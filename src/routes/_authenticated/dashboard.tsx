@@ -10,7 +10,7 @@ import {
   SidebarFooter, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles, Info, Brain } from "lucide-react";
+import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles, Info, Brain, Plus } from "lucide-react";
 import { listCohorts } from "@/lib/cohorts.functions";
 import { getWorkshopMode } from "@/lib/workshop-mode";
 import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
@@ -127,10 +127,19 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       key: "hub",
       to: "/dashboard/hub",
       label: "Ventures",
-      tooltip: "Every startup concept you've explored, with its own 60+ asset workspace. Drop in a URL or describe an idea, then star favorites, archive what's noise, and reopen anything to keep refining.",
+      tooltip: "Every startup concept you've explored, with its own 60+ asset workspace. Use “New venture” below to add one — drop in a URL or describe an idea — then star favorites, archive what's noise, and reopen anything to keep refining.",
       icon: Sparkles,
       hide: !hubVisible,
     },
+    {
+      key: "hub",
+      to: "/dashboard/hub/new",
+      label: "New venture",
+      tooltip: "Start a brand-new venture workspace. Paste a website URL or describe the idea in a sentence, and we'll spin up its own asset library.",
+      icon: Plus,
+      hide: !hubVisible,
+    },
+
     {
       key: "files",
       to: "/dashboard/files",
@@ -166,7 +175,11 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleItems.map((item) => {
-                const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+                const active =
+                  item.to === "/dashboard/hub"
+                    ? pathname.startsWith("/dashboard/hub") && pathname !== "/dashboard/hub/new"
+                    : pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+
                 const adminHidden = isAdmin && visibility[item.key] === false;
                 return (
                   <SidebarMenuItem key={item.to}>
