@@ -667,7 +667,11 @@ function Inner() {
     setDrafting(false);
     setFromBrief(false);
     autoSigRef.current = "";
+    // Back to a clean wizard — steps 2 and 3 re-lock.
+    setActiveStep(1);
+    setMaxStepReached(1);
     setResetOpen(false);
+
     toast.success("Step 1 cleared. Your library is still saved — add a source or type your concept to start again.");
   };
   const anySelectedChips = activeMemoryChips.length > 0;
