@@ -519,7 +519,96 @@ async function runLayer(
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, pending.length || 1) }, () => worker()));
 }
 
-async function runJob(supabase: any, snapshotId: string, jobId: string, category?: string | null) {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Retry sweep — after the main pass, loop back over anything that isn't
+// complete and re-generate it, escalating tactics each round. Blocked docs
+// (waiting on the founder) are never retried.
+const RETRY_ROUNDS: { mode: GenMode; backoffMs: number }[] = [
+  { mode: "full", backoffMs: 5_000 },
+  { mode: "trimmed", backoffMs: 20_000 },
+  { mode: "minimal", backoffMs: 60_000 },
+];
+
+async function retrySweep(
+  supabase: any,
+  ctx: VentureContext,
+  jobId: string,
+  types: any[],
+  state: { done: number; total: number; fails: number; canceled: boolean },
+): Promise<{ remaining: string[]; blocked: string[] }> {
+  const snapshotId = ctx.snapshotId;
+  const byKey = new Map(types.map((t) => [t.type, t]));
+
+  const outstanding = async () => {
+    const { data: docs } = await supabase
+      .from("venture_documents")
+      .select("document_type, status, blocked_reason")
+      .eq("snapshot_id", snapshotId)
+      .in("document_type", types.map((t) => t.type));
+    const rows = docs ?? [];
+    const byType = new Map(rows.map((d: any) => [d.document_type, d]));
+    const blocked: string[] = [];
+    const retryable: string[] = [];
+    for (const t of types) {
+      const row: any = byType.get(t.type);
+      if (row?.status === "complete") continue;
+      if (row?.blocked_reason) { blocked.push(t.type); continue; }
+      retryable.push(t.type);
+    }
+    return { retryable, blocked };
+  };
+
+  let last = await outstanding();
+
+  for (let i = 0; i < RETRY_ROUNDS.length; i++) {
+    if (state.canceled) break;
+    if (!last.retryable.length) break;
+
+    const round = RETRY_ROUNDS[i];
+    await supabase.from("venture_generation_jobs").update({
+      status: "running",
+      circuit_breaker_open: false,
+      error: null,
+      retry_round: i + 1,
+      retry_remaining: last.retryable.length,
+      heartbeat_at: new Date().toISOString(),
+    }).eq("id", jobId);
+
+    await sleep(round.backoffMs);
+
+    // Respect dependency order within the retry subset.
+    const subset = last.retryable.map((k) => byKey.get(k)!).filter(Boolean);
+    for (const layer of dependencyLayers(subset)) {
+      if (state.canceled) break;
+      state.fails = 0; // the breaker shouldn't end a sweep round
+      await runLayer(supabase, ctx, jobId, layer, state, round.mode);
+    }
+
+    const next = await outstanding();
+    const madeProgress = next.retryable.length < last.retryable.length;
+    last = next;
+    if (!next.retryable.length) break;
+    // No progress on the final round — stop burning credits.
+    if (!madeProgress && i === RETRY_ROUNDS.length - 1) break;
+  }
+
+  await supabase.from("venture_generation_jobs").update({
+    retry_round: 0,
+    retry_remaining: last.retryable.length,
+  }).eq("id", jobId);
+
+  return { remaining: last.retryable, blocked: last.blocked };
+}
+
+async function runJob(
+  supabase: any,
+  snapshotId: string,
+  jobId: string,
+  category?: string | null,
+  retryOnly = false,
+) {
+
   // Build venture context ONCE per job. Compute or reuse the brain ONCE
   // before any docs run — subsequent generateOne() calls inherit both.
   const ctx = await loadVentureContext(supabase, snapshotId);
