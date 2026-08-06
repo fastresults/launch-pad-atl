@@ -1904,20 +1904,21 @@ function Inner() {
       {/* Sticky CTA bar */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          {missing.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-1.5 text-xs">
-              <span className="text-muted-foreground">Still needed:</span>
-              {missing.map((m) => (
-                <button
-                  key={m.key}
-                  type="button"
-                  onClick={() => jumpTo(m.key)}
-                  className="rounded-full border border-status-danger/40 bg-status-danger/10 px-2 py-0.5 font-medium text-status-danger hover:bg-status-danger/20"
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
+          {blockingStep ? (
+            <button
+              type="button"
+              onClick={() => goToStep(blockingStep)}
+              className="flex items-center gap-2 text-left text-xs text-muted-foreground hover:text-foreground"
+            >
+              <span className="rounded-full border border-status-danger/40 bg-status-danger/10 px-2 py-0.5 font-semibold uppercase tracking-wider text-status-danger">
+                Step {blockingStep}
+              </span>
+              {blockingStep === 1
+                ? step1Blocker
+                : blockingStep === 2
+                  ? `Still needed: ${missingStep2.map((m) => m.label).join(", ")}`
+                  : "Pick a track"}
+            </button>
           ) : (
             <div className="flex items-center gap-2 text-sm text-status-success">
               <CheckCircle2 className="h-4 w-4" /> Ready to create
@@ -1936,6 +1937,7 @@ function Inner() {
               </>
             )}
           </Button>
+
         </div>
       </div>
 
