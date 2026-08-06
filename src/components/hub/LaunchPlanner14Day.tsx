@@ -38,6 +38,7 @@ interface Props {
   isPhysical?: boolean;
   sourcingOnlyKeys?: Set<string>;
   onOpenDayDeck?: (day: LaunchDay) => void;
+  onFinishDay?: (day: LaunchDay) => void;
   snapshotId?: string;
 }
 
@@ -91,6 +92,7 @@ export function LaunchPlanner14Day({
   isPhysical = false,
   sourcingOnlyKeys,
   onOpenDayDeck,
+  onFinishDay,
   snapshotId,
 }: Props) {
 
@@ -485,6 +487,23 @@ export function LaunchPlanner14Day({
                     );
                   })()}
                   <div className="flex items-center gap-2">
+                    {onFinishDay && active.state !== "complete" && active.total > 0 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={jobRunning}
+                        onClick={() => onFinishDay(active.day)}
+                        className="gap-1.5"
+                        title="Write the assets still missing from this day using everything already on file"
+                      >
+                        {jobRunning ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5" />
+                        )}
+                        Finish this day
+                      </Button>
+                    )}
                     {onOpenDayDeck && availableKeys.length > 0 && (
                       <Button
                         size="sm"
@@ -494,6 +513,7 @@ export function LaunchPlanner14Day({
                         <Presentation className="h-3.5 w-3.5" /> Open Day Deck
                       </Button>
                     )}
+
                     {availableKeys.length > 1 && (
                       <div
                         className="inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-background/40 p-0.5"
