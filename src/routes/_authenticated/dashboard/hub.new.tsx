@@ -1773,6 +1773,7 @@ function Inner() {
                   <Input
                     id="fname"
                     ref={registerRef("founderName") as any}
+                    className={invalidCls("founderName")}
                     value={founderName}
                     onChange={(e) => setFounderName(e.target.value)}
                     placeholder="Jane Doe"
@@ -1786,6 +1787,7 @@ function Inner() {
                   <Input
                     id="femail"
                     ref={registerRef("founderEmail") as any}
+                    className={invalidCls("founderEmail")}
                     type="email"
                     value={founderEmail}
                     onChange={(e) => setFounderEmail(e.target.value)}
@@ -1806,6 +1808,7 @@ function Inner() {
                   <Input
                     id="country"
                     ref={registerRef("country") as any}
+                    className={invalidCls("country")}
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                     placeholder="United States"
@@ -1819,6 +1822,7 @@ function Inner() {
                   <Input
                     id="city"
                     ref={registerRef("city") as any}
+                    className={invalidCls("city")}
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Atlanta"
@@ -1832,6 +1836,7 @@ function Inner() {
                   <Input
                     id="region"
                     ref={registerRef("region") as any}
+                    className={invalidCls("region")}
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
                     placeholder="Georgia"
@@ -1871,7 +1876,7 @@ function Inner() {
                     Industry <span className="text-status-danger">*</span>
                     <AiPill keyName="industry" />
                   </Label>
-                  <div ref={registerRef("industry") as any}>
+                  <div ref={registerRef("industry") as any} className={`rounded-md ${invalidCls("industry")}`}>
                     <IndustryCombobox value={industry} onChange={setIndustry} context={[companyName, businessConcept].filter(Boolean).join(" — ").slice(0, 600)} />
                   </div>
                   <Input
@@ -1895,6 +1900,7 @@ function Inner() {
                 <Input
                   id="company"
                   ref={registerRef("companyName") as any}
+                    className={invalidCls("companyName")}
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Northbound Roasters"
