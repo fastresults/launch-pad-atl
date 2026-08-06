@@ -544,75 +544,73 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  // Two-phase logo run: one short "brief" request, then one request per mark.
-  // Nothing long-running lives in a single connection, so nothing can time out.
-  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "rendering">("idle");
-  const [pending, setPending] = useState<any[]>([]); // {direction, status:'pending'|'error', error?}
-
-  const renderDirection = async (d: any, slot: number, current: any[]) => {
-    try {
-      const out = await generateBrandAsset({
-        data: { snapshotId: snapshot.id, kind: "logo_render", referenceImages: refs, direction: d },
-      });
-      const asset = out?.asset;
-      if (!asset?.url) throw new Error("No image came back");
-      setPending((p) => p.map((x, j) => (j === slot ? null : x)).filter(Boolean) as any[]);
-      setLogos((prev) => {
-        const next = [asset, ...prev].slice(0, 8);
-        onSave({ logos: next });
-        return next;
-      });
-      return true;
-    } catch (e: any) {
-      setPending((p) => p.map((x, j) => (j === slot ? { ...x, status: "error", error: e?.message ?? "Render failed" } : x)));
-      return false;
-    }
-  };
-
-  const runLogoSet = async () => {
-    setLogoPhase("brief");
-    try {
-      const brief = await generateBrandAsset({
-        data: { snapshotId: snapshot.id, kind: "logo_brief", count: 4, referenceImages: refs },
-      });
-      const directions: any[] = brief?.directions ?? [];
-      if (!directions.length) throw new Error("No directions came back");
-      setLogos([]);
-      onSave({ logos: [] });
-      setPending(directions.map((d) => ({ direction: d, status: "pending" })));
-      setLogoPhase("rendering");
-      const outcomes = await Promise.all(directions.map((d, i) => renderDirection(d, i, [])));
-      const okCount = outcomes.filter(Boolean).length;
-      if (okCount) toast.success(`${okCount} logo direction${okCount === 1 ? "" : "s"} rendered`);
-      if (okCount < directions.length) toast.error(`${directions.length - okCount} need another try`);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Could not write the brief");
-    } finally {
-      setLogoPhase("idle");
-    }
-  };
-
-  const retryPending = async (slot: number) => {
-    const item = pending[slot];
-    if (!item) return;
-    setPending((p) => p.map((x, j) => (j === slot ? { ...x, status: "pending", error: undefined } : x)));
-    await renderDirection(item.direction, slot, logos);
-  };
-
-  const genLogos = { isPending: logoPhase !== "idle", mutate: runLogoSet };
-
-  const regenOne = useMutation({
-    mutationFn: (vars: { idx: number; direction: any }) =>
-      generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render", referenceImages: refs, direction: vars.direction } }),
-    onSuccess: (out, vars) => {
-      const fresh = out?.asset;
-      if (!fresh?.url) { toast.error("Regeneration failed"); return; }
-      const next = logos.slice();
-      next[vars.idx] = fresh;
-      setLogos(next);
-      onSave({ logos: next });
-      toast.success(`"${fresh.direction_name}" regenerated`);
+  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "drawing">("idle");
+  const logoRunQ = useQuery({
+    queryKey: ["brandLogoRun", snapshot.id],
+    queryFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run" } }),
+    refetchInterval: (query) => {
+      const status = (query.state.data as any)?.run?.status;
+      return status && !["completed", "completed_with_review", "failed", "canceled"].includes(status) ? 2500 : false;
     },
+  });
+  const activeRun = logoRunQ.data?.run;
+  const runDirections: any[] = logoRunQ.data?.directions ?? [];
+  const runBusy = !!activeRun && !["completed", "completed_with_review", "failed", "canceled"].includes(activeRun.status);
+
+  useEffect(() => {
+    const ready = runDirections.filter((d) => d.status === "ready" || d.status === "needs_review").map((d) => d.asset).filter((a) => a?.url);
+    if (ready.length) setLogos(ready);
+  }, [runDirections]);
+
+  const processLogoRun = async (initialRun: any) => {
+    let run = initialRun;
+    setLogoPhase("brief");
+    if (run.status === "developing_brief" || run.status === "queued") {
+      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_brief", runId: run.id } });
+      run = { ...run, status: "developing_directions" };
+    }
+    setLogoPhase("concepting");
+    let state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+    if (!state.directions?.length) {
+      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_directions", runId: run.id } });
+      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+    }
+    setLogoPhase("drawing");
+    for (let round = 0; round < 3; round++) {
+      const work = (state.directions ?? []).filter((d: any) => !["ready", "needs_review", "canceled"].includes(d.status) && Number(d.attempt_count ?? 0) < 3);
+      if (!work.length) break;
+      for (let i = 0; i < work.length; i += 2) {
+        await Promise.allSettled(work.slice(i, i + 2).map((d: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_draw_vector", runId: run.id, directionId: d.id } })));
+        await logoRunQ.refetch();
+      }
+      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+    }
+    const finished = (state.directions ?? []).filter((d: any) => ["ready", "needs_review"].includes(d.status)).length;
+    await logoRunQ.refetch();
+    if (finished < Number(run.requested_count ?? 4)) throw new Error(`${Number(run.requested_count ?? 4) - finished} direction${Number(run.requested_count ?? 4) - finished === 1 ? "" : "s"} paused after three safe attempts`);
+  };
+
+  const genLogos = useMutation({
+    mutationFn: async () => {
+      const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 4, referenceImages: refs } });
+      setLogos([]);
+      await processLogoRun(created.run);
+      return created;
+    },
+    onSuccess: () => toast.success("Your four vector directions are ready"),
+    onError: (e: any) => toast.error(e?.message ?? "Logo run paused. You can resume it here."),
+    onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
+  });
+
+  const resumeLogos = useMutation({
+    mutationFn: () => processLogoRun(activeRun),
+    onError: (e: any) => toast.error(e?.message ?? "Logo run paused again"),
+    onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
+  });
+
+  const retryDirection = useMutation({
+    mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_retry_direction", runId: item.run_id, directionId: item.id, reviewNote: item.review_note } }),
+    onSuccess: () => { toast.success("Direction rebuilt"); logoRunQ.refetch(); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -787,12 +785,12 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <Button onClick={() => genLogos.mutate()} disabled={genLogos.isPending || !gatePassed} size="sm">
-              {genLogos.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-              {logoPhase === "brief" ? "Writing the brief…" : logoPhase === "rendering" ? "Rendering marks…" : logos.length ? "New direction set" : "Generate 4 logo directions"}
+            <Button onClick={() => runBusy ? resumeLogos.mutate() : genLogos.mutate()} disabled={genLogos.isPending || resumeLogos.isPending || !gatePassed} size="sm">
+              {(genLogos.isPending || resumeLogos.isPending) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+              {logoPhase === "brief" ? "Writing the brief…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : "Generate 4 logo directions"}
             </Button>
-            {genLogos.isPending && (
-              <span className="text-[10px] text-muted-foreground">Brief → concepts → render → design review. Marks appear as they finish.</span>
+            {(genLogos.isPending || resumeLogos.isPending || runBusy) && (
+              <span className="text-[10px] text-muted-foreground">Progress is saved. You can close this window and resume later.</span>
             )}
 
             {!gatePassed && (
@@ -801,24 +799,24 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         </div>
 
-        {pending.length > 0 && (
+        {runDirections.some((d) => !["ready", "needs_review"].includes(d.status)) && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {pending.map((p: any, i: number) => (
-              <div key={`pending-${i}`} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
+            {runDirections.filter((d) => !["ready", "needs_review"].includes(d.status)).map((p: any) => (
+              <div key={p.id} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
                 <div className="flex aspect-square w-full items-center justify-center bg-white/5">
-                  {p.status === "error" ? (
-                    <span className="px-3 text-center text-[11px] text-destructive">{p.error}</span>
+                  {p.status === "failed" || p.status === "retry_wait" ? (
+                    <span className="px-3 text-center text-[11px] text-destructive">{p.last_error ?? "This direction needs another pass."}</span>
                   ) : (
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   )}
                 </div>
                 <div className="space-y-2 p-3">
-                  <div className="truncate text-xs font-semibold">{p.direction?.direction_name ?? `Concept ${i + 1}`}</div>
+                  <div className="truncate text-xs font-semibold">{p.direction_name ?? `Concept ${p.slot + 1}`}</div>
                   <p className="line-clamp-2 text-[11px] text-muted-foreground">
-                    {p.status === "error" ? "This mark didn't render." : p.direction?.one_line_idea ?? "Rendering…"}
+                    {p.status === "failed" || p.status === "retry_wait" ? "Saved for a targeted retry." : p.concept?.one_line_idea ?? p.current_stage?.replaceAll("_", " ") ?? "Drawing…"}
                   </p>
-                  {p.status === "error" && (
-                    <Button variant="ghost" size="sm" className="h-7 w-full text-[11px]" onClick={() => retryPending(i)}>
+                  {(p.status === "failed" || p.status === "retry_wait") && (
+                    <Button variant="ghost" size="sm" className="h-7 w-full text-[11px]" disabled={retryDirection.isPending} onClick={() => retryDirection.mutate(p)}>
                       <Sparkles className="mr-1 h-3 w-3" /> Try this one again
                     </Button>
                   )}
@@ -832,13 +830,19 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {logos.map((a, i) => {
-              const busy = regenOne.isPending && regenOne.variables?.idx === i;
+              const directionRow = runDirections.find((d) => d.asset?.path === a.path || d.id === a.direction_id);
+              const busy = retryDirection.isPending && retryDirection.variables?.id === directionRow?.id;
               const removeLogo = async () => {
-                const next = logos.filter((_, j) => j !== i);
-                setLogos(next);
                 try {
-                  await upsertBrandKit(snapshot.id, { logos: next });
-                  onSave({ logos: next });
+                  if (directionRow && activeRun) {
+                    const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_remove_direction", runId: activeRun.id, directionId: directionRow.id } });
+                    setLogos(out.logos ?? []);
+                    await logoRunQ.refetch();
+                  } else {
+                    const next = logos.filter((_, j) => j !== i);
+                    setLogos(next);
+                    await upsertBrandKit(snapshot.id, { logos: next });
+                  }
                   toast.success("Concept removed");
                 } catch (e: any) {
                   toast.error(e?.message || "Could not remove");
@@ -848,7 +852,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                 <div key={i} className="relative flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
                   <button
                     onClick={removeLogo}
-                    disabled={busy || regenOne.isPending}
+                    disabled={busy || retryDirection.isPending}
                     aria-label="Remove this concept"
                     className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white shadow hover:bg-black disabled:opacity-40"
                   >
@@ -880,8 +884,8 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                           variant="ghost"
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || regenOne.isPending}
-                          onClick={() => regenOne.mutate({ idx: i, direction: a.direction })}
+                          disabled={busy || retryDirection.isPending || !directionRow}
+                          onClick={() => directionRow && retryDirection.mutate(directionRow)}
                         >
                           {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
                           More like this
@@ -892,7 +896,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                         size="sm"
 
                         className="h-7 px-2 text-[11px] text-destructive hover:text-destructive"
-                        disabled={busy || regenOne.isPending}
+                        disabled={busy || retryDirection.isPending}
                         onClick={removeLogo}
                       >
                         Remove

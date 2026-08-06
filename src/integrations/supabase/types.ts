@@ -933,6 +933,173 @@ export type Database = {
           },
         ]
       }
+      brand_logo_directions: {
+        Row: {
+          asset: Json
+          attempt_count: number
+          completed_at: string | null
+          concept: Json
+          created_at: string
+          current_stage: string
+          direction_name: string | null
+          error_class: string | null
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          lease_expires_at: string | null
+          lease_token: string | null
+          logo_type: string | null
+          preview_path: string | null
+          retry_at: string | null
+          review_attempts: number
+          review_note: string | null
+          review_passed: boolean | null
+          review_score: Json
+          run_id: string
+          slot: number
+          snapshot_id: string
+          status: string
+          svg_path: string | null
+          updated_at: string
+          vector_spec: Json
+        }
+        Insert: {
+          asset?: Json
+          attempt_count?: number
+          completed_at?: string | null
+          concept?: Json
+          created_at?: string
+          current_stage?: string
+          direction_name?: string | null
+          error_class?: string | null
+          id?: string
+          idempotency_key: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          logo_type?: string | null
+          preview_path?: string | null
+          retry_at?: string | null
+          review_attempts?: number
+          review_note?: string | null
+          review_passed?: boolean | null
+          review_score?: Json
+          run_id: string
+          slot: number
+          snapshot_id: string
+          status?: string
+          svg_path?: string | null
+          updated_at?: string
+          vector_spec?: Json
+        }
+        Update: {
+          asset?: Json
+          attempt_count?: number
+          completed_at?: string | null
+          concept?: Json
+          created_at?: string
+          current_stage?: string
+          direction_name?: string | null
+          error_class?: string | null
+          id?: string
+          idempotency_key?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          lease_token?: string | null
+          logo_type?: string | null
+          preview_path?: string | null
+          retry_at?: string | null
+          review_attempts?: number
+          review_note?: string | null
+          review_passed?: boolean | null
+          review_score?: Json
+          run_id?: string
+          slot?: number
+          snapshot_id?: string
+          status?: string
+          svg_path?: string | null
+          updated_at?: string
+          vector_spec?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_logo_directions_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "brand_logo_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_logo_directions_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_logo_runs: {
+        Row: {
+          canceled_at: string | null
+          completed_at: string | null
+          completed_count: number
+          created_at: string
+          heartbeat_at: string | null
+          id: string
+          last_error: string | null
+          reference_images: Json
+          requested_count: number
+          snapshot_id: string
+          status: string
+          strategy: Json
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          canceled_at?: string | null
+          completed_at?: string | null
+          completed_count?: number
+          created_at?: string
+          heartbeat_at?: string | null
+          id?: string
+          last_error?: string | null
+          reference_images?: Json
+          requested_count?: number
+          snapshot_id: string
+          status?: string
+          strategy?: Json
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          canceled_at?: string | null
+          completed_at?: string | null
+          completed_count?: number
+          created_at?: string
+          heartbeat_at?: string | null
+          id?: string
+          last_error?: string | null
+          reference_images?: Json
+          requested_count?: number
+          snapshot_id?: string
+          status?: string
+          strategy?: Json
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_logo_runs_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bulk_unlock_codes: {
         Row: {
           code_hash: string
@@ -3919,6 +4086,20 @@ export type Database = {
         Returns: number
       }
       promote_application: { Args: { _app_id: string }; Returns: string }
+      publish_brand_logo_direction: {
+        Args: {
+          p_asset: Json
+          p_direction_id: string
+          p_preview_path: string
+          p_review_note: string
+          p_review_passed: boolean
+          p_review_score: Json
+          p_run_id: string
+          p_run_version: number
+          p_svg_path: string
+        }
+        Returns: Json
+      }
       purge_founder_generated_assets:
         | { Args: { _user_id: string }; Returns: Json }
         | { Args: { _snapshot_id?: string; _user_id: string }; Returns: Json }

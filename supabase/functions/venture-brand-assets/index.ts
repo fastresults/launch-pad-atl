@@ -68,6 +68,23 @@ type BrandStrategy = {
   not_list: string[];
 };
 
+type VectorPrimitive = {
+  kind: "rect" | "circle" | "path" | "line";
+  x?: number; y?: number; width?: number; height?: number; rx?: number;
+  cx?: number; cy?: number; r?: number; d?: string;
+  x1?: number; y1?: number; x2?: number; y2?: number;
+  fill?: "primary" | "secondary" | "accent" | "none" | "white";
+  stroke?: "primary" | "secondary" | "accent" | "none" | "white";
+  strokeWidth?: number;
+};
+
+type VectorSpec = {
+  primitives: VectorPrimitive[];
+  wordmark?: { text: string; case?: "upper" | "title" | "lower"; weight?: number; tracking?: number };
+  rationale?: string;
+  quality_scores?: Record<string, number>;
+};
+
 // Chat models used for the thinking passes, in fallback order. 2.5-pro's
 // thinking budget occasionally eats the whole response and returns empty
 // content, so a flash model always backs it up.
@@ -141,6 +158,79 @@ async function callChatJson(messages: any[]): Promise<any> {
   return null;
 }
 
+async function callChatJsonOnce(messages: any[]): Promise<any> {
+  const parsed = parseJsonLoose(await callChatAI(messages, { json: true, model: THINK_MODELS[0] }));
+  if (!parsed) throw new Error("AI returned malformed structured output");
+  return parsed;
+}
+
+function escapeXml(value: unknown): string {
+  return String(value ?? "").replace(/[&<>'"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&apos;", '"': "&quot;" }[c] ?? c));
+}
+
+function safeColor(value: unknown, fallback: string): string {
+  const text = String(value ?? "").trim();
+  return /^#[0-9a-f]{6}$/i.test(text) ? text : fallback;
+}
+
+function clampNumber(value: unknown, min: number, max: number, fallback = 0): number {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
+}
+
+function sanitizePath(value: unknown): string {
+  const path = String(value ?? "").trim();
+  if (!path || path.length > 1200 || /[^0-9a-zA-Z.,+\-\s]/.test(path)) throw new Error("Vector path contains unsupported data");
+  const commands = path.match(/[A-Za-z]/g) ?? [];
+  if (commands.some((command) => !/[MLHVCQZ]/i.test(command))) throw new Error("Vector path uses an unsupported command");
+  return path;
+}
+
+function renderVectorSvg(spec: VectorSpec, tokens: any, companyName: string): string {
+  const palette = {
+    primary: safeColor(tokens?.colors?.primary, "#171717"),
+    secondary: safeColor(tokens?.colors?.secondary, "#4B5563"),
+    accent: safeColor(tokens?.colors?.accent, "#C29B46"),
+    white: "#FFFFFF",
+    none: "none",
+  };
+  const primitives = Array.isArray(spec?.primitives) ? spec.primitives.slice(0, 5) : [];
+  if (!primitives.length) throw new Error("Vector specification has no drawable elements");
+  const color = (key: unknown, fallback: string) => palette[String(key ?? "") as keyof typeof palette] ?? fallback;
+  const body = primitives.map((p) => {
+    const fill = color(p.fill, palette.primary);
+    const stroke = color(p.stroke, "none");
+    const common = `fill="${fill}" stroke="${stroke}" stroke-width="${clampNumber(p.strokeWidth, 0, 32, 0)}" stroke-linecap="round" stroke-linejoin="round"`;
+    if (p.kind === "rect") return `<rect x="${clampNumber(p.x, 0, 1000)}" y="${clampNumber(p.y, 0, 1000)}" width="${clampNumber(p.width, 1, 1000, 100)}" height="${clampNumber(p.height, 1, 1000, 100)}" rx="${clampNumber(p.rx, 0, 250)}" ${common}/>`;
+    if (p.kind === "circle") return `<circle cx="${clampNumber(p.cx, 0, 1000, 500)}" cy="${clampNumber(p.cy, 0, 1000, 500)}" r="${clampNumber(p.r, 1, 500, 100)}" ${common}/>`;
+    if (p.kind === "line") return `<line x1="${clampNumber(p.x1, 0, 1000)}" y1="${clampNumber(p.y1, 0, 1000)}" x2="${clampNumber(p.x2, 0, 1000)}" y2="${clampNumber(p.y2, 0, 1000)}" ${common}/>`;
+    if (p.kind === "path") return `<path d="${escapeXml(sanitizePath(p.d))}" ${common}/>`;
+    throw new Error("Unsupported vector primitive");
+  }).join("");
+  const wordmark = spec.wordmark?.text ? String(spec.wordmark.text) : "";
+  const text = wordmark ? `<text x="500" y="900" text-anchor="middle" fill="${palette.primary}" font-family="Arial, Helvetica, sans-serif" font-size="${Math.max(42, Math.min(112, Math.floor(760 / Math.max(wordmark.length, 5))))}" font-weight="${clampNumber(spec.wordmark?.weight, 300, 800, 600)}" letter-spacing="${clampNumber(spec.wordmark?.tracking, 0, 20, 2)}">${escapeXml(wordmark || companyName)}</text>` : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="img" aria-label="${escapeXml(companyName)} logo"><rect width="1000" height="1000" fill="#FFFFFF"/><g>${body}</g>${text}</svg>`;
+}
+
+async function uploadVectorAsset(supabase: any, snapshotId: string, userId: string, directionId: string, svg: string) {
+  const path = `${userId}/brand/${snapshotId}/logo-${directionId}.svg`;
+  const bytes = new TextEncoder().encode(svg);
+  const { error } = await supabase.storage.from("user-media").upload(path, bytes, { contentType: "image/svg+xml", upsert: true });
+  if (error) throw new Error(`Vector upload failed: ${error.message}`);
+  const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(path, 60 * 60 * 24 * 7);
+  return { path, url: signed?.signedUrl };
+}
+
+function classifyError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (/429|rate/i.test(message)) return "rate_limit";
+  if (/402|credit/i.test(message)) return "credits";
+  if (/abort|timeout/i.test(message)) return "provider_timeout";
+  if (/structured|json|vector/i.test(message)) return "invalid_output";
+  if (/upload|storage/i.test(message)) return "storage";
+  return "provider_error";
+}
+
 /** Pull the venture's finished brand documents so strategy is grounded in real work. */
 async function loadBrandDocs(supabase: any, snapshotId: string): Promise<string> {
   const { data: docs } = await supabase
@@ -205,7 +295,7 @@ ${docsBlock ? `FINISHED BRAND ASSETS (the founder's own words — treat as autho
 Return STRICT JSON:
 {"core_idea":"one sentence — the single idea the mark must carry","attributes":["three adjectives, no synonyms of each other"],"metaphor_territory":"the ONE visual territory worth mining (an object, action, structure or gesture from this venture's real world) and why","not_list":["4-6 things this brand must never look like — name the category clichés specifically"]}`;
 
-  const parsed = await callChatJson([
+  const parsed = await callChatJsonOnce([
     { role: "system", content: system },
     { role: "user", content: user },
   ]);
@@ -265,7 +355,7 @@ Hard rules:
     }
   }
 
-  const parsed = await callChatJson([
+  const parsed = await callChatJsonOnce([
     { role: "system", content: system },
     { role: "user", content: userContent },
   ]);
@@ -273,6 +363,36 @@ Hard rules:
   const directions = (Array.isArray(list) ? list : []).filter((d: any) => d && d.direction_name);
   if (!directions.length) throw new Error("Creative Director returned no directions");
   return directions.slice(0, count) as LogoDirection[];
+}
+
+async function developVectorSpec(d: LogoDirection, strategy: BrandStrategy | null, ctx: any, tokens: any, reviewNote?: string): Promise<VectorSpec> {
+  const companyName = String(ctx?.snap?.company_name ?? "").trim();
+  const wantsType = /wordmark|lettermark|monogram|combination|emblem/i.test(d.logo_type ?? "");
+  const parsed = await callChatJsonOnce([
+    { role: "system", content: "You are a master identity designer who constructs simple production logos from geometric vector primitives. Return valid JSON only. Never use gradients, filters, masks, images, scripts, external URLs, or more than five primitives." },
+    { role: "user", content: `Turn this approved direction into a precise 1000×1000 vector specification.
+Brand: ${companyName}
+Core idea: ${strategy?.core_idea ?? ""}
+Direction: ${JSON.stringify(d)}
+Palette tokens: ${tokensBlockOf(tokens)}
+${reviewNote ? `Revision instruction: ${reviewNote}` : ""}
+
+Allowed primitives only:
+- rect: x,y,width,height,rx
+- circle: cx,cy,r
+- line: x1,y1,x2,y2,stroke,strokeWidth
+- path: SVG path d using only M/L/H/V/C/Q/Z commands
+Every primitive may use fill/stroke from primary|secondary|accent|white|none. Keep all coordinates in 0..1000. Maximum five primitives. Build the symbol inside x=150..850 and y=100..720. Use one clear silhouette and generous negative space.
+${wantsType ? `Include wordmark.text exactly as "${companyName}" with case, weight 300-800, and tracking 0-20.` : "Omit wordmark entirely."}
+
+Return STRICT JSON:
+{"primitives":[{"kind":"path","d":"M ... Z","fill":"primary","stroke":"none","strokeWidth":0}],"wordmark":{"text":"${companyName}","case":"title","weight":600,"tracking":2},"rationale":"one sentence","quality_scores":{"relevance":1,"distinctiveness":1,"simplicity":1,"scalability":1,"balance":1}}
+Scores are 1-5. Do not include wordmark when instructed to omit it.` },
+  ]);
+  const primitives = Array.isArray(parsed?.primitives) ? parsed.primitives : [];
+  if (!primitives.length || primitives.length > 5) throw new Error("Vector specification is missing or too complex");
+  const wordmark = wantsType ? { ...(parsed.wordmark ?? {}), text: companyName } : undefined;
+  return { primitives, wordmark, rationale: String(parsed.rationale ?? ""), quality_scores: parsed.quality_scores ?? {} };
 }
 
 /** Stage 3 — describe a MARK, not a picture. */
@@ -438,31 +558,36 @@ Deno.serve(async (req) => {
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     const body = await req.json();
-    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote } = body ?? {};
+    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
-    // logo_brief / logo_render are steps of the logo pipeline; they share its preset.
-    const preset = KIND_PRESETS[kind] ?? (kind === "logo_brief" || kind === "logo_render" ? KIND_PRESETS.logo : undefined);
+    // Durable logo stages share the logo preset.
+    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_remove_direction"];
+    const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
 
+    const internal = req.headers.get("x-internal-key") === SERVICE_KEY;
     const authHeader = req.headers.get("Authorization") ?? "";
     const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: userRes } = await userClient.auth.getUser();
-    let userId = userRes?.user?.id;
-    if (!userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const { data: userRes } = internal ? { data: { user: null } } : await userClient.auth.getUser();
+    let userId = userRes?.user?.id ?? "";
+    if (!internal && !userId) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     // Impersonation: an admin may act on a member's behalf (validated server-side).
-    const actorId = userId;
-    const _own = await resolveOwner(req, actorId, userClient, corsHeaders);
-    if (_own.error) return _own.error;
-    userId = _own.userId;
+    if (!internal) {
+      const actorId = userId;
+      const _own = await resolveOwner(req, actorId, userClient, corsHeaders);
+      if (_own.error) return _own.error;
+      userId = _own.userId;
+    }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const ctx = await loadVentureContext(supabase, snapshotId);
     const snap = ctx.snap;
     if (!snap) return new Response(JSON.stringify({ error: "Snapshot not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (internal) userId = snap.user_id;
     if (snap.user_id !== userId) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { data: kit } = await supabase.from("venture_brand_kits").select("palette, typography, dna, logos, moodboard").eq("snapshot_id", snapshotId).maybeSingle();
@@ -475,83 +600,116 @@ Deno.serve(async (req) => {
     const n = Math.max(1, Math.min(4, count ?? preset.defaultCount));
     const results: any[] = [];
 
-    /* ---- STEP 1: the brief. Strategy + scored directions. No image calls. ---- */
-    if (kind === "logo_brief") {
-      const docsBlock = await loadBrandDocs(supabase, snapshotId);
-      const strategy = await buildBrandStrategy(ctx, tokens, docsBlock);
-      const directions = await generateLogoConcepts(ctx, tokens, n, strategy, docsBlock, referenceImages);
-      if (!directions?.length) throw new Error("Creative Director returned no directions");
-      try {
-        const dna = { ...((kit as any)?.dna ?? {}), logo_strategy: strategy, logo_directions: directions };
-        await supabase.from("venture_brand_kits").update({ dna }).eq("snapshot_id", snapshotId);
-      } catch { /* non-fatal */ }
-      return new Response(JSON.stringify({ ok: true, kind, strategy, directions }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const getRun = async (id?: string) => {
+      let query = supabase.from("brand_logo_runs").select("*").eq("snapshot_id", snapshotId);
+      query = id ? query.eq("id", id) : query.order("created_at", { ascending: false }).limit(1);
+      const { data: rows, error } = await query;
+      if (error) throw error;
+      const run = Array.isArray(rows) ? rows[0] : rows;
+      if (!run) return { run: null, directions: [] };
+      const { data: directions, error: directionError } = await supabase.from("brand_logo_directions").select("*").eq("run_id", run.id).order("slot");
+      if (directionError) throw directionError;
+      return { run, directions: directions ?? [] };
+    };
+
+    if (kind === "logo_get_run") {
+      return new Response(JSON.stringify({ ok: true, ...(await getRun(runId)) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    /* ---- STEP 2: render exactly one mark, critique it, retry up to twice. ---- */
-    if (kind === "logo_render") {
-      const d = (direction ?? regenerateDirection) as LogoDirection | undefined;
-      if (!d) throw new Error("direction required for logo_render");
-      const strategy = ((kit as any)?.dna?.logo_strategy ?? null) as BrandStrategy | null;
+    if (kind === "logo_cancel_run") {
+      if (!runId) throw new Error("runId required");
+      const now = new Date().toISOString();
+      const { error } = await supabase.from("brand_logo_runs").update({ status: "canceled", canceled_at: now, heartbeat_at: now }).eq("id", runId).eq("snapshot_id", snapshotId);
+      if (error) throw error;
+      await supabase.from("brand_logo_directions").update({ status: "canceled" }).eq("run_id", runId).not("status", "in", '("ready","needs_review")');
+      return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
-      let prompt = buildLogoImagePrompt(d, ctx, tokens, strategy, reviewNote || undefined);
-      let b64 = await renderMark(prompt, preset.size, referenceImages);
-      let review = await critiqueLogo(b64, d, strategy);
+    if (kind === "logo_remove_direction") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      if (!current.run) throw new Error("Logo run not found");
+      const { error } = await supabase.from("brand_logo_directions").update({ status: "canceled", current_stage: "complete", asset: {}, completed_at: new Date().toISOString() }).eq("id", directionId).eq("run_id", runId);
+      if (error) throw error;
+      const refreshed = await getRun(runId);
+      const logos = refreshed.directions.filter((item: any) => ["ready", "needs_review"].includes(item.status)).map((item: any) => item.asset);
+      const { error: kitError } = await supabase.from("venture_brand_kits").update({ logos }).eq("snapshot_id", snapshotId);
+      if (kitError) throw kitError;
+      return new Response(JSON.stringify({ ok: true, logos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
-      for (let attempt = 0; attempt < 2 && !review.pass; attempt++) {
-        console.log(`logo "${d.direction_name}" failed review: ${review.note} — corrective retry ${attempt + 1}`);
-        const retryPrompt = buildLogoImagePrompt(d, ctx, tokens, strategy, review.note);
-        try {
-          const retryB64 = await renderMark(retryPrompt, preset.size, referenceImages);
-          b64 = retryB64;
-          prompt = retryPrompt;
-          review = await critiqueLogo(retryB64, d, strategy);
-        } catch (e) {
-          console.warn("logo retry failed", e);
-          break;
-        }
+    if (kind === "logo_create_run") {
+      await supabase.from("brand_logo_runs").update({ status: "canceled", canceled_at: new Date().toISOString() }).eq("snapshot_id", snapshotId).not("status", "in", '("completed","completed_with_review","failed","canceled")');
+      const { data: previous } = await supabase.from("brand_logo_runs").select("version").eq("snapshot_id", snapshotId).order("version", { ascending: false }).limit(1);
+      const version = Number(previous?.[0]?.version ?? 0) + 1;
+      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "developing_brief", requested_count: n, reference_images: referenceImages ?? [], heartbeat_at: new Date().toISOString() }).select().single();
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, run }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (kind === "logo_develop_brief") {
+      if (!runId) throw new Error("runId required");
+      const docsBlock = await loadBrandDocs(supabase, snapshotId);
+      const strategy = await buildBrandStrategy(ctx, tokens, docsBlock);
+      if (!strategy) throw new Error("Creative Director returned no strategy");
+      const { error } = await supabase.from("brand_logo_runs").update({ strategy, status: "developing_directions", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId).eq("snapshot_id", snapshotId);
+      if (error) throw error;
+      return new Response(JSON.stringify({ ok: true, strategy }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (kind === "logo_develop_directions") {
+      if (!runId) throw new Error("runId required");
+      const current = await getRun(runId);
+      if (!current.run) throw new Error("Logo run not found");
+      const docsBlock = await loadBrandDocs(supabase, snapshotId);
+      const directions = await generateLogoConcepts(ctx, tokens, current.run.requested_count, current.run.strategy as BrandStrategy, docsBlock, current.run.reference_images);
+      const rows = directions.map((d, slot) => ({ run_id: runId, snapshot_id: snapshotId, slot, idempotency_key: `${runId}:${slot}`, direction_name: d.direction_name, logo_type: d.logo_type, concept: d, status: "queued", current_stage: "develop_vector" }));
+      const { error } = await supabase.from("brand_logo_directions").upsert(rows, { onConflict: "run_id,slot" });
+      if (error) throw error;
+      await supabase.from("brand_logo_runs").update({ status: "rendering", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
+      return new Response(JSON.stringify({ ok: true, directions }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (kind === "logo_draw_vector" || kind === "logo_retry_direction") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      const run = current.run;
+      const row = current.directions.find((item: any) => item.id === directionId);
+      if (!run || !row) throw new Error("Logo direction not found");
+      if (["ready", "needs_review"].includes(row.status) && kind !== "logo_retry_direction") {
+        return new Response(JSON.stringify({ ok: true, asset: row.asset, direction: row }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-
-      const up = await uploadAsset(supabase, snapshotId, userId, "logo", b64, prompt);
-      const asset = {
-        ok: true,
-        prompt,
-        ...up,
-        direction_name: d.direction_name,
-        logo_type: d.logo_type,
-        one_line_idea: d.one_line_idea ?? d.symbol_concept,
-        why_memorable: d.why_memorable ?? "",
-        symbol_concept: d.symbol_concept,
-        review_passed: review.pass,
-        review_note: review.note,
-        direction: d,
-        created_at: new Date().toISOString(),
-      };
-
-      // Atomic append — four parallel renders must not clobber each other.
+      const leaseToken = crypto.randomUUID();
+      const leaseExpiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString();
+      const { data: claimed, error: claimError } = await supabase.from("brand_logo_directions").update({ status: "developing_vector", current_stage: row.review_note ? "revise_vector" : "develop_vector", attempt_count: Number(row.attempt_count ?? 0) + 1, last_error: null, error_class: null, lease_token: leaseToken, lease_expires_at: leaseExpiresAt }).eq("id", directionId).in("status", kind === "logo_retry_direction" ? ["ready", "needs_review", "failed", "retry_wait"] : ["queued", "retry_wait", "failed"]).select("id").maybeSingle();
+      if (claimError) throw claimError;
+      if (!claimed) return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Direction is already being processed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
       try {
-        await supabase.rpc("append_brand_logo", {
-          p_snapshot_id: snapshotId,
-          p_logo: {
-            url: asset.url, path: asset.path,
-            direction_name: asset.direction_name, logo_type: asset.logo_type,
-            one_line_idea: asset.one_line_idea, why_memorable: asset.why_memorable,
-            symbol_concept: asset.symbol_concept, prompt: asset.prompt,
-            direction: asset.direction, created_at: asset.created_at,
-          },
-        });
-      } catch (e) { console.warn("append_brand_logo failed", e); }
-
-      return new Response(JSON.stringify({ ok: true, kind, asset }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        const spec = await developVectorSpec(row.concept as LogoDirection, run.strategy as BrandStrategy, ctx, tokens, reviewNote ?? row.review_note ?? undefined);
+        const svg = renderVectorSvg(spec, tokens, snap.company_name ?? "Venture");
+        const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, svg);
+        const scores = spec.quality_scores ?? {};
+        const scoreValues = Object.values(scores).map(Number).filter(Number.isFinite);
+        const average = scoreValues.length ? scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length : 4;
+        const passed = average >= 3.8;
+        const note = passed ? "" : "Simplify the geometry and strengthen the silhouette before selecting this direction.";
+        const asset = { ok: true, url: uploaded.url, path: uploaded.path, svg_url: uploaded.url, svg_path: uploaded.path, direction_name: row.direction_name, logo_type: row.logo_type, one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept, why_memorable: row.concept?.why_memorable ?? "", symbol_concept: row.concept?.symbol_concept, direction: row.concept, vector_spec: spec, review_passed: passed, review_note: note, review_score: scores, created_at: new Date().toISOString() };
+        const { error: publishError } = await supabase.rpc("publish_brand_logo_direction", { p_direction_id: directionId, p_run_id: runId, p_run_version: run.version, p_asset: asset, p_svg_path: uploaded.path, p_preview_path: uploaded.path, p_review_passed: passed, p_review_score: scores, p_review_note: note });
+        if (publishError) throw publishError;
+        return new Response(JSON.stringify({ ok: true, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (error) {
+        const attempts = Number(row.attempt_count ?? 0) + 1;
+        const terminal = attempts >= 3;
+        await supabase.from("brand_logo_directions").update({ status: terminal ? "failed" : "retry_wait", last_error: error instanceof Error ? error.message : String(error), error_class: classifyError(error), retry_at: terminal ? null : new Date(Date.now() + Math.min(60_000, 5_000 * 2 ** attempts)).toISOString(), lease_token: null, lease_expires_at: null }).eq("id", directionId).eq("lease_token", leaseToken);
+        await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: error instanceof Error ? error.message : String(error) }).eq("id", runId);
+        throw error;
+      }
     }
 
     if (kind === "logo") {
       // Legacy single-shot path: retired — it could not fit inside one request.
-      throw new Error("Use kind 'logo_brief' then 'logo_render' — the single-shot logo run is retired.");
+      throw new Error("Use the resumable Logo Studio workflow — single-request logo generation is retired.");
     }
 
     // Generic kinds: moodboard / social
