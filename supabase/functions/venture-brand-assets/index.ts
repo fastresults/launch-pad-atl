@@ -939,9 +939,12 @@ Deno.serve(async (req) => {
             wordmark_font: variants.wordmark_family,
           },
           direction_name: row.direction_name, logo_type: row.logo_type,
+          human_link: row.concept?.human_link ?? "",
+          craft_move: row.concept?.craft_move ?? row.concept?.geometric_operation ?? "",
           one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
           why_memorable: row.concept?.why_memorable ?? "",
           symbol_concept: row.concept?.symbol_concept,
+
           direction: row.concept, vector_spec: spec,
           review_passed: passed, review_note: note, review_score: scores,
           created_at: new Date().toISOString(),
