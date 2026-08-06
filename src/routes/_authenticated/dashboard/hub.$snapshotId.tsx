@@ -899,7 +899,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   });
   const brandKit = brandKitQ.data ?? null;
   const brandKitLocked = brandKit?.status === "locked";
+  // A provisional kit we inferred from finished assets also unblocks generation.
+  const brandKitInferred = brandKit?.status === "auto";
+  const brandKitReady = brandKitLocked || brandKitInferred;
   const brandKitLockedAt = brandKit?.locked_at ?? null;
+
 
   const openBrandWizard = useCallback(() => {
     setBonusOpen(true);
