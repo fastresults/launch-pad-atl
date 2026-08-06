@@ -885,7 +885,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                         size="sm"
 
                         className="h-7 px-2 text-[11px] text-destructive hover:text-destructive"
-                        disabled={busy || regenOne.isPending}
+                        disabled={busy || retryDirection.isPending}
                         onClick={removeLogo}
                       >
                         Remove
