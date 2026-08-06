@@ -772,8 +772,8 @@ async function runJob(
     .eq("active", true);
 
 
-  // Documents with an intake_schema require founder input — skip them in
-  // bulk runs unless the founder has already saved intake_answers for them.
+  // Intake-gated assets stay in the run: generateOne derives their inputs from
+  // the assets already on file rather than skipping them silently.
   const { data: savedIntakes } = await supabase
     .from("venture_documents")
     .select("document_type, intake_answers")
@@ -783,18 +783,29 @@ async function runJob(
       .filter((d: any) => d.intake_answers && Object.keys(d.intake_answers).length)
       .map((d: any) => d.document_type),
   );
-  let types = (allTypes ?? []).filter(
-    (t: any) => !t.intake_schema || haveAnswers.has(t.type),
-  );
+  let types = allTypes ?? [];
 
-  // Skip sourcing-only asset types for non-physical-product ventures so they
-  // don't sit as pending forever. Keep them for physical products, and always
-  // keep them if the founder has explicitly saved intake for one.
+  // Sourcing-only asset types don't apply to a non-physical venture. Record
+  // them as not_applicable so they stop haunting the "remaining" counter
+  // instead of sitting as pending forever.
   const SOURCING_ONLY_TYPES = new Set(["supplier_shortlist", "bom_and_landed_cost"]);
   const isPhysical = ctx.snap?.sourcing_profile?.is_physical_product === true;
+  let notApplicable: string[] = [];
   if (!isPhysical) {
-    types = types.filter((t: any) => !SOURCING_ONLY_TYPES.has(t.type) || haveAnswers.has(t.type));
+    notApplicable = types
+      .filter((t: any) => SOURCING_ONLY_TYPES.has(t.type) && !haveAnswers.has(t.type))
+      .map((t: any) => t.type);
+    types = types.filter((t: any) => !notApplicable.includes(t.type));
+    for (const t of notApplicable) {
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: t,
+        status: "not_applicable",
+        blocked_reason: "Physical products only — doesn't apply to this venture.",
+      }, { onConflict: "snapshot_id,document_type" });
+    }
   }
+
 
   if (category && category.trim().length > 0) {
     const wanted = category.trim().toLowerCase();
