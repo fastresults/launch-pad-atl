@@ -562,7 +562,7 @@ Deno.serve(async (req) => {
     if (!snapshotId) throw new Error("snapshotId required");
     // logo_brief / logo_render are steps of the logo pipeline; they share its preset.
     const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_remove_direction"];
-    const preset = KIND_PRESETS[kind] ?? (kind === "logo_brief" || kind === "logo_render" || logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
+    const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
 
@@ -695,80 +695,6 @@ Deno.serve(async (req) => {
         await supabase.from("brand_logo_directions").update({ status: terminal ? "failed" : "retry_wait", last_error: error instanceof Error ? error.message : String(error), error_class: classifyError(error), retry_at: terminal ? null : new Date(Date.now() + Math.min(60_000, 5_000 * 2 ** attempts)).toISOString(), lease_token: null, lease_expires_at: null }).eq("id", directionId);
         throw error;
       }
-    }
-
-    /* ---- STEP 1: the brief. Strategy + scored directions. No image calls. ---- */
-    if (kind === "logo_brief") {
-      const docsBlock = await loadBrandDocs(supabase, snapshotId);
-      const strategy = await buildBrandStrategy(ctx, tokens, docsBlock);
-      const directions = await generateLogoConcepts(ctx, tokens, n, strategy, docsBlock, referenceImages);
-      if (!directions?.length) throw new Error("Creative Director returned no directions");
-      try {
-        const dna = { ...((kit as any)?.dna ?? {}), logo_strategy: strategy, logo_directions: directions };
-        await supabase.from("venture_brand_kits").update({ dna }).eq("snapshot_id", snapshotId);
-      } catch { /* non-fatal */ }
-      return new Response(JSON.stringify({ ok: true, kind, strategy, directions }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    /* ---- STEP 2: render exactly one mark, critique it, retry up to twice. ---- */
-    if (kind === "logo_render") {
-      const d = (direction ?? regenerateDirection) as LogoDirection | undefined;
-      if (!d) throw new Error("direction required for logo_render");
-      const strategy = ((kit as any)?.dna?.logo_strategy ?? null) as BrandStrategy | null;
-
-      let prompt = buildLogoImagePrompt(d, ctx, tokens, strategy, reviewNote || undefined);
-      let b64 = await renderMark(prompt, preset.size, referenceImages);
-      let review = await critiqueLogo(b64, d, strategy);
-
-      for (let attempt = 0; attempt < 2 && !review.pass; attempt++) {
-        console.log(`logo "${d.direction_name}" failed review: ${review.note} — corrective retry ${attempt + 1}`);
-        const retryPrompt = buildLogoImagePrompt(d, ctx, tokens, strategy, review.note);
-        try {
-          const retryB64 = await renderMark(retryPrompt, preset.size, referenceImages);
-          b64 = retryB64;
-          prompt = retryPrompt;
-          review = await critiqueLogo(retryB64, d, strategy);
-        } catch (e) {
-          console.warn("logo retry failed", e);
-          break;
-        }
-      }
-
-      const up = await uploadAsset(supabase, snapshotId, userId, "logo", b64, prompt);
-      const asset = {
-        ok: true,
-        prompt,
-        ...up,
-        direction_name: d.direction_name,
-        logo_type: d.logo_type,
-        one_line_idea: d.one_line_idea ?? d.symbol_concept,
-        why_memorable: d.why_memorable ?? "",
-        symbol_concept: d.symbol_concept,
-        review_passed: review.pass,
-        review_note: review.note,
-        direction: d,
-        created_at: new Date().toISOString(),
-      };
-
-      // Atomic append — four parallel renders must not clobber each other.
-      try {
-        await supabase.rpc("append_brand_logo", {
-          p_snapshot_id: snapshotId,
-          p_logo: {
-            url: asset.url, path: asset.path,
-            direction_name: asset.direction_name, logo_type: asset.logo_type,
-            one_line_idea: asset.one_line_idea, why_memorable: asset.why_memorable,
-            symbol_concept: asset.symbol_concept, prompt: asset.prompt,
-            direction: asset.direction, created_at: asset.created_at,
-          },
-        });
-      } catch (e) { console.warn("append_brand_logo failed", e); }
-
-      return new Response(JSON.stringify({ ok: true, kind, asset }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
 
     if (kind === "logo") {
