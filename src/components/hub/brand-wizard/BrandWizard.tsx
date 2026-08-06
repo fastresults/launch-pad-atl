@@ -576,12 +576,18 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     }
     setLogoPhase("drawing");
-    const work = (state.directions ?? []).filter((d: any) => !["ready", "needs_review", "canceled"].includes(d.status));
-    for (let i = 0; i < work.length; i += 2) {
-      await Promise.allSettled(work.slice(i, i + 2).map((d: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_draw_vector", runId: run.id, directionId: d.id } })));
-      await logoRunQ.refetch();
+    for (let round = 0; round < 3; round++) {
+      const work = (state.directions ?? []).filter((d: any) => !["ready", "needs_review", "canceled"].includes(d.status) && Number(d.attempt_count ?? 0) < 3);
+      if (!work.length) break;
+      for (let i = 0; i < work.length; i += 2) {
+        await Promise.allSettled(work.slice(i, i + 2).map((d: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_draw_vector", runId: run.id, directionId: d.id } })));
+        await logoRunQ.refetch();
+      }
+      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     }
+    const finished = (state.directions ?? []).filter((d: any) => ["ready", "needs_review"].includes(d.status)).length;
     await logoRunQ.refetch();
+    if (finished < Number(run.requested_count ?? 4)) throw new Error(`${Number(run.requested_count ?? 4) - finished} direction${Number(run.requested_count ?? 4) - finished === 1 ? "" : "s"} paused after three safe attempts`);
   };
 
   const genLogos = useMutation({

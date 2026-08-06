@@ -293,7 +293,7 @@ ${docsBlock ? `FINISHED BRAND ASSETS (the founder's own words — treat as autho
 Return STRICT JSON:
 {"core_idea":"one sentence — the single idea the mark must carry","attributes":["three adjectives, no synonyms of each other"],"metaphor_territory":"the ONE visual territory worth mining (an object, action, structure or gesture from this venture's real world) and why","not_list":["4-6 things this brand must never look like — name the category clichés specifically"]}`;
 
-  const parsed = await callChatJson([
+  const parsed = await callChatJsonOnce([
     { role: "system", content: system },
     { role: "user", content: user },
   ]);
@@ -353,7 +353,7 @@ Hard rules:
     }
   }
 
-  const parsed = await callChatJson([
+  const parsed = await callChatJsonOnce([
     { role: "system", content: system },
     { role: "user", content: userContent },
   ]);
