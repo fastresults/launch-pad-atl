@@ -356,7 +356,7 @@ async function generateOne(prompt: string, size: string, referenceImages?: strin
       content.push({ type: "image_url", image_url: { url } });
     }
   }
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+  const res = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -365,7 +365,7 @@ async function generateOne(prompt: string, size: string, referenceImages?: strin
       modalities: ["image", "text"],
       size,
     }),
-  });
+  }, 70_000);
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`Image gateway ${res.status}: ${txt.slice(0, 200)}`);
@@ -375,6 +375,17 @@ async function generateOne(prompt: string, size: string, referenceImages?: strin
   if (!b64) throw new Error("No image data returned");
   return b64;
 }
+
+/** Pro model first; a provider hiccup degrades quality instead of losing the logo. */
+async function renderMark(prompt: string, size: string, referenceImages?: string[]): Promise<string> {
+  try {
+    return await generateOne(prompt, size, referenceImages, "google/gemini-3-pro-image");
+  } catch (e) {
+    console.warn("pro image model failed, falling back to flash-image", e);
+    return await generateOne(prompt, size, referenceImages, "google/gemini-3.1-flash-image");
+  }
+}
+
 
 function buildPromptGeneric(kind: string, ctx: any, tokens: any, extra?: string, angle?: string) {
   const snap = ctx.snap;
