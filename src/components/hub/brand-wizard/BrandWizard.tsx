@@ -793,8 +793,11 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                         )}
                       </div>
                     </div>
-                    {a.symbol_concept && (
-                      <p className="line-clamp-3 text-[11px] leading-relaxed text-muted-foreground">{a.symbol_concept}</p>
+                    {(a.one_line_idea || a.symbol_concept) && (
+                      <p className="line-clamp-3 text-[11px] leading-relaxed text-foreground/80">{a.one_line_idea || a.symbol_concept}</p>
+                    )}
+                    {a.why_memorable && (
+                      <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">Why it sticks: {a.why_memorable}</p>
                     )}
                     <div className="flex gap-1.5">
                       {a.direction && (
@@ -806,12 +809,13 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                           onClick={() => regenOne.mutate({ idx: i, direction: a.direction })}
                         >
                           {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-                          Regenerate
+                          More like this
                         </Button>
                       )}
                       <Button
                         variant="ghost"
                         size="sm"
+
                         className="h-7 px-2 text-[11px] text-destructive hover:text-destructive"
                         disabled={busy || regenOne.isPending}
                         onClick={removeLogo}
