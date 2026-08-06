@@ -774,10 +774,11 @@ async function runJob(
   const total = types.length;
   const state = { done: 0, total, fails: 0, canceled: false };
 
+  const startedAt = new Date().toISOString();
   await supabase.from("venture_generation_jobs").update({
     status: "running",
-    started_at: new Date().toISOString(),
-    heartbeat_at: new Date().toISOString(),
+    started_at: startedAt,
+    heartbeat_at: startedAt,
     circuit_breaker_open: false,
     error: null,
   }).eq("id", jobId);
