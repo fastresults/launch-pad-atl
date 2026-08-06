@@ -311,6 +311,6 @@ export function searchSic(query: string, limit = 40): SicEntry[] {
     else score = 20 + hay.indexOf(terms[0]);
     scored.push({ item: it, score });
   }
-  scored.sort((a, b) => a.score - b.score || a.code.localeCompare(b.code));
+  scored.sort((a, b) => a.score - b.score || a.item.code.localeCompare(b.item.code));
   return scored.slice(0, limit).map((s) => s.item);
 }
