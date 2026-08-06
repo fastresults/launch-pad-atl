@@ -537,9 +537,12 @@ Deno.serve(async (req) => {
           return {
             url: r.url, path: r.path,
             direction_name: r.direction_name, logo_type: r.logo_type,
+            one_line_idea: r.one_line_idea, why_memorable: r.why_memorable,
             symbol_concept: r.symbol_concept, prompt: r.prompt,
+            direction: r.direction,
             created_at: r.created_at,
           };
+
         }
         return { url: r.url, path: r.path };
       });
