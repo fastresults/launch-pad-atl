@@ -143,11 +143,7 @@ export function boundingBox(nodes: VectorNode[]): Box {
     const pad = (n.stroke && n.stroke !== "none" ? (n.strokeWidth ?? 0) / 2 : 0);
     let local: Box = { ...EMPTY };
     if (n.kind === "group") {
-      local = boundingBox(n.children ?? []);
-      const t = n.transform?.translate;
-      if (t && Number.isFinite(local.minX)) {
-        local = { minX: local.minX + t[0], maxX: local.maxX + t[0], minY: local.minY + t[1], maxY: local.maxY + t[1] };
-      }
+      local = transformBox(boundingBox(n.children ?? []), n.transform);
     } else if (n.kind === "rect") {
       local = { minX: n.x ?? 0, minY: n.y ?? 0, maxX: (n.x ?? 0) + (n.width ?? 0), maxY: (n.y ?? 0) + (n.height ?? 0) };
     } else if (n.kind === "circle") {
