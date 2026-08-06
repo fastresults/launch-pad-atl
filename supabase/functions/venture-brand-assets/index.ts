@@ -162,9 +162,18 @@ async function callChatJson(messages: any[]): Promise<any> {
 }
 
 async function callChatJsonOnce(messages: any[]): Promise<any> {
-  const parsed = parseJsonLoose(await callChatAI(messages, { json: true, model: THINK_MODELS[0] }));
-  if (!parsed) throw new Error("AI returned malformed structured output");
-  return parsed;
+  let lastError: unknown = null;
+  for (const model of THINK_MODELS) {
+    try {
+      const parsed = parseJsonLoose(await callChatAI(messages, { json: true, model }));
+      if (parsed) return parsed;
+      lastError = new Error(`AI returned malformed structured output (${model})`);
+    } catch (e) {
+      lastError = e;
+      console.warn("structured call failed", model, e instanceof Error ? e.message : e);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("AI returned malformed structured output");
 }
 
 async function uploadVectorAsset(supabase: any, snapshotId: string, userId: string, directionId: string, svg: string, variant = "mark") {
