@@ -928,18 +928,28 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   });
 
   const bulk = useMutation({
-    mutationFn: (vars: { category?: string | null; retryOnly?: boolean } | undefined) =>
-      bulkGenerate({ data: { snapshotId: snapshot.id, category: vars?.category ?? null, retryOnly: vars?.retryOnly === true } }),
+    mutationFn: (vars: { category?: string | null; retryOnly?: boolean; days?: number[] } | undefined) =>
+      bulkGenerate({
+        data: {
+          snapshotId: snapshot.id,
+          category: vars?.category ?? null,
+          retryOnly: vars?.retryOnly === true,
+          days: vars?.days,
+        },
+      }),
     onSuccess: (_d, vars) => {
       toast.success(
-        vars?.retryOnly
-          ? "Trying those again…"
-          : vars?.category
-            ? `Writing the ${vars.category} section…`
-            : "We'll keep writing in the background",
+        vars?.days?.length
+          ? `Finishing Day ${vars.days.join(", ")}…`
+          : vars?.retryOnly
+            ? "Trying those again…"
+            : vars?.category
+              ? `Writing the ${vars.category} section…`
+              : "We'll keep writing in the background",
       );
       qc.invalidateQueries({ queryKey: ["hub"] });
     },
+
 
     onError: (e) => {
       const msg = e instanceof Error ? e.message : "Couldn't start";
