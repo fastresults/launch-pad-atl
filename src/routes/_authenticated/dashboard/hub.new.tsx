@@ -1936,17 +1936,44 @@ function Inner() {
                   ref={registerRef("businessConcept") as any}
                   value={businessConcept}
                   onChange={(e) => setBusinessConcept(e.target.value)}
+                  onBlur={() => {
+                    const text = businessConcept.trim();
+                    if (text.length < 200) return;
+                    if (text === lastExtractedRef.current) return;
+                    if (missingStep2.filter((m) => m.key !== "businessConcept").length === 0) return;
+                    conceptExtract({ auto: true });
+                  }}
                   placeholder="Describe what you're building, who it's for, and why it matters."
                   rows={5}
+                  className={invalidCls("businessConcept")}
                 />
-                <p
-                  className={`text-xs ${
-                    businessConcept.trim().length >= 20 ? "text-status-success" : "text-muted-foreground"
-                  }`}
-                >
-                  {businessConcept.trim().length} / 20 minimum
-                  {businessConcept.trim().length >= 20 ? " ✓" : ""}
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p
+                    className={`text-xs ${
+                      businessConcept.trim().length >= 20 ? "text-status-success" : "text-muted-foreground"
+                    }`}
+                  >
+                    {businessConcept.trim().length} / 20 minimum
+                    {businessConcept.trim().length >= 20 ? " ✓" : ""}
+                  </p>
+                  {businessConcept.trim().length >= 40 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={conceptExtracting || drafting}
+                      onClick={() => conceptExtract()}
+                    >
+                      {conceptExtracting ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Wand2 className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      {conceptExtracting ? "Reading your concept…" : "Extract details from this text"}
+                    </Button>
+                  )}
+                </div>
+
               </div>
 
               {(path === "competitor" || diff) && (
