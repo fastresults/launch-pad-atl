@@ -175,7 +175,11 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
           <SidebarGroupContent>
             <SidebarMenu>
               {visibleItems.map((item) => {
-                const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+                const active =
+                  item.to === "/dashboard/hub"
+                    ? pathname.startsWith("/dashboard/hub") && pathname !== "/dashboard/hub/new"
+                    : pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+
                 const adminHidden = isAdmin && visibility[item.key] === false;
                 return (
                   <SidebarMenuItem key={item.to}>
