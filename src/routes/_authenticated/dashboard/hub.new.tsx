@@ -611,6 +611,84 @@ function Inner() {
     [combinedDocs.map((d) => d.id).join("|"), readyUrls.map((u) => u.id).join("|"), businessConcept, drafting],
   );
 
+  // ── Extract details from a typed / pasted concept ───────────────────────
+  // Pasting text into the concept box used to fill exactly one field, leaving
+  // company name, founder, location and industry empty — which silently kept
+  // "Continue to track" disabled. This runs the same synthesis pass with the
+  // concept as the only source and fills ONLY fields that are still empty.
+  const [conceptExtracting, setConceptExtracting] = useState(false);
+  const lastExtractedRef = useRef<string>("");
+
+  const conceptExtract = useCallback(
+    async (opts?: { auto?: boolean }) => {
+      const text = businessConcept.trim();
+      if (text.length < 40) return;
+      if (conceptExtracting || drafting) return;
+      lastExtractedRef.current = text;
+      setConceptExtracting(true);
+      try {
+        const { data, error } = await invokeEdge("venture-synthesize-concept", {
+          body: {
+            sources: [],
+            urls: [],
+            patternUrls: [],
+            conceptDraft: text,
+            industryValues: SIC_CODES.map((c) => sicValue(c)),
+          },
+        });
+        if (error) throw error;
+
+        const filled: string[] = [];
+        // Fill-empty-only: never overwrite anything already on the form,
+        // including the founder's own concept text.
+        const fillEmpty = (
+          val: unknown,
+          current: string,
+          setter: (v: string) => void,
+          key: string,
+          label: string,
+        ) => {
+          if (current.trim()) return;
+          if (typeof val !== "string" || !val.trim()) return;
+          setter(val.trim());
+          markFilled(key);
+          filled.push(label);
+        };
+
+        fillEmpty(data?.company_name, companyName, setCompanyName, "companyName", "company name");
+        fillEmpty(data?.differentiation_statement, diff, setDiff, "diff", "differentiation");
+        fillEmpty(data?.founder_name, founderName, setFounderName, "founderName", "founder name");
+        fillEmpty(data?.founder_email, founderEmail, setFounderEmail, "founderEmail", "founder email");
+        fillEmpty(data?.founder_phone, founderPhone, setFounderPhone, "founderPhone", "phone");
+        fillEmpty(data?.city, city, setCity, "city", "city");
+        fillEmpty(data?.region, region, setRegion, "region", "state / region");
+        fillEmpty(data?.country, country, setCountry, "country", "country");
+        fillEmpty(data?.sub_industry, subIndustry, setSubIndustry, "subIndustry", "sub-industry");
+        if (!industry.trim() && typeof data?.industry === "string" && data.industry.trim()) {
+          const code = parseSicCode(data.industry);
+          const entry = code ? findSicByCode(code) : undefined;
+          setIndustry(entry ? sicValue(entry) : data.industry.trim());
+          markFilled("industry");
+          filled.push("industry");
+        }
+
+        setProcessed(true);
+        if (filled.length) {
+          toast.success(`Filled ${filled.length} field${filled.length === 1 ? "" : "s"} from your text`);
+        } else if (!opts?.auto) {
+          toast.info("Nothing new to pull from that text — fill the remaining fields below.");
+        }
+      } catch (e) {
+        if (!opts?.auto) toast.error(e instanceof Error ? e.message : "Couldn't read that text");
+      } finally {
+        setConceptExtracting(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [businessConcept, companyName, founderName, founderEmail, founderPhone, city, region, country, industry, subIndustry, diff, conceptExtracting, drafting],
+  );
+
+
   // Auto-synthesize whenever a NEW source becomes ready.
   const autoSigRef = useRef<string>("");
   useEffect(() => {
@@ -770,6 +848,24 @@ function Inner() {
   const step2Valid = missingStep2.length === 0;
   const step3Valid = !!track;
   const stepValid = [step1Valid, step2Valid, step3Valid];
+  const missingKeys = new Set(missingStep2.map((m) => m.key));
+  const invalidCls = (key: string) =>
+    missingKeys.has(key) ? "border-status-danger/60 ring-1 ring-status-danger/30" : "";
+
+  // Auto-extract details once a substantial concept has been pasted/typed and
+  // required fields are still empty. Debounced; never runs twice on same text.
+  useEffect(() => {
+    const text = businessConcept.trim();
+    if (text.length < 200) return;
+    if (text === lastExtractedRef.current) return;
+    if (drafting || conceptExtracting) return;
+    if (missingStep2.filter((m) => m.key !== "businessConcept").length === 0) return;
+    const t = setTimeout(() => conceptExtract({ auto: true }), 1200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessConcept, drafting, conceptExtracting, missingStep2.length]);
+
+
 
   // Locked until reached; complete when passed and not currently open.
   const stepState = (n: number): StepState => {
@@ -1645,17 +1741,19 @@ function Inner() {
         }
         footer={
           <StepNav
-            canGoNext={step2Valid}
-            blockedReason={
-              missingStep2.length
-                ? `Still needed: ${missingStep2.map((m) => m.label).join(", ")}`
-                : undefined
+            canGoNext={step2Valid && !conceptExtracting}
+            blockedReason={conceptExtracting ? "Reading your concept…" : undefined}
+            blockedItems={
+              conceptExtracting
+                ? undefined
+                : missingStep2.map((m) => ({ ...m, onClick: () => jumpTo(m.key) }))
             }
             onBack={goBack}
             onNext={goNext}
             nextLabel="Continue to track"
           />
         }
+
       >
         {true && (
 
@@ -1675,6 +1773,7 @@ function Inner() {
                   <Input
                     id="fname"
                     ref={registerRef("founderName") as any}
+                    className={invalidCls("founderName")}
                     value={founderName}
                     onChange={(e) => setFounderName(e.target.value)}
                     placeholder="Jane Doe"
@@ -1688,6 +1787,7 @@ function Inner() {
                   <Input
                     id="femail"
                     ref={registerRef("founderEmail") as any}
+                    className={invalidCls("founderEmail")}
                     type="email"
                     value={founderEmail}
                     onChange={(e) => setFounderEmail(e.target.value)}
@@ -1708,6 +1808,7 @@ function Inner() {
                   <Input
                     id="country"
                     ref={registerRef("country") as any}
+                    className={invalidCls("country")}
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                     placeholder="United States"
@@ -1721,6 +1822,7 @@ function Inner() {
                   <Input
                     id="city"
                     ref={registerRef("city") as any}
+                    className={invalidCls("city")}
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Atlanta"
@@ -1734,6 +1836,7 @@ function Inner() {
                   <Input
                     id="region"
                     ref={registerRef("region") as any}
+                    className={invalidCls("region")}
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
                     placeholder="Georgia"
@@ -1773,7 +1876,7 @@ function Inner() {
                     Industry <span className="text-status-danger">*</span>
                     <AiPill keyName="industry" />
                   </Label>
-                  <div ref={registerRef("industry") as any}>
+                  <div ref={registerRef("industry") as any} className={`rounded-md ${invalidCls("industry")}`}>
                     <IndustryCombobox value={industry} onChange={setIndustry} context={[companyName, businessConcept].filter(Boolean).join(" — ").slice(0, 600)} />
                   </div>
                   <Input
@@ -1797,10 +1900,17 @@ function Inner() {
                 <Input
                   id="company"
                   ref={registerRef("companyName") as any}
+                  className={invalidCls("companyName")}
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Northbound Roasters"
                 />
+                {!companyName.trim() && lastExtractedRef.current ? (
+                  <p className="text-[11px] text-status-danger">
+                    We couldn't find a name in your text — what's it called?
+                  </p>
+                ) : null}
+
               </div>
 
               {websiteUrl && (
@@ -1832,17 +1942,44 @@ function Inner() {
                   ref={registerRef("businessConcept") as any}
                   value={businessConcept}
                   onChange={(e) => setBusinessConcept(e.target.value)}
+                  onBlur={() => {
+                    const text = businessConcept.trim();
+                    if (text.length < 200) return;
+                    if (text === lastExtractedRef.current) return;
+                    if (missingStep2.filter((m) => m.key !== "businessConcept").length === 0) return;
+                    conceptExtract({ auto: true });
+                  }}
                   placeholder="Describe what you're building, who it's for, and why it matters."
                   rows={5}
+                  className={invalidCls("businessConcept")}
                 />
-                <p
-                  className={`text-xs ${
-                    businessConcept.trim().length >= 20 ? "text-status-success" : "text-muted-foreground"
-                  }`}
-                >
-                  {businessConcept.trim().length} / 20 minimum
-                  {businessConcept.trim().length >= 20 ? " ✓" : ""}
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p
+                    className={`text-xs ${
+                      businessConcept.trim().length >= 20 ? "text-status-success" : "text-muted-foreground"
+                    }`}
+                  >
+                    {businessConcept.trim().length} / 20 minimum
+                    {businessConcept.trim().length >= 20 ? " ✓" : ""}
+                  </p>
+                  {businessConcept.trim().length >= 40 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={conceptExtracting || drafting}
+                      onClick={() => conceptExtract()}
+                    >
+                      {conceptExtracting ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Wand2 className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      {conceptExtracting ? "Reading your concept…" : "Extract details from this text"}
+                    </Button>
+                  )}
+                </div>
+
               </div>
 
               {(path === "competitor" || diff) && (

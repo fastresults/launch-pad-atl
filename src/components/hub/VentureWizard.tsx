@@ -180,6 +180,7 @@ export function StepNav({
   onNext,
   canGoNext,
   blockedReason,
+  blockedItems,
   nextLabel = "Continue",
   nextSlot,
 }: {
@@ -187,12 +188,14 @@ export function StepNav({
   onNext?: () => void;
   canGoNext: boolean;
   blockedReason?: string;
+  /** Clickable chips for each blocking field — clicking scrolls/focuses it. */
+  blockedItems?: { key: string; label: string; onClick: () => void }[];
   nextLabel?: string;
   nextSlot?: ReactNode;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         {onBack ? (
           <Button type="button" variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
@@ -200,7 +203,21 @@ export function StepNav({
         ) : (
           <span />
         )}
-        {!canGoNext && blockedReason ? (
+        {!canGoNext && blockedItems?.length ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">Still needed:</span>
+            {blockedItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={item.onClick}
+                className="rounded-full border border-status-danger/40 bg-status-danger/10 px-2 py-0.5 text-[11px] font-medium text-status-danger transition hover:bg-status-danger/20"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        ) : !canGoNext && blockedReason ? (
           <span className="text-xs text-muted-foreground">{blockedReason}</span>
         ) : null}
       </div>
@@ -212,3 +229,4 @@ export function StepNav({
     </div>
   );
 }
+
