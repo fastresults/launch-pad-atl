@@ -942,6 +942,11 @@ Deno.serve(async (req) => {
 
 
     const retryArg = retryOnly === true;
+    const daysArg = Array.isArray(days)
+      ? days.map((d: any) => Number(d)).filter((d: number) => Number.isInteger(d) && d >= 1 && d <= 14)
+      : sprintOnly === true
+        ? Array.from({ length: 14 }, (_, i) => i + 1)
+        : null;
 
     // Reuse a running job if there is one. Retry-only runs also adopt a paused
     // or blocked job instead of starting a fresh one.
