@@ -363,6 +363,35 @@ Hard rules:
   return directions.slice(0, count) as LogoDirection[];
 }
 
+async function developVectorSpec(d: LogoDirection, strategy: BrandStrategy | null, ctx: any, tokens: any, reviewNote?: string): Promise<VectorSpec> {
+  const companyName = String(ctx?.snap?.company_name ?? "").trim();
+  const wantsType = /wordmark|lettermark|monogram|combination|emblem/i.test(d.logo_type ?? "");
+  const parsed = await callChatJsonOnce([
+    { role: "system", content: "You are a master identity designer who constructs simple production logos from geometric vector primitives. Return valid JSON only. Never use gradients, filters, masks, images, scripts, external URLs, or more than five primitives." },
+    { role: "user", content: `Turn this approved direction into a precise 1000×1000 vector specification.
+Brand: ${companyName}
+Core idea: ${strategy?.core_idea ?? ""}
+Direction: ${JSON.stringify(d)}
+Palette tokens: ${tokensBlockOf(tokens)}
+${reviewNote ? `Revision instruction: ${reviewNote}` : ""}
+
+Allowed primitives only:
+- rect: x,y,width,height,rx
+- circle: cx,cy,r
+- line: x1,y1,x2,y2,stroke,strokeWidth
+- path: SVG path d using only M/L/H/V/C/Q/Z commands
+Every primitive may use fill/stroke from primary|secondary|accent|white|none. Keep all coordinates in 0..1000. Maximum five primitives. Build the symbol inside x=150..850 and y=100..720. Use one clear silhouette and generous negative space.
+${wantsType ? `Include wordmark.text exactly as "${companyName}" with case, weight 300-800, and tracking 0-20.` : "Omit wordmark entirely."}
+
+Return STRICT JSON:
+{"primitives":[{"kind":"path","d":"M ... Z","fill":"primary","stroke":"none","strokeWidth":0}],"wordmark":{"text":"${companyName}","case":"title","weight":600,"tracking":2},"rationale":"one sentence","quality_scores":{"relevance":1,"distinctiveness":1,"simplicity":1,"scalability":1,"balance":1}}
+Scores are 1-5. Do not include wordmark when instructed to omit it.` },
+  ]);
+  const primitives = Array.isArray(parsed?.primitives) ? parsed.primitives : [];
+  if (!primitives.length || primitives.length > 5) throw new Error("Vector specification is missing or too complex");
+  return { primitives, wordmark: wantsType ? parsed.wordmark : undefined, rationale: String(parsed.rationale ?? ""), quality_scores: parsed.quality_scores ?? {} };
+}
+
 /** Stage 3 — describe a MARK, not a picture. */
 function buildLogoImagePrompt(
   d: LogoDirection,
