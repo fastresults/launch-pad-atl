@@ -247,6 +247,7 @@ async function generateOne(
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
+    dayContext,
     brandBlock,
     preamble,
     corpusBlock,
