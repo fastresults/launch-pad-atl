@@ -68,27 +68,10 @@ type BrandStrategy = {
   not_list: string[];
 };
 
-type VectorPrimitive = {
-  kind: "rect" | "circle" | "path" | "line";
-  x?: number; y?: number; width?: number; height?: number; rx?: number;
-  cx?: number; cy?: number; r?: number; d?: string;
-  x1?: number; y1?: number; x2?: number; y2?: number;
-  fill?: "primary" | "secondary" | "accent" | "none" | "white";
-  stroke?: "primary" | "secondary" | "accent" | "none" | "white";
-  strokeWidth?: number;
-};
-
-type VectorSpec = {
-  primitives: VectorPrimitive[];
-  wordmark?: { text: string; case?: "upper" | "title" | "lower"; weight?: number; tracking?: number };
-  rationale?: string;
-  quality_scores?: Record<string, number>;
-};
-
-// Chat models used for the thinking passes, in fallback order. 2.5-pro's
-// thinking budget occasionally eats the whole response and returns empty
-// content, so a flash model always backs it up.
-const THINK_MODELS = ["google/gemini-3.6-flash", "google/gemini-2.5-flash"];
+// Chat models used for the thinking passes, in fallback order. Judgment work
+// (strategy, concepting, drawing) runs on the frontier tier; flash stays last
+// so a provider hiccup degrades quality instead of losing the run.
+const THINK_MODELS = ["openai/gpt-5.5", "google/gemini-3.1-pro-preview", "google/gemini-3.6-flash"];
 
 // Documents that actually carry brand signal, in priority order.
 const STRATEGY_DOC_TYPES = [
