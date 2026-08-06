@@ -360,6 +360,32 @@ Return STRICT JSON:
 }
 
 
+function strategyBlockOf(strategy: BrandStrategy | null): string {
+  if (!strategy) return "";
+  return [
+    "HUMAN TRUTH (start here — the mark exists to make this person feel something)",
+    strategy.human_truth ? `Who: ${strategy.human_truth}` : "",
+    strategy.human_moment ? `The moment: ${strategy.human_moment}` : "",
+    strategy.first_feeling ? `First feeling: ${strategy.first_feeling}` : "",
+    strategy.physical_anchor ? `Physical anchor: ${strategy.physical_anchor}` : "",
+    "",
+    "STRATEGY BRIEF (every concept must serve this)",
+    `Core idea: ${strategy.core_idea}`,
+    `Attributes: ${strategy.attributes.join(", ")}`,
+    `Metaphor territory: ${strategy.metaphor_territory}`,
+    `Must never look like: ${strategy.not_list.join("; ")}`,
+  ].filter(Boolean).join("\n");
+}
+
+/** The universal amateur tells. Named explicitly because models default to them. */
+const BANNED_FORMS = `- A cluster of rounded squares, a plus/cross of blocks, or any "app-icon grid" arrangement.
+- A letter sitting inside a box, circle or shield with nothing else happening.
+- Dots joined by lines (node/network/constellation clip-art).
+- Globes, swooshes, generic leaves, checkmarks, handshakes, lightbulbs, puzzle pieces, upward arrows, speech bubbles, location pins.
+- Gradient-as-idea, bevels, drop shadows, lens flare, faux 3D.
+- Circuit boards, hexagons or "AI orbs" unless the venture is literally hardware.
+- Anything that would still work, unchanged, for a different company in this category.`;
+
 /** Stage 2 — generate wide, then cut. Only the strongest concepts survive. */
 async function generateLogoConcepts(
   ctx: any,
@@ -368,41 +394,46 @@ async function generateLogoConcepts(
   strategy: BrandStrategy | null,
   docsBlock: string,
   referenceImages?: string[],
+  moodboardImages?: string[],
 ): Promise<LogoDirection[]> {
-  const system = `You are a senior brand identity designer with 20 years at Pentagram, COLLINS and Chermayeff & Geismar. You design MARKS, not illustrations. Your discipline: one idea per mark, drawn with the fewest possible elements, recognisable as a black silhouette at 16 pixels. You generate widely, then kill most of your own work.`;
+  const system = `You are a brand identity designer whose work gets posted to Dribbble's award feed and wins there. Pentagram, COLLINS, Chermayeff & Geismar lineage. You design MARKS with a point of view: one idea, drawn with real craft — a continuous contour, a true counterform, a ligature, a shared tangent — never a pile of primitive shapes. You start from the human being in the brief, not from geometry. You generate widely, then kill almost all of your own work.`;
 
-  const strategyBlock = strategy
-    ? `STRATEGY BRIEF (every concept must serve this)
-Core idea: ${strategy.core_idea}
-Attributes: ${strategy.attributes.join(", ")}
-Metaphor territory: ${strategy.metaphor_territory}
-Must never look like: ${strategy.not_list.join("; ")}`
-    : "";
+  const strategyBlock = strategyBlockOf(strategy);
 
   const refsLine = referenceImages?.length
     ? `\nThe founder attached ${referenceImages.length} reference logo(s) they admire. Study them ONLY for structural principles — proportion, stroke weight, level of abstraction, counterform, wordmark tracking. Never restyle or echo their subject matter. State the borrowed principle in reference_learning.`
-    : `\nNo references provided. Drive every concept from the strategy brief.`;
+    : `\nNo logo references provided. Drive every concept from the human truth and the brief.`;
+
+  const moodLine = moodboardImages?.length
+    ? `\nThe brand's LIVE MOODBOARD is attached as ${moodboardImages.length} image(s). This is the visual world the brand already lives in. Read its form language — is it soft or hard, organic or engineered, warm or cool, dense or airy — and build marks that belong in it. Name the tile each direction inherits from in moodboard_link.`
+    : `\nNo moodboard available; infer the visual world from the palette and personality tokens.`;
 
   const instruction = `PROCESS — follow it exactly:
-1. Silently generate 10 candidate concepts across different logo types.
-2. Score each 1-5 on: distinctiveness (would it be mistaken for a competitor?), simplicity (can it be described in one sentence and drawn with under 5 elements?), relevance (does it serve the core idea?), scalability (does it survive at 16px as a solid shape?), memorability (could someone redraw it from memory?).
-3. Discard any concept scoring below 4 on simplicity or distinctiveness, and any concept that would work equally well for a different company in this category.
-4. Return ONLY the ${count} strongest survivors, each a DIFFERENT logo_type.
+1. Silently write the human moment in your own words, and picture the physical anchor.
+2. Silently generate 12 candidate marks across different logo types, each one a different way of drawing that moment.
+3. Score each 1-5 on: distinctiveness, craft (is there a real drawing move, or is it assembled from primitives?), relevance to the human truth, scalability at 16px, memorability.
+4. Kill every candidate that is merely tidy. The bar is: would a working identity designer publish this and be proud of it?
+5. Return ONLY the ${count} strongest survivors, each a DIFFERENT logo_type and a genuinely different form family.
 
 Return STRICT JSON:
-{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE construction move that creates the mark, e.g. 'a circle cut by two mirrored arcs' or 'an M built from three rotated modules'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the strategy","construction_notes":"grid base, stroke-to-height ratio, corner treatment, counterforms, terminals, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"distinctiveness":5,"simplicity":5,"relevance":5,"scalability":5,"memorability":5}}]}
+{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","human_link":"one sentence tracing this mark back to the human moment","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark, e.g. 'one continuous stroke folded back on itself' or 'a circle cut by two mirrored arcs'","craft_move":"the deliberate craft decision: counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the human truth","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"distinctiveness":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
 
 Hard rules:
-- Exactly ${count} directions, each a different logo_type.
-- Every mark must be constructible as flat vector art in 1-2 colours. No scenes, no illustrations, no mascots with rendered detail, no depth.
-- Every direction must be buildable from at most 12 geometric elements on a single module grid with ONE stroke weight. If you cannot state the geometric_operation in one clause, the idea is too complicated — kill it.
-- Reject anything on the venture's own "must never look like" list above; that list outranks your instincts.
-- Forbidden everywhere: globes, swooshes, generic leaves/checkmarks, handshake, lightbulb, puzzle piece, upward arrow, gradient-as-idea, lens flare, 3D bevels, circuit/hex "tech" clichés (unless the venture is literally hardware).`;
+- Exactly ${count} directions, each a different logo_type and a different form family. Four variations of one shape is a failed submission.
+- Every mark must be drawable as flat vector art in 1-2 flat colours. No scenes, no illustrations, no rendered detail, no depth.
+- Every mark must have ONE named craft move. "Three shapes arranged neatly" is not a craft move.
+- Curves, arcs and continuous contours are the default vocabulary. Rectilinear construction is allowed only when the human truth genuinely demands it, and never for more than one of the ${count} directions.
+- Reject anything on the venture's own "must never look like" list; it outranks your instincts.
+- Never propose any of these:
+${BANNED_FORMS}`;
 
   const userContent: any[] = [{
     type: "text",
-    text: `VENTURE\n${ventureBlockOf(ctx)}\n\nBRAND TOKENS\n${tokensBlockOf(tokens)}\n\n${strategyBlock}\n\n${docsBlock ? `FOUNDER'S OWN BRAND ASSETS\n${docsBlock.slice(0, 6000)}\n\n` : ""}${refsLine}\n\n${instruction}`,
+    text: `VENTURE\n${ventureBlockOf(ctx)}\n\nBRAND TOKENS (the live palette and type this mark will live in)\n${tokensBlockOf(tokens)}\n\n${strategyBlock}\n\n${docsBlock ? `FOUNDER'S OWN BRAND ASSETS\n${docsBlock.slice(0, 6000)}\n\n` : ""}${moodLine}\n${refsLine}\n\n${instruction}`,
   }];
+  for (const url of (moodboardImages ?? []).slice(0, 4)) {
+    userContent.push({ type: "image_url", image_url: { url } });
+  }
   if (referenceImages?.length) {
     for (const url of referenceImages.slice(0, 3)) {
       userContent.push({ type: "image_url", image_url: { url } });
@@ -420,18 +451,18 @@ Hard rules:
 }
 
 /**
- * The dossier is the single source of context every pass reads. Strategy work
- * used to be discarded before the mark was drawn; now the drawing pass sees
- * the venture, the brief, the finished brand assets and the anti-cliché list.
+ * The dossier is the single source of context every pass reads: the human
+ * truth, the brief, the venture, the live tokens and the founder's own assets.
  */
 function buildDossier(ctx: any, tokens: any, strategy: BrandStrategy | null, docsBlock: string): string {
   return [
     "VENTURE", ventureBlockOf(ctx),
     "", "BRAND TOKENS", tokensBlockOf(tokens),
-    strategy ? `\nSTRATEGY BRIEF\nCore idea: ${strategy.core_idea}\nAttributes: ${strategy.attributes.join(", ")}\nMetaphor territory: ${strategy.metaphor_territory}\nMust never look like: ${strategy.not_list.join("; ")}` : "",
+    strategy ? `\n${strategyBlockOf(strategy)}` : "",
     docsBlock ? `\nFOUNDER'S OWN BRAND ASSETS (authoritative)\n${docsBlock.slice(0, 6000)}` : "",
   ].filter(Boolean).join("\n");
 }
+
 
 const DRAW_SYSTEM = `You are a mark-maker in the tradition of Chermayeff & Geismar, Paul Rand and Michael Bierut. You do not describe logos — you ENGINEER them: a module grid, one stroke weight, a single radius family, exact coordinates. Every mark you build is one idea, drawn with the fewest possible elements, and holds up as a solid black silhouette at 16 pixels. Return valid JSON only. Never use gradients, filters, masks, images, scripts or external URLs.`;
 
