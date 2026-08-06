@@ -438,10 +438,12 @@ Deno.serve(async (req) => {
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     const body = await req.json();
-    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection } = body ?? {};
+    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
-    const preset = KIND_PRESETS[kind];
+    // logo_brief / logo_render are steps of the logo pipeline; they share its preset.
+    const preset = KIND_PRESETS[kind] ?? (kind === "logo_brief" || kind === "logo_render" ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
+
 
     const authHeader = req.headers.get("Authorization") ?? "";
     const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
