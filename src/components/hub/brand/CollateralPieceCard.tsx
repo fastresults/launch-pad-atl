@@ -41,7 +41,7 @@ export function CollateralPieceCard({
         onClick={generated ? onPreview : onGenerate}
         disabled={!generated && disabled}
         aria-label={generated ? `Preview ${label}` : `Generate ${label}`}
-        className="group relative block aspect-[16/10] w-full overflow-hidden border-b border-white/10 bg-white disabled:cursor-not-allowed"
+        className={`group relative block aspect-[16/10] w-full overflow-hidden border-b border-white/10 disabled:cursor-not-allowed ${preview ? "bg-white" : "bg-background/60"}`}
       >
         {preview ? (
           <img src={preview} alt={label} className="h-full w-full object-contain p-2 transition group-hover:scale-[1.02]" loading="lazy" />
