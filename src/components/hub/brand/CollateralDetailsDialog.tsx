@@ -81,7 +81,7 @@ export function CollateralDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[88vh] max-w-3xl flex-col gap-0 overflow-hidden p-0">
+      <DialogContent className="theme-dark-scope flex max-h-[88vh] max-w-3xl flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="shrink-0 border-b border-white/10 p-5">
           <DialogTitle className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-primary" />

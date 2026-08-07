@@ -1633,8 +1633,9 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
           <section
             ref={brandStudioRef as any}
             id="brand-studio"
-            className="space-y-3 scroll-mt-24"
+            className="theme-dark-scope space-y-3 scroll-mt-24 rounded-2xl bg-background p-3 text-foreground sm:p-4"
           >
+
             <SectionHeader
               cat="Brand Wizard & bonus tools"
               index={bonusIndex}

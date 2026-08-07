@@ -86,7 +86,7 @@ export function AssetPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[92dvh] w-[min(1100px,96vw)] max-w-5xl flex-col overflow-hidden p-0">
+      <DialogContent className="theme-dark-scope flex max-h-[92dvh] w-[min(1100px,96vw)] max-w-5xl flex-col overflow-hidden p-0">
         <DialogHeader className="shrink-0 px-5 pt-5 pb-3">
           <DialogTitle className="text-base">{asset.title}</DialogTitle>
           <DialogDescription className="sr-only">
