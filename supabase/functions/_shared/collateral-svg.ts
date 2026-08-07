@@ -260,13 +260,14 @@ function makeType(fonts: Fonts) {
   ): { svg: string; height: number; size: number; lines: number } {
     const family = o.family ?? "body";
     const leading = o.leading ?? 1.55;
+    const floor = min(o);
     const fit = fitBox(String(text ?? ""), {
-      size,
+      size: Math.max(size, floor),
       maxWidth: width,
       maxLines: o.maxLines ?? 40,
       bytes: bytesFor(family),
       tracking: o.tracking ?? 0,
-      minSize: o.minSize,
+      minSize: floor || undefined,
     });
     const svg = fit.lines
       .map((l, i) => (l ? line(l, x, y + i * fit.size * leading, fit.size, fill, { family, weight: o.weight, tracking: o.tracking, opacity: o.opacity, anchor: o.anchor }) : ""))
@@ -277,7 +278,7 @@ function makeType(fonts: Fonts) {
   const width = (t: string, size: number, family: "head" | "body" = "body", tracking = 0) =>
     measure(t, size, bytesFor(family), tracking);
 
-  return { line, block, width };
+  return { line, block, width, setFloor };
 }
 
 type TypeKit = ReturnType<typeof makeType>;
