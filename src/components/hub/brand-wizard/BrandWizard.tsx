@@ -981,11 +981,27 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="truncate text-xs font-semibold">{a.direction_name ?? `Concept ${i + 1}`}</div>
-                        {a.logo_type && (
-                          <div className="mt-0.5 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-primary">
-                            {a.logo_type}
-                          </div>
-                        )}
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                          {a.logo_type && (
+                            <span className="inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-primary">
+                              {a.logo_type}
+                            </span>
+                          )}
+                          {directionRow?.render_status === "ready" && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-emerald-400">
+                              <CircleCheck className="h-2.5 w-2.5" /> Rendered
+                            </span>
+                          )}
+                          {directionRow?.render_status && !["ready", "pending"].includes(directionRow.render_status) && (
+                            <span
+                              title={directionRow.render_error ?? "Higgsfield render unavailable"}
+                              className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-amber-400"
+                            >
+                              <AlertTriangle className="h-2.5 w-2.5" /> Brief-only
+                            </span>
+                          )}
+                        </div>
+
                       </div>
                     </div>
                     {a.human_link && (
