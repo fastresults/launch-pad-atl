@@ -235,7 +235,7 @@ function businessCard(ctx: CollateralCtx, css: string): Page[] {
 
   const front = page(W, H, css, [
     `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-    markAt(ctx, W / 2 - 130, H / 2 - 150, 260, 180, frontInk),
+    markAt(ctx, W / 2 - 340, H / 2 - 190, 680, 240, frontInk),
     wordmark(ctx, W / 2, H / 2 + 110, 54, frontInk, "middle"),
     ctx.tagline ? line(ctx.tagline, W / 2, H / 2 + 152, 22, frontInk, { anchor: "middle", opacity: 0.75, tracking: 2 }) : "",
   ].join(""));
@@ -244,7 +244,7 @@ function businessCard(ctx: CollateralCtx, css: string): Page[] {
   const back = page(W, H, css, [
     `<rect width="${W}" height="${H}" fill="${bg}"/>`,
     `<rect x="0" y="0" width="14" height="${H}" fill="${primary}"/>`,
-    markAt(ctx, W - M - 120, M - 6, 120, 120, primary),
+    markAt(ctx, W - M - 260, M - 6, 260, 110, null),
     line(p.name || ctx.company, M, M + 66, 44, fg, { family: "BrandHead", weight: 700 }),
     p.title ? line(p.title, M, M + 108, 24, muted, { tracking: 1.6 }) : "",
     ...rows.map((t, i) => line(t, M, H - M - (rows.length - 1 - i) * 40, 24, fg)),
@@ -264,9 +264,8 @@ function letterhead(ctx: CollateralCtx, css: string): Page[] {
   const body = [
     `<rect width="${W}" height="${H}" fill="${bg}"/>`,
     `<rect x="0" y="0" width="${W}" height="10" fill="${primary}"/>`,
-    markAt(ctx, M, M, 110, 110, primary),
-    wordmark(ctx, M + 132, M + 66, 40, fg),
-    ctx.tagline ? line(ctx.tagline, M + 134, M + 96, 18, muted, { tracking: 1.4 }) : "",
+    logoBlock(ctx, M, M + 110, 110, null, fg, 40),
+    ctx.tagline ? line(ctx.tagline, M, M + 146, 18, muted, { tracking: 1.4 }) : "",
     `<line x1="${M}" y1="${M + 160}" x2="${W - M}" y2="${M + 160}" stroke="${primary}" stroke-width="2" opacity="0.35"/>`,
     paragraph(
       "Date\n\nRecipient name\nCompany\nStreet address\n\nDear ______,",
@@ -289,9 +288,8 @@ function envelope(ctx: CollateralCtx, css: string): Page[] {
   const body = [
     `<rect width="${W}" height="${H}" fill="${bg}"/>`,
     `<rect x="0" y="${H - 12}" width="${W}" height="12" fill="${primary}"/>`,
-    markAt(ctx, 70, 62, 84, 84, primary),
-    line(ctx.company, 172, 100, 30, fg, { family: "BrandHead", weight: 700 }),
-    p.address ? paragraph(p.address, 172, 132, 18, 520, muted, 1.5, 3) : "",
+    logoBlock(ctx, 70, 150, 88, null, fg, 30),
+    p.address ? paragraph(p.address, 70, 196, 18, 520, muted, 1.5, 3) : "",
     `<rect x="${W - 250}" y="56" width="180" height="120" fill="none" stroke="${muted}" stroke-width="2" stroke-dasharray="8 8" opacity="0.5"/>`,
     line("STAMP", W - 160, 122, 16, muted, { anchor: "middle", tracking: 3, opacity: 0.6 }),
   ].join("");
@@ -303,8 +301,8 @@ function notecard(ctx: CollateralCtx, css: string): Page[] {
   const { primary, bg, fg, muted } = palette(ctx);
   const body = [
     `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    markAt(ctx, W / 2 - 70, 90, 140, 110, primary),
-    wordmark(ctx, W / 2, 250, 40, fg, "middle"),
+    markAt(ctx, W / 2 - 300, 90, 600, 150, null),
+    wordmark(ctx, W / 2, 290, 40, fg, "middle"),
     ctx.tagline ? line(ctx.tagline, W / 2, 286, 18, muted, { anchor: "middle", tracking: 2 }) : "",
     `<line x1="${W / 2 - 90}" y1="330" x2="${W / 2 + 90}" y2="330" stroke="${primary}" stroke-width="2"/>`,
     ...[0, 1, 2, 3].map((i) => `<line x1="120" y1="${420 + i * 70}" x2="${W - 120}" y2="${420 + i * 70}" stroke="${muted}" stroke-width="1" opacity="0.25"/>`),
@@ -319,7 +317,7 @@ function emailSignature(ctx: CollateralCtx, css: string): Page[] {
   const rows = [p.email, p.phone, p.website].filter(Boolean) as string[];
   const body = [
     `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    markAt(ctx, 60, 110, 140, 140, primary),
+    markAt(ctx, 60, 96, 160, 168, null),
     `<rect x="240" y="96" width="4" height="168" fill="${primary}"/>`,
     line(p.name || ctx.company, 284, 150, 42, fg, { family: "BrandHead", weight: 700 }),
     line([p.title, ctx.company].filter(Boolean).join(" · "), 284, 190, 22, primary, { tracking: 0.8 }),
@@ -345,9 +343,8 @@ function docTemplate(ctx: CollateralCtx, css: string, mode: "invoice" | "proposa
   const body = [
     `<rect width="${W}" height="${H}" fill="${bg}"/>`,
     `<rect x="0" y="0" width="${W}" height="10" fill="${primary}"/>`,
-    markAt(ctx, M, M, 100, 100, primary),
-    wordmark(ctx, M + 122, M + 60, 36, fg),
-    ctx.tagline ? line(ctx.tagline, M + 124, M + 88, 17, muted, { tracking: 1.2 }) : "",
+    logoBlock(ctx, M, M + 100, 100, null, fg, 36),
+    ctx.tagline ? line(ctx.tagline, M, M + 134, 17, muted, { tracking: 1.2 }) : "",
     line(title, W - M, M + 62, 52, primary, { family: "BrandHead", weight: 700, anchor: "end", tracking: 4 }),
     line(isInvoice ? "No. 0001" : "Prepared for", W - M, M + 96, 20, muted, { anchor: "end" }),
     line("From", M, 340, 15, muted, { tracking: 2.4 }),
@@ -383,7 +380,7 @@ function presentation(ctx: CollateralCtx, css: string): Page[] {
     width: W, height: H,
     svg: page(W, H, css, [
       `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-      markAt(ctx, M, M, 180, 180, ink),
+      markAt(ctx, M, M, 420, 180, ink),
       line(ctx.company, M, H / 2 + 40, 132, ink, { family: "BrandHead", weight: 700 }),
       ctx.tagline ? line(ctx.tagline, M, H / 2 + 110, 36, ink, { opacity: 0.8, tracking: 2 }) : "",
       line(new Date().getFullYear().toString(), W - M, H - M, 26, ink, { anchor: "end", opacity: 0.7 }),
@@ -452,7 +449,7 @@ function guidelines(ctx: CollateralCtx, css: string): Page[] {
     name: "guidelines-1-cover", width: W, height: H,
     svg: page(W, H, css, [
       `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-      markAt(ctx, M, M, 170, 170, ink),
+      markAt(ctx, M, M, 420, 170, ink),
       line("Brand guidelines", M, H / 2, 40, ink, { opacity: 0.8, tracking: 4 }),
       line(ctx.company, M, H / 2 + 110, 110, ink, { family: "BrandHead", weight: 700 }),
       ctx.tagline ? line(ctx.tagline, M, H / 2 + 160, 28, ink, { opacity: 0.75 }) : "",
@@ -466,7 +463,7 @@ function guidelines(ctx: CollateralCtx, css: string): Page[] {
     svg: page(W, H, css, [
       head("Logo", "01"),
       `<rect x="${M}" y="280" width="620" height="440" fill="${bg}" stroke="${muted}" stroke-width="1" opacity="0.9"/>`,
-      markAt(ctx, M + 110, 350, 400, 300, primary),
+      markAt(ctx, M + 60, 340, 500, 320, null),
       line("Primary — full colour", M, 760, 20, muted, { tracking: 1.4 }),
       `<rect x="${M + 700}" y="280" width="300" height="210" fill="${fg}"/>`,
       markAt(ctx, M + 760, 310, 180, 150, inkOn(fg)),
