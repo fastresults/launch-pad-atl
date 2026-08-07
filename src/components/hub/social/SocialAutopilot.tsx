@@ -1421,18 +1421,17 @@ function Step6Launch({
           <p className="text-xs text-muted-foreground">One card per channel. Sign in, paste, post — done.</p>
         </div>
         <div className="flex items-center gap-2">
-          {anyImages && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-[11px] text-destructive hover:text-destructive"
-              disabled={clearing}
-              onClick={() => clearImages()}
-              title="Delete every generated image and start the artwork over"
-            >
-              <Trash2 className="mr-1 h-3 w-3" /> Clear all images
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px] text-destructive hover:text-destructive"
+            disabled={clearing}
+            onClick={() => clearImages()}
+            title="Delete every generated image and start the artwork over"
+          >
+            <Trash2 className="mr-1 h-3 w-3" /> Reset all images
+          </Button>
+
           <Badge variant="outline" className="text-[10px]">{liveCount} / {platforms.length} live</Badge>
         </div>
       </header>
