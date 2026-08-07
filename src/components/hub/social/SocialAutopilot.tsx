@@ -1052,7 +1052,18 @@ function Step5BuildKit({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="border-t border-white/5 pb-0 pt-0">
-                    <div className="flex justify-end px-2 pt-2">
+                    <div className="flex justify-end gap-1.5 px-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px]"
+                        disabled={running}
+                        onClick={() => runAll(platform)}
+                        title={`Generate the missing ${platformLabel(platform)} images`}
+                      >
+                        {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+                        Generate {platformLabel(platform)}
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -1064,6 +1075,7 @@ function Step5BuildKit({
                         <Trash2 className="mr-1 h-3 w-3" /> Reset {platformLabel(platform)}
                       </Button>
                     </div>
+
 
                     <ul className="grid gap-2 p-2 sm:grid-cols-2">
 
