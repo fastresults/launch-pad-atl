@@ -67,7 +67,7 @@ const SCHEMA = {
   additionalProperties: false,
   required: [
     "read_back", "question", "helper", "choices",
-    "allow_free_text", "multi_select", "direction", "brief_summary", "done",
+    "allow_free_text", "multi_select", "direction", "requirements", "brief_summary", "done",
   ],
   properties: {
     read_back: {
