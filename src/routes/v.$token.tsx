@@ -113,14 +113,21 @@ export default function VentureSharePage() {
           {/* Masthead */}
           <header className="border-b border-border/60 bg-gradient-to-b from-card/70 to-background">
             <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6 py-8 md:px-10 md:py-12">
-              <Sheet>
+              <Sheet open={navOpen} onOpenChange={setNavOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open contents">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="theme-dark-scope w-[85vw] max-w-xs overflow-y-auto bg-background p-6">
-                  <ShareSidebar payload={payload} activeKey={activeKey} />
+                  <ShareSidebar
+                    payload={payload}
+                    activeKey={activeKey}
+                    onNavigate={(k) => {
+                      goTo(k);
+                      setNavOpen(false);
+                    }}
+                  />
                 </SheetContent>
               </Sheet>
 
@@ -133,7 +140,7 @@ export default function VentureSharePage() {
               )}
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                  Venture showcase
+                  Venture showcase · {items.length} assets
                 </p>
                 <h1 className="mt-1 truncate font-serif text-[26px] leading-tight tracking-tight md:text-[40px]">
                   {payload.venture.name}
@@ -149,25 +156,57 @@ export default function VentureSharePage() {
 
           <div className="mx-auto flex max-w-[1400px] gap-12 px-6 md:px-10">
             <aside className="sticky top-0 hidden h-screen w-72 shrink-0 overflow-y-auto py-10 lg:block">
-              <ShareSidebar payload={payload} activeKey={activeKey} />
+              <ShareSidebar payload={payload} activeKey={activeKey} onNavigate={goTo} />
             </aside>
 
-            <main className="min-w-0 flex-1 pb-32">
-              {payload.sections.map((section) => (
-                <div key={section.key}>
-                  <div className="pt-14 first:pt-10">
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-primary">{section.label}</p>
-                  </div>
-                  {section.items.map((item) => (
-                    <ShareSection key={item.key} item={item} />
-                  ))}
-                </div>
-              ))}
-              <footer className="border-t border-border/60 pt-10 text-xs text-muted-foreground">
+            <main className="min-w-0 flex-1 pb-32 pt-10">
+              {activeSection && (
+                <p className="text-[11px] uppercase tracking-[0.22em] text-primary">
+                  {activeSection.label}
+                </p>
+              )}
+              {activeItem && <ShareSection item={activeItem} />}
+
+              {/* Prev / next keeps the whole set walkable without the sidebar. */}
+              <div className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6">
+                {activeIndex > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => goTo(items[activeIndex - 1].key)}
+                    className="group max-w-[46%] text-left"
+                  >
+                    <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                      <ArrowLeft className="h-3.5 w-3.5" /> Previous
+                    </span>
+                    <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
+                      {items[activeIndex - 1].title}
+                    </span>
+                  </button>
+                ) : (
+                  <span />
+                )}
+                {activeIndex >= 0 && activeIndex < items.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => goTo(items[activeIndex + 1].key)}
+                    className="group max-w-[46%] text-right"
+                  >
+                    <span className="flex items-center justify-end gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                      Next <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
+                      {items[activeIndex + 1].title}
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              <footer className="mt-12 border-t border-border/60 pt-8 text-xs text-muted-foreground">
                 Built with Startup Labs · The 14-Day Pivot Method
               </footer>
             </main>
           </div>
+
         </>
       )}
     </div>
