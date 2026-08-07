@@ -394,7 +394,7 @@ function tokensBlockOf(tokens: any): string {
  * founder actually gave it.
  */
 export async function readReferenceCraftSpec(referenceImages: string[]): Promise<CraftSpec | null> {
-  const urls = (referenceImages ?? []).filter((u) => typeof u === "string" && u.startsWith("http")).slice(0, 3);
+  const urls = (referenceImages ?? []).filter(isUsableImageRef).slice(0, 3);
   if (!urls.length) return null;
   const content: any[] = [{ type: "text", text: REFERENCE_READ_INSTRUCTION }];
   for (const url of urls) content.push({ type: "image_url", image_url: { url } });
