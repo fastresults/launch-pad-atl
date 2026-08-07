@@ -227,28 +227,37 @@ async function generateKind(
       vector: true,
       archetype: ctx.ad.archetype,
     });
-    const bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 2400), undefined, fontBuffers);
+    // Keep raster sizes modest — a 2400px page plus its base64 copy inside the
+    // mock-up scene is what pushed the worker past its memory ceiling.
+    let bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 1400), undefined, fontBuffers);
 
     if (bytes) {
       await store(admin, snapshotId, userId, kind, `${p.name}-preview`, bytes, "image/png", p.width, p.height, {
         preview: true,
         archetype: ctx.ad.archetype,
       });
+      bytes = null as unknown as Uint8Array;
 
-      // Presentation mock-up — the thumbnail the library shows.
+      // Presentation mock-up — the thumbnail the library shows. Rendered from a
+      // small copy of the page so the embedded data URI stays light.
       try {
-        const scene = mockupSvg(bytes, p.width, p.height, kind);
-        const mock = await rasterizeSvgToBytes(scene.svg, Math.min(scene.width, 1600));
-        if (mock) {
-          await store(admin, snapshotId, userId, kind, `${p.name}-mockup`, mock, "image/png", scene.width, scene.height, {
-            mockup: true,
-            of: p.name,
-          });
+        const small = await rasterizeSvgToBytes(p.svg, 700, undefined, fontBuffers);
+        if (small) {
+          const h = Math.round((700 * p.height) / p.width);
+          const scene = mockupSvg(small, 700, h, kind);
+          const mock = await rasterizeSvgToBytes(scene.svg, Math.min(scene.width, 1000));
+          if (mock) {
+            await store(admin, snapshotId, userId, kind, `${p.name}-mockup`, mock, "image/png", scene.width, scene.height, {
+              mockup: true,
+              of: p.name,
+            });
+          }
         }
       } catch (e) {
         console.warn("mockup failed", kind, p.name, (e as Error).message);
       }
     }
+
     count++;
   }
 
