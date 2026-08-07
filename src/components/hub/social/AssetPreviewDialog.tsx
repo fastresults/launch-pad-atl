@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AssetImage } from "./AssetImage";
+import { CaptionPanel } from "./CaptionPanel";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export type PreviewableAsset = {
@@ -26,7 +27,19 @@ export type PreviewableAsset = {
   lastHeadline?: string | null;
   lastLogoSize?: "sm" | "md" | "lg" | null;
   updatedAt?: string | null;
+  /** the calendar post behind this image — enables the paste-ready caption panel */
+  post?: {
+    id?: string;
+    hook?: string | null;
+    body?: string | null;
+    cta?: string | null;
+    hashtags?: string[] | null;
+    platform?: string | null;
+    pillar?: string | null;
+  } | null;
+  snapshotId?: string | null;
 };
+
 
 export function AssetPreviewDialog({
   open, onOpenChange, asset, onRegenerate, onEditHeadline, onEditLogoSize, onDelete, onPrev, onNext, busy = false,
