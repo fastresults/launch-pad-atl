@@ -143,6 +143,7 @@ export default function LegalSetupPage() {
                 Set from your venture brief{brief?.city ? ` (${brief.city}, ${state.code})` : ""}. Change it here if you're filing elsewhere.
               </div>
             )}
+          </div>
           <div className="min-w-[260px]">
             <Select value={stateCode} onValueChange={(v) => saveState.mutate(v)}>
               <SelectTrigger>
