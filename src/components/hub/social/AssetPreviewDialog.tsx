@@ -215,6 +215,24 @@ export function AssetPreviewDialog({
                         : ""}
                     </div>
                   )}
+                  {asset.qaNotes?.headline_fits !== undefined && (
+                    <div
+                      className={`mt-1 text-[10px] ${
+                        asset.qaNotes.headline_fits === false ? "text-amber-600" : "text-muted-foreground"
+                      }`}
+                    >
+                      {asset.qaNotes.headline_fits === false ? "Headline clipped" : "Headline fits"}
+                      {typeof asset.qaNotes?.headline_lines === "number"
+                        ? ` · ${asset.qaNotes.headline_lines} lines`
+                        : ""}
+                      {typeof asset.qaNotes?.longest_line_pct === "number"
+                        ? ` · widest line ${asset.qaNotes.longest_line_pct}% of column`
+                        : ""}
+                      {asset.qaNotes?.copy_truncated ? " · copy shortened" : ""}
+                    </div>
+                  )}
+
+
 
                 </div>
               );
