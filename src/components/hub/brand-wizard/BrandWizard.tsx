@@ -1271,10 +1271,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                           variant={isSelected ? "default" : "outline"}
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || selectDirection.isPending}
+                          disabled={rowBusy || selecting}
                           onClick={() => selectDirection.mutate(directionRow)}
                         >
-                          {isSelected ? <Check className="mr-1 h-3 w-3" /> : null}
+                          {selecting ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : isSelected ? <Check className="mr-1 h-3 w-3" /> : null}
                           {isSelected ? "Selected" : "Select"}
                         </Button>
                       )}
@@ -1283,34 +1283,40 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                           variant="secondary"
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || refineDirection.isPending}
+                          disabled={rowBusy}
                           onClick={() => { setRefineTarget(directionRow); setRefineNote(""); }}
                         >
                           <Sparkles className="mr-1 h-3 w-3" /> Refine this mark
                         </Button>
                       )}
-                      {directionRow && !directionRow.svg_path && (
+                      {directionRow && isSelected && !finalised && (
                         <Button
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || vectorizeDirection.isPending}
+                          disabled={rowBusy}
                           onClick={() => vectorizeDirection.mutate(directionRow)}
                         >
-                          {vectorizeDirection.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <CircleCheck className="mr-1 h-3 w-3" />}
-                          Approve & vectorize
+                          {finalising ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <CircleCheck className="mr-1 h-3 w-3" />}
+                          Approve &amp; finalise
                         </Button>
+                      )}
+                      {directionRow && finalised && (
+                        <span className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-md bg-emerald-500/15 px-2 text-[11px] font-medium text-emerald-400">
+                          <CircleCheck className="h-3 w-3" /> Finalised
+                        </span>
                       )}
 
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-7 px-2 text-[11px] text-destructive hover:text-destructive"
-                        disabled={busy || retryDirection.isPending}
+                        disabled={rowBusy}
                         onClick={removeLogo}
                       >
                         Remove
                       </Button>
                     </div>
+
 
                   </div>
                 </div>
