@@ -58,6 +58,7 @@ const STATE_STATUTES: Record<string, { name: string; citation: string }> = {
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { jsonResponse, requireUser } from "../_shared/auth.ts";
+import { resolveEntityState } from "../_shared/entity-state.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
