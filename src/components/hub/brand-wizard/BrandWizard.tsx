@@ -956,8 +956,8 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
             onChange={(e) => { onDropRefs(e.target.files); e.currentTarget.value = ""; }}
             disabled={refs.length >= 3}
           />
-          <div className="text-sm font-medium">{refs.length >= 3 ? "3 inspirations added — you're set" : "Drag & drop or click to upload"}</div>
-          <div className="mt-1 text-xs text-muted-foreground">PNG, JPG, SVG, WEBP · up to 3 images · {refs.length}/3 added</div>
+          <div className="text-sm font-medium">{refs.length >= 3 ? "3 inspirations added — you're set" : refs.length >= 1 ? "Inspiration added — add more or generate" : "Drag & drop or click to upload"}</div>
+          <div className="mt-1 text-xs text-muted-foreground">PNG, JPG, SVG, WEBP · 1 required, up to 3 · {refs.length}/3 added</div>
         </label>
 
         {refs.length > 0 && (
