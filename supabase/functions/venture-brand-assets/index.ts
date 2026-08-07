@@ -1008,7 +1008,7 @@ Deno.serve(async (req) => {
       await supabase.from("brand_logo_runs").update({ status: "canceled", canceled_at: new Date().toISOString() }).eq("snapshot_id", snapshotId).not("status", "in", '("completed","completed_with_review","failed","canceled")');
       const { data: previous } = await supabase.from("brand_logo_runs").select("version").eq("snapshot_id", snapshotId).order("version", { ascending: false }).limit(1);
       const version = Number(previous?.[0]?.version ?? 0) + 1;
-      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "reading_context", requested_count: n, reference_images: refs, heartbeat_at: new Date().toISOString() }).select().single();
+      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "reading_context", requested_count: Math.min(3, n), reference_images: refs, heartbeat_at: new Date().toISOString() }).select().single();
       if (error) throw error;
       return new Response(JSON.stringify({ ok: true, run }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
