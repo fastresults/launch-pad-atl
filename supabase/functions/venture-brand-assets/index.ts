@@ -27,6 +27,7 @@ import {
   type VectorSpec,
 } from "../_shared/logo-geometry.ts";
 import { fontStackFor, outlineWordmark } from "../_shared/logo-type.ts";
+import { rasterizeSvg } from "../_shared/logo-raster.ts";
 import {
   HiggsfieldError,
   checkHiggsfieldAuth,
