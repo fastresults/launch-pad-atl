@@ -387,6 +387,14 @@ function tokensBlockOf(tokens: any): string {
 }
 
 /**
+ * The wizard stores inspiration marks as downscaled base64 data URLs, and older
+ * kits may hold hosted links. Both are valid vision inputs — accept either.
+ */
+function isUsableImageRef(u: unknown): u is string {
+  return typeof u === "string" && (u.startsWith("http") || u.startsWith("data:image/"));
+}
+
+/**
  * STAGE 1 — read the founder's three inspiration marks.
  *
  * Structure only. This is what the old pipeline was missing: it invented a
@@ -394,7 +402,7 @@ function tokensBlockOf(tokens: any): string {
  * founder actually gave it.
  */
 export async function readReferenceCraftSpec(referenceImages: string[]): Promise<CraftSpec | null> {
-  const urls = (referenceImages ?? []).filter((u) => typeof u === "string" && u.startsWith("http")).slice(0, 3);
+  const urls = (referenceImages ?? []).filter(isUsableImageRef).slice(0, 3);
   if (!urls.length) return null;
   const content: any[] = [{ type: "text", text: REFERENCE_READ_INSTRUCTION }];
   for (const url of urls) content.push({ type: "image_url", image_url: { url } });
@@ -987,7 +995,7 @@ Deno.serve(async (req) => {
     // direction; without them the studio was guessing, which is exactly what
     // produced the previous generation of slop.
     if (kind === "logo_create_run") {
-      const refs = Array.isArray(referenceImages) ? referenceImages.filter((u: any) => typeof u === "string" && u.startsWith("http")) : [];
+      const refs = Array.isArray(referenceImages) ? referenceImages.filter(isUsableImageRef) : [];
       if (refs.length < 3) {
         return new Response(JSON.stringify({
           error: "Upload three logos you admire before generating. They set the craft standard for this run.",
