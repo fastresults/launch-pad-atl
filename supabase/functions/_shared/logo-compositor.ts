@@ -9,6 +9,7 @@
 // Pure JS via imagescript — runs on the Supabase Edge runtime, no native deps.
 
 import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
+import { rasterizeSvgMono } from "./logo-raster.ts";
 
 export type LogoPlacement =
   | "avatar-center"
@@ -297,11 +298,116 @@ function paintShadow(
   base.composite(layer, boxX - spread, boxY - spread + offsetY);
 }
 
+// --- Mark preparation ------------------------------------------------------
+// A vector mark must arrive as ink on transparency. Marks exported with a
+// baked white plate get that plate knocked out here, then the bitmap is
+// trimmed to its ink bounding box so no dead margin ships with the logo.
+function knockoutAndTrim(logo: Image): Image {
+  const w = logo.width;
+  const h = logo.height;
+  const corner = logo.getPixelAt(1, 1);
+  const cr = (corner >>> 24) & 0xff;
+  const cg = (corner >>> 16) & 0xff;
+  const cb = (corner >>> 8) & 0xff;
+  const ca = corner & 0xff;
+  const near = (r: number, g: number, b: number) =>
+    Math.abs(r - cr) < 14 && Math.abs(g - cg) < 14 && Math.abs(b - cb) < 14;
+
+  const out = logo.clone();
+  if (ca > 250) {
+    for (let y = 1; y <= h; y++) {
+      for (let x = 1; x <= w; x++) {
+        const p = out.getPixelAt(x, y);
+        const r = (p >>> 24) & 0xff;
+        const g = (p >>> 16) & 0xff;
+        const b = (p >>> 8) & 0xff;
+        if (near(r, g, b)) out.setPixelAt(x, y, rgbToImagescriptColor(r, g, b, 0));
+      }
+    }
+  }
+
+  let minX = w, minY = h, maxX = 1, maxY = 1;
+  for (let y = 1; y <= h; y++) {
+    for (let x = 1; x <= w; x++) {
+      if ((out.getPixelAt(x, y) & 0xff) > 12) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX <= minX || maxY <= minY) return out;
+  return out.clone().crop(minX - 1, minY - 1, maxX - minX + 1, maxY - minY + 1);
+}
+
+// Repaint every visible pixel in one hex, preserving alpha (knockout mark).
+function tintMark(logo: Image, hex: string): Image {
+  const { r, g, b } = hexToRgb(hex);
+  const out = logo.clone();
+  for (let y = 1; y <= out.height; y++) {
+    for (let x = 1; x <= out.width; x++) {
+      const a = out.getPixelAt(x, y) & 0xff;
+      if (a > 0) out.setPixelAt(x, y, rgbToImagescriptColor(r, g, b, a));
+    }
+  }
+  return out;
+}
+
+// Soft radial falloff behind the mark — no rectangle, no hard edge. Used only
+// when the knockout still lacks contrast against a busy region.
+function paintRadialScrim(base: Image, cx: number, cy: number, radius: number, dark: boolean): void {
+  const r2 = radius * radius;
+  const x0 = Math.max(0, Math.floor(cx - radius));
+  const x1 = Math.min(base.width - 1, Math.ceil(cx + radius));
+  const y0 = Math.max(0, Math.floor(cy - radius));
+  const y1 = Math.min(base.height - 1, Math.ceil(cy + radius));
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const dx = x - cx;
+      const dy = y - cy;
+      const d2 = dx * dx + dy * dy;
+      if (d2 > r2) continue;
+      const t = 1 - Math.sqrt(d2) / radius;
+      const strength = Math.pow(t, 1.6) * 0.55;
+      const p = base.getPixelAt(x + 1, y + 1);
+      const pr = (p >>> 24) & 0xff;
+      const pg = (p >>> 16) & 0xff;
+      const pb = (p >>> 8) & 0xff;
+      const pa = p & 0xff;
+      const target = dark ? 0 : 255;
+      const nr = Math.round(pr + (target - pr) * strength);
+      const ng = Math.round(pg + (target - pg) * strength);
+      const nb = Math.round(pb + (target - pb) * strength);
+      base.setPixelAt(x + 1, y + 1, rgbToImagescriptColor(nr, ng, nb, pa));
+    }
+  }
+}
+
+function isLightHex(hex: string): boolean {
+  const { r, g, b } = hexToRgb(hex);
+  return luminance(r, g, b) > 0.6;
+}
+
+function isDarkHex(hex: string): boolean {
+  const { r, g, b } = hexToRgb(hex);
+  return luminance(r, g, b) < 0.35;
+}
+
 export async function compositeLogo(
   baseBytes: Uint8Array,
   logoBytes: Uint8Array,
-  opts: { placement: LogoPlacement; surfaceHex: string; logoSize?: LogoSize; inkHex?: string; cornerOverride?: "top-left" | "bottom-right" },
-): Promise<Uint8Array> {
+  opts: {
+    placement: LogoPlacement;
+    surfaceHex: string;
+    logoSize?: LogoSize;
+    inkHex?: string;
+    cornerOverride?: "top-left" | "bottom-right";
+    /** Vector source — when present the mark is re-rendered in the knockout
+     *  color instead of pixel-tinted, keeping vector crispness. */
+    svgText?: string | null;
+  },
+): Promise<{ bytes: Uint8Array; contrast: number; inkHex: string; scrim: boolean } | Uint8Array> {
   let base: Image;
   let logo: Image;
   try {
@@ -311,114 +417,69 @@ export async function compositeLogo(
     return baseBytes;
   }
   try {
-    logo = await Image.decode(logoBytes);
+    logo = knockoutAndTrim(await Image.decode(logoBytes));
   } catch (e) {
     console.warn("logo-compositor: logo decode failed, returning base", e);
     return baseBytes;
   }
 
   const size = normalizeLogoSize(opts.logoSize);
+  const isAvatar = opts.placement === "avatar-center";
   const logoAspect = logo.width / Math.max(1, logo.height);
   const box = targetBoxFor(opts.placement, base.width, base.height, logoAspect, size, opts.cornerOverride);
-  const transparent = hasTransparency(logo);
 
-  const surface = hexToRgb(opts.surfaceHex || "#FFFFFF");
-  const surfaceLum = luminance(surface.r, surface.g, surface.b);
   const baseLumBehind = avgLuminance(base, box.x, box.y, box.w, box.h);
-  // If chip surface is too close in luminance to the region behind it, swap
-  // to whichever of white / ink gives the strongest contrast against the base.
-  let chipR = surface.r;
-  let chipG = surface.g;
-  let chipB = surface.b;
-  let surfaceSwap: "none" | "white" | "ink" = "none";
-  if (Math.abs(surfaceLum - baseLumBehind) < 0.10) {
-    const ink = hexToRgb(opts.inkHex || "#0B0F19");
-    const inkLum = luminance(ink.r, ink.g, ink.b);
-    const whiteContrast = Math.abs(1 - baseLumBehind);
-    const inkContrast = Math.abs(inkLum - baseLumBehind);
-    if (whiteContrast >= inkContrast) {
-      chipR = 255; chipG = 255; chipB = 255;
-      surfaceSwap = "white";
+
+  // Knockout ink: a single contrast-safe color pulled from the kit.
+  const lightCandidate = isLightHex(opts.surfaceHex) ? opts.surfaceHex : "#FFFFFF";
+  const darkCandidate = opts.inkHex && isDarkHex(opts.inkHex) ? opts.inkHex : "#0B0F19";
+  const inkHex = baseLumBehind < 0.5 ? lightCandidate : darkCandidate;
+
+  let mark = logo;
+  if (!isAvatar) {
+    if (opts.svgText) {
+      const mono = await rasterizeSvgMono(opts.svgText, inkHex, Math.max(512, box.w * 2));
+      if (mono) {
+        try {
+          mark = knockoutAndTrim(await Image.decode(mono));
+        } catch {
+          mark = tintMark(logo, inkHex);
+        }
+      } else {
+        mark = tintMark(logo, inkHex);
+      }
     } else {
-      chipR = ink.r; chipG = ink.g; chipB = ink.b;
-      surfaceSwap = "ink";
+      mark = tintMark(logo, inkHex);
     }
   }
 
-  const padPct = 0.05;
-  const radius = Math.round(Math.min(box.w, box.h) * 0.14);
+  // Re-derive the box from the trimmed/re-rendered mark's aspect.
+  const finalAspect = mark.width / Math.max(1, mark.height);
+  const finalBox = targetBoxFor(opts.placement, base.width, base.height, finalAspect, size, opts.cornerOverride);
 
-  let chipMode: "chip" | "direct" | "footer-band" = "chip";
+  const inkRgb = hexToRgb(inkHex);
+  const inkLum = luminance(inkRgb.r, inkRgb.g, inkRgb.b);
+  const behind = avgLuminance(base, finalBox.x, finalBox.y, finalBox.w, finalBox.h);
+  let contrast = (Math.max(inkLum, behind) + 0.05) / (Math.min(inkLum, behind) + 0.05);
 
-  if (transparent && opts.placement !== "avatar-center") {
-    // Direct composite path. Only add a soft scrim if the logo has poor
-    // contrast against the region behind it.
-    chipMode = "direct";
-    // Estimate logo ink luminance from a center-band sample.
-    let inkSum = 0;
-    let inkN = 0;
-    const sx0 = Math.floor(logo.width * 0.2);
-    const sx1 = Math.floor(logo.width * 0.8);
-    const sy0 = Math.floor(logo.height * 0.3);
-    const sy1 = Math.floor(logo.height * 0.7);
-    for (let py = sy0; py < sy1; py += Math.max(1, Math.floor((sy1 - sy0) / 12))) {
-      for (let px = sx0; px < sx1; px += Math.max(1, Math.floor((sx1 - sx0) / 12))) {
-        const p = logo.getPixelAt(px + 1, py + 1);
-        const a = p & 0xff;
-        if (a < 100) continue;
-        const r = (p >>> 24) & 0xff;
-        const g = (p >>> 16) & 0xff;
-        const b = (p >>> 8) & 0xff;
-        inkSum += luminance(r, g, b);
-        inkN++;
-      }
-    }
-    const inkLum = inkN ? inkSum / inkN : 0.1;
-    const contrast = (Math.max(inkLum, baseLumBehind) + 0.05) / (Math.min(inkLum, baseLumBehind) + 0.05);
-
-    if (contrast < 3) {
-      // Editorial masthead: paint a full-width footer band in the brand
-      // SURFACE color, then place the logo left-aligned inside it. Reads as
-      // an intentional lockup instead of a translucent "sticker" plate.
-      chipMode = "footer-band";
-      const bandH = Math.min(base.height, Math.round(box.h + Math.round(base.height * 0.06)));
-      const bandY = base.height - bandH;
-      const band = new Image(base.width, bandH);
-      const bandColor = inkLum < 0.5
-        ? rgbToImagescriptColor(255, 255, 255, 0xff)
-        : rgbToImagescriptColor(11, 15, 25, 0xff);
-      // Solid fill (no rounded corners on a full-bleed band).
-      for (let y = 0; y < bandH; y++) {
-        for (let x = 0; x < base.width; x++) band.setPixelAt(x + 1, y + 1, bandColor);
-      }
-      base.composite(band, 0, bandY);
-      // Re-fit the logo inside the band, left-aligned with a comfortable inset.
-      const inset = Math.round(base.width * 0.05);
-      const bandBoxW = Math.min(box.w, base.width - inset * 2);
-      const bandBoxH = Math.min(box.h, bandH - Math.round(bandH * 0.15));
-      const fit = fitInside(logo, bandBoxW, bandBoxH, padPct);
-      base.composite(fit.img, inset + fit.offX, bandY + Math.floor((bandH - bandBoxH) / 2) + fit.offY);
-    } else {
-      const fit = fitInside(logo, box.w, box.h, padPct);
-      base.composite(fit.img, box.x + fit.offX, box.y + fit.offY);
-    }
-
-  } else {
-    // Rounded chip with a soft drop shadow.
-    if (opts.placement !== "avatar-center") {
-      paintShadow(base, box.x, box.y, box.w, box.h, radius);
-    }
-    const chip = new Image(box.w, box.h);
-    fillRoundedRect(chip, rgbToImagescriptColor(chipR, chipG, chipB, 0xff), radius);
-    const fit = fitInside(logo, box.w, box.h, padPct);
-    chip.composite(fit.img, fit.offX, fit.offY);
-    base.composite(chip, box.x, box.y);
+  let scrim = false;
+  if (!isAvatar && contrast < 3) {
+    scrim = true;
+    const cx = finalBox.x + finalBox.w / 2;
+    const cy = finalBox.y + finalBox.h / 2;
+    const radius = Math.max(finalBox.w, finalBox.h) * 1.1;
+    paintRadialScrim(base, cx, cy, radius, inkLum > 0.5);
+    const after = avgLuminance(base, finalBox.x, finalBox.y, finalBox.w, finalBox.h);
+    contrast = (Math.max(inkLum, after) + 0.05) / (Math.min(inkLum, after) + 0.05);
   }
+
+  const fit = fitInside(mark, finalBox.w, finalBox.h, 0.02);
+  base.composite(fit.img, finalBox.x + fit.offX, finalBox.y + fit.offY);
 
   console.log(
-    `[logo-compositor] placement=${opts.placement} size=${size} aspect=${logoAspect.toFixed(2)} mode=${box.mode} chip=${box.w}x${box.h} @${box.x},${box.y} pad=${padPct} r=${radius} chipMode=${chipMode} surfaceSwap=${surfaceSwap} canvas=${base.width}x${base.height}`,
+    `[logo-compositor] placement=${opts.placement} size=${size} aspect=${finalAspect.toFixed(2)} box=${finalBox.w}x${finalBox.h} @${finalBox.x},${finalBox.y} ink=${inkHex} contrast=${contrast.toFixed(2)} scrim=${scrim} vector=${!!opts.svgText} canvas=${base.width}x${base.height}`,
   );
 
   const out = await base.encode();
-  return out;
+  return { bytes: out, contrast, inkHex, scrim };
 }
