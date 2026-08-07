@@ -103,11 +103,19 @@ export default function VentureSharePage() {
       {q.isError && !needsPassword && (
         <div className="flex min-h-screen items-center justify-center px-6 text-center">
           <div>
-            <h1 className="font-serif text-3xl tracking-tight">Link unavailable</h1>
+            <h1 className="font-serif text-3xl tracking-tight">
+              {err?.code === "NETWORK" ? "Couldn't load this showcase" : "Link unavailable"}
+            </h1>
             <p className="mt-3 text-sm text-muted-foreground">{err?.message}</p>
+            {err?.code === "NETWORK" && (
+              <Button variant="outline" className="mt-5" onClick={() => q.refetch()}>
+                Try again
+              </Button>
+            )}
           </div>
         </div>
       )}
+
 
       {payload && (
         <>
