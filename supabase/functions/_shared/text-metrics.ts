@@ -182,7 +182,7 @@ export function fitBox(
   },
 ): FitResult {
   const { size, maxWidth, maxLines, bytes, tracking = 0 } = opts;
-  const minSize = opts.minSize ?? Math.max(8, size * 0.6);
+  const minSize = Math.max(7, opts.minSize ?? Math.max(8, size * 0.6));
   const step = opts.step ?? Math.max(0.5, size * 0.04);
   let s = size;
   let lines = wrap(text, s, maxWidth, bytes, tracking);
@@ -206,7 +206,8 @@ export function fitLine(
   opts: { size: number; maxWidth: number; bytes?: Uint8Array | null; tracking?: number; minSize?: number },
 ): { size: number; text: string } {
   const { maxWidth, bytes, tracking = 0 } = opts;
-  const minSize = opts.minSize ?? opts.size * 0.55;
+  // Hard floor: below ~7px at page scale type is not type, it is texture.
+  const minSize = Math.max(7, opts.minSize ?? opts.size * 0.55);
   let s = opts.size;
   const t = String(text ?? "");
   while (measure(t, s, bytes, tracking) > maxWidth && s > minSize) s -= Math.max(0.5, opts.size * 0.03);

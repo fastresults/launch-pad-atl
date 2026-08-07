@@ -20,49 +20,96 @@ import {
 } from "./brand-art-direction.ts";
 import { addressBlock, addressLine, type ContactDetails } from "./collateral-fields.ts";
 
-// Modern UA gets woff2 (for the SVG's @font-face, used in browsers); the legacy
-// UA gets a plain TTF, which is the only format the wasm rasteriser can load.
+// Font loading has one hard requirement: the wasm rasteriser can only read a
+// real sfnt (TTF/OTF). It has no woff2 decoder and no @font-face support, so if
+// we hand it anything else every <text> node renders as *nothing at all* — the
+// page comes out as a logo on blank paper. Google serves TTF only to a bare
+// "Mozilla/5.0" UA on the v1 CSS endpoint; modern UAs get woff2, and the old
+// MSIE UA gets EOT. So: TTF for the rasteriser and the metrics reader, woff2
+// for the SVG's @font-face (browser previews only).
 const UA_MODERN =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
-const UA_LEGACY = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)";
+const UA_TTF = "Mozilla/5.0";
 
-const fontCache = new Map<string, { b64: string; bytes: Uint8Array } | null>();
+/** Bundled last resort so a page is never typeset with an empty font. */
+const FALLBACK_FAMILY = { serif: "Lora", sans: "Inter" } as const;
 
-async function fetchFont(family: string, weight: number, legacy: boolean) {
-  const cssUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:wght@${weight}&display=swap`;
-  const res = await fetch(cssUrl, { headers: { "User-Agent": legacy ? UA_LEGACY : UA_MODERN } });
+type LoadedFont = { b64: string; bytes: Uint8Array; family: string };
+
+const fontCache = new Map<string, LoadedFont | null>();
+
+/** True for an sfnt container resvg can actually parse. */
+function isSfnt(b: Uint8Array): boolean {
+  if (!b || b.length < 4) return false;
+  const tag = (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
+  return tag === 0x00010000 /* TTF */ ||
+    tag === 0x4f54544f /* OTTO */ ||
+    tag === 0x74727565 /* true */ ||
+    tag === 0x74746366 /* ttcf */;
+}
+
+async function fetchFontFile(family: string, weight: number, ttf: boolean): Promise<Uint8Array | null> {
+  const cssUrl = ttf
+    ? `https://fonts.googleapis.com/css?family=${encodeURIComponent(family).replace(/%20/g, "+")}:${weight}`
+    : `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:wght@${weight}&display=swap`;
+  const res = await fetch(cssUrl, { headers: { "User-Agent": ttf ? UA_TTF : UA_MODERN } });
   if (!res.ok) return null;
   const text = await res.text();
   const blocks = text.split("@font-face").filter((b) => b.includes("url("));
   const latin = blocks.find((b) => /unicode-range:[^;]*U\+0000/i.test(b)) ?? blocks[blocks.length - 1];
-  const url = latin?.match(/url\((https:\/\/[^)]+\.(?:woff2|ttf))\)/)?.[1];
+  // Do NOT require a file extension: Google's legacy endpoint serves
+  // extensionless `/l/font?kit=...` URLs. Sniff the bytes instead.
+  const url = latin?.match(/url\((https:\/\/[^)'"]+)\)/)?.[1];
   if (!url) return null;
   const bin = await fetch(url);
   if (!bin.ok) return null;
-  return new Uint8Array(await bin.arrayBuffer());
+  const bytes = new Uint8Array(await bin.arrayBuffer());
+  if (!bytes.length) return null;
+  if (ttf && !isSfnt(bytes)) return null; // EOT/woff2 is useless to the rasteriser
+  return bytes;
 }
 
-/** Load one weight: base64 woff2 for the SVG, raw TTF bytes for the rasteriser. */
-async function loadFont(family: string, weight: number) {
+function toB64(bytes: Uint8Array): string {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+/** Load one weight: base64 for the SVG @font-face, real TTF bytes for rendering. */
+async function loadFont(family: string, weight: number): Promise<LoadedFont | null> {
   const key = `${family}:${weight}`;
   if (!fontCache.has(key)) {
-    let out: { b64: string; bytes: Uint8Array } | null = null;
+    let out: LoadedFont | null = null;
     try {
-      const [woff2, ttf] = await Promise.all([
-        fetchFont(family, weight, false).catch(() => null),
-        fetchFont(family, weight, true).catch(() => null),
+      const [webBytes, ttfBytes] = await Promise.all([
+        fetchFontFile(family, weight, false).catch(() => null),
+        fetchFontFile(family, weight, true).catch(() => null),
       ]);
-      if (woff2 || ttf) {
-        const forCss = woff2 ?? ttf!;
-        let s = "";
-        for (let i = 0; i < forCss.length; i += 0x8000) s += String.fromCharCode(...forCss.subarray(i, i + 0x8000));
-        out = { b64: btoa(s), bytes: ttf ?? new Uint8Array() };
-      }
-    } catch { /* fall back to system stacks */ }
+      if (ttfBytes) out = { b64: toB64(webBytes ?? ttfBytes), bytes: ttfBytes, family };
+      else if (webBytes) out = { b64: toB64(webBytes), bytes: new Uint8Array(), family };
+    } catch { /* handled by the fallback below */ }
     fontCache.set(key, out);
   }
   return fontCache.get(key) ?? null;
 }
+
+/**
+ * Never return a font without renderable bytes: if the brand family has no
+ * usable TTF, fall back to the bundled serif/sans pair so the page still has
+ * real type rather than silently rendering nothing.
+ */
+async function loadFontOrFallback(family: string, weight: number): Promise<LoadedFont | null> {
+  const first = await loadFont(family, weight);
+  if (first?.bytes.length) return first;
+  const alt = /(serif|playfair|lora|merriweather|garamond|baskerv|crimson|spectral|cormorant|bitter|domine)/i.test(family)
+    ? FALLBACK_FAMILY.serif
+    : FALLBACK_FAMILY.sans;
+  if (alt.toLowerCase() === family.toLowerCase()) return first;
+  console.warn(`[collateral] no TTF for "${family}" — falling back to ${alt}`);
+  const second = await loadFont(alt, weight);
+  return second?.bytes.length ? second : first;
+}
+
 
 export type CollateralCopy = {
   deck?: { section?: string; sectionSub?: string; points?: Array<{ title: string; body: string }>; closing?: string };
@@ -238,8 +285,40 @@ function grainDef(fg: string): string {
   </pattern>`;
 }
 
-/** Inline the vector mark, scaled to fit a box, tinted to one ink colour. */
-function markAt(ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number, ink: string | null): string {
+/** Relative luminance of a hex colour, 0–1. */
+function lum(hex: string): number {
+  const m = /#?([0-9a-f]{6})/i.exec(hex || "");
+  if (!m) return 0;
+  const n = parseInt(m[1], 16);
+  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+
+function contrast(a: string, b: string): number {
+  const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+  return (x + 0.05) / (y + 0.05);
+}
+
+/** Every explicit fill colour in a fragment — used to spot invisible artwork. */
+function fillsIn(svg: string): string[] {
+  return [...svg.matchAll(/fill\s*[=:]\s*["']?(#[0-9a-f]{3,8}|white|black)/gi)].map((m) => m[1].toLowerCase());
+}
+
+/**
+ * Inline the vector mark, scaled to fit a box, tinted to one ink colour.
+ *
+ * `bg` is the surface the mark lands on. It is not decoration: a traced mark is
+ * often solid white, so dropping it on ivory paper — or tinting it with a pale
+ * ink — produces the invisible ghost we shipped before. Any ink that fails to
+ * separate from the surface is replaced with one that does.
+ */
+function markAt(
+  ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number,
+  ink: string | null, bg?: string,
+): string {
   const svg = ctx.logoSvg;
   if (!svg) return "";
   const vb = /viewBox\s*=\s*["']([\d.\-\s,]+)["']/i.exec(svg)?.[1];
@@ -253,16 +332,30 @@ function markAt(ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: nu
     .replace(/^[\s\S]*?<svg[^>]*>/i, "")
     .replace(/<\/svg>\s*$/i, "")
     .trim();
-  if (ink) {
+
+  let use = ink;
+  if (bg) {
+    const MIN = 2.4;
+    if (use && contrast(use, bg) < MIN) use = inkOn(bg);
+    if (!use) {
+      // Untinted artwork: if nothing in it separates from the surface, knock it
+      // out rather than leaving an invisible mark.
+      const fills = fillsIn(inner);
+      const visible = fills.some((f) => contrast(f === "white" ? "#ffffff" : f === "black" ? "#000000" : f, bg) >= MIN);
+      if (fills.length && !visible) use = inkOn(bg);
+    }
+  }
+  if (use) {
     inner = inner
-      .replace(/fill\s*=\s*["'](?!none)[^"']*["']/gi, `fill="${ink}"`)
-      .replace(/stroke\s*=\s*["'](?!none)[^"']*["']/gi, `stroke="${ink}"`);
+      .replace(/fill\s*=\s*["'](?!none)[^"']*["']/gi, `fill="${use}"`)
+      .replace(/stroke\s*=\s*["'](?!none)[^"']*["']/gi, `stroke="${use}"`);
   }
   const s = Math.min(boxW / vw, boxH / vh);
   const dx = x + (boxW - vw * s) / 2;
   const dy = y + (boxH - vh * s) / 2;
   return `<g transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
+
 
 function logoAspect(ctx: CollateralCtx): number {
   const vb = /viewBox\s*=\s*["']([\d.\-\s,]+)["']/i.exec(ctx.logoSvg ?? "")?.[1];
@@ -287,15 +380,15 @@ function clearSpace(height: number): number {
  */
 function logoBlock(
   ctx: CollateralCtx, T: TypeKit, x: number, baseline: number, height: number,
-  ink: string | null, nameFill: string, nameSize: number, maxWidth: number,
+  ink: string | null, nameFill: string, nameSize: number, maxWidth: number, bg?: string,
 ): string {
   if (isLockup(ctx)) {
     const w = Math.min(height * logoAspect(ctx), maxWidth);
-    return markAt(ctx, x, baseline - height, w, height, ink);
+    return markAt(ctx, x, baseline - height, w, height, ink, bg);
   }
   const gap = Math.round(height * 0.42);
   return [
-    markAt(ctx, x, baseline - height, height, height, ink),
+    markAt(ctx, x, baseline - height, height, height, ink, bg),
     T.line(ctx.company, x + height + gap, baseline - height * 0.24, nameSize, nameFill, {
       family: "head", weight: 700, tracking: nameSize * (ctx.ad.type.displayTracking), maxWidth: maxWidth - height - gap,
     }),
@@ -352,6 +445,21 @@ function contactRows(d: ContactDetails): string[] {
   return [d.email, d.phone, d.website, addressLine(d), d.social].filter(Boolean) as string[];
 }
 
+/**
+ * A card carries a descriptor, not a positioning statement. Anything longer
+ * than a glance is cut at a word boundary — never shrunk to 8pt to make it fit.
+ */
+function cardDescriptor(d: ContactDetails): string {
+  const t = String(d.tagline ?? "").replace(/\s+/g, " ").trim();
+  if (t && t.length <= 45) return t;
+  // Never truncate mid-thought. Use the first complete clause if it stands on
+  // its own; otherwise say where the company is, which always reads cleanly.
+  const clause = t.split(/[,;:—–]|\s+\|\s+/)[0]?.trim() ?? "";
+  if (clause.length >= 22 && clause.length <= 45) return clause;
+  const place = [d.address_city, d.address_state].filter(Boolean).join(", ");
+  return place || clause || "";
+}
+
 function businessCard({ ctx, T, defs }: Args): Page[] {
   const W = 1050, H = 600; // 3.5 × 2in at 300dpi
   const ad = ctx.ad;
@@ -359,31 +467,42 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const { primary, paper, fg, accent, muted } = palette(ctx);
   const d = ctx.details;
   const invert = inverted(ctx, "business_card");
-  const faceBg = invert ? primary : paper;
   const faceInk = invert ? inkOn(primary) : fg;
 
-  // FRONT — the mark alone, with real clear space around it.
-  const markH = Math.round(H * 0.26);
-  const markW = Math.min(g.content, markH * Math.max(logoAspect(ctx), 1));
-  const cs = clearSpace(markH);
+  // FRONT — an asymmetric card: a full-bleed colour field carries the mark,
+  // the paper side carries the name and a short descriptor. A centred logo on a
+  // blank field is not a design; this is the one page people actually look at.
+  const fieldW = Math.round(W * 0.34);
+  const fieldX = W - fieldW;
+  const fieldBg = invert ? paper : primary;
+  const fieldInk = inkOn(fieldBg);
+  const pad = Math.round(fieldW * 0.2);
+  const colW = fieldX - g.M * 2;
+
   const nameSize = step(ad, 1.2);
-  const showName = !isLockup(ctx);
-  const blockH = markH + (showName ? cs * 0.6 + nameSize : 0) + (d.tagline ? step(ad, -0.6) * 1.8 : 0);
-  let y = (H - blockH) / 2;
+  const descSize = step(ad, -0.5);
+  const desc = cardDescriptor(d);
+  const showName = !isLockup(ctx) || true; // the field mark reads as a device; the name is set in type
+  const stackH = nameSize * 1.05 + (desc ? descSize * 2.4 : 0);
+  const nameBase = Math.round((H - stackH) / 2 + nameSize * 0.82);
 
   const front = page(W, H, defs, [
     invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
-    markAt(ctx, (W - markW) / 2, y, markW, markH, invert ? faceInk : null),
+    `<rect x="${fieldX}" y="0" width="${fieldW}" height="${H}" fill="${fieldBg}"/>`,
+    markAt(ctx, fieldX + pad, pad, fieldW - pad * 2, H - pad * 2, fieldInk, fieldBg),
     showName
-      ? T.line(ctx.company, W / 2, y + markH + cs * 0.6 + nameSize * 0.78, nameSize, faceInk, {
-        family: "head", weight: 700, anchor: "middle", tracking: nameSize * ad.type.displayTracking, maxWidth: g.content,
+      ? T.line(ctx.company, g.M, nameBase, nameSize, faceInk, {
+        family: "head", weight: 700, tracking: nameSize * ad.type.displayTracking, maxWidth: colW, minSize: 15,
       })
       : "",
-    d.tagline
-      ? label(T, ctx, d.tagline, W / 2, y + blockH + step(ad, -0.6) * 0.9, step(ad, -0.9), invert ? faceInk : muted, "middle", g.content)
+    desc
+      ? T.line(desc, g.M, nameBase + descSize * 2.1, descSize, invert ? faceInk : muted, {
+        tracking: descSize * ad.type.labelTracking * 0.5, maxWidth: colW, minSize: 11,
+      })
       : "",
-    motif(ctx, g, invert ? faceInk : accent, "br"),
+    `<rect x="${g.M}" y="${r(nameBase + descSize * (desc ? 3.6 : 1.6))}" width="${r(g.span(1))}" height="${r(Math.max(2, ad.ink.ruleWeight))}" fill="${invert ? faceInk : accent}"/>`,
   ].join(""));
+
 
   // BACK — the contact block, set on the grid and measured line by line.
   const rows = contactRows(d);
@@ -392,7 +511,7 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const titleS = step(ad, -0.6);
   const rowS = step(ad, -0.7);
   const rowGap = rowS * 1.72;
-  const colW = g.span(Math.max(4, Math.round(ad.grid.columns * 0.62)));
+  const backColW = g.span(Math.max(4, Math.round(ad.grid.columns * 0.62)));
 
   const backTop = g.M + nameS;
   const backRowsTop = H - g.M - (rows.length - 1) * rowGap;
@@ -401,11 +520,11 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="0" width="${r(rule * 3)}" height="${H}" fill="${primary}"/>`,
     // mark, top-right, quiet
-    markAt(ctx, W - g.M - 190, g.M - 4, 190, 76, mix(fg, paper, 0.15)),
-    T.line(d.person_name || ctx.company, g.M, backTop, nameS, fg, { family: "head", weight: 700, maxWidth: colW, tracking: nameS * ad.type.displayTracking }),
-    d.person_title ? label(T, ctx, d.person_title, g.M, backTop + titleS * 1.7, titleS, accent, "start", colW) : "",
+    markAt(ctx, W - g.M - 190, g.M - 4, 190, 76, mix(fg, paper, 0.3), paper),
+    T.line(d.person_name || ctx.company, g.M, backTop, nameS, fg, { family: "head", weight: 700, maxWidth: backColW, tracking: nameS * ad.type.displayTracking, minSize: 13 }),
+    d.person_title ? label(T, ctx, d.person_title, g.M, backTop + titleS * 1.7, titleS, accent, "start", backColW) : "",
     `<rect x="${g.M}" y="${r(backRowsTop - rowGap * 1.25)}" width="${r(g.span(2))}" height="${r(ad.ink.hairline * 2)}" fill="${accent}"/>`,
-    ...rows.map((t, i) => T.line(t, g.M, backRowsTop + i * rowGap, rowS, i === 0 ? fg : muted, { maxWidth: g.content })),
+    ...rows.map((t, i) => T.line(t, g.M, backRowsTop + i * rowGap, rowS, i === 0 ? fg : muted, { maxWidth: g.content, minSize: 10 })),
   ].join(""));
 
   return [
@@ -437,7 +556,7 @@ function letterhead({ ctx, T, defs }: Args): Page[] {
   const body = [
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="0" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
-    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.4), g.span(Math.round(ad.grid.columns * 0.6))),
+    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.4), g.span(Math.round(ad.grid.columns * 0.6)), paper),
     d.tagline ? label(T, ctx, d.tagline, g.M, headBase + step(ad, -0.9) * 2, step(ad, -1.2), muted, "start", g.span(6)) : "",
     `<rect x="${g.M}" y="${r(headBase + clearSpace(logoH))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(primary, paper, 0.55)}"/>`,
     openBlock.svg,
@@ -463,7 +582,7 @@ function envelope({ ctx, T, defs }: Args): Page[] {
   const body = [
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="${r(H - ad.ink.ruleWeight * 2)}" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
-    logoBlock(ctx, T, g.M, base, logoH, null, fg, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.45))),
+    logoBlock(ctx, T, g.M, base, logoH, null, fg, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.45)), paper),
     ...lines.map((l, i) => T.line(l, g.M, base + clearSpace(logoH) + i * step(ad, -1) * 1.6, step(ad, -1.1), muted, { maxWidth: g.span(Math.round(ad.grid.columns * 0.4)) })),
     d.website ? T.line(d.website, g.M, H - g.M, step(ad, -1.2), accent, { maxWidth: g.span(4) }) : "",
     `<rect x="${r(W - g.M - 180)}" y="${g.M}" width="180" height="120" fill="none" stroke="${mix(fg, paper, 0.6)}" stroke-width="${r(ad.ink.hairline * 1.5)}" stroke-dasharray="8 8"/>`,
@@ -491,7 +610,7 @@ function notecard({ ctx, T, defs }: Args): Page[] {
 
   const body = [
     invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
-    markAt(ctx, (W - markW) / 2, top, markW, markH, invert ? ink : null),
+    markAt(ctx, (W - markW) / 2, top, markW, markH, invert ? ink : null, invert ? primary : paper),
     isLockup(ctx) ? "" : T.line(ctx.company, W / 2, top + markH + clearSpace(markH) * 0.8, nameS, ink, { family: "head", weight: 700, anchor: "middle", tracking: nameS * ad.type.displayTracking, maxWidth: g.content }),
     note ? label(T, ctx, note, W / 2, top + markH + clearSpace(markH) * (isLockup(ctx) ? 0.8 : 1.6), step(ad, -1), soft, "middle", g.span(Math.round(ad.grid.columns * 0.75))) : "",
     `<rect x="${r(W / 2 - g.span(1))}" y="${r(H * 0.52)}" width="${r(g.span(2))}" height="${r(ad.ink.hairline * 2)}" fill="${invert ? ink : accent}" opacity="${invert ? 0.5 : 1}"/>`,
@@ -517,7 +636,7 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
 
   const body = [
     surface(W, H, paper, ad.material.grain * 0.4),
-    markAt(ctx, left, (H - markBox) / 2, markBox, markBox, null),
+    markAt(ctx, left, (H - markBox) / 2, markBox, markBox, null, paper),
     `<rect x="${r(railX)}" y="${r(H * 0.2)}" width="${r(Math.max(3, ad.ink.ruleWeight))}" height="${r(H * 0.6)}" fill="${primary}"/>`,
     T.line(d.person_name || ctx.company, textX, top, nameS, fg, { family: "head", weight: 700, maxWidth: W - textX - 60 }),
     T.line([d.person_title, ctx.company].filter(Boolean).join(" · "), textX, top + nameS * 1.35, rowS, accent, { maxWidth: W - textX - 60 }),
@@ -554,7 +673,7 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   const body = [
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="0" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
-    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.1), g.span(Math.round(ad.grid.columns * 0.5))),
+    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.1), g.span(Math.round(ad.grid.columns * 0.5)), paper),
     label(T, ctx, title, W - g.M, headBase - logoH * 0.35, step(ad, 1.8), primary, "end", g.span(4)),
     T.line(isInvoice ? "No. 0001" : "Prepared for", W - g.M, headBase + step(ad, -0.4), step(ad, -1), muted, { anchor: "end", maxWidth: g.span(4) }),
 
@@ -607,7 +726,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     name: "slide-1-cover", width: W, height: H,
     svg: page(W, H, defs, [
       invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
-      markAt(ctx, g.M, g.M, markW, markH, invert ? coverInk : null),
+      markAt(ctx, g.M, g.M, markW, markH, invert ? coverInk : null, invert ? primary : paper),
       T.line(ctx.company, g.M, H * 0.62, step(ad, 5.2), coverInk, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.82)), tracking: step(ad, 5.2) * ad.type.displayTracking }),
       d.tagline ? T.line(d.tagline, g.M, H * 0.62 + step(ad, 2.6), step(ad, 0.8), coverInk, { opacity: invert ? 0.8 : 0.7, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)) }) : "",
       label(T, ctx, String(new Date().getFullYear()), W - g.M, H - g.M, step(ad, -0.6), coverInk, "end", g.span(2)),
@@ -623,7 +742,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
       label(T, ctx, "01", g.M, H * 0.32, step(ad, 0.6), accent),
       T.line(deck.section || "Section title", g.M, H * 0.46, step(ad, 3.8), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.72)), tracking: step(ad, 3.8) * ad.type.displayTracking }),
       T.block(deck.sectionSub || "One sentence that frames what this section proves.", g.M, H * 0.56, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.55)), muted, { leading: 1.5, maxLines: 2 }).svg,
-      markAt(ctx, W - g.M - 120, H - g.M - 120, 120, 120, mix(primary, paper, 0.25)),
+      markAt(ctx, W - g.M - 120, H - g.M - 120, 120, 120, mix(primary, paper, 0.25), paper),
     ].join("")),
   });
 
@@ -648,7 +767,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
         ].join("");
       }),
       T.line(ctx.company, g.M, H - g.M, step(ad, -0.6), muted, { maxWidth: g.span(5) }),
-      markAt(ctx, W - g.M - 70, H - g.M - 60, 70, 70, mix(primary, paper, 0.3)),
+      markAt(ctx, W - g.M - 70, H - g.M - 60, 70, 70, mix(primary, paper, 0.3), paper),
     ].join("")),
   });
 
@@ -656,7 +775,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     name: "slide-4-closing", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${fg}"/>`,
-      markAt(ctx, W / 2 - 100, H * 0.3, 200, 150, inkOn(fg)),
+      markAt(ctx, W / 2 - 100, H * 0.3, 200, 150, inkOn(fg), fg),
       T.line(deck.closing || "Thank you", W / 2, H * 0.6, step(ad, 3.6), inkOn(fg), { family: "head", weight: 700, anchor: "middle", maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
       T.line([d.website, d.email].filter(Boolean).join("   ·   "), W / 2, H * 0.68, step(ad, 0.2), inkOn(fg), { anchor: "middle", opacity: 0.75, maxWidth: g.content }),
     ].join("")),
@@ -688,7 +807,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
     name: "guidelines-1-cover", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-      markAt(ctx, g.M, g.M, g.span(3), Math.round(H * 0.16), ink),
+      markAt(ctx, g.M, g.M, g.span(3), Math.round(H * 0.16), ink, primary),
       label(T, ctx, "Brand guidelines", g.M, H * 0.52, step(ad, 0.6), ink, "start", g.span(6)),
       T.line(ctx.company, g.M, H * 0.66, step(ad, 4), ink, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.8)), tracking: step(ad, 4) * ad.type.displayTracking }),
       d.tagline ? T.line(d.tagline, g.M, H * 0.73, step(ad, 0.4), ink, { opacity: 0.75, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)) }) : "",
@@ -704,13 +823,13 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
     svg: page(W, H, defs, [
       head("Logo", "01"),
       `<rect x="${g.M}" y="${r(top)}" width="${r(boxW)}" height="${r(boxH)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
-      markAt(ctx, g.M + boxW * 0.14, top + boxH * 0.18, boxW * 0.72, boxH * 0.64, null),
+      markAt(ctx, g.M + boxW * 0.14, top + boxH * 0.18, boxW * 0.72, boxH * 0.64, null, paper),
       label(T, ctx, "Primary — full colour", g.M, top + boxH + step(ad, 1.4), step(ad, -1.2), muted),
       `<rect x="${r(g.M + boxW + g.gutter * 2)}" y="${r(top)}" width="${r(boxW * 0.55)}" height="${r(boxH * 0.52)}" fill="${fg}"/>`,
-      markAt(ctx, g.M + boxW + g.gutter * 2 + boxW * 0.09, top + boxH * 0.1, boxW * 0.37, boxH * 0.32, inkOn(fg)),
+      markAt(ctx, g.M + boxW + g.gutter * 2 + boxW * 0.09, top + boxH * 0.1, boxW * 0.37, boxH * 0.32, inkOn(fg), fg),
       label(T, ctx, "Knockout", g.M + boxW + g.gutter * 2, top + boxH * 0.62, step(ad, -1.3), muted),
       `<rect x="${r(g.M + boxW + g.gutter * 2)}" y="${r(top + boxH * 0.72)}" width="${r(boxW * 0.55)}" height="${r(boxH * 0.46)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
-      markAt(ctx, g.M + boxW + g.gutter * 2 + boxW * 0.09, top + boxH * 0.8, boxW * 0.37, boxH * 0.3, "#121212"),
+      markAt(ctx, g.M + boxW + g.gutter * 2 + boxW * 0.09, top + boxH * 0.8, boxW * 0.37, boxH * 0.3, "#121212", paper),
       label(T, ctx, "Mono", g.M + boxW + g.gutter * 2, top + boxH * 1.28, step(ad, -1.3), muted),
       T.block(
         "Keep clear space of at least the mark's cap height on every side. Never stretch, recolour outside these variants, add effects, or place the mark on a busy photograph without a scrim.",
@@ -805,12 +924,19 @@ function fallbackFor(family: string): string {
     : SANS_FALLBACK;
 }
 
-export type RenderResult = { pages: Page[]; fontBuffers: Uint8Array[] };
+export type RenderResult = { pages: Page[]; fontBuffers: Uint8Array[]; fontsOk: boolean };
 
 export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx): Promise<RenderResult> {
-  const heading = ctx.fonts?.heading || "Inter";
-  const body = ctx.fonts?.body || "Inter";
-  const [head, bodyFont] = await Promise.all([loadFont(heading, 700), loadFont(body, 400)]);
+  const wantHead = ctx.fonts?.heading || "Inter";
+  const wantBody = ctx.fonts?.body || "Inter";
+  const [head, bodyFont] = await Promise.all([
+    loadFontOrFallback(wantHead, 700),
+    loadFontOrFallback(wantBody, 400),
+  ]);
+  // Use the family we actually loaded — the rasteriser matches on the font's
+  // own name, so asking for a family we failed to fetch renders nothing.
+  const heading = head?.family ?? wantHead;
+  const body = bodyFont?.family ?? wantBody;
 
   // Browsers read the embedded @font-face; the rasteriser matches the TTF's own
   // family name, so the SVG must ask for the real family, not an alias.
@@ -849,8 +975,9 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
   }));
 
   const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
-  return { pages, fontBuffers };
+  return { pages, fontBuffers, fontsOk: fontBuffers.length > 0 };
 }
+
 
 /** Ready-to-paste HTML email signature (matches the PNG variant). */
 export function signatureHtml(ctx: CollateralCtx, logoUrl?: string | null): string {

@@ -219,9 +219,17 @@ async function generateKind(
     return { kind, files: 2 };
   }
 
-  const { pages, fontBuffers } = await renderCollateral(kind, ctx);
+  const { pages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx);
+  // Fail loudly. Without a real TTF the rasteriser silently drops every line of
+  // type, and we would store a "finished" page that is a logo on blank paper.
+  if (!fontsOk) throw new Error("Brand fonts could not be loaded — refusing to render type-less pages");
   let count = 0;
   for (const p of pages) {
+    const expectedText = (p.svg.match(/<text\b/g) || []).length;
+    if (expectedText === 0 && !/design_tokens|email_signature/.test(kind)) {
+      throw new Error(`${p.name}: no type was set on the page`);
+    }
+
     // Vector master, so a printer can scale it without loss.
     await store(admin, snapshotId, userId, kind, p.name, p.svg, "image/svg+xml", p.width, p.height, {
       vector: true,
