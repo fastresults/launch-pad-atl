@@ -200,7 +200,7 @@ function makeComponents(
     h3: heading(3),
     h4: heading(4),
     p: ({ children }: any) => (
-      <p className="my-3 text-[14.5px] leading-7 text-foreground/85">{children}</p>
+      <p className="my-5 text-[14.5px] leading-[1.85] text-foreground/85">{children}</p>
     ),
     a: ({ href, children }: any) => (
       <a
@@ -271,7 +271,7 @@ function makeComponents(
       );
     },
     img: ({ src, alt }: any) => (
-      <img src={src} alt={alt} className="my-4 max-w-full rounded-lg border border-white/10" />
+      <img src={src} alt={alt} className="my-6 max-w-full rounded-xl border border-white/10" />
     ),
   };
 }
@@ -992,7 +992,7 @@ export function DocumentViewer({
                     decoding="async"
                     // @ts-expect-error — fetchpriority is a valid HTML attribute not yet in React's DOM types
                     fetchpriority="high"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full rounded-lg object-cover"
                     onError={() => {
                       // Signed URLs expire after 1h and can also 404 briefly
                       // during a regenerate swap. Retry once with a fresh URL

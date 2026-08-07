@@ -67,7 +67,7 @@ export function ShareSection({ item }: { item: ShareItem }) {
       <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
         <DialogContent className="theme-dark-scope max-w-5xl border-border/60 bg-background p-2">
           {lightbox && (
-            <img src={lightbox} alt={item.title} className="max-h-[80vh] w-full object-contain" />
+            <img src={lightbox} alt={item.title} className="max-h-[80vh] w-full rounded-xl object-contain" />
           )}
         </DialogContent>
       </Dialog>
