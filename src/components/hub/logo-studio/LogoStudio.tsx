@@ -87,6 +87,10 @@ export default function LogoStudio({
   }, [existing.data]);
 
   const steps = session?.steps ?? [];
+  // A typography request is honoured as a typeset lockup beside the symbol,
+  // never as letters drawn inside the artwork.
+  const wantsLockup = (session?.brief?.requirements ?? []).some((r) => LOCKUP_RE.test(r));
+
   const current = steps[steps.length - 1] ?? null;
 
   useEffect(() => {
