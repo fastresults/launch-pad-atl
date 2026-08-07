@@ -95,6 +95,7 @@ export function businessProfileBlock(profile: BusinessProfile | null): string {
     profile.human_truth ? `Human truth: ${profile.human_truth}` : "",
     profile.emotional_promise ? `Emotional promise: ${profile.emotional_promise}` : "",
     profile.meaning_symbols?.length ? `MEANING-CARRYING SYMBOLS (draw from these first): ${profile.meaning_symbols.join("; ")}` : "",
+    profile.human_figures && profile.human_figures.toLowerCase() !== "none" ? `HUMAN PRESENCE (the mark must show people, not just the props of the place): ${profile.human_figures}` : "",
     profile.symbol_vocabulary.length ? `Honest symbol vocabulary: ${profile.symbol_vocabulary.join(", ")}` : "",
     profile.cliche_blacklist.length ? `BANNED for this category: ${profile.cliche_blacklist.join(", ")}` : "",
     profile.must_communicate ? `Must communicate: ${profile.must_communicate}` : "",
