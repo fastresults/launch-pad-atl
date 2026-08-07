@@ -1,0 +1,2 @@
+ALTER TABLE public.brand_logo_directions DROP CONSTRAINT IF EXISTS brand_logo_directions_current_stage_check;
+ALTER TABLE public.brand_logo_directions ADD CONSTRAINT brand_logo_directions_current_stage_check CHECK (current_stage = ANY (ARRAY['render_concept'::text,'develop_vector'::text,'draw_vector'::text,'review_vector'::text,'revise_vector'::text,'publish_vector'::text,'complete'::text]));
