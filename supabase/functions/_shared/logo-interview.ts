@@ -187,10 +187,36 @@ function normalizeDirection(d: any): RoughDirection {
   return {
     title: typeof d?.title === "string" && d.title ? d.title : "The mark",
     render_brief: typeof d?.render_brief === "string" ? d.render_brief : "",
+    change_note: typeof d?.change_note === "string" ? d.change_note : "",
   };
 }
 
-async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewTurn> {
+/** Merge the ledger the designer returned with the one we already hold. Nothing is lost. */
+export function mergeRequirements(existing: string[], incoming: unknown): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const push = (value: unknown) => {
+    if (typeof value !== "string") return;
+    const text = value.trim();
+    if (!text) return;
+    const key = text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(text.slice(0, 220));
+  };
+  for (const item of existing) push(item);
+  if (Array.isArray(incoming)) for (const item of incoming) push(item);
+  return out.slice(0, 20);
+}
+
+function requirementsBlock(requirements: string[]): string {
+  if (!requirements.length) return "";
+  return `## Locked requirements (LAW — every one of these must be satisfied by the drawing you request, and returned in your requirements list)\n${
+    requirements.map((r) => `- ${r}`).join("\n")
+  }`;
+}
+
+async function callInterviewer(apiKey: string, input: any[], carried: string[]): Promise<InterviewTurn> {
   const parsed = await callDesigner(apiKey, input, "logo_interview_turn", SCHEMA);
   return {
     read_back: parsed.read_back ?? null,
@@ -200,6 +226,7 @@ async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewT
     allow_free_text: parsed.allow_free_text !== false,
     multi_select: parsed.multi_select === true,
     direction: normalizeDirection(parsed.direction),
+    requirements: mergeRequirements(carried, parsed.requirements),
     brief_summary: parsed.brief_summary ?? "",
     done: parsed.done === true,
   };
