@@ -87,18 +87,13 @@ const MOODBOARD_ANGLES = [
   "Tile 4 — Color & motion: an abstract painterly composition built from the brand's primary, secondary and accent colors. Smooth gradients, organic shapes.",
 ];
 
-/* ----------------------- LOGO CREATIVE DIRECTOR ----------------------- */
-
-// An agency process, not a single prompt:
-//   1. Strategy    — read the venture's real assets, write a one-page brief.
-//   2. Concepts    — generate 10 candidates, self-score, return the best 4.
-//   3. Execution   — render each as a flat vector MARK (not a picture).
-//   4. Critique    — look at what actually came back; retry the failures once.
+/* ----------------------- LOGO STUDIO ----------------------- */
 
 type LogoDirection = {
   direction_name: string;
   logo_type: string; // wordmark | lettermark | monogram | pictorial mark | abstract mark | emblem | combination mark
-  human_link?: string;      // how this mark traces back to the human moment
+  business_link?: string;   // how this mark traces back to what the business does
+  human_link?: string;      // legacy field from earlier runs
   one_line_idea?: string;   // the single shape idea, one sentence
   geometric_operation?: string; // the one construction move that creates the mark
   craft_move?: string;      // counterform | continuous stroke | tangent | ligature | negative space
@@ -115,18 +110,6 @@ type LogoDirection = {
   scores?: Record<string, number>;
 };
 
-type BrandStrategy = {
-  // The human truth comes first: identity work that starts at geometry
-  // produces geometry. Identity work that starts at a person produces a mark.
-  human_truth?: string;      // who this is for, in their own terms
-  human_moment?: string;     // the moment the business exists to fix
-  first_feeling?: string;    // what a customer should feel in two seconds
-  physical_anchor?: string;  // the one object, gesture or space that moment lives in
-  core_idea: string;
-  attributes: string[];
-  metaphor_territory: string;
-  not_list: string[];
-};
 
 
 // Chat models used for the thinking passes, in fallback order. Judgment work
