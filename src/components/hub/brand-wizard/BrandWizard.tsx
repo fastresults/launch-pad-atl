@@ -572,7 +572,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     setProbing(true);
     try {
       const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_status", probe: true } });
-      queryClient.setQueryData(["higgsfieldStatus", snapshot.id], out);
+      qc.setQueryData(["higgsfieldStatus", snapshot.id], out);
       out?.state === "ready" ? toast.success(out.headline) : toast.error(out?.headline ?? "Test render failed");
     } catch (e: any) {
       toast.error(e?.message || "Could not reach Higgsfield");
