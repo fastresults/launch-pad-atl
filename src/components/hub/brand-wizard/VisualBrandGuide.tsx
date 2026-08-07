@@ -140,7 +140,12 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
                     <span className="text-xs font-semibold uppercase tracking-wide">{key}</span>
                     <span className="font-mono text-xs">{value}</span>
                   </div>
-                  <div className="mt-1 font-mono text-[11px] text-muted-foreground">RGB {hexToRgb(value)}</div>
+                  <div className="mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground">
+                    <div>RGB {hexToRgb(value)}</div>
+                    <div>CMYK {colorSpaces(value).cmyk.join(", ")}</div>
+                    <div style={{ color: primary }}>{colorSpaces(value).pantone}</div>
+                  </div>
+
                 </div>
               </div>
             ))}
