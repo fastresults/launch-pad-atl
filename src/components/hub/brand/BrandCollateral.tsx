@@ -248,7 +248,7 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
         files={openKind ? (byKind[openKind] ?? []) : []}
         busy={gen.isPending && (busyKind === openKind || busyKind === "all")}
         canGenerate={!!locked}
-        onRegenerate={() => openKind && gen.mutate([openKind])}
+        onRegenerate={() => openKind && requestGen([openKind])}
         onClear={async () => {
           if (!openKind) return;
           if (await confirm({ title: `Clear ${openMeta?.label ?? "this piece"}?`, description: "The generated files for this piece are removed. You can regenerate at any time.", destructive: true, confirmText: "Clear" })) {
@@ -256,6 +256,17 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
           }
         }}
       />
+
+      <CollateralDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        snapshotId={snapshot.id}
+        onVerified={() => {
+          detailsQ.refetch();
+          gen.mutate(pendingKinds);
+        }}
+      />
+
     </div>
   );
 }
