@@ -117,17 +117,43 @@ function charUnits(s: string): number {
   return out;
 }
 
+// The estimator is approximate; bias it wide so its error can only make lines
+// shorter than reality, never wider (a wide error is a clipped poster).
+const WIDTH_SAFETY = 1.05;
+
 function estWidth(s: string, size: number): number {
-  return charUnits(s) * size;
+  return charUnits(s) * size * WIDTH_SAFETY;
+}
+
+/**
+ * Break a token that cannot fit the column: first at existing hyphens / slashes
+ * (so "Administrator-as-a-Service" splits cleanly), then character-by-character
+ * as a last resort. Never returns a fragment wider than `maxW`.
+ */
+function splitLongToken(word: string, size: number, maxW: number): string[] {
+  if (estWidth(word, size) <= maxW) return [word];
+  const parts = word.split(/(?<=[-–—/])/).filter(Boolean);
+  if (parts.length > 1) return parts.flatMap((p) => splitLongToken(p, size, maxW));
+  const out: string[] = [];
+  let cur = "";
+  for (const ch of word) {
+    if (cur && estWidth(cur + ch, size) > maxW) { out.push(cur); cur = ch; }
+    else cur += ch;
+  }
+  if (cur) out.push(cur);
+  return out;
 }
 
 function wrap(text: string, size: number, maxW: number, maxLines: number): string[] | null {
-  const words = text.split(/\s+/).filter(Boolean);
+  const tokens = text
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((w) => splitLongToken(w, size, maxW));
   const lines: string[] = [];
   let cur = "";
-  for (const w of words) {
-    if (estWidth(w, size) > maxW) return null;
-    const next = cur ? `${cur} ${w}` : w;
+  for (const w of tokens) {
+    const glue = cur && /[-–—/]$/.test(cur) ? "" : " ";
+    const next = cur ? `${cur}${glue}${w}` : w;
     if (estWidth(next, size) <= maxW) cur = next;
     else {
       if (cur) lines.push(cur);
@@ -140,7 +166,20 @@ function wrap(text: string, size: number, maxW: number, maxLines: number): strin
   return lines;
 }
 
-type Fitted = { lines: string[]; size: number; lineHeight: number };
+type Fitted = {
+  lines: string[];
+  size: number;
+  lineHeight: number;
+  /** false when the type had to be clamped and copy was dropped. */
+  fits: boolean;
+  /** widest rendered line as a percentage of the available column. */
+  longestPct: number;
+};
+
+function longestPctOf(lines: string[], size: number, maxW: number): number {
+  const widest = lines.reduce((m, l) => Math.max(m, estWidth(l, size)), 0);
+  return Number(((widest / Math.max(1, maxW)) * 100).toFixed(1));
+}
 
 function fitDisplay(text: string, maxW: number, minDim: number, maxLines: number, maxBlockH: number): Fitted | null {
   const clean = text.trim().replace(/\s+/g, " ");
@@ -148,16 +187,42 @@ function fitDisplay(text: string, maxW: number, minDim: number, maxLines: number
   const s = minDim / 1080;
   const max = Math.round(96 * s);
   const min = Math.round(30 * s);
+  const floor = Math.max(12, Math.round(20 * s));
+
   for (let size = max; size >= min; size -= 2) {
     const lines = wrap(clean, size, maxW, maxLines);
     if (!lines) continue;
     const lineHeight = Math.round(size * 1.12);
     // Shrink the type before letting the block run past its height budget.
     if (lines.length * lineHeight > maxBlockH) continue;
-    return { lines, size, lineHeight };
+    return { lines, size, lineHeight, fits: true, longestPct: longestPctOf(lines, size, maxW) };
   }
-  const lines = wrap(clean, min, maxW, maxLines + 1) ?? [clean];
-  return { lines, size: min, lineHeight: Math.round(min * 1.12) };
+
+  // Nothing fit at the comfortable range — keep shrinking, and allow one extra
+  // line, before we ever consider dropping copy.
+  for (let size = min - 1; size >= floor; size -= 1) {
+    const lines = wrap(clean, size, maxW, maxLines + 1);
+    if (!lines) continue;
+    const lineHeight = Math.round(size * 1.12);
+    if (lines.length * lineHeight > maxBlockH) continue;
+    return { lines, size, lineHeight, fits: true, longestPct: longestPctOf(lines, size, maxW) };
+  }
+
+  // Last resort: typeset at the floor and clamp the number of lines. Every line
+  // is still width-safe (splitLongToken guarantees it) — we drop copy rather
+  // than draw anything past the margin, and flag the poster as not fitting.
+  const lineHeight = Math.round(floor * 1.12);
+  const heightCap = Math.max(1, Math.floor(maxBlockH / lineHeight));
+  const all = wrap(clean, floor, maxW, 999) ?? [clean];
+  const cap = Math.max(1, Math.min(maxLines + 1, heightCap));
+  const lines = all.slice(0, cap);
+  return {
+    lines,
+    size: floor,
+    lineHeight,
+    fits: lines.length === all.length,
+    longestPct: longestPctOf(lines, floor, maxW),
+  };
 }
 
 function maxHeadlineLines(aspect: AdAspect): number {
