@@ -285,11 +285,29 @@ const LIBRARY_MOBILITY: SceneVariant[] = [
   { depict: "Flat-lay of blueprints, calipers, and a coffee cup on a steel workbench.", subjects: ["blueprints", "tools"], setting: "workbench flat-lay", mood: "engineered", camera: CAMERAS[3], composition: COMPOSITIONS[5] },
 ];
 
+// Human-care ventures: elder care, home care, assisted living, childcare,
+// caregiving, in-home support. Previously these fell through to
+// LIBRARY_STARTUP, which is how a passport flat-lay ended up representing an
+// elderly residence.
+const LIBRARY_CARE: SceneVariant[] = [
+  { depict: "An older adult and a caregiver seated together in a sunlit living room, mid-conversation, both relaxed and smiling naturally.", subjects: ["older adult", "caregiver", "living room"], setting: "warm residential living room, late-morning light", mood: "warm, dignified", camera: CAMERAS[1], composition: COMPOSITIONS[7], tags: ["care", "customer", "trust"] },
+  { depict: "A caregiver's hand steadying an older adult's hand on a wooden banister — cropped close, respectful, no faces.", subjects: ["hands", "banister"], setting: "home staircase macro", mood: "steady, trusted", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["trust", "care"] },
+  { depict: "An older adult tending potted herbs on a back porch, a caregiver nearby holding the watering can.", subjects: ["older adult", "caregiver", "porch plants"], setting: "residential back porch", mood: "independent, tended", command: "", camera: CAMERAS[0], composition: COMPOSITIONS[0], tags: ["independence", "care"] },
+  { depict: "A quiet, made-up bedroom in a residential care home — soft linens, a reading lamp, a framed family photo on the nightstand.", subjects: ["bedroom", "reading lamp", "family photo"], setting: "residential care bedroom", mood: "safe, homelike", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["home", "brand"] },
+  { depict: "A family member and a care coordinator talking across a kitchen table, a mug between them, calm daylight.", subjects: ["family member", "care coordinator", "kitchen table"], setting: "home kitchen", mood: "reassuring", camera: CAMERAS[1], composition: COMPOSITIONS[7], tags: ["family", "customer"] },
+  { depict: "Three generations walking slowly along a tree-lined neighborhood sidewalk, the eldest arm-in-arm in the middle.", subjects: ["older adult", "family", "sidewalk"], setting: "leafy residential street", mood: "connected", camera: CAMERAS[2], composition: COMPOSITIONS[0], tags: ["family", "community"] },
+  { depict: "A caregiver setting a warm meal in front of an older adult at a small dining table, steam rising.", subjects: ["caregiver", "older adult", "meal"], setting: "home dining nook", mood: "nourishing, everyday", camera: CAMERAS[0], composition: COMPOSITIONS[2], tags: ["daily", "care"] },
+  { depict: "Macro of a weekly care schedule handwritten on a paper planner beside reading glasses on a kitchen counter.", subjects: ["planner", "reading glasses"], setting: "kitchen counter macro", mood: "organized, human", camera: CAMERAS[4], composition: COMPOSITIONS[5], tags: ["process", "trust"] },
+];
+
 function pickLibrary(track: string, industry: string): SceneVariant[] {
+  // Care matching runs FIRST: an elder-care venture on the main-street track
+  // is still a care business, not a storefront.
+  if (/(elder|senior|aging|geriatric|assisted living|residential care|nursing|home care|homecare|caregiv|hospice|memory care|child ?care|day ?care|in-home)/.test(industry)) return LIBRARY_CARE;
   if (track.includes("main_street") || track.includes("main street")) return LIBRARY_MAIN_STREET;
   if (/food|restaurant|bever|cafe|coffee/.test(industry)) return LIBRARY_FOOD;
   if (/fitness|wellness|health club|gym/.test(industry)) return LIBRARY_FITNESS;
-  if (/(life ?sci|biotech|pharma|medical|health tech)/.test(industry)) return LIBRARY_HEALTH;
+  if (/(life ?sci|biotech|pharma|medical|health tech|clinic|therap)/.test(industry)) return LIBRARY_HEALTH;
   if (/auto|vehicle|mobility/.test(industry)) return LIBRARY_MOBILITY;
   return LIBRARY_STARTUP;
 }
