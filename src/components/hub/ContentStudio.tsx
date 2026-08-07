@@ -339,7 +339,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           direction={direction}
           posterLayout={posterLayout}
           aspects={aspects}
-          selectedWeeks={selectedWeeks}
+          selectedWeeks={effectiveWeeks}
           posts={posts}
           ads={ads}
           autoRunWeek={autoRunWeek}
@@ -361,7 +361,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           snapshotId={snapshotId}
           ads={ads}
           posts={posts}
-          selectedWeeks={selectedWeeks}
+          selectedWeeks={effectiveWeeks}
           onBack={() => setStep(4)}
 
           onAddWeek={async (week) => {
