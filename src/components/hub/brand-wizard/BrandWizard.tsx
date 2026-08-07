@@ -575,6 +575,23 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_directions", runId: run.id } });
       state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     }
+    // Render each concept as a real designed mark before tracing it to vector.
+    // This stage self-heals: a direction whose render is unavailable advances to
+    // drawing anyway, so the loop below never blocks on the image provider.
+    const pending = (state.directions ?? []).filter(
+      (d: any) => d.current_stage === "render_concept" && !["ready", "needs_review", "canceled"].includes(d.status),
+    );
+    if (pending.length) {
+      setLogoPhase("rendering");
+      for (let i = 0; i < pending.length; i += 2) {
+        await Promise.allSettled(pending.slice(i, i + 2).map((d: any) =>
+          generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_concept", runId: run.id, directionId: d.id } })
+        ));
+        await logoRunQ.refetch();
+      }
+      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+    }
+
     setLogoPhase("drawing");
     for (let round = 0; round < 3; round++) {
       const work = (state.directions ?? []).filter((d: any) => !["ready", "needs_review", "canceled"].includes(d.status) && Number(d.attempt_count ?? 0) < 3);
