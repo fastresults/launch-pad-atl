@@ -290,18 +290,28 @@ function normalizeVectorResponse(parsed: any): { root: any; primitives: any[] } 
 async function requestVectorResponse(messages: any[]): Promise<{ root: any; primitives: any[] }> {
   const failures: string[] = [];
   for (const model of VECTOR_MODELS) {
-    try {
-      const raw = await callChatAI(messages, { json: true, model });
-      const parsed = parseJsonLoose(raw);
-      const normalized = normalizeVectorResponse(parsed);
-      if (normalized) return normalized;
-      failures.push(`${model}: structured response contained no supported vector elements`);
-      console.warn("invalid vector response", model, String(raw).slice(0, 240));
-    } catch (error) {
-      failures.push(`${model}: ${errorMessage(error)}`);
-      console.warn("vector call failed", model, errorMessage(error));
+    // A full vector spec is a long structured generation; 60s clipped it mid-
+    // stream, so each model gets a real window plus one retry on a timeout.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const raw = await callChatAI(messages, { json: true, model, timeoutMs: 150_000 });
+        const parsed = parseJsonLoose(raw);
+        const normalized = normalizeVectorResponse(parsed);
+        if (normalized) return normalized;
+        failures.push(`${model}: structured response contained no supported vector elements`);
+        console.warn("invalid vector response", model, String(raw).slice(0, 240));
+        break;
+      } catch (error) {
+        const msg = errorMessage(error);
+        console.warn("vector call failed", model, `attempt ${attempt + 1}`, msg);
+        const retryable = /abort|timeout|429|502|503|504/i.test(msg);
+        if (retryable && attempt === 0) continue;
+        failures.push(`${model}: ${msg}`);
+        break;
+      }
     }
   }
+
   throw new Error(`Logo designer returned no drawable vector after provider fallbacks. ${failures.join(" | ").slice(0, 700)}`);
 }
 
