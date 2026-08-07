@@ -300,9 +300,8 @@ export default function LogoStudio({
               </p>
             )}
           </div>
-
-          </div>
         </div>
+
       </section>
     );
   }
