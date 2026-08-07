@@ -1055,9 +1055,11 @@ export type Database = {
       }
       brand_logo_runs: {
         Row: {
+          business_profile: Json | null
           canceled_at: string | null
           completed_at: string | null
           completed_count: number
+          craft_spec: Json | null
           created_at: string
           heartbeat_at: string | null
           id: string
@@ -1072,9 +1074,11 @@ export type Database = {
           version: number
         }
         Insert: {
+          business_profile?: Json | null
           canceled_at?: string | null
           completed_at?: string | null
           completed_count?: number
+          craft_spec?: Json | null
           created_at?: string
           heartbeat_at?: string | null
           id?: string
@@ -1089,9 +1093,11 @@ export type Database = {
           version?: number
         }
         Update: {
+          business_profile?: Json | null
           canceled_at?: string | null
           completed_at?: string | null
           completed_count?: number
+          craft_spec?: Json | null
           created_at?: string
           heartbeat_at?: string | null
           id?: string
