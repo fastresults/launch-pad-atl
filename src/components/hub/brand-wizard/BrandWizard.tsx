@@ -1205,7 +1205,51 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
             })}
           </div>
         )}
+
+        <Dialog open={!!refineTarget} onOpenChange={(open) => { if (!open && !refineDirection.isPending) { setRefineTarget(null); setRefineNote(""); } }}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Refine this mark</DialogTitle>
+              <DialogDescription>
+                Write your own art direction. The same concept is re-rendered with your note — the current version is kept in the archive.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-1.5">
+                {REFINE_CHIPS.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setRefineNote((prev) => (prev.trim() ? `${prev.trim()} ${chip}.` : `${chip}.`))}
+                    className="rounded-full border border-white/15 px-2.5 py-1 text-[11px] text-muted-foreground transition hover:border-primary hover:text-foreground"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+              <Textarea
+                value={refineNote}
+                onChange={(e) => setRefineNote(e.target.value)}
+                rows={4}
+                placeholder="e.g. Keep the cane, drop the leaf, and make the stroke weight even throughout."
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" disabled={refineDirection.isPending} onClick={() => { setRefineTarget(null); setRefineNote(""); }}>
+                  Cancel
+                </Button>
+                <Button
+                  disabled={refineDirection.isPending || !refineNote.trim()}
+                  onClick={() => refineDirection.mutate({ item: refineTarget, note: refineNote.trim() })}
+                >
+                  {refineDirection.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+                  Re-render
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </section>
+
 
 
       <div className="flex justify-between">
