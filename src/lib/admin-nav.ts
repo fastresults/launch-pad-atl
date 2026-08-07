@@ -150,6 +150,14 @@ export const ADMIN_NAV: AdminNavItem[] = [
     keywords: ["ventures", "snapshots", "ideas", "assets", "new venture"],
   },
   {
+    to: "/dashboard/hub",
+    label: "My ventures",
+    icon: Rocket,
+    group: "Workspace",
+    description: "Ventures you own — open and work in them",
+    keywords: ["my ventures", "my startups", "mine", "own", "workspace", "founders hub"],
+  },
+  {
     to: "/admin/hub/new",
     label: "New venture",
     icon: Plus,
