@@ -1377,8 +1377,41 @@ function Step6Launch({
   const setLive = (platform: string, live: boolean) =>
     onUpdate({ ...launchStatus, [platform]: { live } });
 
+  const qc = useQueryClient();
+  const confirm = useConfirm();
+  const [clearing, setClearing] = useState(false);
+
+  /** Delete the generated images for one channel, or for every channel, so the
+   *  founder can go back and build a fresh set rather than living with these. */
+  const clearImages = async (platform?: string) => {
+    const targets = assets.filter((a: any) => a.id && (!platform || a.platform === platform));
+    if (targets.length === 0) { toast.info("No images to clear here."); return; }
+    const ok = await confirm({
+      title: platform ? `Clear ${platform} images?` : "Clear all generated images?",
+      description: platform
+        ? `Deletes the ${targets.length} generated image${targets.length === 1 ? "" : "s"} for ${platform}. Go back to Build kit to generate a fresh set.`
+        : `Deletes all ${targets.length} generated image${targets.length === 1 ? "" : "s"} across every channel. Your brand kit, style and channel choices stay put — go back to Build kit to start the artwork over.`,
+      destructive: true,
+      confirmText: "Clear",
+    });
+    if (!ok) return;
+    setClearing(true);
+    let failed = 0;
+    try {
+      for (const a of targets) {
+        try { await deleteSocialAsset(snapshotId, a.id); } catch { failed += 1; }
+      }
+      await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+      if (failed) toast.error(`Cleared, but ${failed} image${failed === 1 ? "" : "s"} could not be deleted.`);
+      else toast.success(platform ? `${platform} images cleared.` : "All images cleared — head back to Build kit to start over.");
+    } finally {
+      setClearing(false);
+    }
+  };
+
   const liveCount = platforms.filter((p) => launchStatus[p]?.live).length;
   const allLive = platforms.length > 0 && liveCount === platforms.length;
+  const anyImages = assets.length > 0;
 
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
@@ -1387,8 +1420,23 @@ function Step6Launch({
           <h3 className="text-base font-semibold">You're ready to launch</h3>
           <p className="text-xs text-muted-foreground">One card per channel. Sign in, paste, post — done.</p>
         </div>
-        <Badge variant="outline" className="text-[10px]">{liveCount} / {platforms.length} live</Badge>
+        <div className="flex items-center gap-2">
+          {anyImages && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-[11px] text-destructive hover:text-destructive"
+              disabled={clearing}
+              onClick={() => clearImages()}
+              title="Delete every generated image and start the artwork over"
+            >
+              <Trash2 className="mr-1 h-3 w-3" /> Clear all images
+            </Button>
+          )}
+          <Badge variant="outline" className="text-[10px]">{liveCount} / {platforms.length} live</Badge>
+        </div>
       </header>
+
 
       {allLive && (
         <div className="flex items-center gap-2 rounded-lg border border-status-success/30 bg-status-success/10 p-3 text-xs">
