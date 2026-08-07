@@ -100,6 +100,7 @@ export async function generateContentAd(
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
     headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
     logoSize?: "sm" | "md" | "lg";
+    posterLayout?: string;
   },
 ) {
   return invoke("venture-content-ad", {
@@ -118,6 +119,7 @@ export type ContentProgress = {
   current_step: number;
   selected_weeks: number[];
   art_direction: string | null;
+  poster_layout?: string | null;
   default_aspects: AdAspect[];
   launch_status: Record<string, { live?: boolean }>;
 };
