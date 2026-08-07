@@ -926,7 +926,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold">Drop your 3 logo inspirations</h3>
+              <h3 className="text-sm font-semibold">Drop a logo inspiration (up to 3)</h3>
               <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">Required</span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
