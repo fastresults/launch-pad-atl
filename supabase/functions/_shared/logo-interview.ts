@@ -94,7 +94,7 @@ const SCHEMA = {
     direction: DIRECTION_SCHEMA,
     requirements: REQUIREMENTS_SCHEMA,
     brief_summary: { type: "string", description: "The accumulated design brief in plain language — everything decided so far." },
-    done: { type: "boolean", description: "True when enough has been decided that the founder should be approving the mark rather than approving more questions." },
+    done: { type: "boolean", description: "True when enough has been decided that the founder should be approving the mark rather than answering more questions." },
   },
 } as const;
 
