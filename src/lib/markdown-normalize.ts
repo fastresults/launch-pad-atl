@@ -1,9 +1,10 @@
 /**
- * Generated venture copy often separates paragraphs with a single newline,
- * which markdown collapses into one run-on block. This inserts blank lines
- * between consecutive prose lines so each paragraph renders as its own <p>,
- * while leaving structural markdown (lists, tables, code, headings, quotes)
- * untouched.
+ * Normalizers for generated venture copy before it hits react-markdown.
+ *
+ * Two problems recur in generated assets:
+ *  1. Paragraphs separated by a single newline collapse into one run-on block.
+ *  2. Plain prose/checklists get wrapped in triple-backtick fences, which
+ *     render as an unwrappable monospace slab that runs off the page.
  */
 
 const STRUCTURAL = /^\s*(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||```|~~~|---|===|\s*$)/;
@@ -31,4 +32,86 @@ export function normalizeParagraphs(md?: string | null): string {
   }
 
   return out.join("\n");
+}
+
+/** Languages that are genuinely code and must keep their fence. */
+const REAL_CODE = /^(json|js|jsx|ts|tsx|html|css|scss|xml|yaml|yml|sql|sh|bash|zsh|py|python|rb|go|rust|java|php|c|cpp|csharp|swift|kotlin|toml|ini|diff|graphql|svg)$/i;
+
+/** Heuristic: does this fenced body look like actual code rather than prose? */
+function looksLikeCode(body: string): boolean {
+  const codey = /[{};]\s*$|^\s*[<{[]|=>|function\s|const\s|import\s|SELECT\s|<\/?[a-z]+>/im;
+  const hits = body.split("\n").filter((l) => codey.test(l)).length;
+  return hits >= Math.max(2, body.split("\n").length * 0.3);
+}
+
+/**
+ * Convert `Day 0 — Foo :: Bar :: DONE WHEN baz` style pseudo-columns into a
+ * readable list item so the line can wrap instead of running off-screen.
+ */
+function unpackColumns(line: string): string {
+  const parts = line.split("::").map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return line;
+  const [head, ...rest] = parts;
+  return `- **${head}** — ${rest.join(" · ")}`;
+}
+
+/**
+ * Unwrap fences that hold ordinary prose/checklists (no language, or a
+ * text/markdown/plain language) so the content renders as real markdown.
+ * Real code fences are left untouched.
+ */
+export function unwrapProseFences(md: string): string {
+  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const out: string[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const open = lines[i].match(/^\s*(```|~~~)\s*([A-Za-z0-9+#-]*)\s*$/);
+    if (!open) {
+      out.push(lines[i++]);
+      continue;
+    }
+    const marker = open[1];
+    const lang = open[2] || "";
+    const body: string[] = [];
+    let j = i + 1;
+    let closed = false;
+    while (j < lines.length) {
+      if (new RegExp(`^\\s*${marker}\\s*$`).test(lines[j])) {
+        closed = true;
+        break;
+      }
+      body.push(lines[j++]);
+    }
+    if (!closed) {
+      out.push(lines[i++]);
+      continue;
+    }
+
+    const text = body.join("\n");
+    const keepFence =
+      REAL_CODE.test(lang) || (!/^(text|txt|plain|plaintext|markdown|md)$/i.test(lang) && lang !== "" ) || looksLikeCode(text);
+
+    if (keepFence) {
+      out.push(lines[i], ...body, lines[j]);
+    } else {
+      for (const raw of body) {
+        if (!raw.trim()) {
+          out.push("");
+          continue;
+        }
+        out.push(raw.includes("::") ? unpackColumns(raw) : raw);
+      }
+      out.push("");
+    }
+    i = j + 1;
+  }
+
+  return out.join("\n");
+}
+
+/** Full pipeline: unwrap fake fences, then split run-on paragraphs. */
+export function normalizeMarkdown(md?: string | null): string {
+  if (!md) return "";
+  return normalizeParagraphs(unwrapProseFences(md));
 }
