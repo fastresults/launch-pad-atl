@@ -603,12 +603,11 @@ Scores are 1-5 and must be honest.`;
 }
 
 /**
- * Stage 3 — draw the mark, then discipline it. The model gets one corrective
- * pass driven by the deterministic lint, so geometry errors never ship.
+ * STAGE 6 — vectorize. This now runs only on a mark the founder has approved,
+ * and it traces that exact render; it never invents geometry from a brief.
  */
 async function developVectorSpec(
   d: LogoDirection,
-  strategy: BrandStrategy | null,
   ctx: any,
   tokens: any,
   dossier: string,
@@ -657,53 +656,44 @@ async function developVectorSpec(
   return best!;
 }
 
-/** Stage 4 — the jury. Look at the mark that actually rendered and judge it honestly. */
-async function critiqueMark(
-  b64: string,
+/**
+ * STAGE 5 — the jury. Judges the RENDER (not a vector reconstruction) against
+ * the craft spec read from the founder's references and the business profile
+ * read from their copy.
+ */
+async function juryReview(
+  imageUrl: string,
   d: LogoDirection,
-  strategy: BrandStrategy | null,
-): Promise<{ pass: boolean; note: string }> {
-  const system = `You are judging a logo submission for an award feed of professional identity work. You have seen ten thousand generated marks and you can spot one instantly. You are not being kind. Most submissions fail. You only pass work a practising identity designer would put their name on in public.`;
-  const text = `Judge this rendered mark.
-
-Idea it claims: ${d.one_line_idea ?? d.symbol_concept}
-Craft move it claims: ${d.craft_move ?? d.geometric_operation ?? "unstated"}
-Logo type: ${d.logo_type}
-${strategy?.human_truth ? `Human truth it serves: ${strategy.human_truth}` : ""}
-${strategy?.core_idea ? `Must communicate: ${strategy.core_idea}` : ""}
-
-Fail it if ANY of these are true:
-- It reads as auto-generated: primitive shapes arranged neatly, with no drawing in it.
-- It is a cluster of rounded squares, a block plus/cross, dots-and-lines, or a letter parked in a box.
-- The claimed craft move is not actually visible in the artwork.
-- The shape is illegible, broken, accidental, unbalanced, or floats apart.
-- Curves are lumpy, tangents don't meet, or terminals look arbitrary.
-- It carries more than one competing idea, or turns to mush at 16px.
-- It has nothing to do with the human truth or the idea it claims.
-- It would work unchanged for any other company.
-
-Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact drawing change to make"}`;
-
-
-  let parsed: any = null;
+  spec: CraftSpec | null,
+  profile: BusinessProfile | null,
+): Promise<{ pass: boolean; note: string; scores: Record<string, number> }> {
+  const instruction = juryInstruction(
+    String((d as any).one_line_idea ?? d.symbol_concept ?? ""),
+    String(d.craft_move ?? d.geometric_operation ?? ""),
+    String(d.logo_type ?? ""),
+    spec,
+    profile,
+  );
   try {
-    parsed = parseJsonLoose(await callChatAI([
-      { role: "system", content: system },
+    const parsed = parseJsonLoose(await callChatAI([
+      { role: "system", content: JURY_SYSTEM },
       {
         role: "user",
         content: [
-          { type: "text", text },
-          { type: "image_url", image_url: { url: `data:image/png;base64,${b64}` } },
+          { type: "text", text: instruction },
+          { type: "image_url", image_url: { url: imageUrl } },
         ],
       },
-    ], { json: true, model: REVIEW_MODEL }));
+    ], { json: true, model: REVIEW_MODEL, timeoutMs: 90_000 }));
+    const verdict = parseJuryVerdict(parsed);
+    if (verdict) return verdict;
   } catch (error) {
-    console.warn("vision review unavailable", errorMessage(error));
+    console.warn("jury unavailable", errorMessage(error));
   }
-  // A failed/unavailable critique must never block delivery.
-  if (!parsed || typeof parsed.pass !== "boolean") return { pass: true, note: "" };
-  return { pass: parsed.pass, note: String(parsed.note ?? "") };
+  // A failed/unavailable jury must never block delivery.
+  return { pass: true, note: "", scores: {} };
 }
+
 
 /** Build the full lockup family from one approved construction. */
 async function buildLogoVariants(spec: VectorSpec, tokens: any, companyName: string) {
