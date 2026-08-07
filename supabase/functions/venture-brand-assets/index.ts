@@ -1474,16 +1474,16 @@ Deno.serve(async (req) => {
     }
 
 
-    // STAGE 6 — vectorize an APPROVED mark. Explicit, never automatic: this
-    // traces the raster the founder picked instead of redrawing the brief,
-    // which is what used to turn a decent concept into geometry slop.
+    // STAGE 6 — finalise an APPROVED mark. The concept is already vector, so
+    // this only assembles the lockup family from the stored construction:
+    // no model call, no redraw, nothing can change the founder's drawing.
     if (kind === "logo_vectorize" || kind === "logo_draw_vector" || kind === "logo_retry_direction") {
       if (!runId || !directionId) throw new Error("runId and directionId required");
       const current = await getRun(runId);
       const run = current.run;
       const row = current.directions.find((item: any) => item.id === directionId);
       if (!run || !row) throw new Error("Logo direction not found");
-      if (!row.render_path) throw new Error("Nothing to vectorize — this concept has no approved render yet.");
+      if (!row.vector_spec && !row.render_path) throw new Error("Nothing to finalise — this concept has no drawing yet.");
       if (row.asset?.vectorized && kind !== "logo_retry_direction") {
         return new Response(JSON.stringify({ ok: true, asset: row.asset, direction: row }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
@@ -1494,19 +1494,27 @@ Deno.serve(async (req) => {
       if (!claimed) return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Direction is already being processed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
       try {
-        const started = Date.now();
         const companyName = snap.company_name ?? "Venture";
-        const docsBlock = await loadBrandDocs(supabase, snapshotId);
         const profile = (run.business_profile ?? null) as BusinessProfile | null;
         const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
-        const dossier = buildDossier(ctx, tokens, profile, craftSpec, docsBlock);
 
-        // The approved raster is the design decision; the vector pass traces it.
-        const { data: signedRender } = await supabase.storage.from("user-media")
-          .createSignedUrl(row.render_path, 60 * 60);
+        const { data: signedRender } = row.render_path
+          ? await supabase.storage.from("user-media").createSignedUrl(row.render_path, 60 * 60)
+          : { data: null } as any;
         const renderUrl = signedRender?.signedUrl ?? null;
 
-        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, ctx, tokens, dossier, reviewNote ?? undefined, renderUrl);
+        // The stored spec IS the approved artwork. Only fall back to a model
+        // draw for legacy rows that predate vector-first concepting.
+        let spec = (row.vector_spec ?? null) as VectorSpec | null;
+        let redrawn = false;
+        if (!spec) {
+          const docsBlock = await loadBrandDocs(supabase, snapshotId);
+          const dossier = buildDossier(ctx, tokens, profile, craftSpec, docsBlock);
+          const drawn = await developVectorSpec(row.concept as LogoDirection, ctx, tokens, dossier, reviewNote ?? undefined, renderUrl);
+          spec = drawn.spec;
+          redrawn = true;
+        }
+        const lint = lintVectorSpec(spec);
         const variants = await buildLogoVariants(spec, tokens, companyName);
 
 
@@ -1522,28 +1530,16 @@ Deno.serve(async (req) => {
           uploadVariant(variants.knockout, "knockout"),
         ]);
 
-        // The trace is judged against the render it came from, not re-judged
-        // as a concept — the design decision was already made upstream.
-        let visionPass = true;
-        let visionNote = "";
-        if (Date.now() - started < 60_000 && renderUrl) {
-          const png = await rasterizeSvg(variants.mark, 512);
-          if (png) {
-            const verdict = await juryReview(`data:image/png;base64,${png}`, row.concept as LogoDirection, craftSpec, profile, null, (row.concept as any)?.set_law ?? null);
-            visionPass = verdict.pass;
-            visionNote = verdict.note;
-          }
-        }
-
         const modelScores = spec.quality_scores ?? {};
         const scoreValues = Object.values(modelScores).map(Number).filter(Number.isFinite);
         const average = scoreValues.length ? scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length : 4;
-        const passed = lint.pass && visionPass && average >= 3.5;
+        const passed = lint.pass && average >= 3.5;
         const note = [
-          visionPass ? "" : visionNote,
+          redrawn ? "Legacy concept — redrawn, not carried over from an approved vector." : "",
           ...(lint.pass ? [] : lint.findings),
         ].filter(Boolean).join(" ");
         const scores = { ...modelScores, geometry: Number(lint.score.toFixed(2)), ...lint.metrics };
+
 
         const asset = {
           ok: true,
