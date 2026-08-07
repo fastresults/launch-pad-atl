@@ -1089,11 +1089,20 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
         {runDirections.some((d) => !["ready", "needs_review"].includes(d.status)) && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
 
-            {runDirections.filter((d) => !["ready", "needs_review"].includes(d.status)).map((p: any) => (
+            {runDirections.filter((d) => !["ready", "needs_review"].includes(d.status)).map((p: any) => {
+              const stalled =
+                ["queued", "vectorizing", "retry_wait"].includes(p.status) &&
+                ((p.retry_at && new Date(p.retry_at).getTime() < Date.now()) ||
+                  (p.lease_expires_at && new Date(p.lease_expires_at).getTime() < Date.now()) ||
+                  (!p.retry_at && !p.lease_expires_at && p.status !== "vectorizing" && !!p.render_path));
+              const needsAction = p.status === "failed" || p.status === "retry_wait" || stalled;
+              return (
               <div key={p.id} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
                 <div className="flex aspect-square w-full items-center justify-center bg-white/5">
                   {p.status === "failed" || p.status === "retry_wait" ? (
                     <span className="px-3 text-center text-[11px] text-destructive">{p.last_error ?? "This direction needs another pass."}</span>
+                  ) : stalled ? (
+                    <span className="px-3 text-center text-[11px] text-amber-400">Paused — this concept stopped part-way through.</span>
                   ) : (
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   )}
@@ -1101,16 +1110,22 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                 <div className="space-y-2 p-3">
                   <div className="truncate text-xs font-semibold">{p.direction_name ?? `Concept ${p.slot + 1}`}</div>
                   <p className="line-clamp-2 text-[11px] text-muted-foreground">
-                    {p.status === "failed" || p.status === "retry_wait" ? "Saved for a targeted retry." : p.concept?.one_line_idea ?? p.current_stage?.replaceAll("_", " ") ?? "Drawing…"}
+                    {p.status === "failed" || p.status === "retry_wait"
+                      ? "Saved for a targeted retry."
+                      : stalled
+                        ? "Resume it to finish this mark."
+                        : p.concept?.one_line_idea ?? p.current_stage?.replaceAll("_", " ") ?? "Drawing…"}
                   </p>
-                  {(p.status === "failed" || p.status === "retry_wait") && (
+                  {needsAction && (
                     <Button variant="ghost" size="sm" className="h-7 w-full text-[11px]" disabled={retryDirection.isPending} onClick={() => retryDirection.mutate(p)}>
-                      <Sparkles className="mr-1 h-3 w-3" /> Try this one again
+                      <Sparkles className="mr-1 h-3 w-3" /> {stalled && p.status !== "failed" && p.status !== "retry_wait" ? "Resume this one" : "Try this one again"}
                     </Button>
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
+
           </div>
         )}
 
