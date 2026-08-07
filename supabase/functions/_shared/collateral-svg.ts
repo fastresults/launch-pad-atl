@@ -574,8 +574,9 @@ function letterhead({ ctx, T, defs }: Args): Page[] {
   const { primary, paper, fg, accent, muted } = palette(ctx);
   const d = ctx.details;
 
-  const logoH = Math.round(H * 0.052);
-  const headBase = snap(ad, g.M + logoH);
+  const rs = resolveSpec("letterhead", W, H);
+  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.6)), 0.7).h;
+  const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const footerY = H - g.M;
   const footer = [d.website, d.email, d.phone].filter(Boolean).join("   ·   ");
   const addr = addressLine(d);
@@ -609,8 +610,9 @@ function envelope({ ctx, T, defs }: Args): Page[] {
   const g = gridFor(ad, W, H);
   const { primary, paper, fg, accent, muted } = palette(ctx);
   const d = ctx.details;
-  const logoH = Math.round(H * 0.13);
-  const base = snap(ad, g.M + logoH);
+  const rs = resolveSpec("envelope-no10", W, H);
+  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.45)), 0.7).h;
+  const base = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const lines = addressBlock(d);
 
   const body = [
@@ -636,8 +638,10 @@ function notecard({ ctx, T, defs }: Args): Page[] {
   const ink = invert ? inkOn(primary) : fg;
   const soft = invert ? inkOn(primary) : muted;
 
-  const markH = Math.round(H * 0.17);
-  const markW = Math.min(g.content * 0.6, markH * Math.max(logoAspect(ctx), 1));
+  const rs = resolveSpec("notecard", W, H);
+  const nBox = markBoxFor(ctx, rs, g.content * 0.62, 0.68);
+  const markH = nBox.h;
+  const markW = nBox.w;
   const top = snap(ad, H * 0.17);
   const nameS = step(ad, 1.1);
   const note = ctx.copy?.notecard || d.tagline || "";
@@ -660,8 +664,9 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
   const { primary, paper, fg, accent, muted } = palette(ctx);
   const d = ctx.details;
   const rows = [d.email, d.phone, d.website, d.social].filter(Boolean) as string[];
-  const markBox = 150;
-  const left = 60;
+  const rsSig = resolveSpec("email-signature", W, H);
+  const markBox = markBoxFor(ctx, rsSig, W * 0.25, 0.6).h;
+  const left = Math.max(60, rsSig.safe);
   const railX = left + markBox + clearSpace(markBox) * 0.7;
   const textX = railX + 34;
   const nameS = step(ad, 0.9);
@@ -690,8 +695,9 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   const cols = isInvoice ? ["Description", "Qty", "Rate", "Amount"] : ["Scope item", "Detail", "Timeline", "Investment"];
   const colX = [g.M, g.col(Math.round(ad.grid.columns * 0.55)), g.col(Math.round(ad.grid.columns * 0.72)), W - g.M];
 
-  const logoH = Math.round(H * 0.045);
-  const headBase = snap(ad, g.M + logoH);
+  const rs = resolveSpec(mode, W, H);
+  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.5)), 0.7).h;
+  const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const metaTop = snap(ad, headBase + clearSpace(logoH) + step(ad, 2.5));
   const tableTop = snap(ad, metaTop + step(ad, 9));
   const rowH = step(ad, 1.8);
@@ -753,8 +759,12 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const deck = ctx.copy?.deck ?? {};
   const points = (deck.points ?? []).slice(0, 3);
 
-  const markH = Math.round(H * 0.11);
-  const markW = Math.min(g.span(4), markH * Math.max(logoAspect(ctx), 1));
+  const rsCover = resolveSpec("slide-1-cover", W, H);
+  const rsSlide = resolveSpec("slide-2-section", W, H);
+  const coverBox = markBoxFor(ctx, rsCover, g.span(4), 0.65);
+  const slideBox = markBoxFor(ctx, rsSlide, g.span(3), 0.6);
+  const markH = coverBox.h;
+  const markW = coverBox.w;
 
   pages.push({
     name: "slide-1-cover", width: W, height: H,
@@ -776,7 +786,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
       label(T, ctx, "01", g.M, H * 0.32, step(ad, 0.6), accent),
       T.line(deck.section || "Section title", g.M, H * 0.46, step(ad, 3.8), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.72)), tracking: step(ad, 3.8) * ad.type.displayTracking }),
       T.block(deck.sectionSub || "One sentence that frames what this section proves.", g.M, H * 0.56, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.55)), muted, { leading: 1.5, maxLines: 2 }).svg,
-      markAt(ctx, W - g.M - 120, H - g.M - 120, 120, 120, mix(primary, paper, 0.25), paper),
+      markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, mix(primary, paper, 0.25), paper),
     ].join("")),
   });
 
@@ -801,7 +811,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
         ].join("");
       }),
       T.line(ctx.company, g.M, H - g.M, step(ad, -0.6), muted, { maxWidth: g.span(5) }),
-      markAt(ctx, W - g.M - 70, H - g.M - 60, 70, 70, mix(primary, paper, 0.3), paper),
+      markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, mix(primary, paper, 0.3), paper),
     ].join("")),
   });
 
@@ -809,7 +819,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     name: "slide-4-closing", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${fg}"/>`,
-      markAt(ctx, W / 2 - 100, H * 0.3, 200, 150, inkOn(fg), fg),
+      markAt(ctx, (W - coverBox.w) / 2, H * 0.3, coverBox.w, coverBox.h, inkOn(fg), fg),
       T.line(deck.closing || "Thank you", W / 2, H * 0.6, step(ad, 3.6), inkOn(fg), { family: "head", weight: 700, anchor: "middle", maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
       T.line([d.website, d.email].filter(Boolean).join("   ·   "), W / 2, H * 0.68, step(ad, 0.2), inkOn(fg), { anchor: "middle", opacity: 0.75, maxWidth: g.content }),
     ].join("")),
@@ -835,13 +845,15 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
     label(T, ctx, `${ctx.company} — Brand guidelines`, W - g.M, g.M + step(ad, 0.4), step(ad, -1.3), muted, "end", g.span(5)),
   ].join("");
 
+  const rsG = resolveSpec("guidelines-1-cover", W, H);
+  const gCover = markBoxFor(ctx, rsG, g.span(4), 0.68);
   const top = g.M + step(ad, 6.4);
 
   pages.push({
     name: "guidelines-1-cover", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-      markAt(ctx, g.M, g.M, g.span(3), Math.round(H * 0.16), ink, primary),
+      markAt(ctx, g.M, g.M, gCover.w, gCover.h, ink, primary),
       label(T, ctx, "Brand guidelines", g.M, H * 0.52, step(ad, 0.6), ink, "start", g.span(6)),
       T.line(ctx.company, g.M, H * 0.66, step(ad, 4), ink, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.8)), tracking: step(ad, 4) * ad.type.displayTracking }),
       d.tagline ? T.line(d.tagline, g.M, H * 0.73, step(ad, 0.4), ink, { opacity: 0.75, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)) }) : "",
