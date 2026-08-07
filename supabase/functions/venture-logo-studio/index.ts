@@ -167,7 +167,12 @@ async function uploadSvg(supabase: any, userId: string, snapshotId: string, svg:
   return { path, url: data?.signedUrl ?? null };
 }
 
-/** Draw the single mark for this turn. One rough, never a set. */
+/**
+ * Draw the single mark for this turn. One rough, never a set.
+ *
+ * When there is already a mark on the table its image leads the reference list
+ * so the model edits that artwork instead of guessing a new one from text.
+ */
 async function drawOne(
   supabase: any,
   userId: string,
@@ -176,16 +181,20 @@ async function drawOne(
   tokens: any,
   companyName: string,
   references: string[],
+  requirements: string[] = [],
+  editRef?: string | null,
 ): Promise<{ roughs: Rough[]; error: string | null }> {
   try {
-    const prompt = roughPrompt(direction, tokens, companyName);
-    const { bytes, provider } = await drawRough(prompt, references);
+    const prompt = roughPrompt(direction, tokens, companyName, requirements, Boolean(editRef));
+    const refs = editRef ? [editRef, ...references.filter((r) => r !== editRef)] : references;
+    const { bytes, provider } = await drawRough(prompt, refs);
     const stored = await uploadPng(supabase, userId, snapshotId, bytes, "rough");
     return {
       roughs: [{
         id: crypto.randomUUID(),
         title: direction.title,
         brief: direction.render_brief,
+        change_note: direction.change_note ?? "",
         path: stored.path,
         url: stored.url,
         provider,
