@@ -383,6 +383,15 @@ Deno.serve(async (req) => {
       })
       .map(([label, items]) => ({ key: `cat:${label}`, label, items }));
 
+    // A gallery section carries its own artwork; a document section is only
+    // "illustrated" when it has real header art.
+    const allItems = sections.flatMap((s) => s.items);
+    const illustrated = allItems.filter(
+      (i) => !!i.heroImageUrl || (i.kind === "gallery" && !!i.images?.length),
+    ).length;
+
+    if (signFailures) console.error("[venture-share] signed url failures:", signFailures);
+
     return json({
       venture: {
         name: snap.company_name ?? "Untitled venture",
@@ -391,10 +400,18 @@ Deno.serve(async (req) => {
         industry: snap.industry ?? null,
         logoUrl,
         founderName: snap.founder_name ?? null,
+        colors: {
+          primary: paletteColors.primary ?? null,
+          accent: paletteColors.accent ?? null,
+          secondary: paletteColors.secondary ?? null,
+        },
       },
       share: { title: share.title ?? null, updatedAt: share.updated_at },
+      chatEnabled: share.chat_enabled !== false,
+      coverage: { total: allItems.length, illustrated, signFailures },
       sections,
     });
+
   } catch (e) {
     console.error("[venture-share]", e);
     return json({ error: "Could not load this share." }, 500);
