@@ -47,16 +47,17 @@ function ext(f: File) {
   return "FILE";
 }
 
-/** Collapse the SVG master and its `-preview` PNG into a single page. */
+/** Collapse the SVG master, its `-preview` PNG and its `-mockup` scene into one page. */
 function buildPages(files: File[]): Page[] {
   const groups = new Map<string, File[]>();
   for (const f of files) {
-    const base = String(f.name ?? "").replace(/-preview$/, "");
+    const base = String(f.name ?? "").replace(/-(preview|mockup)$/, "");
     if (!groups.has(base)) groups.set(base, []);
     groups.get(base)!.push(f);
   }
   return [...groups.entries()].map(([base, group]) => {
-    const png = group.find((f) => f.mime_type === "image/png");
+    const isMock = (f: File) => /-mockup$/.test(String(f.name ?? ""));
+    const png = group.find((f) => f.mime_type === "image/png" && !isMock(f));
     const svg = group.find((f) => f.mime_type === "image/svg+xml");
     const html = group.find((f) => f.mime_type === "text/html");
     const render = png ?? svg ?? html ?? group[0] ?? null;
@@ -66,10 +67,12 @@ function buildPages(files: File[]): Page[] {
       width: png?.width ?? svg?.width ?? null,
       height: png?.height ?? svg?.height ?? null,
       render,
-      files: group,
+      // The mock-up scene is presentation only — it never belongs in a download row.
+      files: group.filter((f) => !isMock(f)),
     };
   });
 }
+
 
 export function CollateralPreviewDialog({
   open, onOpenChange, kind, files, busy = false, canGenerate = true, onRegenerate, onClear,
