@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Loader2, Package, RotateCcw, Sparkles } from "lucide-react";
+import { Download, Eye, Loader2, Package, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   COLLATERAL_TIERS,
@@ -13,11 +13,13 @@ import {
   listCollateral,
 } from "@/lib/collateral.functions";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { CollateralPreviewDialog } from "@/components/hub/brand/CollateralPreviewDialog";
 
 export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: boolean }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [busyKind, setBusyKind] = useState<string | null>(null);
+  const [openKind, setOpenKind] = useState<string | null>(null);
 
   const q = useQuery({
     queryKey: ["brandCollateral", snapshot.id],
@@ -59,6 +61,11 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
       wipe.mutate(undefined);
     }
   };
+
+  const openMeta = useMemo(
+    () => COLLATERAL_TIERS.flatMap((t) => t.kinds).find((k) => k.kind === openKind) ?? null,
+    [openKind],
+  );
 
   const previewOf = (kind: string) =>
     (byKind[kind] ?? []).find((i) => i.mime_type === "image/png")?.url ?? null;
