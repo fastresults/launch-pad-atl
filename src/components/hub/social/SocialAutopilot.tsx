@@ -1481,17 +1481,16 @@ function Step6Launch({
                     Download cover
                   </a>
                 )}
-                {(avatar || cover) && (
-                  <button
-                    type="button"
-                    disabled={clearing}
-                    onClick={() => clearImages(p)}
-                    className="inline-flex h-6 items-center rounded border border-destructive/30 px-1.5 text-[10px] text-destructive hover:bg-destructive/10 disabled:opacity-50"
-                    title={`Delete the generated images for ${p}`}
-                  >
-                    <Trash2 className="mr-1 h-3 w-3" /> Clear
-                  </button>
-                )}
+                <button
+                  type="button"
+                  disabled={clearing}
+                  onClick={() => clearImages(p)}
+                  className="inline-flex h-6 items-center rounded border border-destructive/30 px-1.5 text-[10px] text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                  title={`Delete the generated images for ${p}`}
+                >
+                  <Trash2 className="mr-1 h-3 w-3" /> Reset {p}
+                </button>
+
               </div>
 
 
