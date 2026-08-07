@@ -577,7 +577,7 @@ Deno.serve(async (req) => {
         last_error: null,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
     /* ---------------- refine ---------------- */
@@ -593,17 +593,24 @@ Deno.serve(async (req) => {
         source
           ? `They are looking at the mark titled "${source.title}" (${source.brief}) and said: ${instruction}. Redraw THAT mark — same idea, their change applied.`
           : instruction,
+        undefined,
+        mergeRequirements(carried, [instruction]),
+        source,
       );
       const nextSteps = [...steps, step];
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         steps: nextSteps,
-        brief: { ...(session.brief ?? {}), summary: turn.brief_summary },
-
+        brief: {
+          ...(session.brief ?? {}),
+          summary: turn.brief_summary,
+          requirements: mergeRequirements(carried, turn.requirements),
+        },
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
+
 
     /* ---------------- approve (trace) ---------------- */
     if (action === "approve") {
