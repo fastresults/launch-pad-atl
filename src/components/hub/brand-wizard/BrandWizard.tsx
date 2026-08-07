@@ -764,7 +764,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const prdQ = useQuery({
     queryKey: ["brandWizardPrd", snapshot.id],
     queryFn: async () => {
-      const docs = await listSnapshotDocuments({ snapshotId: snapshot.id });
+      const docs = await listSnapshotDocuments({ data: { snapshotId: snapshot.id } });
       return docs.find((d: any) => d.document_type === "website_prd") ?? null;
     },
   });
