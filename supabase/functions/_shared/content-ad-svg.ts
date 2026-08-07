@@ -236,6 +236,18 @@ function maxHeadlineLines(aspect: AdAspect): number {
   return aspect === "1:1" ? 3 : 4;
 }
 
+/** Shrink a single-line element (kicker / CTA) until it clears the column. */
+function fitSingleLine(text: string, baseSize: number, maxW: number, trackingEm = 0): number {
+  if (!text) return baseSize;
+  const widthAt = (s: number) => estWidth(text, s) + text.length * s * trackingEm;
+  let size = baseSize;
+  while (size > 8 && widthAt(size) > maxW) size -= 1;
+  return size;
+}
+
+  return aspect === "1:1" ? 3 : 4;
+}
+
 // ---------- margin scale ----------
 
 /** One inset drives left, right, bottom and the logo. */
