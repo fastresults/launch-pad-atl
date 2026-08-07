@@ -205,6 +205,11 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
                     >
                       <span className="truncate text-sm font-medium hover:underline">{k.label}</span>
                       {files.length > 0 && <Badge variant="secondary" className="text-[10px]">{files.length}</Badge>}
+                      {isStale(k.kind) && (
+                        <Badge variant="outline" className="border-amber-500/50 text-[10px] text-amber-500">
+                          Details changed
+                        </Badge>
+                      )}
                     </button>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">{k.note}</p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -221,12 +226,13 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
                         variant="ghost"
                         className="h-6 px-2 text-[11px]"
                         disabled={!locked || gen.isPending}
-                        onClick={() => gen.mutate([k.kind])}
+                        onClick={() => requestGen([k.kind])}
                       >
                         {busyKind === k.kind ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
                         {files.length ? "Regenerate" : "Generate"}
                       </Button>
                     </div>
+
                   </div>
                 </div>
               );
