@@ -466,7 +466,17 @@ Deno.serve(async (req) => {
 
     let result: { b64: string; modelUsed: string; prompt: string };
     try {
-      result = await generate();
+      if (isAvatar) {
+        // Avatars are deterministic: a flat brand surface plus the real mark,
+        // composited below. No model call — nothing for it to get wrong.
+        result = {
+          b64: bytesToB64(solidPngBytes(asset.width, asset.height, plan.surface)),
+          modelUsed: "deterministic (flat brand surface + composited mark)",
+          prompt: buildPrompt(),
+        };
+      } else {
+        result = await generate();
+      }
     } catch (e: any) {
       const status = e?.status;
       const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: status };
