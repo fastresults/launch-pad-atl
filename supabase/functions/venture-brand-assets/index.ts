@@ -144,7 +144,7 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
   }
 }
 
-async function callChatAI(messages: any[], opts: { json?: boolean; model?: string } = {}) {
+async function callChatAI(messages: any[], opts: { json?: boolean; model?: string; timeoutMs?: number } = {}) {
   const model = opts.model ?? THINK_MODELS[0];
   const isOpenAI = model.startsWith("openai/");
   const res = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -157,7 +157,8 @@ async function callChatAI(messages: any[], opts: { json?: boolean; model?: strin
       ...(isOpenAI ? { max_completion_tokens: 8000 } : { max_tokens: 8000 }),
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
-  }, 60_000);
+  }, opts.timeoutMs ?? 60_000);
+
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`AI chat ${res.status}: ${txt.slice(0, 300)}`);
@@ -289,18 +290,28 @@ function normalizeVectorResponse(parsed: any): { root: any; primitives: any[] } 
 async function requestVectorResponse(messages: any[]): Promise<{ root: any; primitives: any[] }> {
   const failures: string[] = [];
   for (const model of VECTOR_MODELS) {
-    try {
-      const raw = await callChatAI(messages, { json: true, model });
-      const parsed = parseJsonLoose(raw);
-      const normalized = normalizeVectorResponse(parsed);
-      if (normalized) return normalized;
-      failures.push(`${model}: structured response contained no supported vector elements`);
-      console.warn("invalid vector response", model, String(raw).slice(0, 240));
-    } catch (error) {
-      failures.push(`${model}: ${errorMessage(error)}`);
-      console.warn("vector call failed", model, errorMessage(error));
+    // A full vector spec is a long structured generation; 60s clipped it mid-
+    // stream, so each model gets a real window plus one retry on a timeout.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const raw = await callChatAI(messages, { json: true, model, timeoutMs: 150_000 });
+        const parsed = parseJsonLoose(raw);
+        const normalized = normalizeVectorResponse(parsed);
+        if (normalized) return normalized;
+        failures.push(`${model}: structured response contained no supported vector elements`);
+        console.warn("invalid vector response", model, String(raw).slice(0, 240));
+        break;
+      } catch (error) {
+        const msg = errorMessage(error);
+        console.warn("vector call failed", model, `attempt ${attempt + 1}`, msg);
+        const retryable = /abort|timeout|429|502|503|504/i.test(msg);
+        if (retryable && attempt === 0) continue;
+        failures.push(`${model}: ${msg}`);
+        break;
+      }
     }
   }
+
   throw new Error(`Logo designer returned no drawable vector after provider fallbacks. ${failures.join(" | ").slice(0, 700)}`);
 }
 
