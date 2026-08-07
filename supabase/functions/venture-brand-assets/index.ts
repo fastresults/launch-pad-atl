@@ -987,7 +987,7 @@ Deno.serve(async (req) => {
     // direction; without them the studio was guessing, which is exactly what
     // produced the previous generation of slop.
     if (kind === "logo_create_run") {
-      const refs = Array.isArray(referenceImages) ? referenceImages.filter((u: any) => typeof u === "string" && u.startsWith("http")) : [];
+      const refs = Array.isArray(referenceImages) ? referenceImages.filter(isUsableImageRef) : [];
       if (refs.length < 3) {
         return new Response(JSON.stringify({
           error: "Upload three logos you admire before generating. They set the craft standard for this run.",
