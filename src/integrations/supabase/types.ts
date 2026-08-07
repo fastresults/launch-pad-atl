@@ -2887,6 +2887,7 @@ export type Database = {
           asset_notes: string | null
           best_time: string | null
           body: string | null
+          caption_variants: Json
           created_at: string
           cta: string | null
           day: string | null
@@ -2907,6 +2908,7 @@ export type Database = {
           asset_notes?: string | null
           best_time?: string | null
           body?: string | null
+          caption_variants?: Json
           created_at?: string
           cta?: string | null
           day?: string | null
@@ -2927,6 +2929,7 @@ export type Database = {
           asset_notes?: string | null
           best_time?: string | null
           body?: string | null
+          caption_variants?: Json
           created_at?: string
           cta?: string | null
           day?: string | null

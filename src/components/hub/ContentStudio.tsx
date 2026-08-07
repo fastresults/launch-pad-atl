@@ -1016,6 +1016,9 @@ function Step4BuildAds({
           lastHeadline: t.ad.last_headline,
           lastLogoSize: t.ad.last_logo_size,
           updatedAt: t.ad.updated_at,
+          post: t.post,
+          snapshotId,
+
         };
         return (
           <AssetPreviewDialog
@@ -1274,6 +1277,9 @@ function Step5Launch({
           lastHeadline: ad.last_headline,
           lastLogoSize: ad.last_logo_size,
           updatedAt: ad.updated_at,
+          post: p ?? null,
+          snapshotId,
+
         };
         return (
           <AssetPreviewDialog
