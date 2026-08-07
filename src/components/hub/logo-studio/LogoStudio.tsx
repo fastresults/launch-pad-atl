@@ -11,9 +11,9 @@ import { invokeEdge } from "@/lib/edge-invoke";
 /**
  * Logo Studio — an AI art director interviewing the founder while it draws.
  *
- * No queue, no background run, nothing to resume. Each answer is one request
- * that returns the next question and three fresh roughs. The rough the founder
- * approves is the artwork that gets vectored — what they see is what they get.
+ * It opens with a written brief of about 100 words proposing one mark. Once the
+ * founder approves the brief, exactly one mark is drawn and evolved question by
+ * question. The rough they approve is the artwork that gets vectored.
  */
 
 type Rough = { id: string; title: string; brief: string; url: string | null; provider: string };
@@ -33,14 +33,15 @@ type Step = {
 };
 type Session = {
   id: string;
-  status: "interviewing" | "approved" | "committed";
-  brief: { summary?: string } | null;
+  status: "briefing" | "interviewing" | "approved" | "committed";
+  brief: { summary?: string; proposal?: string; direction?: { title: string; render_brief: string } } | null;
   steps: Step[];
   approved_rough: Rough | null;
   vector_svg: string | null;
   traced: boolean | null;
   last_error: string | null;
 };
+
 
 async function studio(payload: Record<string, unknown>): Promise<any> {
   const { data, error } = await invokeEdge("venture-logo-studio", { body: payload });
