@@ -987,6 +987,18 @@ function Step5BuildKit({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-[10px] capitalize">{direction}</Badge>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px]"
+            disabled={running}
+            onClick={() => runAll()}
+            title="Generate every missing image across all channels"
+          >
+            {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+            Generate all
+          </Button>
+
           {anyDone && (
             <Button
               size="sm"
