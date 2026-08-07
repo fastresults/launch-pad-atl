@@ -439,6 +439,7 @@ Deno.serve(async (req) => {
         ? { mode: "custom", text: resolvedHeadline.text }
         : { mode: "auto" },
     });
+    step("poster copy distilled", { headline: !!posterCopy.headline });
 
     const headlineComposited = !!posterCopy.headline;
     const logoComposited = !!(logoSvgText || logoBytes || logoDataUrl);
@@ -464,6 +465,7 @@ Deno.serve(async (req) => {
       // the starting preference when the headline is suppressed.
       logoCorner: undefined,
     });
+    step("poster composited", poster.metrics);
     bytes = poster.bytes;
     (qa as any).headline_composited = headlineComposited;
     (qa as any).logo_composited = logoComposited;
@@ -471,6 +473,7 @@ Deno.serve(async (req) => {
     (qa as any).poster_layout = posterLayout;
     (qa as any).poster_copy = posterCopy;
     Object.assign(qa as any, poster.metrics);
+
 
 
 
