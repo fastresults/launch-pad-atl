@@ -73,7 +73,7 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const KIND_PRESETS: Record<string, { size: string; sceneHint: string; defaultCount: number }> = {
-  logo:          { size: "1024x1024", sceneHint: "", defaultCount: 4 },
+  logo:          { size: "1024x1024", sceneHint: "", defaultCount: 3 },
   moodboard:     { size: "1024x1024", sceneHint: "editorial brand moodboard tile, evocative, tactile, art-directed, magazine quality", defaultCount: 4 },
   social_profile:{ size: "1024x1024", sceneHint: "social media profile avatar, square 1:1, centered subject, simple background", defaultCount: 1 },
   social_cover:  { size: "1536x1024", sceneHint: "social media cover banner, wide composition, leave space for an overlaid headline on the right third", defaultCount: 1 },
@@ -805,7 +805,7 @@ Deno.serve(async (req) => {
     const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // Durable logo stages share the logo preset.
-    const logoKinds = ["logo_create_run", "logo_read_context", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_jury", "logo_vectorize", "logo_render_status", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_force_reset", "logo_remove_direction"];
+    const logoKinds = ["logo_create_run", "logo_read_context", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_jury", "logo_vectorize", "logo_render_status", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_force_reset", "logo_remove_direction", "logo_select_direction", "logo_refine_direction", "logo_restore_render"];
     const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
@@ -1008,7 +1008,7 @@ Deno.serve(async (req) => {
       await supabase.from("brand_logo_runs").update({ status: "canceled", canceled_at: new Date().toISOString() }).eq("snapshot_id", snapshotId).not("status", "in", '("completed","completed_with_review","failed","canceled")');
       const { data: previous } = await supabase.from("brand_logo_runs").select("version").eq("snapshot_id", snapshotId).order("version", { ascending: false }).limit(1);
       const version = Number(previous?.[0]?.version ?? 0) + 1;
-      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "reading_context", requested_count: n, reference_images: refs, heartbeat_at: new Date().toISOString() }).select().single();
+      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "reading_context", requested_count: Math.min(3, n), reference_images: refs, heartbeat_at: new Date().toISOString() }).select().single();
       if (error) throw error;
       return new Response(JSON.stringify({ ok: true, run }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -1278,6 +1278,87 @@ Deno.serve(async (req) => {
     }
 
 
+    // Founder picks ONE mark to carry forward. Single selection per run.
+    if (kind === "logo_select_direction") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
+      const { error: selErr } = await supabase.from("brand_logo_directions").update({ selected: true }).eq("id", directionId).eq("run_id", runId);
+      if (selErr) throw selErr;
+      return new Response(JSON.stringify({ ok: true, selected: directionId }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Founder-written refinement: archive the current render, then re-render the
+    // SAME brief with their note as the correction line so it stays in family.
+    if (kind === "logo_refine_direction") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      const row = current.directions.find((item: any) => item.id === directionId);
+      if (!row) throw new Error("Logo direction not found");
+      const note = typeof body?.note === "string" ? body.note.trim() : "";
+      if (!note) throw new Error("Add a short refinement direction before re-rendering.");
+
+      const history: any[] = Array.isArray(row.render_history) ? row.render_history : [];
+      if (row.render_path) {
+        const archivePath = `brand/${userId}/${snapshotId}/logo-renders/archive/${directionId}-${Date.now()}.png`;
+        const { error: copyErr } = await supabase.storage.from("user-media").copy(row.render_path, archivePath);
+        if (!copyErr) {
+          const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(archivePath, 60 * 60 * 24 * 7);
+          history.push({
+            path: archivePath,
+            url: signed?.signedUrl ?? null,
+            note: row.review_note ?? null,
+            archived_at: new Date().toISOString(),
+          });
+        }
+      }
+
+      const { error: refErr } = await supabase.from("brand_logo_directions").update({
+        render_history: history.slice(-8),
+        status: "queued",
+        current_stage: "render_concept",
+        render_status: "pending",
+        render_error: null,
+        review_attempts: 0,
+        review_note: note,
+        lease_token: null,
+        lease_expires_at: null,
+      }).eq("id", directionId);
+      if (refErr) throw refErr;
+      await supabase.from("brand_logo_runs").update({ status: "rendering", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
+      return new Response(JSON.stringify({ ok: true, queued: true, note, history: history.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Bring an archived version back as the current mark.
+    if (kind === "logo_restore_render") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      const row = current.directions.find((item: any) => item.id === directionId);
+      if (!row) throw new Error("Logo direction not found");
+      const historyPath = typeof body?.historyPath === "string" ? body.historyPath : "";
+      const history: any[] = Array.isArray(row.render_history) ? row.render_history : [];
+      const entry = history.find((h) => h?.path === historyPath);
+      if (!entry) throw new Error("That archived version is no longer available.");
+
+      const livePath = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
+      const { data: blob, error: dlErr } = await supabase.storage.from("user-media").download(entry.path);
+      if (dlErr || !blob) throw new Error("Could not read the archived mark from storage.");
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const { error: upErr } = await supabase.storage.from("user-media").upload(livePath, bytes, { contentType: "image/png", upsert: true });
+      if (upErr) throw upErr;
+      const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(livePath, 60 * 60 * 24 * 7);
+
+      const asset = { ...(row.asset ?? {}), url: signed?.signedUrl ?? null, preview_url: signed?.signedUrl ?? null, path: livePath, vectorized: false };
+      const { error: resErr } = await supabase.from("brand_logo_directions").update({
+        render_path: livePath,
+        render_status: "ready",
+        render_error: null,
+        status: "ready",
+        current_stage: "jury",
+        asset,
+      }).eq("id", directionId);
+      if (resErr) throw resErr;
+      return new Response(JSON.stringify({ ok: true, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
 
     // STAGE 6 — vectorize an APPROVED mark. Explicit, never automatic: this

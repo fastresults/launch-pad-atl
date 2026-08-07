@@ -37,21 +37,24 @@ ${brand?.mood ? `Brand visual world: ${brand.mood}` : ""}
 ${spec ? `Reference craft spec it must match: ${spec.construction} construction, abstraction ${spec.abstraction}/5, at most ${spec.element_count} elements, ${spec.colour_count} ink(s), ${spec.shared_quality}` : ""}
 
 Fail it if ANY of these are true:
+- It contains letters, words, numerals, initials or lettering of any kind. This is an automatic fail, no matter how good the rest is.
+- The parts do not fuse: shapes merely sit near each other, overlap loosely, or float apart instead of sharing a contour, a tangent or a counterform.
+- The curves are not deliberate: wobbly, lumpy, sagging, randomly tapering strokes, uneven weight, bulging joins, or corners and terminals that are cut differently across the mark.
+- It carries decorative filler: a swoosh, sparkle, highlight arc, orbiting dot or accent leaf that could be removed without losing the idea.
+- Knocked out as one flat colour at 24px it does not still read as the same distinct shape.
 - It reads as auto-generated: primitives arranged neatly, with no drawing in it.
-- It contains letters, words or lettering of any kind.
 - It uses a banned category cliché, or has nothing to do with the business.
-- Its construction contradicts the reference craft spec (too many elements, wrong abstraction level, wrong stroke character).
+- Its construction contradicts the reference craft spec (too many shapes, wrong abstraction level, wrong stroke character).
 - The claimed craft move is not visibly present.
-- Shapes are broken, lumpy, accidental, unbalanced, or float apart.
-- More than one competing idea, or it turns to mush at 24px.
+- More than one competing idea.
 - It would work unchanged for a different company in the same category.
 - It ignores the locked brand palette, or introduces colours that are not in it.
 - It does not belong in the brand's visual world (wrong temperature, softness or register).
 
-Score honestly 1-5 on: structure_match, craft, relevance, distinctiveness, scalability, palette_fidelity, moodboard_fit.
-Pass only if every score is 4 or higher.
+Score honestly 1-5 on: fusion, curve_quality, silhouette_read, structure_match, craft, relevance, distinctiveness, scalability, palette_fidelity, moodboard_fit.
+Pass only if every score is 4 or higher. If there is any lettering, set every score to 1 and fail.
 
-Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact change to make on the next render","scores":{"structure_match":1,"craft":1,"relevance":1,"distinctiveness":1,"scalability":1,"palette_fidelity":1,"moodboard_fit":1}}`;
+Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact change to make on the next render","scores":{"fusion":1,"curve_quality":1,"silhouette_read":1,"structure_match":1,"craft":1,"relevance":1,"distinctiveness":1,"scalability":1,"palette_fidelity":1,"moodboard_fit":1}}`;
 }
 
 export function parseJuryVerdict(parsed: any): JuryVerdict | null {

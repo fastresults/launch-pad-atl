@@ -32,14 +32,19 @@ export interface BrandContext {
 }
 
 const NEGATIVE = [
-  "text", "letters", "lettering", "words", "typography", "wordmark", "watermark", "signature",
+  "text", "letters", "lettering", "words", "typography", "wordmark", "monogram", "initials",
+  "watermark", "signature", "caption", "label",
   "mockup", "business card", "stationery", "packaging", "billboard", "storefront", "product shot",
   "3d render", "bevel", "emboss", "extrusion", "glossy", "metallic", "chrome", "reflection",
   "drop shadow", "gradient", "gradient mesh", "glow", "lens flare", "bokeh", "photograph", "photorealistic",
-  "clip art", "stock icon", "generic swoosh", "globe", "handshake", "lightbulb", "puzzle piece",
+  "clip art", "stock icon", "generic swoosh", "decorative swoosh", "sparkle", "highlight arc",
+  "filler leaf", "stray dots", "confetti",
+  "globe", "handshake", "lightbulb", "puzzle piece",
   "gear icon", "rocket ship", "checkmark badge", "sunburst seal", "laurel wreath", "shield badge",
-  "cluttered", "busy", "multiple logos", "grid lines", "guide lines", "construction marks",
-  "border", "frame", "noise", "texture", "sketch", "hand drawn wobble",
+  "cluttered", "busy", "multiple logos", "detached elements", "floating parts",
+  "grid lines", "guide lines", "construction marks",
+  "border", "frame", "noise", "texture", "sketch", "hand drawn wobble", "lumpy contour",
+  "uneven stroke", "random tapering", "asymmetric mistake",
 ].join(", ");
 
 function hexes(palette?: string[]): string[] {
@@ -59,20 +64,24 @@ function clean(value?: string): string | null {
 }
 
 function constructionClause(spec?: CraftSpec | null): string {
-  if (!spec) return "clean, sophisticated lines with confident, hand-refined curves";
+  if (!spec) return "confident geometric construction with deliberate, evenly-modulated curves";
   return [
     `${spec.construction} construction`,
     clean(spec.stroke_character) ? `${spec.stroke_character} strokes` : "",
     clean(spec.corner_and_terminals) ? spec.corner_and_terminals : "",
     clean(spec.symmetry) ? `${spec.symmetry} balance` : "",
     `abstraction level ${spec.abstraction} of 5`,
-    `no more than ${spec.element_count} distinct elements`,
   ].filter(Boolean).join(", ");
 }
 
 /**
- * Builds the positive prompt for one concept: one emblem sentence first,
- * short hard constraints after.
+ * Builds the positive prompt for one concept.
+ *
+ * Order is deliberate: image models weight the head and the tail of a prompt
+ * most, so the absolute rules (no lettering, one fused form, silhouette read)
+ * sit first and are repeated last. Everything measurable is stated as a count
+ * or a test, never as an adjective — "clean sophisticated lines" is exactly the
+ * kind of unmeasurable instruction that produced lumpy, assembled slop.
  */
 export function buildLogoRenderPrompt(
   brief: ConceptBrief,
@@ -93,8 +102,12 @@ export function buildLogoRenderPrompt(
   const differentiator = clean(profile?.must_communicate ?? undefined);
   const vibe = [clean(profile?.register ?? undefined), ...(brand.personality ?? [])]
     .filter(Boolean).slice(0, 4).join(", ") || "confident, credible, premium";
+  const shapeCount = Math.max(1, Math.min(4, Number(spec?.element_count ?? 2)));
 
-  // The one composed emblem sentence.
+  // 1. The absolute rule, first.
+  lines.push("ABSOLUTE RULE: this image contains NO letters, NO words, NO lettering, NO monogram, NO initials of any kind. A symbol only.");
+
+  // 2. The one composed emblem sentence.
   lines.push(
     [
       `A centered, balanced graphic vector emblem featuring ${symbol}.`,
@@ -103,21 +116,39 @@ export function buildLogoRenderPrompt(
       }.`,
       `Use ${paletteClause(brand.palette)}, ${spec?.colour_count ?? 2} ink(s) maximum, flat solid fills only.`,
       `The vibe must be ${vibe}.`,
-      `The logo must have high scalability and readability at 24 pixels${
-        brand.headingFont ? `, and must sit comfortably beside ${brand.headingFont} type` : ""
-      }.`,
-    ].join(" "),
+      brand.headingFont ? `It must sit comfortably beside ${brand.headingFont} type.` : "",
+    ].filter(Boolean).join(" "),
+  );
+
+  // 3. Fusion — the failure mode that separates an agency mark from an AI collage.
+  lines.push(
+    `FUSION: the mark is ONE continuous, connected form. Every part must physically touch, share a contour, share a tangent, or be cut out of another part as a counterform. Elements that merely sit near each other, overlap loosely, or float apart are a FAILED mark. Draw exactly ${shapeCount} closed shape${shapeCount === 1 ? "" : "s"} and no more.`,
+  );
+
+  // 4. Curve quality — measurable, not adjectival.
+  lines.push(
+    "CURVE QUALITY: every curve is deliberate and evenly weighted — consistent stroke width, or one single deliberate modulation axis applied consistently. No wobble, no random tapering, no lumpy or sagging contours, no accidental asymmetry, no bulging joins. Corners and terminals are cut cleanly and identically across the whole mark.",
+  );
+
+  // 5. No filler.
+  lines.push(
+    "NO DECORATION: every stroke must carry meaning. No stray swooshes, sparkles, highlight arcs, orbiting dots, filler leaves, or accent flourishes added for balance. If a shape can be removed without losing the idea, it must not be drawn.",
+  );
+
+  // 6. The silhouette test, stated as a test.
+  lines.push(
+    "SILHOUETTE TEST: knocked out as one flat colour and reduced to 24 pixels, the mark must still read as the same distinct shape. Counterforms must stay open, gaps must stay visible, no detail may close up or turn to mush.",
   );
 
   const craft = clean(brief.craftMove);
-  if (craft) lines.push(`The single drawing move that creates the mark: ${craft}. Execute it with restraint — one idea, resolved perfectly.`);
+  if (craft) lines.push(`The single drawing move that creates the mark: ${craft}. Execute that one move with restraint — one idea, resolved perfectly, nothing added around it.`);
 
   // Vision reference roles, stated in attachment order.
   const refCount = brand.referenceCount ?? 0;
   const tileCount = brand.moodboardTileCount ?? 0;
   if (refCount || tileCount) {
     const parts: string[] = [];
-    if (refCount) parts.push(`The first ${refCount} attached image(s) are the founder's inspiration marks — they define HOW this is built (proportion, stroke, abstraction, counterform). Never echo their subject matter.`);
+    if (refCount) parts.push(`The first ${refCount} attached image(s) are the founder's inspiration marks — they define HOW this is built (proportion, stroke, abstraction, counterform, curve discipline). Match their level of craft. Never echo their subject matter.`);
     if (tileCount) parts.push(`The following ${tileCount} attached image(s) are the brand's live moodboard — they define the WORLD this mark lives in (colour temperature, texture, softness). Never copy their imagery.`);
     lines.push(parts.join(" "));
   }
@@ -138,18 +169,18 @@ export function buildLogoRenderPrompt(
   if (moodboard) lines.push(`Brand mood in words: ${moodboard}.`);
 
   lines.push(
-    "Format: one centred symbol on a plain solid white background, generous even margins, perfectly balanced optical weight. Flat 2D vector illustration with crisp clean edges — not mechanically grid-snapped, not wobbly. It must hold up as a solid one-colour silhouette.",
-  );
-
-  lines.push(
-    "Absolutely no text, letters, words, or lettering anywhere in the image. No mockups, no cards, no packaging, no 3D, no shadows, no glow, no photographic elements. The symbol only.",
+    "Format: one centred symbol on a plain solid white background, generous even margins, perfectly balanced optical weight. Flat 2D vector illustration with crisp clean edges — not mechanically grid-snapped, not wobbly. No mockups, no cards, no packaging, no 3D, no shadows, no glow, no photographic elements.",
   );
 
   const fix = clean(correction ?? undefined);
-  if (fix) lines.push(`THE PREVIOUS ATTEMPT WAS REJECTED BY THE JURY. Fix exactly this and change nothing else: ${fix}`);
+  if (fix) lines.push(`THE PREVIOUS ATTEMPT WAS REJECTED. Fix exactly this and change nothing else: ${fix}`);
+
+  // Repeat the absolute rule last — models weight the tail heavily.
+  lines.push("Repeat: absolutely no text, letters, words, numerals or lettering anywhere in the image. One fused symbol only.");
 
   return lines.join("\n\n");
 }
+
 
 export function logoNegativePrompt(): string {
   return NEGATIVE;

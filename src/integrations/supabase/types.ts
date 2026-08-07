@@ -951,6 +951,7 @@ export type Database = {
           logo_type: string | null
           preview_path: string | null
           render_error: string | null
+          render_history: Json
           render_job_id: string | null
           render_path: string | null
           render_provider: string | null
@@ -961,6 +962,7 @@ export type Database = {
           review_passed: boolean | null
           review_score: Json
           run_id: string
+          selected: boolean
           slot: number
           snapshot_id: string
           status: string
@@ -985,6 +987,7 @@ export type Database = {
           logo_type?: string | null
           preview_path?: string | null
           render_error?: string | null
+          render_history?: Json
           render_job_id?: string | null
           render_path?: string | null
           render_provider?: string | null
@@ -995,6 +998,7 @@ export type Database = {
           review_passed?: boolean | null
           review_score?: Json
           run_id: string
+          selected?: boolean
           slot: number
           snapshot_id: string
           status?: string
@@ -1019,6 +1023,7 @@ export type Database = {
           logo_type?: string | null
           preview_path?: string | null
           render_error?: string | null
+          render_history?: Json
           render_job_id?: string | null
           render_path?: string | null
           render_provider?: string | null
@@ -1029,6 +1034,7 @@ export type Database = {
           review_passed?: boolean | null
           review_score?: Json
           run_id?: string
+          selected?: boolean
           slot?: number
           snapshot_id?: string
           status?: string

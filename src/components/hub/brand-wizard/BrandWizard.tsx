@@ -690,12 +690,12 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const genLogos = useMutation({
     mutationFn: async () => {
       if (refs.length < 3) throw new Error("Upload three logos you admire first — they set the craft standard for this run.");
-      const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 4, referenceImages: refs } });
+      const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 3, referenceImages: refs } });
       setLogos([]);
       await processLogoRun(created.run);
       return created;
     },
-    onSuccess: () => toast.success("Your four concept marks are ready — approve one to vectorize it"),
+    onSuccess: () => toast.success("Your three concept marks are ready — pick one, refine it, then vectorize"),
     onError: (e: any) => toast.error(e?.message ?? "Logo run paused. You can resume it here."),
     onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
   });
@@ -718,6 +718,43 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onSuccess: () => { toast.success("Direction rebuilt"); logoRunQ.refetch(); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  // Founder picks one mark, then writes their own art direction for it.
+  const [refineTarget, setRefineTarget] = useState<any>(null);
+  const [refineNote, setRefineNote] = useState("");
+
+  const selectDirection = useMutation({
+    mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_select_direction", runId: item.run_id, directionId: item.id } }),
+    onSuccess: () => logoRunQ.refetch(),
+    onError: (e: any) => toast.error(e?.message ?? "Could not select this mark"),
+  });
+
+  const refineDirection = useMutation({
+    mutationFn: async ({ item, note }: { item: any; note: string }) => {
+      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_refine_direction", runId: item.run_id, directionId: item.id, note } });
+      await processLogoRun({ ...activeRun, status: "rendering" });
+    },
+    onSuccess: () => { toast.success("Re-rendered with your direction — the previous version is in the archive"); setRefineTarget(null); setRefineNote(""); },
+    onError: (e: any) => toast.error(e?.message ?? "Could not re-render this mark"),
+    onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
+  });
+
+  const restoreRender = useMutation({
+    mutationFn: ({ item, historyPath }: { item: any; historyPath: string }) =>
+      generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_restore_render", runId: item.run_id, directionId: item.id, historyPath } }),
+    onSuccess: () => { toast.success("Earlier version restored"); logoRunQ.refetch(); },
+    onError: (e: any) => toast.error(e?.message ?? "Could not restore that version"),
+  });
+
+  const REFINE_CHIPS = [
+    "Thicker, more even stroke weight",
+    "Simplify — remove one element",
+    "Fuse the parts into one continuous form",
+    "Stronger silhouette at small sizes",
+    "Lean more geometric, less organic",
+    "Use the primary brand colour only",
+  ];
+
 
 
 
@@ -977,7 +1014,8 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
 
         {runDirections.some((d) => !["ready", "needs_review"].includes(d.status)) && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
             {runDirections.filter((d) => !["ready", "needs_review"].includes(d.status)).map((p: any) => (
               <div key={p.id} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
                 <div className="flex aspect-square w-full items-center justify-center bg-white/5">
@@ -1015,7 +1053,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
         {logos.length > 0 && (
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {logos.map((a, i) => {
               const directionRow = runDirections.find((d) => d.asset?.path === a.path || d.id === a.direction_id);
               const busy = retryDirection.isPending && retryDirection.variables?.id === directionRow?.id;
@@ -1035,8 +1073,15 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                   toast.error(e?.message || "Could not remove");
                 }
               };
+              const isSelected = !!directionRow?.selected;
               return (
-                <div key={i} className="relative flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
+                <div
+                  key={i}
+                  className={`relative flex flex-col overflow-hidden rounded-lg border bg-background/40 transition ${
+                    isSelected ? "border-primary ring-2 ring-primary/40" : "border-white/10"
+                  }`}
+                >
+
                   <button
                     onClick={removeLogo}
                     disabled={busy || retryDirection.isPending}
@@ -1088,7 +1133,49 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                       <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">Why it sticks: {a.why_memorable}</p>
                     )}
 
-                    <div className="flex gap-1.5">
+                    {Array.isArray(directionRow?.render_history) && directionRow.render_history.length > 0 && (
+                      <div className="space-y-1 border-t border-white/10 pt-2">
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Archive</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {directionRow.render_history.map((h: any) => (
+                            <button
+                              key={h.path}
+                              title="Restore this version"
+                              disabled={restoreRender.isPending}
+                              onClick={() => restoreRender.mutate({ item: directionRow, historyPath: h.path })}
+                              className="h-10 w-10 overflow-hidden rounded border border-white/15 bg-white transition hover:border-primary disabled:opacity-40"
+                            >
+                              {h.url ? <img src={h.url} alt="Earlier version" className="h-full w-full object-contain" /> : null}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {directionRow && (
+                        <Button
+                          variant={isSelected ? "default" : "outline"}
+                          size="sm"
+                          className="h-7 flex-1 text-[11px]"
+                          disabled={busy || selectDirection.isPending}
+                          onClick={() => selectDirection.mutate(directionRow)}
+                        >
+                          {isSelected ? <Check className="mr-1 h-3 w-3" /> : null}
+                          {isSelected ? "Selected" : "Select"}
+                        </Button>
+                      )}
+                      {directionRow && isSelected && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 flex-1 text-[11px]"
+                          disabled={busy || refineDirection.isPending}
+                          onClick={() => { setRefineTarget(directionRow); setRefineNote(""); }}
+                        >
+                          <Sparkles className="mr-1 h-3 w-3" /> Refine this mark
+                        </Button>
+                      )}
                       {directionRow && !directionRow.svg_path && (
                         <Button
                           size="sm"
@@ -1100,23 +1187,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                           Approve & vectorize
                         </Button>
                       )}
-                      {a.direction && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 flex-1 text-[11px]"
-                          disabled={busy || retryDirection.isPending}
-                          onClick={() => directionRow && retryDirection.mutate(directionRow)}
-                        >
-                          {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-                          More like this
-                        </Button>
-                      )}
 
                       <Button
                         variant="ghost"
                         size="sm"
-
                         className="h-7 px-2 text-[11px] text-destructive hover:text-destructive"
                         disabled={busy || retryDirection.isPending}
                         onClick={removeLogo}
@@ -1124,13 +1198,58 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                         Remove
                       </Button>
                     </div>
+
                   </div>
                 </div>
               );
             })}
           </div>
         )}
+
+        <Dialog open={!!refineTarget} onOpenChange={(open) => { if (!open && !refineDirection.isPending) { setRefineTarget(null); setRefineNote(""); } }}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Refine this mark</DialogTitle>
+              <DialogDescription>
+                Write your own art direction. The same concept is re-rendered with your note — the current version is kept in the archive.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-1.5">
+                {REFINE_CHIPS.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setRefineNote((prev) => (prev.trim() ? `${prev.trim()} ${chip}.` : `${chip}.`))}
+                    className="rounded-full border border-white/15 px-2.5 py-1 text-[11px] text-muted-foreground transition hover:border-primary hover:text-foreground"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+              <Textarea
+                value={refineNote}
+                onChange={(e) => setRefineNote(e.target.value)}
+                rows={4}
+                placeholder="e.g. Keep the cane, drop the leaf, and make the stroke weight even throughout."
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" disabled={refineDirection.isPending} onClick={() => { setRefineTarget(null); setRefineNote(""); }}>
+                  Cancel
+                </Button>
+                <Button
+                  disabled={refineDirection.isPending || !refineNote.trim()}
+                  onClick={() => refineDirection.mutate({ item: refineTarget, note: refineNote.trim() })}
+                >
+                  {refineDirection.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+                  Re-render
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </section>
+
 
 
       <div className="flex justify-between">
