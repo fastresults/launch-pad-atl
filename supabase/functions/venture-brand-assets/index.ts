@@ -73,7 +73,7 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
 const KIND_PRESETS: Record<string, { size: string; sceneHint: string; defaultCount: number }> = {
-  logo:          { size: "1024x1024", sceneHint: "", defaultCount: 4 },
+  logo:          { size: "1024x1024", sceneHint: "", defaultCount: 3 },
   moodboard:     { size: "1024x1024", sceneHint: "editorial brand moodboard tile, evocative, tactile, art-directed, magazine quality", defaultCount: 4 },
   social_profile:{ size: "1024x1024", sceneHint: "social media profile avatar, square 1:1, centered subject, simple background", defaultCount: 1 },
   social_cover:  { size: "1536x1024", sceneHint: "social media cover banner, wide composition, leave space for an overlaid headline on the right third", defaultCount: 1 },
