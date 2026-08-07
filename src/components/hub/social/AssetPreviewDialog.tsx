@@ -86,8 +86,8 @@ export function AssetPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl p-0 overflow-hidden">
-        <DialogHeader className="px-5 pt-5">
+      <DialogContent className="flex max-h-[92dvh] w-[min(1100px,96vw)] max-w-5xl flex-col overflow-hidden p-0">
+        <DialogHeader className="shrink-0 px-5 pt-5 pb-3">
           <DialogTitle className="text-base">{asset.title}</DialogTitle>
           <DialogDescription className="sr-only">
             Preview this generated startup asset, download it, or regenerate it.
@@ -97,8 +97,8 @@ export function AssetPreviewDialog({
           )}
         </DialogHeader>
 
-        <div className="grid gap-0 md:grid-cols-[1fr_280px]">
-          <div className="relative flex items-center justify-center p-4" style={{ background: checker, minHeight: 360 }}>
+        <div className="grid min-h-0 flex-1 gap-0 overflow-y-auto md:grid-cols-[1fr_300px] md:overflow-hidden">
+          <div className="relative flex min-h-0 items-center justify-center overflow-y-auto p-4" style={{ background: checker, minHeight: 280 }}>
             {onPrev && !busy && (
               <button
                 type="button"
