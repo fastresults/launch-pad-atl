@@ -53,8 +53,21 @@ export default function LegalSetupPage() {
   const qc = useQueryClient();
   const { data: progress } = useQuery({ queryKey: ["my", "legal-setup"], queryFn: getMyLegalSetup });
   const { data: filing } = useQuery({ queryKey: ["my", "filing"], queryFn: getMyFiling });
+  const { data: brief } = useQuery({ queryKey: ["my", "brief-location"], queryFn: getMyBriefLocation });
 
-  const stateCode = progress?.entity_state || "GA";
+  // GLOBAL RULE: the venture brief decides the state unless the founder overrides it here.
+  const resolvedState = useMemo(
+    () =>
+      resolveEntityState({
+        savedState: progress?.entity_state,
+        savedSource: progress?.entity_state_source,
+        briefRegion: brief?.region,
+        briefCity: brief?.city,
+        filingState: filing?.state,
+      }),
+    [progress?.entity_state, progress?.entity_state_source, brief?.region, brief?.city, filing?.state],
+  );
+  const stateCode = resolvedState.code;
   const state = useMemo(() => getStateByCode(stateCode), [stateCode]);
   const steps = useMemo(() => buildLegalSteps(state), [state]);
 
@@ -69,7 +82,8 @@ export default function LegalSetupPage() {
   });
 
   const saveState = useMutation({
-    mutationFn: (code: string) => upsertMyLegalSetup({ entity_state: code }),
+    mutationFn: (code: string) =>
+      upsertMyLegalSetup({ entity_state: code, entity_state_source: "user" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my", "legal-setup"] });
       toast.success("State updated");
