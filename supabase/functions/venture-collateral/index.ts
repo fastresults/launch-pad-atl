@@ -447,7 +447,17 @@ Deno.serve(async (req) => {
       const qcIssues = done.flatMap((r: any) =>
         (r.qc ?? []).filter((v: QcVerdict) => !v.ok).map((v: QcVerdict) => ({ kind: r.kind, page: v.page, reasons: v.reasons })),
       );
-      return json({ ok: true, generated: done, failed, qcIssues, artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale } });
+      return json({
+        ok: true,
+        generated: done,
+        failed,
+        qcIssues,
+        // Tells the library whether the wordmark on these pieces is real type
+        // (symbol isolated) or the tracer's polygons (nothing to isolate).
+        logo: { symbolIsolated: !!ctx.symbolSvg },
+        artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },
+      });
+
     }
 
     return json({ error: `Unknown action: ${action}` }, 400);
