@@ -700,9 +700,12 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
   const rows = [d.email, d.phone, d.website, d.social].filter(Boolean) as string[];
   const rsSig = resolveSpec("email-signature", W, H);
   T.setFloor(rsSig.minType, rsSig.measureMax);
-  const markBox = markBoxFor(ctx, rsSig, W * 0.4, 1, true).h;
+  // Use the box's real aspect: fitting a wide lockup inside a square slot is
+  // what kept the mark a third under its standard height.
+  const mb = markBoxFor(ctx, rsSig, W * 0.4, 1, true);
+  const markBox = mb.h;
   const left = Math.max(60, rsSig.safe);
-  const railX = left + markBox + clearSpace(markBox) * 0.7;
+  const railX = left + mb.w + clearSpace(markBox) * 0.7;
   const textX = railX + 34;
   const nameS = step(ad, 0.9);
   const rowS = step(ad, -0.9);
@@ -710,7 +713,7 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
 
   const body = [
     surface(W, H, paper, ad.material.grain * 0.4),
-    markAt(ctx, left, (H - markBox) / 2, markBox, markBox, null, paper),
+    markAt(ctx, left, (H - mb.h) / 2, mb.w, mb.h, null, paper),
     `<rect x="${r(railX)}" y="${r(H * 0.2)}" width="${r(Math.max(3, ad.ink.ruleWeight))}" height="${r(H * 0.6)}" fill="${primary}"/>`,
     T.line(d.person_name || ctx.company, textX, top, nameS, fg, { family: "head", weight: 700, maxWidth: W - textX - 60 }),
     T.line([d.person_title, ctx.company].filter(Boolean).join(" · "), textX, top + nameS * 1.35, rowS, accent, { maxWidth: W - textX - 60 }),
