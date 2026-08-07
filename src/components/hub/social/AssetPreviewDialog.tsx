@@ -161,6 +161,16 @@ export function AssetPreviewDialog({
               )}
             </div>
 
+            {asset.post && (
+              <CaptionPanel
+                post={asset.post}
+                snapshotId={asset.snapshotId}
+                defaultPlatform={asset.post.platform ?? asset.platform}
+              />
+            )}
+
+
+
 
             {(asset.width || asset.height) && (
               <div>
