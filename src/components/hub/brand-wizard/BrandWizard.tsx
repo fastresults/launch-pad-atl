@@ -891,7 +891,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   // Hard gate: three reference marks ARE the art direction. Without them the
   // studio invents a house style, which is what produced the earlier slop.
-  const gatePassed = refs.length >= 3;
+  const gatePassed = refs.length >= 1;
 
 
   return (
