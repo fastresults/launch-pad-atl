@@ -1643,6 +1643,36 @@ function Step6Launch({
         })}
       </div>
 
+      <AssetPreviewDialog
+        open={!!previewAsset}
+        onOpenChange={(v) => !v && setPreviewId(null)}
+        asset={
+          previewAsset
+            ? {
+                url: previewAsset.signed_url,
+                title: `${previewAsset.platform} — ${String(previewAsset.asset_kind || "").replace(/_/g, " ")}`,
+                subtitle: snapshot?.company_name || null,
+                platform: previewAsset.platform,
+                assetKind: previewAsset.asset_kind,
+                width: previewAsset.width,
+                height: previewAsset.height,
+                canvasPlan: previewAsset.canvas_plan ?? null,
+                qaStatus: previewAsset.qa_status ?? null,
+                qaNotes: previewAsset.qa_notes ?? null,
+                modelUsed: previewAsset.model_used ?? null,
+                lastFeedback: previewAsset.last_feedback ?? null,
+                lastHeadline: previewAsset.last_headline,
+                lastLogoSize: previewAsset.last_logo_size ?? null,
+                updatedAt: previewAsset.updated_at ?? null,
+              }
+            : null
+        }
+        busy={!!previewAsset && !!regenerating[`${previewAsset.platform}:${previewAsset.asset_kind}`]}
+        onRegenerate={previewAsset ? () => regenerate(previewAsset.platform, previewAsset.asset_kind) : undefined}
+        onPrev={previewables.length > 1 ? () => stepPreview(-1) : undefined}
+        onNext={previewables.length > 1 ? () => stepPreview(1) : undefined}
+      />
+
       <footer className="flex items-center justify-between gap-2">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back</Button>
         <span className="text-[11px] text-muted-foreground">Need to tweak assets? Open Advanced mode.</span>
