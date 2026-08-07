@@ -517,8 +517,21 @@ function drawInstruction(
   companyName: string,
   wantsType: boolean,
   fixNotes: string[],
+  hasRender = false,
 ): string {
-  return `Draw the approved direction below as a finished 1000×1000 vector mark. You are drawing, not assembling — the result has to look like a designer's hand made it.
+  return `${hasRender
+    ? `Reproduce the approved mark in the attached image as a finished 1000×1000 vector. The image is the design decision — it has already been approved. Your job is faithful reconstruction in clean paths, NOT reinterpretation.
+
+HOW TO TRACE IT
+- Match the silhouette, proportion, counterforms, and stroke rhythm of the attached image as closely as the primitive vocabulary allows.
+- Where the raster is soft or imprecise, resolve it into the cleanest confident curve — tighten the drawing, never redesign it.
+- Ignore any anti-aliasing artefacts, background texture, or stray marks in the image.
+- If the image contains lettering, do NOT trace it; reproduce the symbol only.
+- Keep the same visual weight and optical balance. Do not add elements the image does not have, and do not remove any it does.
+
+The written direction below is context for what the mark means — the image outranks it wherever they disagree.`
+    : `Draw the approved direction below as a finished 1000×1000 vector mark. You are drawing, not assembling — the result has to look like a designer's hand made it.`}
+
 
 ${dossier}
 
