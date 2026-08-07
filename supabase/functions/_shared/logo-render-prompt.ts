@@ -16,7 +16,12 @@ export interface ConceptBrief {
   /** The concrete thing from the business the form is built on. */
   imagery?: string;
   logoType?: string;
+  /** The literal subject a stranger would name on sight. */
+  readsAs?: string;
+  /** What the mark means, in human terms. */
+  meaning?: string;
 }
+
 
 export interface BrandContext {
   brandName?: string;
