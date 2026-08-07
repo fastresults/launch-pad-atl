@@ -20,30 +20,30 @@ export function ShareSection({ item }: { item: ShareItem }) {
       </header>
 
       {item.heroImageUrl && (
-        <div className="mb-8 overflow-hidden rounded-xl border border-border/60 bg-muted/20">
+        <div className="mb-10 flex justify-center rounded-2xl border border-border/60 bg-muted/10 p-3">
           <img
             src={item.heroImageUrl}
             alt={item.title}
             loading="lazy"
-            className="max-h-[420px] w-full object-contain"
+            className="max-h-[420px] w-auto max-w-full rounded-xl object-contain"
           />
         </div>
       )}
 
       {item.kind === "gallery" && !!item.images?.length && (
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {item.images.map((img, i) => (
             <button
               key={`${img.url}-${i}`}
               type="button"
               onClick={() => setLightbox(img.url)}
-              className="group overflow-hidden rounded-xl border border-border/60 bg-muted/20 text-left transition-colors hover:border-primary/50"
+              className="group overflow-hidden rounded-2xl border border-border/60 bg-muted/20 text-left transition-colors hover:border-primary/50"
             >
               <img
                 src={img.url}
                 alt={img.label ?? `${item.title} ${i + 1}`}
                 loading="lazy"
-                className="aspect-[4/3] w-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.02]"
+                className="aspect-[4/3] w-full rounded-xl object-contain p-2 transition-transform duration-300 group-hover:scale-[1.02]"
               />
               {img.label && (
                 <div className="border-t border-border/60 px-3 py-2 text-[11px] leading-snug text-muted-foreground line-clamp-2">
@@ -56,10 +56,11 @@ export function ShareSection({ item }: { item: ShareItem }) {
       )}
 
       {item.body && (
-        <div className="prose prose-invert max-w-none prose-headings:font-serif prose-headings:tracking-tight prose-p:text-[15px] prose-p:leading-[1.75] prose-li:text-[15px] prose-a:text-primary prose-strong:text-foreground prose-hr:border-border/60 prose-table:text-sm">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{item.body}</ReactMarkdown>
+        <div className="prose prose-invert max-w-none prose-headings:font-serif prose-headings:tracking-tight prose-headings:mt-10 prose-headings:mb-3 prose-p:text-[15px] prose-p:leading-[1.85] prose-p:mb-6 prose-ul:my-6 prose-ol:my-6 prose-li:my-2 prose-li:text-[15px] prose-li:leading-[1.8] prose-a:text-primary prose-strong:text-foreground prose-hr:my-10 prose-hr:border-border/60 prose-table:text-sm prose-img:rounded-xl">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{normalizeParagraphs(item.body)}</ReactMarkdown>
         </div>
       )}
+
 
       <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
         <DialogContent className="theme-dark-scope max-w-5xl border-border/60 bg-background p-2">
