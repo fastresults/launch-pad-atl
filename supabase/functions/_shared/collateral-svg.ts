@@ -246,8 +246,16 @@ function makeType(fonts: Fonts) {
     const tracking = o.tracking ?? 0;
     const floor = min(o);
     let out = t, s = Math.max(size, floor);
+    // A single line longer than the piece's comfortable measure is a paragraph
+    // masquerading as a headline — cut it at a word, don't set it in agate.
+    if (measureChars && t.length > measureChars * 1.15) {
+      let cut = t.slice(0, measureChars);
+      const sp = cut.lastIndexOf(" ");
+      if (sp > measureChars * 0.5) cut = cut.slice(0, sp);
+      out = `${cut.replace(/[\s,;:.\-–—]+$/, "")}…`;
+    }
     if (o.maxWidth) {
-      const fit = fitLine(t, { size: s, maxWidth: o.maxWidth, bytes: bytesFor(family), tracking, minSize: floor || undefined });
+      const fit = fitLine(out, { size: s, maxWidth: o.maxWidth, bytes: bytesFor(family), tracking, minSize: floor || undefined });
       out = fit.text; s = fit.size;
       if (!out) return "";
     }
@@ -692,7 +700,7 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
   const rows = [d.email, d.phone, d.website, d.social].filter(Boolean) as string[];
   const rsSig = resolveSpec("email-signature", W, H);
   T.setFloor(rsSig.minType, rsSig.measureMax);
-  const markBox = markBoxFor(ctx, rsSig, W * 0.25, 1, true).h;
+  const markBox = markBoxFor(ctx, rsSig, W * 0.4, 1, true).h;
   const left = Math.max(60, rsSig.safe);
   const railX = left + markBox + clearSpace(markBox) * 0.7;
   const textX = railX + 34;
