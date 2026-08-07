@@ -1557,6 +1557,7 @@ Deno.serve(async (req) => {
           business_link: row.concept?.business_link ?? row.concept?.human_link ?? "",
           reads_as: row.concept?.reads_as ?? "",
           meaning: row.concept?.meaning ?? "",
+          second_read: row.concept?.second_read ?? "",
           craft_move: row.concept?.craft_move ?? row.concept?.geometric_operation ?? "",
           one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
           why_memorable: row.concept?.why_memorable ?? "",
