@@ -4,7 +4,7 @@
 // and the wizard's locked palette/typography/personality.
 //
 // LOGO STUDIO pipeline (rebuilt — references first, vector last):
-//   0 inspiration gate  three reference logos are REQUIRED to start a run.
+//   0 inspiration gate  at least one reference logo is REQUIRED to start a run.
 //   1 reference read    vision pass over the references -> craft spec
 //                       (structure only, never subject matter).
 //   2 business read     the founder's finished copy -> business profile
