@@ -1091,6 +1091,9 @@ Deno.serve(async (req) => {
             wordmark_font: variants.wordmark_family,
           },
           direction_name: row.direction_name, logo_type: row.logo_type,
+          render: row.render_path
+            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "higgsfield" }
+            : null,
           human_link: row.concept?.human_link ?? "",
           craft_move: row.concept?.craft_move ?? row.concept?.geometric_operation ?? "",
           one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
