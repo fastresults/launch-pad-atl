@@ -394,7 +394,7 @@ export function AssetPreviewDialog({
               </div>
             )}
 
-            <div className="sticky bottom-[-1rem] -mx-4 -mb-4 space-y-2 border-t border-border bg-card/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+            <div className="sticky bottom-0 -mx-4 -mb-4 space-y-2 border-t border-border bg-card/95 px-4 pb-5 pt-3 backdrop-blur supports-[backdrop-filter]:bg-card/80">
               {asset.url && (
                 <>
                   <Button asChild variant="outline" size="sm" className="w-full justify-start">
