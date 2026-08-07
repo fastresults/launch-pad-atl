@@ -110,8 +110,39 @@ export function unwrapProseFences(md: string): string {
   return out.join("\n");
 }
 
-/** Full pipeline: unwrap fake fences, then split run-on paragraphs. */
+/**
+ * Cleanups for generated files that leak authoring artifacts into the reader
+ * view: a filename used as the first heading, a stray unmatched fence marker,
+ * and bold-only lines that are really section headings.
+ */
+function stripAuthoringArtifacts(md: string): string {
+  const lines = md.replace(/\r\n/g, "\n").split("\n");
+
+  // Drop a leading `# some-file.md` / `filename.md` title.
+  while (lines.length && !lines[0].trim()) lines.shift();
+  if (lines.length && /^\s*#{0,6}\s*[\w.-]+\.(md|txt|docx?|csv|json)\s*$/i.test(lines[0])) {
+    lines.shift();
+  }
+
+  // A single unmatched fence marker renders everything after it as code.
+  const fenceIdx: number[] = [];
+  lines.forEach((l, i) => {
+    if (/^\s*(```|~~~)/.test(l)) fenceIdx.push(i);
+  });
+  if (fenceIdx.length % 2 === 1) lines[fenceIdx[fenceIdx.length - 1]] = "";
+
+  return lines
+    .map((l) => {
+      const bold = l.match(/^\s*\*\*(.+?)\*\*\s*:?\s*$/);
+      // A bold-only line is a heading, not a paragraph.
+      return bold && bold[1].length <= 80 ? `### ${bold[1]}` : l;
+    })
+    .join("\n");
+}
+
+/** Full pipeline: unwrap fake fences, tidy artifacts, then split run-on paragraphs. */
 export function normalizeMarkdown(md?: string | null): string {
   if (!md) return "";
-  return normalizeParagraphs(unwrapProseFences(md));
+  return normalizeParagraphs(stripAuthoringArtifacts(unwrapProseFences(md)));
 }
+
