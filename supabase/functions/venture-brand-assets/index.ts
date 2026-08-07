@@ -1278,6 +1278,87 @@ Deno.serve(async (req) => {
     }
 
 
+    // Founder picks ONE mark to carry forward. Single selection per run.
+    if (kind === "logo_select_direction") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
+      const { error: selErr } = await supabase.from("brand_logo_directions").update({ selected: true }).eq("id", directionId).eq("run_id", runId);
+      if (selErr) throw selErr;
+      return new Response(JSON.stringify({ ok: true, selected: directionId }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Founder-written refinement: archive the current render, then re-render the
+    // SAME brief with their note as the correction line so it stays in family.
+    if (kind === "logo_refine_direction") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      const row = current.directions.find((item: any) => item.id === directionId);
+      if (!row) throw new Error("Logo direction not found");
+      const note = typeof body?.note === "string" ? body.note.trim() : "";
+      if (!note) throw new Error("Add a short refinement direction before re-rendering.");
+
+      const history: any[] = Array.isArray(row.render_history) ? row.render_history : [];
+      if (row.render_path) {
+        const archivePath = `brand/${userId}/${snapshotId}/logo-renders/archive/${directionId}-${Date.now()}.png`;
+        const { error: copyErr } = await supabase.storage.from("user-media").copy(row.render_path, archivePath);
+        if (!copyErr) {
+          const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(archivePath, 60 * 60 * 24 * 7);
+          history.push({
+            path: archivePath,
+            url: signed?.signedUrl ?? null,
+            note: row.review_note ?? null,
+            archived_at: new Date().toISOString(),
+          });
+        }
+      }
+
+      const { error: refErr } = await supabase.from("brand_logo_directions").update({
+        render_history: history.slice(-8),
+        status: "queued",
+        current_stage: "render_concept",
+        render_status: "pending",
+        render_error: null,
+        review_attempts: 0,
+        review_note: note,
+        lease_token: null,
+        lease_expires_at: null,
+      }).eq("id", directionId);
+      if (refErr) throw refErr;
+      await supabase.from("brand_logo_runs").update({ status: "rendering", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
+      return new Response(JSON.stringify({ ok: true, queued: true, note, history: history.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Bring an archived version back as the current mark.
+    if (kind === "logo_restore_render") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      const row = current.directions.find((item: any) => item.id === directionId);
+      if (!row) throw new Error("Logo direction not found");
+      const historyPath = typeof body?.historyPath === "string" ? body.historyPath : "";
+      const history: any[] = Array.isArray(row.render_history) ? row.render_history : [];
+      const entry = history.find((h) => h?.path === historyPath);
+      if (!entry) throw new Error("That archived version is no longer available.");
+
+      const livePath = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
+      const { data: blob, error: dlErr } = await supabase.storage.from("user-media").download(entry.path);
+      if (dlErr || !blob) throw new Error("Could not read the archived mark from storage.");
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const { error: upErr } = await supabase.storage.from("user-media").upload(livePath, bytes, { contentType: "image/png", upsert: true });
+      if (upErr) throw upErr;
+      const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(livePath, 60 * 60 * 24 * 7);
+
+      const asset = { ...(row.asset ?? {}), url: signed?.signedUrl ?? null, preview_url: signed?.signedUrl ?? null, path: livePath, vectorized: false };
+      const { error: resErr } = await supabase.from("brand_logo_directions").update({
+        render_path: livePath,
+        render_status: "ready",
+        render_error: null,
+        status: "ready",
+        current_stage: "jury",
+        asset,
+      }).eq("id", directionId);
+      if (resErr) throw resErr;
+      return new Response(JSON.stringify({ ok: true, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
 
     // STAGE 6 — vectorize an APPROVED mark. Explicit, never automatic: this
