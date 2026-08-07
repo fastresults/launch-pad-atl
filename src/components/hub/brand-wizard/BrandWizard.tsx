@@ -726,9 +726,81 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   const selectDirection = useMutation({
     mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_select_direction", runId: item.run_id, directionId: item.id } }),
-    onSuccess: () => logoRunQ.refetch(),
+    onSuccess: (out: any) => {
+      if (Array.isArray(out?.logos)) setLogos(out.logos);
+      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      logoRunQ.refetch();
+      toast.success("Mark selected — it's now your primary logo in the Live Brand");
+    },
     onError: (e: any) => toast.error(e?.message ?? "Could not select this mark"),
   });
+
+  // Founder's own logo file becomes the selected primary mark.
+  const uploadOwnLogo = useMutation({
+    mutationFn: async (file: File) => {
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Could not read that file"));
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      return generateBrandAsset({
+        data: { snapshotId: snapshot.id, kind: "logo_upload_own", dataUrl, filename: file.name, runId: activeRun?.id },
+      });
+    },
+    onSuccess: (out: any) => {
+      if (Array.isArray(out?.logos)) setLogos(out.logos);
+      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      logoRunQ.refetch();
+      toast.success("Your logo is selected and saved to the Live Brand");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Upload failed"),
+  });
+
+  const selectedLogo = logos.find((l: any) => l?.primary) ?? null;
+
+  // Website PRD — regenerate with the locked brand + selected mark, then copy
+  // or download it without leaving the wizard.
+  const prdQ = useQuery({
+    queryKey: ["brandWizardPrd", snapshot.id],
+    queryFn: async () => {
+      const docs = await listSnapshotDocuments({ snapshotId: snapshot.id });
+      return docs.find((d: any) => d.document_type === "website_prd") ?? null;
+    },
+  });
+  const prd = prdQ.data;
+
+  const regeneratePrd = useMutation({
+    mutationFn: async () => {
+      await generateDocument({ data: { snapshotId: snapshot.id, documentType: "website_prd" } });
+      return prdQ.refetch();
+    },
+    onSuccess: () => toast.success("Website PRD regenerated with your brand"),
+    onError: (e: any) => toast.error(e?.message ?? "Could not regenerate the PRD"),
+  });
+
+  const copyPrd = async () => {
+    if (!prd?.content) return;
+    try {
+      await navigator.clipboard.writeText(prd.content);
+      toast.success("PRD markdown copied");
+    } catch {
+      toast.error("Copy failed");
+    }
+  };
+
+  const downloadPrd = () => {
+    if (!prd?.content) return;
+    const slug = String(snapshot.company_name || "venture").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const blob = new Blob([prd.content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slug}-website-prd.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
 
   const refineDirection = useMutation({
     mutationFn: async ({ item, note }: { item: any; note: string }) => {
