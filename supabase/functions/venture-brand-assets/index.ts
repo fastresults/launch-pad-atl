@@ -3,19 +3,18 @@
 // grounded in the FULL venture context (snapshot + brief + sources + brain)
 // and the wizard's locked palette/typography/personality.
 //
-// LOGOS use a durable, art-directed pipeline of atomic stages:
-//   Stage 1 (brief):     a chat model produces the brand strategy.
-//   Stage 2 (concepts):  four distinct directions are written as briefs.
-//   Stage 3 (render):    Higgsfield renders each direction as a real designed
-//                        mark. This is what stops output looking auto-generated
-//                        — the vector step then has a target to reproduce
-//                        instead of inventing geometry from a text brief.
-//   Stage 4 (vector):    the approved render is traced into clean SVG paths.
-//   Stage 5 (jury):      a vision model judges the finished mark and can fail
-//                        it back into the retry engine.
-// Stage 3 degrades gracefully: if Higgsfield is unreachable or out of API
-// credits, the direction falls through to drawing from the brief alone and
-// records why on the row.
+// LOGO STUDIO pipeline (rebuilt — references first, vector last):
+//   0 inspiration gate  three reference logos are REQUIRED to start a run.
+//   1 reference read    vision pass over the references -> craft spec
+//                       (structure only, never subject matter).
+//   2 business read     the founder's finished copy -> business profile
+//                       (category, customer, symbol vocabulary, cliché ban).
+//   3 concepting        eight ideas, cut to four, each obeying 1 + 2.
+//   4 render            reference-conditioned image render of each concept.
+//   5 jury              vision critique vs. the craft spec; one corrective
+//                       re-render, then the mark is published as-is.
+//   6 vectorize         runs ONLY on the mark the founder approves, tracing
+//                       that exact image — nothing is auto-redrawn.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
@@ -28,7 +27,6 @@ import {
   type VectorSpec,
 } from "../_shared/logo-geometry.ts";
 import { fontStackFor, outlineWordmark } from "../_shared/logo-type.ts";
-import { rasterizeSvg } from "../_shared/logo-raster.ts";
 import {
   HiggsfieldError,
   checkHiggsfieldAuth,
@@ -43,6 +41,26 @@ import {
   logoNegativePrompt,
   seedForConcept,
 } from "../_shared/logo-render-prompt.ts";
+import {
+  REFERENCE_READ_INSTRUCTION,
+  REFERENCE_READ_SYSTEM,
+  craftSpecBlock,
+  parseCraftSpec,
+  type CraftSpec,
+} from "../_shared/logo-reference-read.ts";
+import {
+  BUSINESS_READ_SYSTEM,
+  businessProfileBlock,
+  businessReadPrompt,
+  parseBusinessProfile,
+  type BusinessProfile,
+} from "../_shared/logo-business-read.ts";
+import {
+  JURY_SYSTEM,
+  juryInstruction,
+  parseJuryVerdict,
+} from "../_shared/logo-jury.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
