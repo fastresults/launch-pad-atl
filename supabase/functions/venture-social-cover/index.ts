@@ -379,6 +379,14 @@ Deno.serve(async (req) => {
     // and the model returns a near-duplicate image).
     const variationSeed = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
 
+    // Server-rendered headline: the model paints ZERO glyphs and reserves the
+    // top band; we typeset the founder's headline afterwards in real type.
+    // This is the only way to guarantee correct spelling.
+    const serverHeadline =
+      !isAvatar && headlineOverride?.mode === "custom" && (headlineOverride.text ?? "").trim()
+        ? (headlineOverride.text ?? "").trim()
+        : "";
+
     const buildPrompt = (retryNote?: string) =>
       isAvatar
         ? buildAvatarPrompt({
@@ -402,24 +410,54 @@ Deno.serve(async (req) => {
             variationSeed,
             headlineOverride,
             logoZone: logoZoneHint,
+            serverRenderedHeadline: true,
           });
+
+    // The text-only fallback never sees the palette tile or the logo, so spell
+    // the palette out inline for that path.
+    const inlinePalette = [
+      "",
+      "## Palette (no reference images available on this path — obey these hexes literally)",
+      `- Background surface: ${plan.surface}`,
+      `- Ink / marks: ${plan.ink}`,
+      `- Signature brand color (must be a confident visible shape): ${plan.displaySignature}`,
+      `- Accent, used sparingly: ${plan.accent}`,
+      "- Use no other colors. No gradients between them. Zero lettering of any kind.",
+      "",
+    ].join("\n");
+
+    let usedFallback = false;
 
     const generate = async (retryNote?: string) => {
       const prompt = buildPrompt(retryNote);
       const refs = [logoDataUrl, paletteTileDataUrl].filter(Boolean) as string[];
+      const runFallback = async () => {
+        usedFallback = true;
+        return await callTextOnly(prompt + inlinePalette, asset.modelSize, apiKey);
+      };
       try {
         if (refs.length) {
-          const b64 = await callMultimodal(prompt, refs, apiKey);
-          return { b64, modelUsed: MODEL_MULTIMODAL, prompt };
+          try {
+            const b64 = await callMultimodal(prompt, refs, apiKey);
+            return { b64, modelUsed: MODEL_MULTIMODAL, prompt };
+          } catch (e: any) {
+            const status = e?.status;
+            // One retry on a transient upstream failure before dropping to the
+            // blind, lower-fidelity fallback model.
+            if ([401, 402, 403, 429].includes(status)) throw e;
+            console.warn("[social-cover] multimodal failed, retrying once", status, e?.message);
+            const b64 = await callMultimodal(prompt, refs, apiKey);
+            return { b64, modelUsed: MODEL_MULTIMODAL + " (retry)", prompt };
+          }
         }
-        const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+        const b64 = await runFallback();
         return { b64, modelUsed: MODEL_FALLBACK, prompt };
       } catch (e: any) {
         const status = e?.status;
         // Do not mask billing/auth/rate-limit errors by making a second fallback
         // request; preserve the real gateway message for the UI.
         if (refs.length && ![401, 402, 403, 429].includes(status)) {
-          const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+          const b64 = await runFallback();
           return { b64, modelUsed: MODEL_FALLBACK + " (multimodal fallback)", prompt };
         }
         throw e;
