@@ -1197,7 +1197,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
                   <button
                     onClick={removeLogo}
-                    disabled={busy || retryDirection.isPending}
+                    disabled={rowBusy}
                     aria-label="Remove this concept"
                     className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white shadow hover:bg-black disabled:opacity-40"
                   >
