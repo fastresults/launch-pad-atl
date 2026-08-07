@@ -428,14 +428,14 @@ function clearSpace(height: number): number {
  * The mark box this piece's standard calls for — height inside the spec band,
  * width from the artwork's own aspect. Templates never hand-pick a logo size.
  */
-function markBoxFor(ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.62, fillWidth = false) {
+function markBoxFor(ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.85, fillWidth = false) {
   return logoBox(rs, logoAspect(ctx), isLockup(ctx), maxWidth, bias, fillWidth);
 }
 
 /** Draw the mark at its spec size, top-left anchored at (x, y). */
 function specMark(
   ctx: CollateralCtx, rs: ResolvedSpec, x: number, y: number, maxWidth: number,
-  ink: string | null, bg: string, bias = 0.62,
+  ink: string | null, bg: string, bias = 0.85,
 ): { svg: string; w: number; h: number; clear: number } {
   const box = markBoxFor(ctx, rs, maxWidth, bias);
   return { svg: markAt(ctx, x, y, box.w, box.h, ink, bg), ...box };
