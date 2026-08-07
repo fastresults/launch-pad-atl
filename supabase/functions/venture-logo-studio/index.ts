@@ -3,21 +3,24 @@
 // There is no queue, no job ledger, no background worker and nothing that can
 // stall. Every action is one synchronous request the founder is watching:
 //
-//   start    load the venture's real context, open the session, draw 3 roughs
-//   answer   record the answer, ask the next question, draw 3 fresh roughs
-//   back     step the conversation back and take a different branch
-//   refine   free-form direction on one rough -> 3 variations of it
-//   approve  TRACE the approved rough into brand-coloured vectors
-//   commit   assemble the lockup family and write it into the brand kit
+//   start          read the venture and write a ~100 word design brief proposing one mark
+//   revise_brief   the founder corrects the brief; the designer rewrites it
+//   approve_brief  draw the first mark and open the interview
+//   answer         record the answer, ask the next question, draw ONE evolved mark
+//   back           step the conversation back and take a different branch
+//   refine         free-form direction on the current mark -> one redraw
+//   approve        TRACE the approved rough into brand-coloured vectors
+//   commit         assemble the lockup family and write it into the brand kit
 //
-// Fidelity rule: approving traces the artwork the founder is looking at. The
-// mark is never redrawn between approval and delivery.
+// One mark at a time. Fidelity rule: approving traces the artwork the founder is
+// looking at. The mark is never redrawn between approval and delivery.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
 import {
   nextTurn,
+  openingBrief,
   roughPrompt,
   ROUGH_NEGATIVE,
   type InterviewTurn,
@@ -32,6 +35,7 @@ import {
   higgsfieldConfigured,
   renderLogoConcept,
 } from "../_shared/higgsfield.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
