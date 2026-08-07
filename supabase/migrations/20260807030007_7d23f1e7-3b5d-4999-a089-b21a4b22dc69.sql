@@ -1,0 +1,1 @@
+update public.brand_logo_directions set last_error = null, status = 'queued' where last_error = 'rasterizeSvg is not defined';
