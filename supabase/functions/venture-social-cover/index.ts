@@ -68,6 +68,22 @@ function b64ToBytes(b64: string): Uint8Array {
   return out;
 }
 
+// Flat single-color PNG — used for deterministic avatars (brand surface, then
+// the real logo composited on top).
+function solidPngBytes(width: number, height: number, hex: string): Uint8Array {
+  const h = String(hex || "#0B0F19").replace("#", "");
+  const ok = /^[0-9a-fA-F]{6}$/.test(h) ? h : "0B0F19";
+  const r = parseInt(ok.slice(0, 2), 16);
+  const g = parseInt(ok.slice(2, 4), 16);
+  const b = parseInt(ok.slice(4, 6), 16);
+  const png = new PNG({ width, height });
+  for (let i = 0; i < png.data.length; i += 4) {
+    png.data[i] = r; png.data[i + 1] = g; png.data[i + 2] = b; png.data[i + 3] = 255;
+  }
+  return new Uint8Array(PNG.sync.write(png));
+}
+
+
 function bytesToB64(bytes: Uint8Array): string {
   let s = "";
   const chunk = 0x8000;
