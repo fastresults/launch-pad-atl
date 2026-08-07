@@ -1167,6 +1167,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
               const selecting = selectDirection.isPending && (selectDirection.variables as any)?.id === rowId;
               const finalising = vectorizeDirection.isPending && (vectorizeDirection.variables as any)?.id === rowId;
               const busy = retrying;
+              void busy;
               const rowBusy = retrying || selecting || finalising;
               const finalised = !!directionRow?.asset?.vectorized;
               const removeLogo = async () => {
