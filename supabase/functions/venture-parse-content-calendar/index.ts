@@ -101,8 +101,14 @@ function parseBulletPosts(body: string, week: number, out: ParsedPost[]) {
   while ((dm = dayRe.exec(body))) {
     const post: ParsedPost = { week, day: dm[1].replace(/[:*]/g, "").trim() };
     parseFieldLines(dm[2], post);
+    if (!post.hook && !post.body) {
+      // Outline style: "*   **Day 1 (Mon):** one-line idea."
+      const inline = dm[2].split("\n").map((l) => l.trim()).find(Boolean);
+      if (inline && !inline.startsWith("*") && !inline.startsWith("#")) post.hook = inline;
+    }
     if (post.hook || post.body) out.push(post);
   }
+
 }
 
 
