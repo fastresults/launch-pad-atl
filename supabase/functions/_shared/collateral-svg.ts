@@ -19,6 +19,13 @@ import {
   step,
 } from "./brand-art-direction.ts";
 import { addressBlock, addressLine, type ContactDetails } from "./collateral-fields.ts";
+import {
+  logoBox,
+  type PageMetrics,
+  printMeta,
+  resolveSpec,
+  type ResolvedSpec,
+} from "./collateral-specs.ts";
 
 // Font loading has one hard requirement: the wasm rasteriser can only read a
 // real sfnt (TTF/OTF). It has no woff2 decoder and no @font-face support, so if
@@ -169,7 +176,7 @@ export const KIND_LABELS: Record<CollateralKind, string> = {
   design_tokens: "Design tokens",
 };
 
-export type Page = { name: string; svg: string; width: number; height: number };
+export type Page = { name: string; svg: string; width: number; height: number; metrics?: PageMetrics };
 
 function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
@@ -353,7 +360,9 @@ function markAt(
   const s = Math.min(boxW / vw, boxH / vh);
   const dx = x + (boxW - vw * s) / 2;
   const dy = y + (boxH - vh * s) / 2;
-  return `<g transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  // The drawn size is recorded on the group so QC can verify the mark landed
+  // inside the size band this piece's standard allows.
+  return `<g data-mark-w="${r(vw * s)}" data-mark-h="${r(vh * s)}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
 
 
@@ -372,6 +381,23 @@ function isLockup(ctx: CollateralCtx): boolean {
 /** Clear space the mark demands on every side, from its own height. */
 function clearSpace(height: number): number {
   return Math.round(height * 0.55);
+}
+
+/**
+ * The mark box this piece's standard calls for — height inside the spec band,
+ * width from the artwork's own aspect. Templates never hand-pick a logo size.
+ */
+function markBoxFor(ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.62) {
+  return logoBox(rs, logoAspect(ctx), isLockup(ctx), maxWidth, bias);
+}
+
+/** Draw the mark at its spec size, top-left anchored at (x, y). */
+function specMark(
+  ctx: CollateralCtx, rs: ResolvedSpec, x: number, y: number, maxWidth: number,
+  ink: string | null, bg: string, bias = 0.62,
+): { svg: string; w: number; h: number; clear: number } {
+  const box = markBoxFor(ctx, rs, maxWidth, bias);
+  return { svg: markAt(ctx, x, y, box.w, box.h, ink, bg), ...box };
 }
 
 /**
