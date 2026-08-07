@@ -122,15 +122,28 @@ export async function revokeVentureShare(id: string) {
   return updateVentureShare(id, { revoked_at: new Date().toISOString() });
 }
 
-const FUNCTIONS_BASE = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1`;
+// Built from VITE_SUPABASE_URL (injected in production builds) with a hard
+// fallback — deriving it from VITE_SUPABASE_PROJECT_ID produced
+// "https://undefined.supabase.co" in published bundles.
+const SUPABASE_URL =
+  (import.meta.env.VITE_SUPABASE_URL as string | undefined) ||
+  "https://hflfxytqrlkobhuugsca.supabase.co";
+const FUNCTIONS_BASE = `${SUPABASE_URL}/functions/v1`;
 
 /** Public fetch — works signed out, so it calls the endpoint directly. */
 export async function fetchSharePayload(token: string, password?: string) {
-  const res = await fetch(`${FUNCTIONS_BASE}/venture-share`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, password, action: "get" }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${FUNCTIONS_BASE}/venture-share`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password, action: "get" }),
+    });
+  } catch {
+    const err: any = new Error("Couldn't reach the server. Check your connection and try again.");
+    err.code = "NETWORK";
+    throw err;
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err: any = new Error(body?.error ?? "Could not load this share.");
@@ -139,6 +152,7 @@ export async function fetchSharePayload(token: string, password?: string) {
   }
   return body as SharePayload;
 }
+
 
 export async function trackShareView(token: string, password?: string) {
   await fetch(`${FUNCTIONS_BASE}/venture-share`, {
