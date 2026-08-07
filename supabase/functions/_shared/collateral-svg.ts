@@ -131,9 +131,11 @@ function markAt(
     const p = vb.trim().split(/[\s,]+/).map(Number);
     if (p.length === 4 && p[2] > 0 && p[3] > 0) { vw = p[2]; vh = p[3]; }
   }
-  let inner = svg.replace(/^[\s\S]*?<svg[^>]*>/i, "").replace(/<\/svg>\s*$/i, "").trim();
-  // Drop full-bleed background plates so the mark sits on the paper.
-  inner = inner.replace(/<rect\b[^>]*\bwidth\s*=\s*["']?(100%|\s*0*(?:1024|512|256)(?:px)?)["']?[^>]*\/?>(?:<\/rect>)?/gi, "");
+  // Drop full-bleed background plates so the mark sits directly on the paper.
+  let inner = stripSvgBackground(svg)
+    .replace(/^[\s\S]*?<svg[^>]*>/i, "")
+    .replace(/<\/svg>\s*$/i, "")
+    .trim();
   if (ink) {
     inner = inner
       .replace(/fill\s*=\s*["'](?!none)[^"']*["']/gi, `fill="${ink}"`)
@@ -145,9 +147,47 @@ function markAt(
   return `<g transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
 
+/** Aspect of the saved vector — a wide file is a lockup that already sets the name. */
+function logoAspect(ctx: CollateralCtx): number {
+  const vb = /viewBox\s*=\s*["']([\d.\-\s,]+)["']/i.exec(ctx.logoSvg ?? "")?.[1];
+  if (!vb) return 1;
+  const p = vb.trim().split(/[\s,]+/).map(Number);
+  return p.length === 4 && p[3] > 0 ? p[2] / p[3] : 1;
+}
+
+/** True when the saved artwork already contains the company name. */
+function isLockup(ctx: CollateralCtx): boolean {
+  return logoAspect(ctx) >= 1.6;
+}
+
 function wordmark(ctx: CollateralCtx, x: number, y: number, size: number, fill: string, anchor = "start") {
+  if (isLockup(ctx)) return "";
   return `<text x="${r(x)}" y="${r(y)}" font-family="BrandHead" font-weight="700" font-size="${r(size)}" fill="${fill}" text-anchor="${anchor}" letter-spacing="${r(size * -0.01)}">${esc(ctx.company)}</text>`;
 }
+
+/**
+ * Logo block for a header: a wide lockup gets the full width it needs, a square
+ * mark is paired with the typeset company name.
+ */
+function logoBlock(
+  ctx: CollateralCtx,
+  x: number,
+  baseline: number,
+  height: number,
+  ink: string | null,
+  nameFill: string,
+  nameSize: number,
+): string {
+  if (isLockup(ctx)) {
+    const w = Math.min(height * logoAspect(ctx), 520);
+    return markAt(ctx, x, baseline - height, w, height, ink);
+  }
+  return [
+    markAt(ctx, x, baseline - height, height, height, ink),
+    wordmark(ctx, x + height + 22, baseline - height * 0.28, nameSize, nameFill),
+  ].join("");
+}
+
 
 function r(n: number, p = 2): number {
   const f = Math.pow(10, p);
