@@ -574,6 +574,22 @@ Deno.serve(async (req) => {
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
     if (!logoComposited && logoSkipReason) (qa as any).logo_skipped = logoSkipReason;
+    (qa as any).used_fallback = usedFallback;
+
+    // --- Server-rendered headline: real typography, correctly spelled.
+    if (serverHeadline) {
+      try {
+        const aspect: AdAspect = asset.height > asset.width ? "4:5" : "1:1";
+        const withText = await compositeHeadline(bytes, plan, aspect, serverHeadline);
+        const changed = withText !== bytes;
+        bytes = withText;
+        (qa as any).headline_composited = changed;
+      } catch (e) {
+        console.warn("headline composite failed", e);
+        (qa as any).headline_composited = false;
+      }
+    }
+
 
     const fileId = crypto.randomUUID();
     const storagePath = `social-cover/${userId}/${snapshotId}/${platform.platform}/${asset.kind}/${direction}-${fileId}.png`;
