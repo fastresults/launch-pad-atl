@@ -113,6 +113,7 @@ export function buildContentAdPrompt(args: {
   headlineOverride?: HeadlineOverride;
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
   serverRenderedHeadline?: boolean;
+  posterLayout?: string;
 }): string {
   const { aspect, post } = args;
   const asset = specForAspect(aspect);
@@ -172,7 +173,7 @@ server-side afterwards — render ZERO letters, numerals, glyphs, signage, capti
     },
   });
 
-  return `${base}\n${postBrief}\n`;
+  return `${base}\n${postBrief}\n${posterBrief}\n`;
 }
 
 // Re-export for callers that need to know the finally-rendered headline text.
