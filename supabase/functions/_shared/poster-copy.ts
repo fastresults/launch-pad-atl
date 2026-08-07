@@ -1,27 +1,36 @@
-// Poster copy pass — distills a calendar post (long hook + body + CTA) into the
-// three-part editorial lockup used by the poster compositor:
-//   kicker    — short letterspaced eyebrow (2–4 words)
-//   headline  — display line, <= 60 chars, no trailing punctuation
-//   ctaLine   — one short action line, <= 42 chars
-// Falls back to a deterministic local distillation when AI is unavailable.
+// Poster copy pass — writes the three-part editorial lockup used by the poster
+// compositor from a calendar post:
+//   kicker    — short letterspaced eyebrow (topic / audience)
+//   headline  — a WRITTEN display line, 4–9 words, that lands one clear message
+//   ctaLine   — one short action line
 //
-// Hard rule: a headline is never chopped mid-thought. Every shortening path
-// lands on a sentence / clause / word boundary and then drops trailing function
-// words, so "…why having a professional manager beats an" can't ship.
+// Hard rule: the post's hook is source material, never the headline. A hook is
+// an article sentence; slicing it yields "Dealing with Dementia: Tips for local
+// families navigating" — a topic with its ending lopped off. The copywriter
+// writes a line instead, and a validator rejects article-title phrasing.
 
 import { trimDangling } from "./content-ad-director.ts";
 
 const AI_CHAT = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "openai/gpt-5.6-sol";
 
+export type HeadlineSource = "written" | "founder" | "fallback" | "none";
+
 export type PosterCopy = {
   kicker: string;
   headline: string;
   ctaLine: string;
-  source: "ai" | "fallback" | "override";
-  /** true when the source copy had to be shortened to fit the poster */
+  source: HeadlineSource;
+  /** why the written headline was rejected, when we had to fall back */
+  headlineIssue?: string | null;
+  /** the model's one-line rationale for the chosen line (logged, not rendered) */
+  rationale?: string | null;
+  /** true when source copy had to be shortened rather than written */
   truncated: boolean;
 };
+
+const MAX_WORDS = 9;
+const MIN_WORDS = 3;
 
 function clean(s: unknown, cap: number): string {
   return String(s ?? "")
@@ -51,17 +60,44 @@ export function firstClause(s: string, cap: number): string {
   return trimDangling(base);
 }
 
-/** Headline is unusable if it's empty, over budget, or ends on a function word. */
-export function headlineIssue(h: string, cap: number): string | null {
+// Phrasings that mean "this is an article, not a headline".
+const ARTICLE_TITLE_PATTERNS: { re: RegExp; why: string }[] = [
+  { re: /^(tips|ideas|ways|reasons|things|steps|lessons|questions|mistakes)\b/i, why: "listicle opener" },
+  { re: /\b(tips|guide|checklist|overview|introduction|breakdown|roundup)\s+(for|to|on|about)\b/i, why: "guide phrasing" },
+  { re: /^(why|how|what|when|where|who)\b.*\b(matters|works|is important|you should)\b/i, why: "explainer phrasing" },
+  { re: /\b(everything you need to know|a closer look|deep dive|101)\b/i, why: "article cliché" },
+  { re: /\b(navigating|exploring|understanding|discussing|considering)\b/i, why: "gerund topic phrasing" },
+];
+
+const VERBS_OK = /\b(is|are|isn't|aren't|was|were|get|gets|got|make|makes|made|take|takes|keep|keeps|turn|turns|build|builds|built|start|starts|stop|stops|find|finds|know|knows|need|needs|want|wants|beat|beats|win|wins|cost|costs|save|saves|pay|pays|run|runs|call|calls|ask|asks|leave|leaves|stay|stays|come|comes|go|goes|can|can't|won't|don't|doesn't|should|shouldn't|will|deserve|deserves|belong|belongs|feel|feels|look|looks|works?|help|helps|hire|hires|choose|chooses|change|changes|fix|fixes|carry|carries|hold|holds|show|shows|matter|matters)\b/i;
+
+/** Reject anything that isn't a written headline. Returns a reason, or null. */
+export function headlineIssue(h: string, cap: number, kicker = ""): string | null {
   const t = (h || "").trim();
   if (!t) return "empty";
-  if (t.length > cap) return "too_long";
-  if (/[,;:\-–—]$/.test(t)) return "dangling_punctuation";
-  if (trimDangling(t) !== t.replace(/[\s.!?]+$/g, "")) return "dangling_word";
+  if (t.length > cap) return `over ${cap} characters`;
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length > MAX_WORDS) return `over ${MAX_WORDS} words`;
+  if (words.length < MIN_WORDS) return "too short to carry a message";
+  if (/[,;:\-–—]$/.test(t)) return "ends on punctuation";
+  if (/\.{2,}|…/.test(t)) return "contains an ellipsis";
+  if (/#\w/.test(t)) return "contains a hashtag";
+  if (trimDangling(t) !== t.replace(/[\s.!?]+$/g, "")) return "ends on a function word";
+  for (const p of ARTICLE_TITLE_PATTERNS) if (p.re.test(t)) return p.why;
+  // "Topic: subtitle" is only allowed when both halves are complete thoughts.
+  const colon = t.indexOf(":");
+  if (colon > 0) {
+    const [a, b] = [t.slice(0, colon), t.slice(colon + 1)];
+    if (!VERBS_OK.test(a) || !VERBS_OK.test(b)) return "reads as a topic with a subtitle";
+  } else if (!VERBS_OK.test(t)) {
+    return "names a topic instead of making a claim";
+  }
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z ]/g, "").trim();
+  if (kicker && norm(t).startsWith(norm(kicker)) && norm(kicker).length > 6) return "repeats the kicker";
   return null;
 }
 
-/** Shorten an existing headline by one clause / a few words — used by the QA retry. */
+/** Shorten an existing headline by a clause — the compositor's last-resort refit. */
 export function shortenHeadline(h: string, cap: number): string {
   const t = (h || "").trim();
   if (!t) return t;
@@ -75,7 +111,7 @@ export function fallbackPosterCopy(post: {
   body?: string | null;
   cta?: string | null;
   pillar?: string | null;
-}, cap = 60): PosterCopy {
+}, cap = 52): PosterCopy {
   const source = String(post.hook || post.body || "").trim();
   const headline = firstClause(source, cap);
   return {
@@ -96,41 +132,71 @@ export async function buildPosterCopy(args: {
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string } | null;
 }): Promise<PosterCopy> {
   const { post, headlineOverride } = args;
-  const cap = Math.max(28, Math.min(90, args.headlineCap ?? 60));
+  const cap = Math.max(28, Math.min(72, args.headlineCap ?? 52));
+
   if (headlineOverride?.mode === "none") {
-    return { kicker: "", headline: "", ctaLine: "", source: "override", truncated: false };
+    return { kicker: "", headline: "", ctaLine: "", source: "none", truncated: false };
   }
 
   const fb = fallbackPosterCopy(post, cap);
 
-  let ai: Partial<PosterCopy> = {};
+  // Founder typed a headline: use it verbatim, length-guarded only.
+  const typed = headlineOverride?.mode === "custom" ? (headlineOverride.text ?? "").trim() : "";
+  if (typed) {
+    const headline = firstClause(typed, cap);
+    return {
+      kicker: fb.kicker,
+      headline,
+      ctaLine: fb.ctaLine,
+      source: "founder",
+      truncated: headline.length < typed.replace(/\s+/g, " ").length,
+    };
+  }
+
+  let ai: { kicker?: string; headline?: string; ctaLine?: string; rationale?: string } = {};
+  let issue: string | null = "no ai key";
+
   if (args.apiKey) {
-    const sys = `You are an award-winning editorial poster copywriter. Distill a social post into a magazine-cover lockup.
-Return STRICT JSON: { "kicker": string, "headline": string, "ctaLine": string }
-Rules:
-- kicker: 1-4 words, uppercase-friendly eyebrow naming the theme or audience. No punctuation.
-- headline: a COMPLETE, grammatical, arresting display line that stands on its own. MAX ${cap} characters — write short, do not truncate. It must never end on an article, preposition, conjunction or auxiliary verb ("an", "the", "of", "and", "is"...). No ellipsis, no trailing punctuation, no quotes, no emoji, no hashtags.
-- Avoid unbroken words longer than 18 characters; rephrase instead.
-- ctaLine: one short imperative line, MAX 42 characters. No URLs unless present in the source CTA.
-- Plain sentence case for the headline; never shout.
+    const sys = `You are an award-winning advertising copywriter writing the headline on a printed poster. The post below is your SOURCE MATERIAL, not your headline — never quote or truncate it.
+
+Return STRICT JSON:
+{ "kicker": string, "headline": string, "ctaLine": string, "rationale": string }
+
+Write three candidate headlines in your head, pick the strongest, and return only that one.
+
+headline — this is the whole job:
+- ${MIN_WORDS}-${MAX_WORDS} words, MAX ${cap} characters. Short is the point.
+- It must LAND ONE MESSAGE: a promise, a tension, a claim, or a consequence the reader feels. A reader who sees only this line should know what is being offered or argued.
+- It must contain a verb. Never a bare topic or noun phrase.
+- BANNED: article-title phrasing — "Tips for…", "Why X matters", "How to…", "Everything you need to know", "Navigating/Understanding/Exploring X", listicles, and "Topic: subtitle" constructions unless both halves are complete sentences.
+- No ellipsis, no trailing punctuation, no quotes, no emoji, no hashtags, no unbroken word over 18 characters.
+- Sentence case. Never shout. Do not repeat the kicker's words.
+
+kicker — 1-4 words naming the topic or audience, so the headline never has to.
+ctaLine — one short imperative, MAX 42 characters. No URL unless the source CTA has one.
+rationale — one sentence on why this line lands.
+
 No prose outside the JSON.`;
     const user = `Brand: ${args.brandName ?? "(unnamed)"}
 Value proposition: ${args.valueProp ?? ""}
 Pillar: ${post.pillar ?? ""}
 Platform: ${post.platform ?? ""}
-Hook: ${post.hook ?? ""}
-Body: ${String(post.body ?? "").slice(0, 500)}
-CTA: ${post.cta ?? ""}`;
+Source hook: ${post.hook ?? ""}
+Source body: ${String(post.body ?? "").slice(0, 600)}
+Source CTA: ${post.cta ?? ""}`;
 
-    const ask = async (extra?: string): Promise<Partial<PosterCopy>> => {
-      const messages: any[] = [
-        { role: "system", content: sys },
-        { role: "user", content: extra ? `${user}\n\nREWRITE NOTE: ${extra}` : user },
-      ];
+    const ask = async (note?: string) => {
       const res = await fetch(AI_CHAT, {
         method: "POST",
         headers: { Authorization: `Bearer ${args.apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: MODEL, messages, response_format: { type: "json_object" } }),
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: "system", content: sys },
+            { role: "user", content: note ? `${user}\n\nREWRITE NOTE: ${note}` : user },
+          ],
+          response_format: { type: "json_object" },
+        }),
       });
       if (!res.ok) {
         console.warn("poster copy gateway error", res.status, await res.text());
@@ -140,49 +206,37 @@ CTA: ${post.cta ?? ""}`;
       const parsed = JSON.parse(data?.choices?.[0]?.message?.content ?? "{}");
       return {
         kicker: clean(parsed.kicker, 26).toUpperCase(),
-        headline: String(parsed.headline ?? "").replace(/\s+/g, " ").trim(),
+        headline: String(parsed.headline ?? "").replace(/\s+/g, " ").replace(/^["'“”]+|["'“”]+$/g, "").trim(),
         ctaLine: clean(parsed.ctaLine, 42),
+        rationale: clean(parsed.rationale, 160),
       };
     };
 
     try {
       ai = await ask();
-      const issue = headlineIssue(ai.headline ?? "", cap);
+      issue = headlineIssue(ai.headline ?? "", cap, ai.kicker ?? "");
       if (issue) {
-        // One rewrite attempt rather than silently slicing the sentence.
         const retry = await ask(
-          `Your previous headline was rejected (${issue}): "${ai.headline ?? ""}". Return a complete sentence under ${cap} characters that ends on a strong noun or verb.`,
+          `Your headline "${ai.headline ?? ""}" was rejected: ${issue}. Write a different line — ${MIN_WORDS}-${MAX_WORDS} words, under ${cap} characters, with a verb, that makes a claim a reader can act on. Do not restate the source hook.`,
         );
-        if (retry.headline && !headlineIssue(retry.headline, cap)) ai = { ...ai, ...retry };
+        const retryIssue = headlineIssue(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
+        if (retry.headline && !retryIssue) { ai = { ...ai, ...retry }; issue = null; }
+        else console.warn("[poster-copy] headline rejected twice", { first: ai.headline, second: retry.headline, issue, retryIssue });
       }
     } catch (e) {
       console.warn("poster copy failed", e);
+      issue = "copy pass failed";
     }
   }
 
-  const aiHeadlineOk = !!ai.headline && !headlineIssue(ai.headline, cap);
-  const rawOverride = headlineOverride?.mode === "custom" ? (headlineOverride.text ?? "").trim() : "";
-
-  let headline: string;
-  let truncated = false;
-  if (rawOverride) {
-    headline = firstClause(rawOverride, cap);
-    truncated = headline.length < rawOverride.replace(/\s+/g, " ").length;
-  } else if (aiHeadlineOk) {
-    headline = ai.headline!;
-  } else if (ai.headline) {
-    headline = firstClause(ai.headline, cap);
-    truncated = headline.length < ai.headline.length;
-  } else {
-    headline = fb.headline;
-    truncated = fb.truncated;
-  }
-
+  const wrote = !!ai.headline && !issue;
   return {
     kicker: ai.kicker || fb.kicker,
-    headline,
+    headline: wrote ? ai.headline! : (ai.headline ? firstClause(ai.headline, cap) : fb.headline),
     ctaLine: ai.ctaLine || fb.ctaLine,
-    source: ai.headline && !rawOverride ? "ai" : (rawOverride ? "override" : "fallback"),
-    truncated,
+    source: wrote ? "written" : "fallback",
+    headlineIssue: wrote ? null : issue,
+    rationale: ai.rationale ?? null,
+    truncated: wrote ? false : true,
   };
 }
