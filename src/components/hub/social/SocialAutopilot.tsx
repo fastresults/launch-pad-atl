@@ -1048,7 +1048,22 @@ function Step5BuildKit({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="border-t border-white/5 pb-0 pt-0">
+                    {items.some((t) => !!t.asset_id) && (
+                      <div className="flex justify-end px-2 pt-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-[10px] text-destructive hover:text-destructive"
+                          disabled={running}
+                          onClick={() => clearAssets({ platform })}
+                          title={`Delete every generated ${platformLabel(platform)} image`}
+                        >
+                          <Trash2 className="mr-1 h-3 w-3" /> Clear {platformLabel(platform)}
+                        </Button>
+                      </div>
+                    )}
                     <ul className="grid gap-2 p-2 sm:grid-cols-2">
+
                       {items.map((t) => {
                         const k = taskKey(t);
                         const done = t.status === "done";
