@@ -359,18 +359,16 @@ function fillsIn(svg: string): string[] {
  * ink — produces the invisible ghost we shipped before. Any ink that fails to
  * separate from the surface is replaced with one that does.
  */
+function markSvgOf(ctx: CollateralCtx): string | null {
+  return ctx.symbolSvg || ctx.logoSvg || null;
+}
+
 function markAt(
   ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number,
   ink: string | null, bg?: string,
 ): string {
-  const svg = ctx.logoSvg;
+  const svg = markSvgOf(ctx);
   if (!svg) return "";
-  const vb = /viewBox\s*=\s*["']([\d.\-\s,]+)["']/i.exec(svg)?.[1];
-  let vw = 1024, vh = 1024;
-  if (vb) {
-    const p = vb.trim().split(/[\s,]+/).map(Number);
-    if (p.length === 4 && p[2] > 0 && p[3] > 0) { vw = p[2]; vh = p[3]; }
-  }
   // Drop full-bleed background plates so the mark sits directly on the paper.
   let inner = stripSvgBackground(svg)
     .replace(/^[\s\S]*?<svg[^>]*>/i, "")
@@ -394,25 +392,29 @@ function markAt(
       .replace(/fill\s*=\s*["'](?!none)[^"']*["']/gi, `fill="${use}"`)
       .replace(/stroke\s*=\s*["'](?!none)[^"']*["']/gi, `stroke="${use}"`);
   }
-  const s = Math.min(boxW / vw, boxH / vh);
-  const dx = x + (boxW - vw * s) / 2;
-  const dy = y + (boxH - vh * s) / 2;
+  // Scale and position by the artwork's INK box, never its file box: traced
+  // marks carry the tracer's canvas padding, so fitting the file put roughly
+  // half the requested height on the page as empty air.
+  const box = inkBox(svg);
+  const s = Math.min(boxW / box.w, boxH / box.h);
+  const dx = x + (boxW - box.w * s) / 2 - box.x * s;
+  const dy = y + (boxH - box.h * s) / 2 - box.y * s;
   // The drawn size is recorded on the group so QC can verify the mark landed
   // inside the size band this piece's standard allows.
-  return `<g data-mark-w="${r(vw * s)}" data-mark-h="${r(vh * s)}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  return `<g data-mark-w="${r(box.w * s)}" data-mark-h="${r(box.h * s)}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
 
 
 function logoAspect(ctx: CollateralCtx): number {
-  const vb = /viewBox\s*=\s*["']([\d.\-\s,]+)["']/i.exec(ctx.logoSvg ?? "")?.[1];
-  if (!vb) return 1;
-  const p = vb.trim().split(/[\s,]+/).map(Number);
-  return p.length === 4 && p[3] > 0 ? p[2] / p[3] : 1;
+  const svg = markSvgOf(ctx);
+  return svg ? inkAspect(svg) : 1;
 }
 
-/** True when the saved artwork already contains the company name. */
+/** True when the artwork being drawn already contains the company name. */
 function isLockup(ctx: CollateralCtx): boolean {
+  if (ctx.symbolSvg) return false; // the wordmark is set in real type instead
   return logoAspect(ctx) >= 1.6;
+
 }
 
 /** Clear space the mark demands on every side, from its own height. */
