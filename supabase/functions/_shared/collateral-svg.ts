@@ -970,6 +970,32 @@ function fallbackFor(family: string): string {
     : SANS_FALLBACK;
 }
 
+/**
+ * What the page actually contains, read back off the finished SVG: the drawn
+ * mark size, the smallest type on the page, and the longest line. QC compares
+ * these against the piece's standard.
+ */
+function pageMetrics(name: string, svg: string, rs: ResolvedSpec): PageMetrics {
+  const markHs = [...svg.matchAll(/data-mark-h="([\d.]+)"/g)].map((m) => Number(m[1]));
+  const markWs = [...svg.matchAll(/data-mark-w="([\d.]+)"/g)].map((m) => Number(m[1]));
+  const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
+  const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
+  const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
+  const idx = primaryMark !== undefined ? markHs.indexOf(primaryMark) : -1;
+  return {
+    page: name,
+    markH: primaryMark,
+    markW: idx >= 0 ? markWs[idx] : undefined,
+    markBand: isLockup({ logoSvg: svg } as unknown as CollateralCtx) ? rs.lockupBand : rs.logoBand,
+    safe: rs.safe,
+    bleed: rs.bleed,
+    minType: rs.minType,
+    textLines: texts.length,
+    smallestType: sizes.length ? Math.min(...sizes) : undefined,
+    longestLine: texts.length ? Math.max(...texts.map((t) => t.length)) : undefined,
+  };
+}
+
 export type RenderResult = { pages: Page[]; fontBuffers: Uint8Array[]; fontsOk: boolean };
 
 export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx): Promise<RenderResult> {
@@ -1013,12 +1039,14 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
 
   const headStack = `${heading}, ${fallbackFor(heading)}`;
   const bodyStack = `${body}, ${fallbackFor(body)}`;
-  pages = pages.map((p) => ({
-    ...p,
-    svg: p.svg
+  pages = pages.map((p) => {
+    const rs = resolveSpec(p.name, p.width, p.height);
+    const svg = p.svg
       .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
-      .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`),
-  }));
+      .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
+      .replace("<svg ", `<svg${printMeta(rs)} `);
+    return { ...p, svg, metrics: pageMetrics(p.name, svg, rs) };
+  });
 
   const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
   return { pages, fontBuffers, fontsOk: fontBuffers.length > 0 };
