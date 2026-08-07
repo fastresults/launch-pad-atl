@@ -51,9 +51,25 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
   }, [items]);
 
   const gen = useMutation({
-    mutationFn: (kinds?: string[]) => generateCollateral(snapshot.id, kinds),
+    // Rasterising every piece in one call blows the edge worker's memory
+    // budget, so we walk through them two at a time.
+    mutationFn: async (kinds?: string[]) => {
+      const all = kinds?.length ? kinds : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind));
+      const generated: any[] = [];
+      const failed: any[] = [];
+      let artDirection: any = null;
+      for (let i = 0; i < all.length; i += 2) {
+        const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 2));
+        generated.push(...(res?.generated ?? []));
+        failed.push(...(res?.failed ?? []));
+        artDirection ??= res?.artDirection ?? null;
+        qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
+      }
+      return { ok: true, generated, failed, artDirection };
+    },
     onMutate: (kinds) => setBusyKind(kinds?.length === 1 ? kinds[0] : "all"),
     onSettled: () => setBusyKind(null),
+
     onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       const failed = res?.failed ?? [];
