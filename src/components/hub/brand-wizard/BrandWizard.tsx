@@ -581,6 +581,28 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     }
   };
 
+  // Escape hatch: a stuck queue (dead leases, spinners that never resolve)
+  // is cleared outright and the provider status re-read from scratch.
+  const [clearing, setClearing] = useState(false);
+  const forceClear = async () => {
+    setClearing(true);
+    try {
+      const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_force_reset" } });
+      setLogos([]);
+      setLogoPhase(null);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["logoRun", snapshot.id] }),
+        qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] }),
+        renderStatusQ.refetch(),
+      ]);
+      toast.success(`Queue cleared — ${out?.clearedDirections ?? 0} concept slot(s) removed. Render status refreshed.`);
+    } catch (e: any) {
+      toast.error(e?.message || "Could not clear the logo queue");
+    } finally {
+      setClearing(false);
+    }
+  };
+
   // Concepts that were vectored without a Higgsfield render behind them.
   const fellBack = runDirections.filter(
     (d) => d.render_status && d.render_status !== "ready" && d.render_status !== "pending",
