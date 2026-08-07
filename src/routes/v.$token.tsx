@@ -33,24 +33,25 @@ export default function VentureSharePage() {
     }
   }, [payload, token, submitted]);
 
-  // Scroll spy over every rendered asset.
+  // One asset at a time: 60+ documents in a single scroll is unreadable.
+  // The hash keeps every asset individually linkable.
   useEffect(() => {
     if (!items.length) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (visible?.target.id) setActiveKey(visible.target.id);
-      },
-      { rootMargin: "-15% 0px -70% 0px", threshold: 0 },
-    );
-    for (const it of items) {
-      const el = document.getElementById(it.key);
-      if (el) obs.observe(el);
-    }
-    return () => obs.disconnect();
+    const fromHash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    const initial = items.find((i) => i.key === fromHash)?.key ?? items[0].key;
+    setActiveKey((prev) => prev ?? initial);
   }, [items]);
+
+  const activeIndex = items.findIndex((i) => i.key === activeKey);
+  const activeItem = activeIndex >= 0 ? items[activeIndex] : null;
+  const activeSection = payload?.sections.find((s) => s.items.some((i) => i.key === activeKey));
+
+  const goTo = (key: string) => {
+    setActiveKey(key);
+    history.replaceState(null, "", `#${key}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
 
   useDocumentTitle(
     payload ? `${payload.venture.name} — venture showcase` : "Venture showcase",
