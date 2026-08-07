@@ -36,8 +36,6 @@ export function edgeErrorMessage(err: any, fallback = "Something went wrong. Ple
     return "Your session expired. Please sign in again and retry.";
   }
 
-    return "Your session expired. Please sign in again and retry.";
-  }
   if (status === 403) {
     return "You don't have access to run this action. Try signing out and back in, or retry in a moment.";
   }
