@@ -207,6 +207,15 @@ export function AssetPreviewDialog({
                       Signature coverage: {signatureCoverage}% {signatureVisible === false ? "(not visible)" : ""}
                     </div>
                   )}
+                  {typeof asset.qaNotes?.headline_contrast === "number" && (
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      Headline contrast: {asset.qaNotes.headline_contrast.toFixed(1)}:1
+                      {typeof asset.qaNotes?.kicker_contrast === "number"
+                        ? ` · kicker ${asset.qaNotes.kicker_contrast.toFixed(1)}:1`
+                        : ""}
+                    </div>
+                  )}
+
                 </div>
               );
             })()}

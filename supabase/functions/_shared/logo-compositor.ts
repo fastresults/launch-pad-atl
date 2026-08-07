@@ -274,6 +274,47 @@ function tintMark(logo: Image, hex: string): Image {
   return out;
 }
 
+function b64FromBytes(bytes: Uint8Array): string {
+  let s = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) s += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  return btoa(s);
+}
+
+/**
+ * Produces a transparent, single-ink PNG of the brand mark for use as vector
+ * ink on a poster — never a plate, chip or white box. Prefers re-rendering the
+ * source SVG in the knockout color; falls back to knocking the background out
+ * of a raster mark and tinting it.
+ */
+export async function buildVectorInkLogoPng(opts: {
+  svgText?: string | null;
+  bytes?: Uint8Array | null;
+  inkHex: string;
+  targetWidthPx?: number;
+}): Promise<{ dataUrl: string; aspect: number } | null> {
+  const width = Math.max(512, Math.round(opts.targetWidthPx || 512) * 2);
+  try {
+    if (opts.svgText) {
+      const mono = await rasterizeSvgMono(opts.svgText, opts.inkHex, width);
+      if (mono) {
+        const img = knockoutAndTrim(await Image.decode(mono));
+        const out = await img.encode();
+        return { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
+      }
+    }
+    if (opts.bytes && opts.bytes.byteLength) {
+      const img = tintMark(knockoutAndTrim(await Image.decode(opts.bytes)), opts.inkHex);
+      const out = await img.encode();
+      return { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
+    }
+  } catch (e) {
+    console.warn("[logo-compositor] buildVectorInkLogoPng failed", e instanceof Error ? e.message : e);
+  }
+  return null;
+}
+
+
 // Soft radial falloff behind the mark — no rectangle, no hard edge. Used only
 // when the knockout still lacks contrast against a busy region.
 function paintRadialScrim(base: Image, cx: number, cy: number, radius: number, dark: boolean): void {

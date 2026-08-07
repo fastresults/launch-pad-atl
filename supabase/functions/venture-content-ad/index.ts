@@ -70,9 +70,12 @@ function mimeFromPath(p: string): string {
 
 async function fetchPrimaryLogo(admin: any, kit: any) {
   // Shared loader — rasterises SVG marks so the logo is never silently dropped.
-  const { dataUrl, bytes } = await fetchPrimaryLogoBitmap(admin, kit);
-  return { dataUrl, bytes };
+  // svgText is kept so the poster compositor can re-render the mark as vector
+  // ink (no plate, recolored for contrast).
+  const { dataUrl, bytes, svgText } = await fetchPrimaryLogoBitmap(admin, kit);
+  return { dataUrl, bytes, svgText };
 }
+
 
 
 // Per-call timeout so a hung upstream doesn't idle the whole 150s request.
@@ -288,7 +291,7 @@ Deno.serve(async (req) => {
 
     const asset = specForAspect(aspect);
     const ctx = await loadVentureContext(admin, snapshotId);
-    const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
+    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
 
     let plan: CanvasPlan = buildCanvasPlan({ kit, asset, direction, signature: signatureCfg });
     plan = applyPaletteOverride(plan, paletteOverride);
@@ -419,9 +422,11 @@ Deno.serve(async (req) => {
     });
 
     const headlineComposited = !!posterCopy.headline;
-    const logoComposited = !!logoDataUrl;
-    bytes = await buildContentAdSvgBytes({
-      baseImageB64: bytesToB64(bytes),
+    const logoComposited = !!(logoSvgText || logoBytes || logoDataUrl);
+    const platePngBytes = bytes;
+    const poster = await buildContentAdSvgBytes({
+      baseImageB64: bytesToB64(platePngBytes),
+      basePngBytes: platePngBytes,
       baseMime: "image/png",
       width: asset.width,
       height: asset.height,
@@ -432,15 +437,22 @@ Deno.serve(async (req) => {
       headline: posterCopy.headline,
       ctaLine: posterCopy.ctaLine,
       logoDataUrl,
+      logoSvgText,
+      logoBytes,
       logoAspect,
       logoSize,
-      logoCorner: cornerOverride,
+      // The compositor picks the quietest legal corner; bottom-right is only
+      // the starting preference when the headline is suppressed.
+      logoCorner: undefined,
     });
+    bytes = poster.bytes;
     (qa as any).headline_composited = headlineComposited;
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
     (qa as any).poster_layout = posterLayout;
     (qa as any).poster_copy = posterCopy;
+    Object.assign(qa as any, poster.metrics);
+
 
 
     const fileId = crypto.randomUUID();
