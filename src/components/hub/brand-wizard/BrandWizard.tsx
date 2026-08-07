@@ -711,15 +711,15 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       await processLogoRun(created.run);
       return created;
     },
-    onSuccess: () => toast.success("Your three concept marks are ready — pick one, refine it, then vectorize"),
+    onSuccess: () => toast.success("Your three concept marks are ready — pick one, refine it, then finalise"),
     onError: (e: any) => toast.error(e?.message ?? "Logo run paused. You can resume it here."),
     onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
   });
 
   const vectorizeDirection = useMutation({
     mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_vectorize", runId: item.run_id, directionId: item.id } }),
-    onSuccess: () => { toast.success("Mark vectorized — SVG lockups are ready"); logoRunQ.refetch(); },
-    onError: (e: any) => toast.error(e?.message ?? "Could not vectorize this mark"),
+    onSuccess: () => { toast.success("Mark finalised — SVG lockups are ready"); logoRunQ.refetch(); },
+    onError: (e: any) => toast.error(e?.message ?? "Could not finalise this mark"),
   });
 
 
@@ -1166,8 +1166,6 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
               const retrying = retryDirection.isPending && retryDirection.variables?.id === rowId;
               const selecting = selectDirection.isPending && (selectDirection.variables as any)?.id === rowId;
               const finalising = vectorizeDirection.isPending && (vectorizeDirection.variables as any)?.id === rowId;
-              const busy = retrying;
-              void busy;
               const rowBusy = retrying || selecting || finalising;
               const finalised = !!directionRow?.asset?.vectorized;
               const removeLogo = async () => {
