@@ -1029,7 +1029,16 @@ Deno.serve(async (req) => {
         const strategy = (run.strategy ?? null) as BrandStrategy | null;
         const dossier = buildDossier(ctx, tokens, strategy, docsBlock);
 
-        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, strategy, ctx, tokens, dossier, reviewNote ?? row.review_note ?? undefined);
+        // When stage 3 produced a render, the vector model traces it instead of
+        // inventing geometry from the written brief.
+        let renderUrl: string | null = null;
+        if (row.render_path) {
+          const { data: signedRender } = await supabase.storage.from("user-media")
+            .createSignedUrl(row.render_path, 60 * 30);
+          renderUrl = signedRender?.signedUrl ?? null;
+        }
+
+        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, strategy, ctx, tokens, dossier, reviewNote ?? row.review_note ?? undefined, renderUrl);
         const variants = await buildLogoVariants(spec, tokens, companyName);
 
         const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, variants.mark, "mark");
