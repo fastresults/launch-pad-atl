@@ -188,19 +188,56 @@ Deno.serve(async (req) => {
     const primaryLogo = logos.find((l) => l?.primary) ?? logos[0] ?? null;
     const logoUrl = primaryLogo ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}` : null;
 
+    const paletteColors: Record<string, string> =
+      (kit?.palette?.colors && typeof kit.palette.colors === "object" ? kit.palette.colors : {}) as any;
+
     if (kit && !excluded.has("cat:Brand")) {
       if (!excluded.has("brand:identity")) {
-        const palette = Array.isArray(kit.palette) ? kit.palette : (kit.palette?.colors ?? []);
         const lines: string[] = [];
         if (kit.dna?.positioning) lines.push(String(kit.dna.positioning));
         if (kit.voice?.summary) lines.push(String(kit.voice.summary));
+
+        const swatchOrder = [
+          ["primary", "Primary"],
+          ["secondary", "Secondary"],
+          ["accent", "Accent"],
+          ["fg", "Text"],
+          ["muted", "Muted"],
+          ["bg", "Surface"],
+          ["border", "Border"],
+        ];
+        const swatches = swatchOrder
+          .filter(([k]) => typeof paletteColors[k] === "string")
+          .map(([k, label]) => ({ label, hex: paletteColors[k] }));
+
+        // Logo variants: every stored mark, signed so the reader can see them.
+        const logoImages: { url: string; label?: string | null }[] = [];
+        for (const l of logos) {
+          const p = l?.preview_path ?? l?.svg_path ?? l?.path;
+          const url = await sign(BUCKET, p);
+          if (url) logoImages.push({ url, label: l?.label ?? l?.name ?? (l?.primary ? "Primary mark" : "Variant") });
+        }
+
         push("Brand", {
           key: "brand:identity",
           title: "Brand identity",
           subtitle: "Logo, palette and typography",
           kind: "doc",
-          body: lines.join("\n\n") || kit.guide_markdown || null,
+          body: lines.join("\n\n") || null,
           heroImageUrl: logoUrl,
+          brandBoard: {
+            paletteName: kit.palette?.name ?? null,
+            swatches,
+            fonts: [
+              kit.typography?.heading?.family
+                ? { role: "Headings", family: String(kit.typography.heading.family) }
+                : null,
+              kit.typography?.body?.family
+                ? { role: "Body", family: String(kit.typography.body.family) }
+                : null,
+            ].filter(Boolean) as { role: string; family: string }[],
+            logos: logoImages,
+          },
         });
         if (kit.guide_markdown && !excluded.has("brand:guide")) {
           push("Brand", {
@@ -211,8 +248,8 @@ Deno.serve(async (req) => {
             body: kit.guide_markdown,
           });
         }
-        void palette;
       }
+
 
       const collateral = collRes.data ?? [];
       if (collateral.length && !excluded.has("brand:collateral")) {
