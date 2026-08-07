@@ -1074,10 +1074,10 @@ Deno.serve(async (req) => {
     }
 
 
-    // Stage 3 — render the concept as a real designed mark before any vector
-    // math happens. This stage never fails a direction: an unavailable provider
-    // records why and hands the direction to the vector stage regardless, so a
-    // Higgsfield outage degrades quality rather than breaking the run.
+    // STAGE 4 — render the concept as a real designed mark, conditioned on the
+    // founder's own reference logos and moodboard. The reference-conditioned
+    // gateway render leads because it can actually SEE the references;
+    // Higgsfield is the fallback when the gateway render fails.
     if (kind === "logo_render_concept") {
       if (!runId || !directionId) throw new Error("runId and directionId required");
       const current = await getRun(runId);
@@ -1087,7 +1087,7 @@ Deno.serve(async (req) => {
 
       const advance = async (patch: Record<string, unknown>) => {
         await supabase.from("brand_logo_directions").update({
-          current_stage: "develop_vector",
+          current_stage: "jury",
           status: "queued",
           lease_token: null,
           lease_expires_at: null,
@@ -1096,14 +1096,9 @@ Deno.serve(async (req) => {
         await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString() }).eq("id", runId);
       };
 
-      // Already rendered, or already past this stage — nothing to do.
-      if (row.render_path || (row.current_stage !== "render_concept" && kind === "logo_render_concept" && row.render_status !== "pending")) {
+      // Already rendered — nothing to do.
+      if (row.render_path && row.render_status === "ready") {
         return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Concept already rendered" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
-      if (!higgsfieldConfigured()) {
-        await advance({ render_status: "unavailable", render_error: "Higgsfield credentials are not configured." });
-        return new Response(JSON.stringify({ ok: true, rendered: false, reason: "not_configured" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const leaseToken = crypto.randomUUID();
@@ -1118,61 +1113,155 @@ Deno.serve(async (req) => {
       }
       await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
 
-      const strategy = (run.strategy ?? null) as BrandStrategy | null;
+      const profile = (run.business_profile ?? null) as BusinessProfile | null;
+      const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
       const concept = (row.concept ?? {}) as any;
       const prompt = buildLogoRenderPrompt(
         {
           name: row.direction_name,
-          humanTruth: concept.human_link || strategy?.human_truth,
+          idea: concept.one_line_idea || concept.symbol_concept,
           craftMove: concept.craft_move || concept.geometric_operation,
-          imagery: concept.symbol_concept || concept.one_line_idea,
-          mood: concept.why_memorable,
+          imagery: concept.symbol_concept,
+          logoType: row.logo_type,
         },
         {
           brandName: snap.company_name ?? undefined,
-          positioning: strategy?.core_idea ?? ctx?.snap?.one_liner ?? undefined,
           palette: Array.isArray(tokens?.colors)
             ? tokens.colors
             : Object.values(tokens?.colors ?? {}).filter((v): v is string => typeof v === "string"),
           moodboard: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
           personality: Array.isArray(kit?.dna?.personality) ? kit.dna.personality : undefined,
         },
+        profile,
+        craftSpec,
+        typeof body?.correction === "string" ? body.correction : row.review_note ?? null,
       );
 
-      try {
-        const render = await renderLogoConcept({
-          prompt,
-          negativePrompt: logoNegativePrompt(),
-          seed: seedForConcept(directionId),
-        });
-        const bytes = await fetchRenderBytes(render.imageUrl);
-        const path = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
+      const refImages: string[] = [
+        ...(Array.isArray(run.reference_images) ? run.reference_images.slice(0, 3) : []),
+      ];
+      const path = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
+      const store = async (bytes: Uint8Array) => {
         const { error: upErr } = await supabase.storage.from("user-media")
           .upload(path, bytes, { contentType: "image/png", upsert: true });
         if (upErr) throw upErr;
+      };
 
-        await advance({
-          render_status: "ready",
-          render_path: path,
-          render_provider: "higgsfield",
-          render_job_id: render.jobId,
-          render_error: null,
-        });
-        return new Response(JSON.stringify({ ok: true, rendered: true, path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      } catch (error) {
-        // Terminal provider problems (no credits, bad key) must not burn the
-        // direction's three attempts — fall through to the brief-only path.
-        const terminal = error instanceof HiggsfieldError && error.terminal;
-        const message = errorMessage(error);
-        await advance({
-          render_status: terminal ? "unavailable" : "failed",
-          render_error: message.slice(0, 500),
-          render_provider: "higgsfield",
-        });
-        console.warn("logo render skipped", message);
-        return new Response(JSON.stringify({ ok: true, rendered: false, reason: message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Primary: reference-conditioned gateway render — it sees the founder's
+      // three marks, so the output inherits their construction, not a guess.
+      try {
+        const b64 = await renderMark(prompt, "1024x1024", refImages);
+        await store(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
+        await advance({ render_status: "ready", render_path: path, render_provider: "gateway_reference", render_error: null });
+        return new Response(JSON.stringify({ ok: true, rendered: true, provider: "gateway_reference", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (primaryError) {
+        console.warn("reference-conditioned render failed", errorMessage(primaryError));
+        if (!higgsfieldConfigured()) {
+          await advance({ render_status: "failed", render_error: errorMessage(primaryError).slice(0, 500), render_provider: "gateway_reference" });
+          return new Response(JSON.stringify({ ok: true, rendered: false, reason: errorMessage(primaryError) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        // Fallback: Higgsfield, text-only but art-directed by the same brief.
+        try {
+          const render = await renderLogoConcept({
+            prompt,
+            negativePrompt: logoNegativePrompt(),
+            seed: seedForConcept(directionId, Number(row.attempt_count ?? 0)),
+          });
+          await store(await fetchRenderBytes(render.imageUrl));
+          await advance({ render_status: "ready", render_path: path, render_provider: "higgsfield", render_job_id: render.jobId, render_error: null });
+          return new Response(JSON.stringify({ ok: true, rendered: true, provider: "higgsfield", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        } catch (error) {
+          const terminal = error instanceof HiggsfieldError && error.terminal;
+          const message = errorMessage(error);
+          await advance({
+            render_status: terminal ? "unavailable" : "failed",
+            render_error: message.slice(0, 500),
+            render_provider: "higgsfield",
+          });
+          console.warn("logo render failed on both providers", message);
+          return new Response(JSON.stringify({ ok: true, rendered: false, reason: message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
       }
     }
+
+    // STAGE 5 — the jury. Judges the render itself, allows exactly one
+    // corrective re-render, then publishes the raster mark for the founder to
+    // choose from. Nothing is vectorized until a mark is approved.
+    if (kind === "logo_jury") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      const run = current.run;
+      const row = current.directions.find((item: any) => item.id === directionId);
+      if (!run || !row) throw new Error("Logo direction not found");
+      if (["ready", "needs_review"].includes(row.status)) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, asset: row.asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!row.render_path) throw new Error("This concept has no render to judge.");
+
+      await supabase.from("brand_logo_directions").update({ status: "judging", current_stage: "jury" }).eq("id", directionId);
+
+      const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(row.render_path, 60 * 60 * 24 * 7);
+      const renderUrl = signed?.signedUrl ?? null;
+      if (!renderUrl) throw new Error("Could not read the rendered mark from storage.");
+
+      const profile = (run.business_profile ?? null) as BusinessProfile | null;
+      const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
+      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile);
+
+      const reviewAttempts = Number(row.review_attempts ?? 0);
+      // One corrective re-render: the jury's note becomes the render brief's fix line.
+      if (!verdict.pass && reviewAttempts < 1) {
+        await supabase.from("brand_logo_directions").update({
+          status: "queued",
+          current_stage: "render_concept",
+          render_status: "pending",
+          review_attempts: reviewAttempts + 1,
+          review_note: verdict.note,
+          review_score: verdict.scores,
+          lease_token: null,
+          lease_expires_at: null,
+        }).eq("id", directionId);
+        return new Response(JSON.stringify({ ok: true, pass: false, retry: true, note: verdict.note }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const concept = (row.concept ?? {}) as any;
+      const asset = {
+        ok: true,
+        kind: "raster",
+        url: renderUrl,
+        path: row.render_path,
+        preview_url: renderUrl,
+        render: { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "gateway_reference" },
+        direction_name: row.direction_name,
+        logo_type: row.logo_type,
+        business_link: concept.business_link ?? concept.human_link ?? "",
+        craft_move: concept.craft_move ?? concept.geometric_operation ?? "",
+        one_line_idea: concept.one_line_idea ?? concept.symbol_concept,
+        why_memorable: concept.why_memorable ?? "",
+        symbol_concept: concept.symbol_concept,
+        direction: concept,
+        vectorized: false,
+        review_passed: verdict.pass,
+        review_note: verdict.note,
+        review_score: verdict.scores,
+        created_at: new Date().toISOString(),
+      };
+
+      const { error: publishError } = await supabase.rpc("publish_brand_logo_direction", {
+        p_direction_id: directionId,
+        p_run_id: runId,
+        p_run_version: run.version,
+        p_asset: asset,
+        p_svg_path: null,
+        p_preview_path: row.render_path,
+        p_review_passed: verdict.pass,
+        p_review_score: verdict.scores,
+        p_review_note: verdict.note,
+      });
+      if (publishError) throw publishError;
+      return new Response(JSON.stringify({ ok: true, pass: verdict.pass, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
 
 
 
