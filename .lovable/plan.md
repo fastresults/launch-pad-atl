@@ -49,23 +49,54 @@ A short AI copy pass fills templates with the venture's actual positioning: deck
 
 A vision QA pass scores each rendered page on contrast, crowding, alignment, mark clear-space and hierarchy; anything below the bar is re-rendered once with the specific defect corrected — mirroring the poster QA gate already in place.
 
+### 7. Text audit + user verification (run before anything renders)
+
+No amount of art direction saves a card with a missing phone number or a placeholder website. Today contact details are silently pulled from the founder profile (`profile.phone`, `city, state`, etc.) and whatever is blank just disappears from the layout — so the piece renders "successfully" while being unusable.
+
+**Audit pass.** Before generating, the function assembles the full text inventory the kit needs and grades each field: present / missing / suspect (e.g. a placeholder domain, an unformatted phone, a personal gmail on a business card, ALL-CAPS or lowercase company name, a tagline over the character budget).
+
+Fields audited:
+
+| Field | Used by |
+| --- | --- |
+| Legal / display company name | every piece |
+| Tagline (≤ 60 chars) | card, letterhead, notecard, deck cover, guidelines |
+| Person name | card, signature, letterhead, proposal |
+| Job title | card, signature |
+| Email (business domain preferred) | card, letterhead, envelope, signature, invoice, proposal |
+| Phone (E.164 + display format) | card, letterhead, signature, invoice |
+| Website / domain | every piece |
+| Street address, city, state, ZIP | card back, letterhead footer, envelope return, invoice |
+| Social handles (optional) | card back, signature |
+| Legal entity line + EIN (optional) | invoice, proposal |
+| Payment terms / remit-to | invoice |
+| Brand voice sentence | guidelines |
+
+**Verification screen.** A "Confirm your details" step in Brand Studio shows every field in one form, pre-filled from the venture and founder profile, with the audit flags inline ("no phone — the card will render without one", "website looks like a placeholder"). The user edits and confirms once; answers are saved to the venture so the whole kit and every future regeneration use the same verified set. Normalisation happens on save: phone formatting, URL stripped to display form (`acme.com`), address cased and abbreviated to postal standard, name title-cased.
+
+**Gate.** Generation is blocked until the required fields for the selected pieces are confirmed — with a clear list of what's missing and which pieces need it. Optional fields can be explicitly skipped, and layouts adapt (a card without an address gets a rebalanced back, not a hole). Once confirmed, a "Details verified" chip with an edit link sits at the top of the collateral library, and changing any field marks affected pieces stale so the user knows to regenerate.
+
+
 ## Technical notes
 
 New files:
 - `supabase/functions/_shared/brand-art-direction.ts` — the AI director prompt, the archetype definitions, grid/scale math, and the saved record type.
 - `supabase/functions/_shared/text-metrics.ts` — TTF advance-width measurement, wrap, and fit-to-box.
 - `supabase/functions/_shared/collateral-mockup.ts` — surface/shadow mock-up compositor for thumbnails.
+- `src/lib/brand/collateral-fields.ts` — the field inventory, per-piece requirements, validators and normalisers (shared shape with the edge function).
+- `src/components/hub/brand/CollateralDetailsDialog.tsx` — the "Confirm your details" verification form.
 
 Changed:
-- `_shared/collateral-svg.ts` — templates take `(ctx, ad, css)` and lay out on the grid; `wrapText`/`paragraph` swap to measured text.
-- `venture-collateral/index.ts` — resolve-or-create the art direction record before rendering, run the copy pass, store mock-up + flat variants, run the QA gate.
-- Migration: add art direction JSON to the venture brand row; add mockup path column to `venture_brand_collateral`.
-- `BrandCollateral.tsx` / `CollateralPreviewDialog.tsx` — show mock-up thumbnails, expose "Re-direct" (new art direction) separately from "Regenerate" (same direction, fresh render).
+- `_shared/collateral-svg.ts` — templates take `(ctx, ad, css)` and lay out on the grid; `wrapText`/`paragraph` swap to measured text; layouts adapt when an optional field is skipped.
+- `venture-collateral/index.ts` — run the field audit and block on missing required fields; resolve-or-create the art direction record; run the copy pass; store mock-up + flat variants; run the QA gate.
+- Migration: add art direction JSON and a verified-contact-details JSON (with a verified-at stamp) to the venture brand row; add mockup path column to `venture_brand_collateral`.
+- `BrandCollateral.tsx` / `CollateralPreviewDialog.tsx` — "Details verified" chip with edit link, stale badges when details change, mock-up thumbnails, and "Re-direct" (new art direction) separate from "Regenerate" (same direction, fresh render).
 
 ## Order of work
 
-1. Art direction record + archetypes + text metrics.
-2. Rewrite the four highest-visibility pieces on the grid: business card, letterhead, presentation, guidelines.
-3. Remaining pieces: envelope, notecard, signature, invoice, proposal.
-4. Material pass + mock-up thumbnails.
-5. Real-copy pass + QA gate + UI controls.
+1. Field inventory, validators, verification dialog, and the generation gate.
+2. Art direction record + archetypes + text metrics.
+3. Rewrite the four highest-visibility pieces on the grid: business card, letterhead, presentation, guidelines.
+4. Remaining pieces: envelope, notecard, signature, invoice, proposal.
+5. Material pass + mock-up thumbnails.
+6. Real-copy pass + QA gate + UI controls.
