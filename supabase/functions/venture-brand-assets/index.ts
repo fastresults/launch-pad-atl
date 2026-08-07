@@ -95,6 +95,8 @@ type LogoDirection = {
   business_link?: string;   // how this mark traces back to what the business does
   human_link?: string;      // legacy field from earlier runs
   one_line_idea?: string;   // the single shape idea, one sentence
+  reads_as?: string;        // the literal subject a stranger names on sight
+  meaning?: string;         // what the mark means, in human terms
   geometric_operation?: string; // the one construction move that creates the mark
   craft_move?: string;      // counterform | continuous stroke | tangent | ligature | negative space
   moodboard_link?: string;  // which moodboard tile's form language it inherits
@@ -1133,6 +1135,8 @@ Deno.serve(async (req) => {
           craftMove: concept.craft_move || concept.geometric_operation,
           imagery: concept.symbol_concept,
           logoType: row.logo_type,
+          readsAs: concept.reads_as,
+          meaning: concept.meaning,
         },
         {
           brandName: snap.company_name ?? undefined,
@@ -1254,6 +1258,8 @@ Deno.serve(async (req) => {
         direction_name: row.direction_name,
         logo_type: row.logo_type,
         business_link: concept.business_link ?? concept.human_link ?? "",
+        reads_as: concept.reads_as ?? "",
+        meaning: concept.meaning ?? "",
         craft_move: concept.craft_move ?? concept.geometric_operation ?? "",
         one_line_idea: concept.one_line_idea ?? concept.symbol_concept,
         why_memorable: concept.why_memorable ?? "",
@@ -1458,6 +1464,8 @@ Deno.serve(async (req) => {
             ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "gateway_reference" }
             : null,
           business_link: row.concept?.business_link ?? row.concept?.human_link ?? "",
+          reads_as: row.concept?.reads_as ?? "",
+          meaning: row.concept?.meaning ?? "",
           craft_move: row.concept?.craft_move ?? row.concept?.geometric_operation ?? "",
           one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
           why_memorable: row.concept?.why_memorable ?? "",
