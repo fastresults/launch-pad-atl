@@ -2771,6 +2771,9 @@ export type Database = {
       }
       venture_brand_kits: {
         Row: {
+          art_direction: Json | null
+          contact_details: Json | null
+          contact_verified_at: string | null
           created_at: string
           dna: Json
           guide_markdown: string | null
@@ -2788,6 +2791,9 @@ export type Database = {
           voice: Json | null
         }
         Insert: {
+          art_direction?: Json | null
+          contact_details?: Json | null
+          contact_verified_at?: string | null
           created_at?: string
           dna?: Json
           guide_markdown?: string | null
@@ -2805,6 +2811,9 @@ export type Database = {
           voice?: Json | null
         }
         Update: {
+          art_direction?: Json | null
+          contact_details?: Json | null
+          contact_verified_at?: string | null
           created_at?: string
           dna?: Json
           guide_markdown?: string | null
