@@ -386,11 +386,12 @@ Deno.serve(async (req) => {
     let bytes = b64ToBytes(result.b64);
     let qa = runContrastQa(bytes, plan);
     step("contrast QA done", { ok: qa.ok, plateBytes: bytes.byteLength });
-    // Skip the QA retry if we've already burned most of our 150s budget on the
-    // first generation — a second slow call would push us past IDLE_TIMEOUT.
-    // Reserve enough headroom for compositing, storage upload and signed URLs:
-    // the poster pass (plate decode + vector ink + SVG) is CPU-heavy.
-    const timeBudgetOkForRetry = (Date.now() - requestStartedAt) < 45_000;
+    // The client (and the edge proxy) give up well before Deno's 150s idle
+    // limit, so total wall time — not just the function budget — is what makes
+    // regeneration "fail". A second image call costs ~25-30s, so only retry
+    // when the first pass came back fast.
+    const timeBudgetOkForRetry = (Date.now() - requestStartedAt) < 25_000;
+
     if (!qa.ok && timeBudgetOkForRetry) {
       try {
         const sigVisible = qa.observed.signatureVisible !== false;
