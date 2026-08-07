@@ -1056,27 +1056,28 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       </section>
 
       {/* WEBSITE PRD — brand-infused */}
-      <section className={`space-y-3 rounded-xl border p-4 ${selectedLogo ? "border-primary/40 bg-primary/5" : "border-white/10 bg-background/40"}`}>
+      <section className={`space-y-3 rounded-xl border p-4 ${!prdBlockedReason ? "border-primary/40 bg-primary/5" : "border-white/10 bg-background/40"}`}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
               <FileText className="h-4 w-4 text-primary" /> Website PRD
             </h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              {selectedLogo
-                ? "Rebuild the PRD so your palette, typography, voice and selected mark are baked in — paste-ready for a site builder."
-                : "Select a mark above (or upload your own) to fold the brand into your website PRD."}
+              {prdBlockedReason ??
+                "Rebuild the PRD so your palette, typography, voice and selected mark are baked in — with a permanent logo link a site builder can load directly."}
             </p>
           </div>
           <Button
             size="sm"
-            disabled={!selectedLogo || regeneratePrd.isPending}
+            disabled={Boolean(prdBlockedReason) || regeneratePrd.isPending}
+            title={prdBlockedReason ?? "Regenerate the PRD with your locked brand"}
             onClick={() => regeneratePrd.mutate()}
           >
             {regeneratePrd.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
             {regeneratePrd.isPending ? "Regenerating…" : "Regenerate website PRD"}
           </Button>
         </div>
+
 
         {prd?.content ? (
           <div className="overflow-hidden rounded-lg border border-white/10 bg-card">
