@@ -409,6 +409,47 @@ Deno.serve(async (req) => {
     if (!session) throw new Error("No logo session found. Start a new one.");
     const steps: Step[] = Array.isArray(session.steps) ? session.steps : [];
 
+    /* ---------------- revise_brief ---------------- */
+    if (action === "revise_brief") {
+      const correction = String(body?.instruction ?? "").trim();
+      if (!correction) throw new Error("Tell the designer what to change in the brief.");
+      const { studio } = await buildStudioContext(supabase, ctx, tokens, kit);
+      const proposal = await openingBrief(LOVABLE_API_KEY, studio, correction, session.brief?.proposal ?? "");
+
+      const { data, error } = await supabase.from("venture_logo_sessions").update({
+        status: "briefing",
+        brief: {
+          summary: proposal.design_brief,
+          proposal: proposal.design_brief,
+          direction: proposal.direction,
+        },
+        last_error: null,
+      }).eq("id", session.id).select().single();
+      if (error) throw error;
+      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+    }
+
+    /* ---------------- approve_brief (draw the first mark) ---------------- */
+    if (action === "approve_brief") {
+      const proposal: string = session.brief?.proposal ?? "";
+      const direction: RoughDirection | undefined = session.brief?.direction ?? undefined;
+      const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
+      const { step, turn } = await buildStep(
+        supabase, userId, snapshotId, studio, references, tokens, [], proposal,
+        `The founder approved this brief:\n${proposal}\n\nDraw that mark now and ask your first refining question about it.`,
+        direction,
+      );
+
+      const { data, error } = await supabase.from("venture_logo_sessions").update({
+        status: "interviewing",
+        steps: [step],
+        brief: { ...(session.brief ?? {}), summary: turn.brief_summary || proposal },
+        last_error: step.render_error,
+      }).eq("id", session.id).select().single();
+      if (error) throw error;
+      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+    }
+
     /* ---------------- answer ---------------- */
     if (action === "answer") {
       const answer = String(body?.answer ?? "").trim();
@@ -428,12 +469,13 @@ Deno.serve(async (req) => {
 
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         steps: nextSteps,
-        brief: { summary: turn.brief_summary },
+        brief: { ...(session.brief ?? {}), summary: turn.brief_summary },
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
       return json({ ok: true, session: await withFreshUrls(supabase, data) });
     }
+
 
     /* ---------------- back ---------------- */
     if (action === "back") {
