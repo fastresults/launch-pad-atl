@@ -923,7 +923,55 @@ function Step5BuildKit({
     }
   };
 
+  /** Wipe every generated image for one channel, or for the whole kit, so the
+   *  founder can start over from a clean slate instead of regenerating on top
+   *  of art they've already rejected. */
+  const clearAssets = async (scope: { platform?: string }) => {
+    const targets = tasks.filter(
+      (t) => t.asset_id && (!scope.platform || t.platform === scope.platform),
+    );
+    if (targets.length === 0) {
+      toast.info("Nothing to clear here yet.");
+      return;
+    }
+    const what = scope.platform
+      ? `all ${targets.length} ${platformLabel(scope.platform)} image${targets.length === 1 ? "" : "s"}`
+      : `all ${targets.length} generated image${targets.length === 1 ? "" : "s"} across every channel`;
+    const ok = await confirm({
+      title: scope.platform ? `Clear ${platformLabel(scope.platform)} images?` : "Clear all generated images?",
+      description: `This permanently deletes ${what}. Your brand kit, style and channel choices stay put — you'll just start the artwork over.`,
+      destructive: true,
+      confirmText: "Clear",
+    });
+    if (!ok) return;
+
+    setRunning(true);
+    let failed = 0;
+    try {
+      for (const t of targets) {
+        const k = taskKey(t);
+        setTaskRunning(k, true);
+        try {
+          await deleteSocialAsset(snapshotId, t.asset_id);
+          setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
+          setKept((prev) => { const n = { ...prev }; delete n[k]; return n; });
+        } catch {
+          failed += 1;
+        } finally {
+          setTaskRunning(k, false);
+        }
+      }
+      await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+      if (failed) toast.error(`Cleared, but ${failed} image${failed === 1 ? "" : "s"} could not be deleted.`);
+      else toast.success(scope.platform ? `${platformLabel(scope.platform)} cleared — generate a fresh set.` : "All images cleared — start over whenever you're ready.");
+    } finally {
+      setRunning(false);
+    }
+  };
+
   const anyDone = tasks.some((t) => t.status === "done");
+  const anyGenerated = tasks.some((t) => !!t.asset_id);
+
 
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
