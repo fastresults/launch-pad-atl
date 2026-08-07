@@ -81,9 +81,9 @@ export function BrandIdentityHeader({
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
       {/* Mark — true aspect, never cropped */}
-      <div className="min-w-0">
+      <div className="flex min-w-0 flex-col">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Your mark</div>
-        <div className="mt-2 flex min-h-[132px] items-center justify-center rounded-xl border border-white/10 bg-white p-5">
+        <div className="mt-2 flex min-h-[132px] flex-1 items-center justify-center rounded-xl border border-white/10 bg-white p-6">>
           {logo ? (
             <img
               src={logo.url}
