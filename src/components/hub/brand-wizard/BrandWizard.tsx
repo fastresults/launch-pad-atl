@@ -81,8 +81,8 @@ export function BrandWizard({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[92vh] max-h-[92vh] max-w-7xl flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="border-b border-white/10 px-6 py-4">
+      <DialogContent className="flex h-[92dvh] max-h-[92dvh] max-w-7xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b border-white/10 px-6 py-4">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             Brand Wizard — {snapshot.company_name || "Your venture"}
@@ -121,7 +121,7 @@ export function BrandWizard({
         </DialogHeader>
 
         <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[1fr_360px]">
-          <div className="min-h-0 overflow-y-auto px-6 pb-8 pt-5">
+          <div className="min-h-0 overflow-y-auto overscroll-contain px-6 pb-8 pt-5">
             {kitQ.isLoading ? (
               <div className="flex items-center justify-center py-10 text-muted-foreground">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading kit…

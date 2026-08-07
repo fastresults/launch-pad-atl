@@ -522,7 +522,7 @@ export function DaySprintDeckDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[96vw] w-[96vw] h-[92vh] p-0 gap-0 overflow-hidden bg-background border-border flex flex-col">
+      <DialogContent className="max-w-[96vw] w-[96vw] h-[92dvh] max-h-[92dvh] p-0 gap-0 overflow-hidden bg-background border-border flex flex-col">
         <DialogTitle className="sr-only">{deckTitle}</DialogTitle>
 
         <div

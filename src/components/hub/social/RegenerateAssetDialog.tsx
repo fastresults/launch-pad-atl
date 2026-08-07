@@ -324,7 +324,7 @@ export function RegenerateAssetDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => onOpenChange(v)}>
-      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-lg max-h-[90dvh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
