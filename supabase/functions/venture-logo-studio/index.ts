@@ -19,6 +19,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
 import {
+  mergeRequirements,
   nextTurn,
   openingBrief,
   roughPrompt,
