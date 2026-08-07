@@ -208,6 +208,42 @@ export function contextBlock(ctx: StudioContext): string {
 
 type PriorStep = { question: string; answer: string; chosen?: string | null };
 
+/**
+ * The opening move: a written design brief of about 100 words proposing the
+ * first mark, plus the art direction to draw it once the founder approves.
+ * Nothing is drawn until they say go.
+ */
+export async function openingBrief(
+  apiKey: string,
+  ctx: StudioContext,
+  correction?: string,
+  previous?: string,
+): Promise<OpeningBrief> {
+  const input = [
+    { role: "developer", content: [{ type: "input_text", text: SYSTEM }] },
+    {
+      role: "user",
+      content: [{
+        type: "input_text",
+        text: [
+          contextBlock(ctx),
+          previous ? `## The brief you proposed last time\n${previous}` : "",
+          correction ? `## The founder's correction\n${correction}` : "",
+          correction
+            ? `Rewrite the brief so it answers their correction. Same shape: about 100 words of prose, then the art direction for the single mark you will draw.`
+            : `Open the session with a written design brief of about 100 words, addressed to the founder in plain prose: who they are, the human truth the mark must carry, the single symbol you propose to draw, how it is constructed, and which brand colours carry it. Then give the art direction for that one mark. Do not draw anything yet and do not ask a question — this is the proposal they will approve.`,
+        ].filter(Boolean).join("\n\n"),
+      }],
+    },
+  ];
+
+  const parsed = await callDesigner(apiKey, input, "logo_opening_brief", BRIEF_SCHEMA);
+  return {
+    design_brief: typeof parsed.design_brief === "string" ? parsed.design_brief : "",
+    direction: normalizeDirection(parsed.direction),
+  };
+}
+
 export async function nextTurn(
   apiKey: string,
   ctx: StudioContext,
@@ -216,7 +252,7 @@ export async function nextTurn(
   freeInstruction?: string,
 ): Promise<InterviewTurn> {
   const transcript = history.length
-    ? history.map((s, i) => `Q${i + 1}: ${s.question}\nFounder: ${s.answer}${s.chosen ? `\n(They pointed at the rough titled "${s.chosen}")` : ""}`).join("\n\n")
+    ? history.map((s, i) => `Q${i + 1}: ${s.question}\nFounder: ${s.answer}${s.chosen ? `\n(They were looking at the rough titled "${s.chosen}")` : ""}`).join("\n\n")
     : "(nothing yet — this is the opening turn)";
 
   const input = [
@@ -230,13 +266,12 @@ export async function nextTurn(
           `## The session so far\n${transcript}`,
           brief ? `## Design brief accumulated so far\n${brief}` : "",
           freeInstruction ? `## The founder just said\n${freeInstruction}` : "",
-          history.length === 0
-            ? `Open the session: read this business back in one or two sentences, name the human truth the mark should carry, ask them to confirm or correct it, and put three opening roughs on the table.`
-            : `Give the next turn: one question plus three fresh roughs reflecting everything decided.`,
+          `Give the next turn: one question plus ONE fresh rough that evolves the mark to reflect everything decided.`,
         ].filter(Boolean).join("\n\n"),
       }],
     },
   ];
+
 
   return await callInterviewer(apiKey, input);
 }
