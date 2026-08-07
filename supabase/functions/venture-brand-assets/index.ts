@@ -714,7 +714,7 @@ async function buildLogoVariants(spec: VectorSpec, tokens: any, companyName: str
 async function generateOne(prompt: string, size: string, referenceImages?: string[], model = "google/gemini-3.1-flash-image"): Promise<string> {
   const content: any[] = [{ type: "text", text: prompt }];
   if (referenceImages?.length) {
-    for (const url of referenceImages.slice(0, 3)) {
+    for (const url of referenceImages.slice(0, 7)) {
       content.push({ type: "image_url", image_url: { url } });
     }
   }
