@@ -226,6 +226,7 @@ async function generateKind(
   // type, and we would store a "finished" page that is a logo on blank paper.
   if (!fontsOk) throw new Error("Brand fonts could not be loaded — refusing to render type-less pages");
   let count = 0;
+  let pageIndex = 0;
   const verdicts: QcVerdict[] = [];
   for (const p of pages) {
     const expectedText = (p.svg.match(/<text\b/g) || []).length;
@@ -262,9 +263,11 @@ async function generateKind(
       });
       bytes = null as unknown as Uint8Array;
 
-      // Presentation mock-up — the thumbnail the library shows. Rendered from a
-      // small copy of the page so the embedded data URI stays light.
+      // Presentation mock-up — the thumbnail the library shows. Only the first
+      // page of a piece gets one: three rasters per page is what pushed a
+      // five-page piece (guidelines, deck) past the worker's CPU ceiling.
       try {
+        if (pageIndex > 0) throw new Error("skip");
         const small = await rasterizeSvgToBytes(p.svg, 700, undefined, fontBuffers);
         if (small) {
           const h = Math.round((700 * p.height) / p.width);
@@ -278,11 +281,12 @@ async function generateKind(
           }
         }
       } catch (e) {
-        console.warn("mockup failed", kind, p.name, (e as Error).message);
+        if ((e as Error).message !== "skip") console.warn("mockup failed", kind, p.name, (e as Error).message);
       }
     }
 
     count++;
+    pageIndex++;
   }
 
   if (kind === "email_signature") {
