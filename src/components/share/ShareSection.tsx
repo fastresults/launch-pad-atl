@@ -58,7 +58,7 @@ export function ShareSection({ item }: { item: ShareItem }) {
       )}
 
       {item.body && (
-        <div className="prose prose-invert max-w-none prose-headings:font-serif prose-headings:tracking-tight prose-headings:mt-10 prose-headings:mb-3 prose-p:text-[15px] prose-p:leading-[1.85] prose-p:mb-6 prose-ul:my-6 prose-ol:my-6 prose-li:my-2 prose-li:text-[15px] prose-li:leading-[1.8] prose-a:text-primary prose-strong:text-foreground prose-hr:my-10 prose-hr:border-border/60 prose-table:text-sm prose-img:rounded-xl">
+        <div className="max-w-none text-foreground/90 [&_a]:text-primary [&_a]:underline [&_blockquote]:my-8 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_h1]:mb-4 [&_h1]:mt-12 [&_h1]:font-serif [&_h1]:text-[26px] [&_h1]:leading-tight [&_h2]:mb-4 [&_h2]:mt-12 [&_h2]:font-serif [&_h2]:text-[22px] [&_h2]:leading-tight [&_h3]:mb-3 [&_h3]:mt-10 [&_h3]:font-serif [&_h3]:text-[18px] [&_hr]:my-10 [&_hr]:border-border/60 [&_img]:my-8 [&_img]:rounded-xl [&_li]:my-2.5 [&_li]:text-[15px] [&_li]:leading-[1.8] [&_ol]:my-6 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6 [&_p]:mb-6 [&_p]:text-[15px] [&_p]:leading-[1.85] [&_strong]:font-semibold [&_strong]:text-foreground [&_table]:my-8 [&_table]:w-full [&_table]:text-sm [&_td]:border-t [&_td]:border-border/50 [&_td]:py-2 [&_td]:pr-4 [&_th]:py-2 [&_th]:pr-4 [&_th]:text-left [&_ul]:my-6 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6 [&>*:first-child]:mt-0">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{normalizeParagraphs(item.body)}</ReactMarkdown>
         </div>
       )}
