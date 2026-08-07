@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Loader2, Package, RotateCcw, Sparkles } from "lucide-react";
+import { Download, Eye, Loader2, Package, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   COLLATERAL_TIERS,
@@ -13,11 +13,13 @@ import {
   listCollateral,
 } from "@/lib/collateral.functions";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { CollateralPreviewDialog } from "@/components/hub/brand/CollateralPreviewDialog";
 
 export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: boolean }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [busyKind, setBusyKind] = useState<string | null>(null);
+  const [openKind, setOpenKind] = useState<string | null>(null);
 
   const q = useQuery({
     queryKey: ["brandCollateral", snapshot.id],
@@ -59,6 +61,11 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
       wipe.mutate(undefined);
     }
   };
+
+  const openMeta = useMemo(
+    () => COLLATERAL_TIERS.flatMap((t) => t.kinds).find((k) => k.kind === openKind) ?? null,
+    [openKind],
+  );
 
   const previewOf = (kind: string) =>
     (byKind[kind] ?? []).find((i) => i.mime_type === "image/png")?.url ?? null;
@@ -112,18 +119,35 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
               const preview = previewOf(k.kind);
               return (
                 <div key={k.kind} className="flex gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded border border-white/10 bg-white">
+                  <button
+                    type="button"
+                    onClick={() => setOpenKind(k.kind)}
+                    aria-label={`Preview ${k.label}`}
+                    className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded border border-white/10 bg-white transition hover:ring-2 hover:ring-primary"
+                  >
                     {preview
                       ? <img src={preview} alt={k.label} className="h-full w-full object-contain" loading="lazy" />
                       : <Package className="h-5 w-5 text-muted-foreground" />}
-                  </div>
+                  </button>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate text-sm font-medium">{k.label}</span>
+                    <button
+                      type="button"
+                      onClick={() => setOpenKind(k.kind)}
+                      className="flex items-center gap-1.5 text-left"
+                    >
+                      <span className="truncate text-sm font-medium hover:underline">{k.label}</span>
                       {files.length > 0 && <Badge variant="secondary" className="text-[10px]">{files.length}</Badge>}
-                    </div>
+                    </button>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">{k.note}</p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 px-2 text-[11px]"
+                        onClick={() => setOpenKind(k.kind)}
+                      >
+                        <Eye className="mr-1 h-3 w-3" />Preview
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -134,19 +158,6 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
                         {busyKind === k.kind ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
                         {files.length ? "Regenerate" : "Generate"}
                       </Button>
-                      {files.map((f) => (
-                        f.url ? (
-                          <a
-                            key={f.id}
-                            href={f.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[11px] text-primary underline underline-offset-2"
-                          >
-                            {f.storage_path?.split(".").pop()?.toUpperCase()}
-                          </a>
-                        ) : null
-                      )).slice(0, 4)}
                     </div>
                   </div>
                 </div>
@@ -155,6 +166,23 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
           </div>
         </div>
       ))}
+
+      <CollateralPreviewDialog
+        open={!!openKind}
+        onOpenChange={(v) => setOpenKind(v ? openKind : null)}
+        kind={openMeta}
+        files={openKind ? (byKind[openKind] ?? []) : []}
+        busy={gen.isPending && (busyKind === openKind || busyKind === "all")}
+        canGenerate={!!locked}
+        onRegenerate={() => openKind && gen.mutate([openKind])}
+        onClear={async () => {
+          if (!openKind) return;
+          if (await confirm({ title: `Clear ${openMeta?.label ?? "this piece"}?`, description: "The generated files for this piece are removed. You can regenerate at any time.", destructive: true, confirmText: "Clear" })) {
+            wipe.mutate(openKind);
+          }
+        }}
+      />
     </div>
   );
 }
+
