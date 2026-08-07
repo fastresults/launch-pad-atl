@@ -91,9 +91,23 @@ export default function LogoStudio({
 
   const start = useMutation({
     mutationFn: () => studio({ action: "start", snapshotId }),
-    onSuccess: (data) => { land(data); toast.success("Your art director is sketching"); },
+    onSuccess: (data) => { land(data); toast.success("Your art director has written a brief"); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const reviseBrief = useMutation({
+    mutationFn: (instruction: string) =>
+      studio({ action: "revise_brief", snapshotId, sessionId: session?.id, instruction }),
+    onSuccess: (data) => { land(data); setBriefNote(""); toast.success("Brief rewritten"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const approveBrief = useMutation({
+    mutationFn: () => studio({ action: "approve_brief", snapshotId, sessionId: session?.id }),
+    onSuccess: (data) => { land(data); setBriefNote(""); toast.success("Drawing your first mark"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
 
   const answer = useMutation({
     mutationFn: (vars: { answer: string; chosenRoughId?: string | null }) =>
