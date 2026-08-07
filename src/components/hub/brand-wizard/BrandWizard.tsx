@@ -1053,7 +1053,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
         {logos.length > 0 && (
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {logos.map((a, i) => {
               const directionRow = runDirections.find((d) => d.asset?.path === a.path || d.id === a.direction_id);
               const busy = retryDirection.isPending && retryDirection.variables?.id === directionRow?.id;
