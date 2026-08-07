@@ -245,8 +245,7 @@ function fitSingleLine(text: string, baseSize: number, maxW: number, trackingEm 
   return size;
 }
 
-  return aspect === "1:1" ? 3 : 4;
-}
+
 
 // ---------- margin scale ----------
 
