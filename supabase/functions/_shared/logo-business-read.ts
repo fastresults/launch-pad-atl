@@ -57,9 +57,10 @@ Rules:
 - human_truth: what is actually happening in the customer's life at the moment they need this. Write it as a human situation, not a market statement.
 - emotional_promise: what this business promises that person — the thing they are really buying.
 - meaning_symbols: 4-6 entries, each written as "symbol = the meanings it carries", where the meanings come from human_truth and emotional_promise. Example for an elder-care residence: "tree = roots, generations, shelter, a long life". These must be things that can be DRAWN and instantly named on sight, and they must carry more than one true idea at once. Not abstract gestures, not swooshes, not "connection" or "journey".
+- human_figures: how people should appear in this business's mark — who they are, how many, and in what relation to each other (e.g. "two elders side by side, one steadied by a hand at the elbow"). A mark for a business that people live in, are cared by, or are served by must show human presence, not just the props of the place. If this business genuinely has no human subject, write "none".
 
 Return STRICT JSON:
-{"category":"","archetype":"","what_is_sold":"","customer":"","moment_of_need":"","register":"","human_truth":"","emotional_promise":"","meaning_symbols":["",""],"symbol_vocabulary":["",""],"cliche_blacklist":["",""],"must_communicate":""}`;
+{"category":"","archetype":"","what_is_sold":"","customer":"","moment_of_need":"","register":"","human_truth":"","emotional_promise":"","meaning_symbols":["",""],"human_figures":"","symbol_vocabulary":["",""],"cliche_blacklist":["",""],"must_communicate":""}`;
 }
 
 export function parseBusinessProfile(parsed: any): BusinessProfile | null {
