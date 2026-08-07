@@ -138,7 +138,11 @@ export default function LegalSetupPage() {
             <div className="text-xs text-muted-foreground">
               {state.filingAgency} · {state.filingAgencyAddress}
             </div>
-          </div>
+            {resolvedState.source === "brief" && (
+              <div className="mt-1 text-xs text-muted-foreground/80">
+                Set from your venture brief{brief?.city ? ` (${brief.city}, ${state.code})` : ""}. Change it here if you're filing elsewhere.
+              </div>
+            )}
           <div className="min-w-[260px]">
             <Select value={stateCode} onValueChange={(v) => saveState.mutate(v)}>
               <SelectTrigger>
