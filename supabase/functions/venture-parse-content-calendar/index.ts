@@ -133,6 +133,7 @@ function parseCalendar(md: string): ParsedPost[] {
       parseBulletPosts(body, week, posts);
     }
   }
+  if (!posts.length) parseBulletPosts(md, 1, posts);
   return posts;
 }
 
