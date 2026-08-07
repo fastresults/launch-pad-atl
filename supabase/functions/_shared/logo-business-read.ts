@@ -25,6 +25,8 @@ export interface BusinessProfile {
   emotional_promise: string;
   /** 4-6 entries of "symbol = the meanings it carries". */
   meaning_symbols: string[];
+  /** How people appear in this business's mark: who, how many, in what relation. */
+  human_figures: string;
   /** 5-8 concrete nouns/forms drawn from the real work of this business. */
   symbol_vocabulary: string[];
   /** 5-8 category-specific clichés that are banned for this venture. */
