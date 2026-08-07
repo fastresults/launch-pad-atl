@@ -344,13 +344,16 @@ Deno.serve(async (req) => {
     let logoComposited = false;
     if (logoBytes) {
       try {
-        bytes = await compositeLogo(bytes, logoBytes, {
+        const res = await compositeLogo(bytes, logoBytes, {
           placement: logoPlacement,
           surfaceHex: plan.surface,
           inkHex: plan.ink,
           logoSize,
+          svgText: logoSvgText,
         });
+        bytes = res.bytes;
         logoComposited = true;
+        (qa as any).logo_contrast = Number(res.contrast.toFixed(2));
       } catch (e) {
         console.warn("style preview logo composite failed", e);
       }

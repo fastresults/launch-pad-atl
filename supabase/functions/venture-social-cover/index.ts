@@ -338,7 +338,7 @@ Deno.serve(async (req) => {
     }
 
     const ctx = await loadVentureContext(admin, snapshotId);
-    const { dataUrl: logoDataUrl, bytes: logoBytes, skipReason: logoSkipReason } = await fetchPrimaryLogo(admin, kit);
+    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText, skipReason: logoSkipReason } = await fetchPrimaryLogo(admin, kit);
 
     const isAvatar = asset.kind === "avatar";
 
@@ -382,7 +382,12 @@ Deno.serve(async (req) => {
     // Aspect-aware logo safe zone hint for the prompt (must match compositor).
     const logoAspect = (await readLogoAspect(logoBytes)) ?? 1;
     const logoPlacement = placementForAssetKind(asset.kind);
-    const logoZoneHint = isAvatar ? undefined : logoSafeZone(logoPlacement, logoSize, logoAspect, asset.width, asset.height);
+    // No reserved zone is requested from the model any more — asking for one is
+    // what produced the painted plate behind the mark. The compositor owns the
+    // logo pixels; the prompt only asks for a quiet corner.
+    const logoZoneHint = undefined;
+    void logoAspect;
+    void logoSafeZone;
 
     // --- Palette tile so the model SEES the only colors it may use ---
     let paletteTileDataUrl: string | null = null;
@@ -560,13 +565,18 @@ Deno.serve(async (req) => {
     let logoComposited = false;
     if (logoBytes) {
       try {
-        bytes = await compositeLogo(bytes, logoBytes, {
+        const res = await compositeLogo(bytes, logoBytes, {
           placement: logoPlacement,
           surfaceHex: plan.surface,
           inkHex: plan.ink,
           logoSize,
+          svgText: logoSvgText,
         });
+        bytes = res.bytes;
         logoComposited = true;
+        (qa as any).logo_contrast = Number(res.contrast.toFixed(2));
+        (qa as any).logo_ink = res.inkHex;
+        (qa as any).logo_scrim = res.scrim;
       } catch (e) {
         console.warn("logo composite failed, shipping un-composited image", e);
       }
