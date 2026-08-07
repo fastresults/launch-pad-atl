@@ -164,44 +164,36 @@ async function uploadSvg(supabase: any, userId: string, snapshotId: string, svg:
   return { path, url: data?.signedUrl ?? null };
 }
 
-async function drawSet(
+/** Draw the single mark for this turn. One rough, never a set. */
+async function drawOne(
   supabase: any,
   userId: string,
   snapshotId: string,
-  directions: RoughDirection[],
+  direction: RoughDirection,
   tokens: any,
   companyName: string,
   references: string[],
 ): Promise<{ roughs: Rough[]; error: string | null }> {
-  const settled = await Promise.allSettled(
-    directions.slice(0, 3).map(async (direction) => {
-      const prompt = roughPrompt(direction, tokens, companyName);
-      const { bytes, provider } = await drawRough(prompt, references);
-      const stored = await uploadPng(supabase, userId, snapshotId, bytes, "rough");
-      return {
+  try {
+    const prompt = roughPrompt(direction, tokens, companyName);
+    const { bytes, provider } = await drawRough(prompt, references);
+    const stored = await uploadPng(supabase, userId, snapshotId, bytes, "rough");
+    return {
+      roughs: [{
         id: crypto.randomUUID(),
         title: direction.title,
         brief: direction.render_brief,
         path: stored.path,
         url: stored.url,
         provider,
-      } satisfies Rough;
-    }),
-  );
-
-  const roughs: Rough[] = [];
-  const failures: string[] = [];
-  for (const item of settled) {
-    if (item.status === "fulfilled") roughs.push(item.value);
-    else failures.push(errorMessage(item.reason));
+      }],
+      error: null,
+    };
+  } catch (e) {
+    return { roughs: [], error: `The mark could not be drawn. ${errorMessage(e).slice(0, 240)}` };
   }
-  return {
-    roughs,
-    error: failures.length
-      ? `${failures.length} of ${directions.length} roughs could not be drawn. ${failures[0].slice(0, 220)}`
-      : null,
-  };
 }
+
 
 /* ----------------------------- context ----------------------------- */
 
