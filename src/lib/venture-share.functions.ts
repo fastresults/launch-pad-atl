@@ -173,3 +173,25 @@ export async function trackShareView(token: string, password?: string) {
     body: JSON.stringify({ token, password, action: "track" }),
   }).catch(() => {});
 }
+
+export interface ShareChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/** Ask the venture's second brain a question from the public showcase. */
+export async function askShareChat(
+  token: string,
+  messages: ShareChatMessage[],
+  password?: string,
+): Promise<string> {
+  const res = await fetch(`${FUNCTIONS_BASE}/venture-share-chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password, messages }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body?.error ?? "The assistant is unavailable right now.");
+  return String(body?.reply ?? "");
+}
+
