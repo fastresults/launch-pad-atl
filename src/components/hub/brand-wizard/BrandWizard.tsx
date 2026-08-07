@@ -973,10 +973,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
         <div className="text-xs">
           {gatePassed ? (
-            <span className="text-emerald-700 dark:text-emerald-400">Craft standard set — these three marks now drive every concept.</span>
+            <span className="text-emerald-700 dark:text-emerald-400">Craft standard set — {refs.length === 1 ? "this mark drives" : `these ${refs.length} marks drive`} every concept. Add more for a richer read.</span>
           ) : (
             <span className="text-amber-700 dark:text-amber-400">
-              {3 - refs.length} more to go. Generation stays locked until all three are here — they are the art direction, not a nice-to-have.
+              Add one inspiration to unlock generation — it's the art direction, not a nice-to-have.
             </span>
           )}
         </div>
