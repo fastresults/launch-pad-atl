@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Check, Loader2, PenLine, RotateCcw, Sparkles, Upload, Wand2,
+  ArrowLeft, Check, Loader2, PenLine, RotateCcw, Sparkles, Upload, Wand2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
