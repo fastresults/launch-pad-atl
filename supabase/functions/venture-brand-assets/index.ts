@@ -1241,7 +1241,7 @@ Deno.serve(async (req) => {
           .filter((v: any) => typeof v === "string" && v.trim().length),
         mood: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
       };
-      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand);
+      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand, (row.concept as any)?.set_law ?? null);
 
       const reviewAttempts = Number(row.review_attempts ?? 0);
       // One corrective re-render: the jury's note becomes the render brief's fix line.
@@ -1272,6 +1272,7 @@ Deno.serve(async (req) => {
         business_link: concept.business_link ?? concept.human_link ?? "",
         reads_as: concept.reads_as ?? "",
         meaning: concept.meaning ?? "",
+        second_read: concept.second_read ?? "",
         craft_move: concept.craft_move ?? concept.geometric_operation ?? "",
         one_line_idea: concept.one_line_idea ?? concept.symbol_concept,
         why_memorable: concept.why_memorable ?? "",
@@ -1516,7 +1517,7 @@ Deno.serve(async (req) => {
         if (Date.now() - started < 60_000 && renderUrl) {
           const png = await rasterizeSvg(variants.mark, 512);
           if (png) {
-            const verdict = await juryReview(`data:image/png;base64,${png}`, row.concept as LogoDirection, craftSpec, profile);
+            const verdict = await juryReview(`data:image/png;base64,${png}`, row.concept as LogoDirection, craftSpec, profile, null, (row.concept as any)?.set_law ?? null);
             visionPass = verdict.pass;
             visionNote = verdict.note;
           }
