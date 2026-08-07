@@ -23,6 +23,19 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
   const confirm = useConfirm();
   const [busyKind, setBusyKind] = useState<string | null>(null);
   const [openKind, setOpenKind] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  /** Set when a generate attempt was blocked, so we can retry after confirming. */
+  const [pendingKinds, setPendingKinds] = useState<string[] | undefined>(undefined);
+
+  const detailsQ = useQuery({
+    queryKey: ["collateralDetails", snapshot.id],
+    queryFn: () => getCollateralDetails(snapshot.id),
+    enabled: !!snapshot?.id && !!locked,
+    retry: false,
+  });
+  const verifiedAt = detailsQ.data?.verifiedAt ?? null;
+  const detailsAudit = detailsQ.data?.audit ?? null;
+
 
   const q = useQuery({
     queryKey: ["brandCollateral", snapshot.id],
