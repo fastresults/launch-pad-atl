@@ -11,7 +11,7 @@ import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-til
 import { runContrastQa } from "../_shared/image-qa.ts";
 import { placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
-import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
+import { buildContentAdPrompt, specForAspect, resolveAdHeadline, HEADLINE_CAP, type AdAspect } from "../_shared/content-ad-director.ts";
 import { buildContentAdSvgBytes, type PosterLayout } from "../_shared/content-ad-svg.ts";
 import { buildPosterCopy, shortenHeadline } from "../_shared/poster-copy.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
@@ -501,6 +501,8 @@ Deno.serve(async (req) => {
     (qa as any).poster_layout = posterLayout;
     (qa as any).poster_copy = { ...posterCopy, headline: finalHeadline };
     (qa as any).copy_truncated = posterCopy.truncated;
+    (qa as any).headline_source = posterCopy.source;
+    (qa as any).headline_issue = posterCopy.headlineIssue ?? null;
     Object.assign(qa as any, poster.metrics);
     if (clipped(poster.metrics)) {
       qa.ok = false;
