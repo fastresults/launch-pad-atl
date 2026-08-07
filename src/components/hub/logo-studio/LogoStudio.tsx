@@ -63,7 +63,9 @@ export default function LogoStudio({
   const [picked, setPicked] = useState<string[]>([]);
   const [refineFor, setRefineFor] = useState<Rough | null>(null);
   const [refineNote, setRefineNote] = useState("");
+  const [briefNote, setBriefNote] = useState("");
   const bottom = useRef<HTMLDivElement>(null);
+
 
   const existing = useQuery({
     queryKey: ["logoStudio", snapshotId],
