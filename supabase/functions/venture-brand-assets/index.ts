@@ -1265,18 +1265,22 @@ Deno.serve(async (req) => {
 
 
 
-    if (kind === "logo_draw_vector" || kind === "logo_retry_direction") {
+    // STAGE 6 — vectorize an APPROVED mark. Explicit, never automatic: this
+    // traces the raster the founder picked instead of redrawing the brief,
+    // which is what used to turn a decent concept into geometry slop.
+    if (kind === "logo_vectorize" || kind === "logo_draw_vector" || kind === "logo_retry_direction") {
       if (!runId || !directionId) throw new Error("runId and directionId required");
       const current = await getRun(runId);
       const run = current.run;
       const row = current.directions.find((item: any) => item.id === directionId);
       if (!run || !row) throw new Error("Logo direction not found");
-      if (["ready", "needs_review"].includes(row.status) && kind !== "logo_retry_direction") {
+      if (!row.render_path) throw new Error("Nothing to vectorize — this concept has no approved render yet.");
+      if (row.asset?.vectorized && kind !== "logo_retry_direction") {
         return new Response(JSON.stringify({ ok: true, asset: row.asset, direction: row }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const leaseToken = crypto.randomUUID();
       const leaseExpiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString();
-      const { data: claimed, error: claimError } = await supabase.from("brand_logo_directions").update({ status: "developing_vector", current_stage: row.review_note ? "revise_vector" : "develop_vector", attempt_count: Number(row.attempt_count ?? 0) + 1, last_error: null, error_class: null, lease_token: leaseToken, lease_expires_at: leaseExpiresAt }).eq("id", directionId).in("status", kind === "logo_retry_direction" ? ["ready", "needs_review", "failed", "retry_wait"] : ["queued", "retry_wait", "failed"]).select("id").maybeSingle();
+      const { data: claimed, error: claimError } = await supabase.from("brand_logo_directions").update({ status: "vectorizing", current_stage: "vectorize", attempt_count: Number(row.attempt_count ?? 0) + 1, last_error: null, error_class: null, lease_token: leaseToken, lease_expires_at: leaseExpiresAt }).eq("id", directionId).in("status", ["ready", "needs_review", "failed", "retry_wait", "queued"]).select("id").maybeSingle();
       if (claimError) throw claimError;
       if (!claimed) return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Direction is already being processed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
@@ -1284,20 +1288,18 @@ Deno.serve(async (req) => {
         const started = Date.now();
         const companyName = snap.company_name ?? "Venture";
         const docsBlock = await loadBrandDocs(supabase, snapshotId);
-        const strategy = (run.strategy ?? null) as BrandStrategy | null;
-        const dossier = buildDossier(ctx, tokens, strategy, docsBlock);
+        const profile = (run.business_profile ?? null) as BusinessProfile | null;
+        const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
+        const dossier = buildDossier(ctx, tokens, profile, craftSpec, docsBlock);
 
-        // When stage 3 produced a render, the vector model traces it instead of
-        // inventing geometry from the written brief.
-        let renderUrl: string | null = null;
-        if (row.render_path) {
-          const { data: signedRender } = await supabase.storage.from("user-media")
-            .createSignedUrl(row.render_path, 60 * 30);
-          renderUrl = signedRender?.signedUrl ?? null;
-        }
+        // The approved raster is the design decision; the vector pass traces it.
+        const { data: signedRender } = await supabase.storage.from("user-media")
+          .createSignedUrl(row.render_path, 60 * 60);
+        const renderUrl = signedRender?.signedUrl ?? null;
 
-        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, strategy, ctx, tokens, dossier, reviewNote ?? row.review_note ?? undefined, renderUrl);
+        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, ctx, tokens, dossier, reviewNote ?? undefined, renderUrl);
         const variants = await buildLogoVariants(spec, tokens, companyName);
+
 
         const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, variants.mark, "mark");
         const uploadVariant = async (svg: string | null, name: string) => {
