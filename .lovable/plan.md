@@ -49,6 +49,34 @@ A short AI copy pass fills templates with the venture's actual positioning: deck
 
 A vision QA pass scores each rendered page on contrast, crowding, alignment, mark clear-space and hierarchy; anything below the bar is re-rendered once with the specific defect corrected — mirroring the poster QA gate already in place.
 
+### 7. Text audit + user verification (run before anything renders)
+
+No amount of art direction saves a card with a missing phone number or a placeholder website. Today contact details are silently pulled from the founder profile (`profile.phone`, `city, state`, etc.) and whatever is blank just disappears from the layout — so the piece renders "successfully" while being unusable.
+
+**Audit pass.** Before generating, the function assembles the full text inventory the kit needs and grades each field: present / missing / suspect (e.g. a placeholder domain, an unformatted phone, a personal gmail on a business card, ALL-CAPS or lowercase company name, a tagline over the character budget).
+
+Fields audited:
+
+| Field | Used by |
+| --- | --- |
+| Legal / display company name | every piece |
+| Tagline (≤ 60 chars) | card, letterhead, notecard, deck cover, guidelines |
+| Person name | card, signature, letterhead, proposal |
+| Job title | card, signature |
+| Email (business domain preferred) | card, letterhead, envelope, signature, invoice, proposal |
+| Phone (E.164 + display format) | card, letterhead, signature, invoice |
+| Website / domain | every piece |
+| Street address, city, state, ZIP | card back, letterhead footer, envelope return, invoice |
+| Social handles (optional) | card back, signature |
+| Legal entity line + EIN (optional) | invoice, proposal |
+| Payment terms / remit-to | invoice |
+| Brand voice sentence | guidelines |
+
+**Verification screen.** A "Confirm your details" step in Brand Studio shows every field in one form, pre-filled from the venture and founder profile, with the audit flags inline ("no phone — the card will render without one", "website looks like a placeholder"). The user edits and confirms once; answers are saved to the venture so the whole kit and every future regeneration use the same verified set. Normalisation happens on save: phone formatting, URL stripped to display form (`acme.com`), address cased and abbreviated to postal standard, name title-cased.
+
+**Gate.** Generation is blocked until the required fields for the selected pieces are confirmed — with a clear list of what's missing and which pieces need it. Optional fields can be explicitly skipped, and layouts adapt (a card without an address gets a rebalanced back, not a hole). Once confirmed, a "Details verified" chip with an edit link sits at the top of the collateral library, and changing any field marks affected pieces stale so the user knows to regenerate.
+
+
 ## Technical notes
 
 New files:
