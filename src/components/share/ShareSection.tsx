@@ -2,6 +2,8 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ShareItem } from "@/lib/venture-share.functions";
+import { normalizeParagraphs } from "@/lib/markdown-normalize";
+
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 /** One asset in the reading pane: document body, hero art, or an image grid. */
