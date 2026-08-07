@@ -929,7 +929,18 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                       Top up platform credits <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
+                  <button
+                    type="button"
+                    onClick={forceClear}
+                    disabled={clearing}
+                    className="inline-flex items-center gap-1 font-medium text-destructive underline-offset-2 hover:underline disabled:opacity-50"
+                  >
+                    {clearing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                    {clearing ? "Clearing…" : "Force clear queue & refresh status"}
+                  </button>
+                  <span className="text-[10px] text-muted-foreground">Cancels every run and deletes stuck concepts.</span>
                 </div>
+
               </div>
             </div>
           </div>
