@@ -843,11 +843,15 @@ function Step5BuildKit({
     });
   };
 
-  const runAll = async () => {
+  const runAll = async (platform?: string) => {
+    const targets = tasks.filter((t) => (!platform || t.platform === platform) && t.status !== "done");
+    if (targets.length === 0) {
+      toast.info(platform ? `${platformLabel(platform)} is already generated — reset it first to rebuild.` : "Everything is already generated — reset first to rebuild.");
+      return;
+    }
     setRunning(true);
     setErrors({});
-    for (const t of tasks) {
-      if (t.status === "done") continue;
+    for (const t of targets) {
       const k = taskKey(t);
       setTaskRunning(k, true);
       try {
@@ -861,6 +865,7 @@ function Step5BuildKit({
     }
     setRunning(false);
   };
+
 
   const regenerateSingle = async (
     t: any,
@@ -982,6 +987,18 @@ function Step5BuildKit({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-[10px] capitalize">{direction}</Badge>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px]"
+            disabled={running}
+            onClick={() => runAll()}
+            title="Generate every missing image across all channels"
+          >
+            {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+            Generate all
+          </Button>
+
           {anyDone && (
             <Button
               size="sm"
@@ -1047,7 +1064,18 @@ function Step5BuildKit({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="border-t border-white/5 pb-0 pt-0">
-                    <div className="flex justify-end px-2 pt-2">
+                    <div className="flex justify-end gap-1.5 px-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px]"
+                        disabled={running}
+                        onClick={() => runAll(platform)}
+                        title={`Generate the missing ${platformLabel(platform)} images`}
+                      >
+                        {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+                        Generate {platformLabel(platform)}
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -1059,6 +1087,7 @@ function Step5BuildKit({
                         <Trash2 className="mr-1 h-3 w-3" /> Reset {platformLabel(platform)}
                       </Button>
                     </div>
+
 
                     <ul className="grid gap-2 p-2 sm:grid-cols-2">
 
@@ -1243,7 +1272,7 @@ function Step5BuildKit({
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back</Button>
         <div className="flex items-center gap-2">
           {anyDone && tasks.some((t) => t.status !== "done") && (
-            <Button variant="outline" onClick={runAll} disabled={running}>
+            <Button variant="outline" onClick={() => runAll()} disabled={running}>
               {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               Generate missing ({tasks.filter((t) => t.status !== "done").length})
             </Button>
@@ -1253,11 +1282,12 @@ function Step5BuildKit({
               Continue to launch <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
           ) : (
-            <Button onClick={runAll} disabled={running}>
+            <Button onClick={() => runAll()} disabled={running}>
               {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               Generate all
             </Button>
           )}
+
         </div>
       </footer>
 
