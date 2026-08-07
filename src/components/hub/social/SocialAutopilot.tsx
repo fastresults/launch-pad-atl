@@ -1479,6 +1479,20 @@ function Step6Launch({
   const allLive = platforms.length > 0 && liveCount === platforms.length;
   const anyImages = assets.length > 0;
 
+  // Click-to-magnify: flat list of every generated image on this screen.
+  const previewables = useMemo(
+    () => assets.filter((a: any) => a.signed_url),
+    [assets],
+  );
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const previewIdx = previewables.findIndex((a: any) => a.id === previewId);
+  const previewAsset = previewIdx >= 0 ? previewables[previewIdx] : null;
+  const stepPreview = (delta: number) => {
+    if (previewables.length < 2 || previewIdx < 0) return;
+    const next = (previewIdx + delta + previewables.length) % previewables.length;
+    setPreviewId(previewables[next].id);
+  };
+
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
       <header className="flex items-center justify-between gap-2">
