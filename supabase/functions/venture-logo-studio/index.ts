@@ -662,12 +662,15 @@ Deno.serve(async (req) => {
       if (!mark) throw new Error("Could not assemble the primary mark.");
 
       const approved = session.approved_rough ?? {};
+      const durableUrl = `${SUPABASE_URL.replace(/\/$/, "")}/functions/v1/brand-logo/${snapshotId}`;
       const asset = {
         ok: true,
         kind: "vector",
+        primary: true,
         vectorized: session.traced === true,
         traced: session.traced === true,
         url: mark.url,
+        public_url: durableUrl,
         path: mark.path,
         svg_url: mark.url,
         svg_path: mark.path,
