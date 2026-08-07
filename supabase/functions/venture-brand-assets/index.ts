@@ -387,6 +387,14 @@ function tokensBlockOf(tokens: any): string {
 }
 
 /**
+ * The wizard stores inspiration marks as downscaled base64 data URLs, and older
+ * kits may hold hosted links. Both are valid vision inputs — accept either.
+ */
+function isUsableImageRef(u: unknown): u is string {
+  return typeof u === "string" && (u.startsWith("http") || u.startsWith("data:image/"));
+}
+
+/**
  * STAGE 1 — read the founder's three inspiration marks.
  *
  * Structure only. This is what the old pipeline was missing: it invented a
