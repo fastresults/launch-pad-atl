@@ -57,11 +57,30 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
     onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       const failed = res?.failed ?? [];
+      const arch = res?.artDirection?.archetype;
       if (failed.length) toast.warning(`Generated with ${failed.length} skipped: ${failed.map((f: any) => f.kind).join(", ")}`);
-      else toast.success("Collateral generated.");
+      else toast.success(arch ? `Collateral generated — art direction: ${String(arch).replace(/_/g, " ")}.` : "Collateral generated.");
     },
-    onError: (e: any) => toast.error(e.message || "Generation failed"),
+    onError: (e: any) => {
+      // Missing text is a fixable gap, not a failure — send them to the form.
+      if (e?.code === "DETAILS_INCOMPLETE") {
+        toast.warning(e.message);
+        setDetailsOpen(true);
+        return;
+      }
+      toast.error(e.message || "Generation failed");
+    },
   });
+
+  /** Generate, but confirm the text inventory first if it has never been signed off. */
+  const requestGen = (kinds?: string[]) => {
+    setPendingKinds(kinds);
+    if (!verifiedAt) {
+      setDetailsOpen(true);
+      return;
+    }
+    gen.mutate(kinds);
+  };
 
   const wipe = useMutation({
     mutationFn: (kind?: string) => clearCollateral(snapshot.id, kind),
@@ -83,8 +102,16 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
     [openKind],
   );
 
-  const previewOf = (kind: string) =>
-    (byKind[kind] ?? []).find((i) => i.mime_type === "image/png")?.url ?? null;
+  // Prefer the staged mock-up for the library thumbnail — a flat card on white
+  // reads like a wireframe at 64px.
+  const previewOf = (kind: string) => {
+    const files = byKind[kind] ?? [];
+    const mock = files.find((i) => i.mime_type === "image/png" && /-mockup$/.test(i.name ?? ""));
+    return (mock ?? files.find((i) => i.mime_type === "image/png"))?.url ?? null;
+  };
+
+  const isStale = (kind: string) => (byKind[kind] ?? []).some((i) => i?.meta?.stale);
+
 
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
