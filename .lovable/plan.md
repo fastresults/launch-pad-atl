@@ -1,52 +1,59 @@
-# Logo Studio: why the marks look like blobs, and why runs stall
+# Logo Studio, rebuilt: an AI-first design interview
 
-## 1. What the hell happened to the design
+## Scrap first
 
-The three identical dark lozenges-in-a-ring on your screen are not a model failure. They are the direct result of the change made an hour ago.
+The current pipeline is retired, not patched. Deleted or reduced to nothing:
 
-Before that change, the picture on each card was the Higgsfield render — a real image model drawing your concept. That is why the earlier sets had recognisable subjects (the porch, the two figures, the umbrella). The problem you raised was that approving one and vectoring it produced a *different-looking* mark, because vectoring redrew the concept from scratch instead of tracing the approved image.
+- The multi-stage run machine in `venture-brand-assets` — `logo_create_run`, `logo_read_context`, `logo_develop_brief`, `logo_develop_directions`, `logo_render_concept`, `logo_jury`, `logo_vectorize`, `logo_draw_vector`, `logo_retry_direction`, `logo_restore_render`, `logo_force_reset`, and the lease/heartbeat plumbing around them.
+- The client-side driver, stall detection, "Clear queue", "Resume this one", and the render-history archive in `BrandWizard.tsx`.
+- `logo-geometry.ts` primitive drawing (the source of the arch-in-a-circle blobs), `logo-jury.ts`, `logo-business-read.ts`, `logo-reference-read.ts`, `logo-render-prompt.ts` as they stand.
+- The `brand_logo_runs` / `brand_logo_directions` job ledger. Existing rows are kept read-only for reference and no longer written to.
 
-The fix applied was "vector-first": draw the concept as SVG up front and rasterise that SVG for the card, so preview and download can never diverge. Fidelity was solved. Quality was destroyed. The SVG is authored by a language model emitting JSON into a deliberately tiny primitive vocabulary — `rect`, `circle`, `ellipse`, `line`, `path`, `group` — through `logo-geometry.ts`. A text model composing a handful of primitives cannot draw a porch or two figures. It can draw a circle with a rounded rectangle inside it, three times. That is precisely what you are looking at, and the banner still says "3 rendered · 0 fell back" because Higgsfield was never asked.
+Nothing about batch runs, queues, retries, or watchdogs survives. There is no background job to stall.
 
-So: fidelity and quality got traded against each other, and the wrong side won.
+## What replaces it
 
-### The correct answer to both
+A conversation. The founder talks to an award-winning logo designer who is drawing while they talk. Every exchange is a question plus a fresh set of roughs on screen. Back and forward at any point. No spinners waiting on a batch of three; each step is one short request the user is watching.
 
-Keep Higgsfield as the concept artwork — it is the only thing in this pipeline that can actually draw. Then make finalising a **faithful trace of that exact approved image**, not a redraw:
+### The designer's starting knowledge
 
-1. Stage 4 goes back to Higgsfield rendering the concept. The card shows the render.
-2. Approving runs a real raster-to-vector trace of the approved PNG (edge detection to closed paths, palette-snapped to the brand tokens, path-simplified) — a deterministic image operation, not a second model call. What you approved is what gets traced, so shape fidelity is preserved by construction.
-3. The primitive-drawing path (`developVectorSpec`) is demoted to an emergency fallback used only when Higgsfield is unavailable, and any concept produced that way is clearly badged as a fallback sketch instead of being presented as a finished mark.
-4. The jury keeps judging the render, so nothing reaches you that the critique pass rejected.
+Before the first question, the studio loads the venture's real context: the brand kit (typefaces, colour system, personality), the mood board, and the substance of the sixty-odd generated assets — positioning, customer, offer, tone, the words the founder actually used. The opening line is not "what do you want" but a designer's read-back: here is who I think you are, here is where I'd take the mark, correct me.
 
-## 2. Why runs stall — the log audit
+### The interview
 
-Run `f2167f53` (version 11) is alive right now: heartbeat 03:28:35, slot 2 rendering, slots 0 and 1 waiting at the jury stage. Yet the UI labels one card "Paused — this concept stopped part-way through." Nothing is broken in that moment; the badge is wrong.
+Adaptive, not a fixed form. The designer asks the next most useful question given what it already knows and what the founder just said, and stops asking as soon as it has enough. Typical arc:
 
-Run history for this venture in the last four hours: 6 completed with review, 3 canceled by hand, 1 failed with "Logo Studio paused after 30 minutes of recovery attempts." No provider error is recorded on any of them. The `venture-brand-assets` edge function logs across the window contain only boot/shutdown lines and one `logo_force_reset` — no thrown errors. These are not provider failures. They are orchestration failures.
+1. **Read-back and correction.** The designer states the business in one line and names the human truth it wants the mark to carry. The founder confirms, corrects, or redirects.
+2. **Type of mark.** Symbol plus wordmark, wordmark alone, lettermark/monogram, or an emblem. Shown as roughs, not described in words.
+3. **What the symbol is.** Two or three candidate subjects drawn from the context, each with a one-line reason. The founder picks or rejects; rejection triggers a fresh set.
+4. **Character.** Geometric or humanist, weight, line versus solid, how much detail survives at 24px.
+5. **Colour and type.** Defaults come from the existing brand system; the founder can pull a different accent or lock to mono.
+6. **Refinement.** Free-form. "Heavier", "lose the circle", "make the two figures read as parent and child", "closer to option 2 but simpler."
 
-**Root cause:** the entire run is driven from the browser. `processLogoRun` in the Brand Wizard calls the edge function once per stage, per concept, in a React loop — read context, develop directions, render two at a time, jury two at a time, sweep orphans. The edge function is stateless; it executes only the one stage it is handed. So the run advances only while that tab is open, awake, and on the page. A refresh, a navigation, HMR in preview, a sleeping laptop, a background-tab throttle, or one failed call out of fifteen strands the run permanently: rows sit mid-flight, the run row keeps a stale `rendering` status, and nothing on the server is watching. That is every stall from tonight, including the 30-minute failure and the repeated force-clears.
+At every step the founder can go back a step and take a different branch. Earlier roughs stay reachable so nothing good is lost.
 
-Secondary defect: the stall badge calls a concept "stalled" when it has a drawing, no lease and no retry time — which is the normal resting state between jury batches. It fires on healthy rows mid-run.
+### Live roughs — how quality gets fixed
 
-## 3. The durable fix
+Roughs are drawn by an image model with the full brand context in the prompt, at small size and low step count so a set returns in seconds. This is the part that was working before it got replaced with primitive-assembly; it is coming back and staying. Two or three roughs per step, never a large batch, so a set is cheap to discard.
 
-**Server-side run driver.** A `logo_drive_run` action in `venture-brand-assets` claims the run and executes the stage machine that currently lives in the component, against the database, respecting existing leases and attempt counts. When its time budget runs low it re-invokes itself via `EdgeRuntime.waitUntil`, so a long run chains across invocations instead of dying in one.
+Text is never baked into a rough. The wordmark is set separately in the brand typeface and locked to the symbol in the lockup, which removes the mangled-lettering failure entirely.
 
-**Client becomes a spectator.** `processLogoRun` shrinks to: create run, kick the driver once, poll `logo_get_run` until terminal. Closing the tab stops nothing; reopening shows the run wherever the server took it. Resume and Refine also just kick the driver.
+### Approval and vectorisation
 
-**Watchdog sweep.** The existing `venture-job-watchdog` cron picks up non-terminal runs with a heartbeat older than ~3 minutes, clears expired leases, and re-kicks the driver. A run with no forward progress across several sweeps fails with a real reason rather than a generic timeout.
+When the founder approves, the approved rough is what gets vectorised — traced, not redrawn. Edges are extracted to closed paths, colours snapped to the brand tokens, paths simplified and cleaned, and the wordmark is placed as real outlined type. Shape fidelity is guaranteed by construction: the approval and the vector are the same artwork. The founder sees the traced vector side by side with the rough before it is committed, and can send it back for another pass.
 
-**Honest status.** "Paused" appears only when the run is terminal or its heartbeat is stale. While the heartbeat is fresh, a waiting concept shows its stage. The banner reports stage, concepts drawn, and last check-in, so a slow run reads as working.
+Committing writes the primary mark plus the horizontal, stacked, mono and knockout lockups into the brand kit, and unlocks the existing downstream paths: the website PRD infusion, social assets, and the design system.
 
 ## Technical notes
 
-- `logo-render-prompt.ts` / stage 4 revert to the Higgsfield path; `render_provider` records `higgsfield` vs `vector_fallback` truthfully.
-- Finalise becomes trace-of-approved-raster plus lockup assembly in `logo-geometry.ts` / `logo-compositor.ts`; no model call in that step.
-- New `logo_drive_run` action; existing per-stage actions stay and become internal calls.
-- Concurrency uses mechanisms already on the tables: `lease_token` / `lease_expires_at` on `brand_logo_directions`, `heartbeat_at` on `brand_logo_runs`. No schema change expected; if a run-level claim token is needed it is one nullable column.
-- `BrandWizard.tsx` loses the multi-stage loop; the stall UI is rewritten against run heartbeat and status.
+- New edge function `venture-logo-studio` with a small synchronous action set: `start_session`, `answer` (returns next question plus roughs), `back`, `refine`, `approve`, `commit`. Every action returns within one request. No leases, no heartbeats, no watchdog.
+- One new table `venture_logo_sessions` holding the transcript, the accumulated design brief, and every rough generated, with `GRANT`s and owner-scoped RLS in the same migration. Branching is a pointer into the transcript, so back/forward is a state change rather than a rerun.
+- The interviewer is a single `openai/gpt-5.6-sol` call per turn via the gateway Responses API, given the brand kit, mood board, asset digest, and transcript so far; it returns the next question and the art direction for the roughs.
+- Roughs render through the Higgsfield connector, falling back to a gateway image model. Failures are reported inline on the step with a retry button — never a silent fallback, never a paused card.
+- Tracing runs in the edge function on approval only: a real raster-to-vector trace, no model call.
+- New UI at `src/components/hub/logo-studio/` — a conversation column with the step's question and a canvas of roughs beside it. `BrandWizard.tsx` keeps the brand kit, mood board and PRD sections and links out to the studio for the mark.
+- Uploading an existing logo stays available and skips straight to commit.
 
-## What you will see afterwards
+## What changes for you
 
-Concepts that look drawn, not assembled. Approving one gives you a vector of that same mark. Start a run, close the tab, come back later — it finished on its own. "Paused" only when something is actually paused.
+You answer a handful of questions and watch marks appear as you answer them. You steer while it draws instead of judging three finished things you did not ask for. What you approve is what you download. Nothing runs in the background, so nothing can stall.
