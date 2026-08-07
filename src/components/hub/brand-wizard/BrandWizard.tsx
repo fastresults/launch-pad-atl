@@ -690,12 +690,12 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const genLogos = useMutation({
     mutationFn: async () => {
       if (refs.length < 3) throw new Error("Upload three logos you admire first — they set the craft standard for this run.");
-      const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 4, referenceImages: refs } });
+      const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 3, referenceImages: refs } });
       setLogos([]);
       await processLogoRun(created.run);
       return created;
     },
-    onSuccess: () => toast.success("Your four concept marks are ready — approve one to vectorize it"),
+    onSuccess: () => toast.success("Your three concept marks are ready — pick one, refine it, then vectorize"),
     onError: (e: any) => toast.error(e?.message ?? "Logo run paused. You can resume it here."),
     onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
   });
@@ -718,6 +718,43 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onSuccess: () => { toast.success("Direction rebuilt"); logoRunQ.refetch(); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  // Founder picks one mark, then writes their own art direction for it.
+  const [refineTarget, setRefineTarget] = useState<any>(null);
+  const [refineNote, setRefineNote] = useState("");
+
+  const selectDirection = useMutation({
+    mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_select_direction", runId: item.run_id, directionId: item.id } }),
+    onSuccess: () => logoRunQ.refetch(),
+    onError: (e: any) => toast.error(e?.message ?? "Could not select this mark"),
+  });
+
+  const refineDirection = useMutation({
+    mutationFn: async ({ item, note }: { item: any; note: string }) => {
+      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_refine_direction", runId: item.run_id, directionId: item.id, note } });
+      await processLogoRun({ ...activeRun, status: "rendering" });
+    },
+    onSuccess: () => { toast.success("Re-rendered with your direction — the previous version is in the archive"); setRefineTarget(null); setRefineNote(""); },
+    onError: (e: any) => toast.error(e?.message ?? "Could not re-render this mark"),
+    onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
+  });
+
+  const restoreRender = useMutation({
+    mutationFn: ({ item, historyPath }: { item: any; historyPath: string }) =>
+      generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_restore_render", runId: item.run_id, directionId: item.id, historyPath } }),
+    onSuccess: () => { toast.success("Earlier version restored"); logoRunQ.refetch(); },
+    onError: (e: any) => toast.error(e?.message ?? "Could not restore that version"),
+  });
+
+  const REFINE_CHIPS = [
+    "Thicker, more even stroke weight",
+    "Simplify — remove one element",
+    "Fuse the parts into one continuous form",
+    "Stronger silhouette at small sizes",
+    "Lean more geometric, less organic",
+    "Use the primary brand colour only",
+  ];
+
 
 
 
