@@ -3246,6 +3246,65 @@ export type Database = {
           },
         ]
       }
+      venture_logo_sessions: {
+        Row: {
+          approved_rough: Json | null
+          brief: Json
+          created_at: string
+          id: string
+          inspiration: Json
+          last_error: string | null
+          snapshot_id: string
+          status: string
+          steps: Json
+          traced: boolean
+          updated_at: string
+          user_id: string
+          vector_path: string | null
+          vector_svg: string | null
+        }
+        Insert: {
+          approved_rough?: Json | null
+          brief?: Json
+          created_at?: string
+          id?: string
+          inspiration?: Json
+          last_error?: string | null
+          snapshot_id: string
+          status?: string
+          steps?: Json
+          traced?: boolean
+          updated_at?: string
+          user_id: string
+          vector_path?: string | null
+          vector_svg?: string | null
+        }
+        Update: {
+          approved_rough?: Json | null
+          brief?: Json
+          created_at?: string
+          id?: string
+          inspiration?: Json
+          last_error?: string | null
+          snapshot_id?: string
+          status?: string
+          steps?: Json
+          traced?: boolean
+          updated_at?: string
+          user_id?: string
+          vector_path?: string | null
+          vector_svg?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_logo_sessions_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venture_snapshots: {
         Row: {
           brand_tokens: Json | null
