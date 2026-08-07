@@ -422,9 +422,11 @@ Deno.serve(async (req) => {
     });
 
     const headlineComposited = !!posterCopy.headline;
-    const logoComposited = !!logoDataUrl;
-    bytes = await buildContentAdSvgBytes({
-      baseImageB64: bytesToB64(bytes),
+    const logoComposited = !!(logoSvgText || logoBytes || logoDataUrl);
+    const platePngBytes = bytes;
+    const poster = await buildContentAdSvgBytes({
+      baseImageB64: bytesToB64(platePngBytes),
+      basePngBytes: platePngBytes,
       baseMime: "image/png",
       width: asset.width,
       height: asset.height,
@@ -435,15 +437,22 @@ Deno.serve(async (req) => {
       headline: posterCopy.headline,
       ctaLine: posterCopy.ctaLine,
       logoDataUrl,
+      logoSvgText,
+      logoBytes,
       logoAspect,
       logoSize,
-      logoCorner: cornerOverride,
+      // The compositor picks the quietest legal corner; bottom-right is only
+      // the starting preference when the headline is suppressed.
+      logoCorner: headlineSuppressed ? undefined : undefined,
     });
+    bytes = poster.bytes;
     (qa as any).headline_composited = headlineComposited;
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
     (qa as any).poster_layout = posterLayout;
     (qa as any).poster_copy = posterCopy;
+    Object.assign(qa as any, poster.metrics);
+
 
 
     const fileId = crypto.randomUUID();
