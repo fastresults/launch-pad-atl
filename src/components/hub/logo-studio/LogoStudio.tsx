@@ -397,11 +397,22 @@ export default function LogoStudio({
                             Not drawn
                           </div>
                         )}
+                        {wantsLockup && (
+                          <LockupPreview
+                            markUrl={rough.url}
+                            name={session.brand?.companyName ?? ""}
+                            font={session.brand?.headingFont ?? null}
+                          />
+                        )}
                         <div className="space-y-2 p-3">
                           <div>
                             <p className="text-sm font-semibold">{rough.title}</p>
+                            {rough.change_note && (
+                              <p className="mt-0.5 text-[11px] font-medium text-primary">{rough.change_note}</p>
+                            )}
                             <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{rough.brief}</p>
                           </div>
+
                           {!answered && (
                             <div className="flex flex-wrap gap-1.5">
                               <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" disabled={busy}
