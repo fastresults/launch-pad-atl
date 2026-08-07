@@ -136,7 +136,7 @@ export function BrandIdentityHeader({
             <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Typography</span>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <div className="rounded-lg border border-white/10 bg-background/40 p-3">
-                <div className="truncate text-xl leading-tight" style={headingFamily ? { fontFamily: `"${headingFamily}", serif` } : undefined}>
+                <div className="line-clamp-2 text-xl leading-tight" style={headingFamily ? { fontFamily: `"${headingFamily}", serif` } : undefined}>
                   {companyName || "Aa Bb Cc"}
                 </div>
                 <div className="mt-1 truncate text-[11px] text-muted-foreground">Headings · {headingFamily ?? "—"}</div>
