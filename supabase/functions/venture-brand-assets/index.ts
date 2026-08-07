@@ -3,11 +3,19 @@
 // grounded in the FULL venture context (snapshot + brief + sources + brain)
 // and the wizard's locked palette/typography/personality.
 //
-// LOGOS use a two-stage Creative Director → Designer pipeline:
-//   Stage 1: a chat model (multimodal with reference logos) produces a
-//            structured logo design brief with 4 distinct directions.
-//   Stage 2: each direction is rendered as its own image with a long,
-//            art-directed prompt.
+// LOGOS use a durable, art-directed pipeline of atomic stages:
+//   Stage 1 (brief):     a chat model produces the brand strategy.
+//   Stage 2 (concepts):  four distinct directions are written as briefs.
+//   Stage 3 (render):    Higgsfield renders each direction as a real designed
+//                        mark. This is what stops output looking auto-generated
+//                        — the vector step then has a target to reproduce
+//                        instead of inventing geometry from a text brief.
+//   Stage 4 (vector):    the approved render is traced into clean SVG paths.
+//   Stage 5 (jury):      a vision model judges the finished mark and can fail
+//                        it back into the retry engine.
+// Stage 3 degrades gracefully: if Higgsfield is unreachable or out of API
+// credits, the direction falls through to drawing from the brief alone and
+// records why on the row.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
@@ -21,6 +29,17 @@ import {
 } from "../_shared/logo-geometry.ts";
 import { fontStackFor, outlineWordmark } from "../_shared/logo-type.ts";
 import { rasterizeSvg } from "../_shared/logo-raster.ts";
+import {
+  HiggsfieldError,
+  fetchRenderBytes,
+  higgsfieldConfigured,
+  renderLogoConcept,
+} from "../_shared/higgsfield.ts";
+import {
+  buildLogoRenderPrompt,
+  logoNegativePrompt,
+  seedForConcept,
+} from "../_shared/logo-render-prompt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
