@@ -11,7 +11,7 @@ import { StandaloneLanding } from "@/components/landing/StandaloneLanding";
  * the toggle to turn landing-only mode back off. The `_authenticated/_admin`
  * route guards still gate non-admin access to those routes.
  */
-const ALLOWED_PREFIXES = ["/login", "/reset-password", "/admin"];
+const ALLOWED_PREFIXES = ["/login", "/reset-password", "/admin", "/v"];
 
 /**
  * Post-login destinations, reachable only once the visitor is authenticated.
