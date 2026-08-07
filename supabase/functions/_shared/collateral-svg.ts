@@ -975,7 +975,7 @@ function fallbackFor(family: string): string {
  * mark size, the smallest type on the page, and the longest line. QC compares
  * these against the piece's standard.
  */
-function pageMetrics(name: string, svg: string, rs: ResolvedSpec): PageMetrics {
+function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: ResolvedSpec): PageMetrics {
   const markHs = [...svg.matchAll(/data-mark-h="([\d.]+)"/g)].map((m) => Number(m[1]));
   const markWs = [...svg.matchAll(/data-mark-w="([\d.]+)"/g)].map((m) => Number(m[1]));
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
@@ -986,7 +986,7 @@ function pageMetrics(name: string, svg: string, rs: ResolvedSpec): PageMetrics {
     page: name,
     markH: primaryMark,
     markW: idx >= 0 ? markWs[idx] : undefined,
-    markBand: isLockup({ logoSvg: svg } as unknown as CollateralCtx) ? rs.lockupBand : rs.logoBand,
+    markBand: isLockup(ctx) ? rs.lockupBand : rs.logoBand,
     safe: rs.safe,
     bleed: rs.bleed,
     minType: rs.minType,
@@ -1045,7 +1045,7 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
       .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
       .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
       .replace("<svg ", `<svg${printMeta(rs)} `);
-    return { ...p, svg, metrics: pageMetrics(p.name, svg, rs) };
+    return { ...p, svg, metrics: pageMetrics(ctx, p.name, svg, rs) };
   });
 
   const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
