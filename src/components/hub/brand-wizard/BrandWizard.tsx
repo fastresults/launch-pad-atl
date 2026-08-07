@@ -845,6 +845,76 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         </div>
 
+        {/* Render-provider status. Higgsfield renders each concept as a real
+            designed mark before it is vectored; when it is unavailable the
+            pipeline still finishes, but from the written brief alone. */}
+        {renderStatus && (
+          <div
+            className={`rounded-lg border p-3 text-[11px] ${
+              renderStatus.state === "ready"
+                ? "border-emerald-500/25 bg-emerald-500/5"
+                : renderStatus.state === "untested"
+                  ? "border-white/10 bg-background/40"
+                  : "border-amber-500/35 bg-amber-500/10"
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              {renderStatus.state === "ready"
+                ? <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                : renderStatus.state === "untested"
+                  ? <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  : <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />}
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold">{renderStatus.headline}</span>
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Render engine
+                  </span>
+                </div>
+                {renderStatus.detail && (
+                  <p className="leading-relaxed text-muted-foreground">{renderStatus.detail}</p>
+                )}
+                {renderStatus.state !== "ready" && renderStatus.state !== "untested" && (
+                  <p className="leading-relaxed text-amber-200/90">
+                    Concepts are still being produced — but they are drawn from the written brief instead of an
+                    art-directed render, which is the lower-quality path.
+                  </p>
+                )}
+                {(renderStatus.renderedCount > 0 || renderStatus.fallbackCount > 0) && (
+                  <p className="text-muted-foreground">
+                    Recent concepts: {renderStatus.renderedCount} rendered · {renderStatus.fallbackCount} fell back to
+                    brief-only drawing.
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-3 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={probeRender}
+                    disabled={probing}
+                    className="inline-flex items-center gap-1 font-medium text-primary underline-offset-2 hover:underline disabled:opacity-50"
+                  >
+                    {probing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                    {probing ? "Testing…" : "Run a live credit test"}
+                  </button>
+                  <span className="text-[10px] text-muted-foreground">Spends 1 Higgsfield credit if funded.</span>
+                  {renderStatus.state === "no_credits" && (
+                    <a
+                      href={renderStatus.topUpUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      Top up platform credits <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+
         {runDirections.some((d) => !["ready", "needs_review"].includes(d.status)) && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {runDirections.filter((d) => !["ready", "needs_review"].includes(d.status)).map((p: any) => (
