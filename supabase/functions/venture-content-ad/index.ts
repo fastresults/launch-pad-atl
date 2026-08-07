@@ -443,7 +443,7 @@ Deno.serve(async (req) => {
       logoSize,
       // The compositor picks the quietest legal corner; bottom-right is only
       // the starting preference when the headline is suppressed.
-      logoCorner: headlineSuppressed ? undefined : undefined,
+      logoCorner: undefined,
     });
     bytes = poster.bytes;
     (qa as any).headline_composited = headlineComposited;
