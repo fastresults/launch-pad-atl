@@ -514,7 +514,13 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const backColW = g.span(Math.max(4, Math.round(ad.grid.columns * 0.62)));
 
   const backTop = g.M + nameS;
-  const backRowsTop = H - g.M - (rows.length - 1) * rowGap;
+  // Set the contact block a measured interval under the name rather than
+  // pinning it to the trim — bottom-anchoring left a dead void mid-card.
+  const backRowsTop = Math.min(
+    backTop + titleS * 1.7 + rowGap * 2.6,
+    H - g.M - (rows.length - 1) * rowGap,
+  );
+
 
   const back = page(W, H, defs, [
     surface(W, H, paper, ad.material.grain),
