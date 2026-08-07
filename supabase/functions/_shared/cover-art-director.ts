@@ -531,17 +531,17 @@ function assetSystem(
       ? `- HEADLINE (verbatim, exact wording, no substitutions, no rewrites, no punctuation changes): "${h}". Set in the brand heading family, ranged left, max two lines. This is the ONLY text permitted on the canvas apart from the reserved logo zone.`
       : `- If a headline is rendered, use the brand heading family, set ranged left, max two lines, headline candidate: "${h || "(use venture name only)"}".`;
 
-  // Compose a size-aware reserved-zone directive when the compositor has
-  // told us exactly how much canvas the logo will occupy.
-  const zone = (defaultCorner: "top-left" | "bottom-right", defaultW: number, defaultH: number) => {
-    const w = logoZone?.widthPct ?? defaultW;
-    const h = logoZone?.heightPct ?? defaultH;
+  // The logo is composited afterwards as vector ink — never as a plate. So we
+  // do NOT request a reserved rectangle (that is what produced painted panels
+  // behind the mark); we only ask for a compositionally quiet corner.
+  const zone = (defaultCorner: "top-left" | "bottom-right", _defaultW: number, _defaultH: number) => {
     const corner = (logoZone?.corner === "center" ? defaultCorner : (logoZone?.corner ?? defaultCorner));
-    return `- LOGO LANDING AREA: leave the ${corner} region (approx. ${w}% × ${h}% of the canvas, with ~5% inset from both edges) as unmarked negative space that continues the surrounding composition. Do NOT frame it, do NOT outline it, do NOT draw a border, hairline, stroke, rule, divider, bracket, corner mark, ghosted panel, tonal shift, drop shadow, gradient edge, debossed plate, chip, card, or watermark around it or inside it. The surrounding composition must flow up to the edges of this area as if the logo were not there — no "window" cut out for it. We will composite the venture's actual logo directly on top of that area after generation; it needs no container of any kind.
-- HARD EXCLUSION for the ${corner} logo landing area: NO headline text, NO subhead, NO caption, NO sticker, NO callout, NO URL, NO signature color block, NO sidebar stripe, NO focal shape, and NO photo subject may enter this rectangle or cross its edges. Any glyph or major shape that overlaps this rectangle is an automatic rejection — the logo will be composited on top and destroy the composition.
-- Any signature-color block, sidebar stripe, or focal shape must terminate at least 8% of the canvas away from the outer edges of this rectangle. Signature color reaches its coverage target through blocks placed on the OPPOSITE side of the canvas from the logo landing area.
+    return `- QUIET CORNER: keep the ${corner} area of the canvas visually calm and tonally even — continuous surface, sky, wall, fabric, or soft gradient — so a small mark can sit there legibly. It is NOT a reserved box: there is no rectangle, no window, no frame, no panel, no plate, no chip, no card, no tonal patch, no outline, no shadow, and no border of any kind. The composition simply stays quiet in that area and flows normally.
+- Do NOT paint a lighter or darker rectangle, badge, or "logo area" anywhere on the canvas. Any visible container in that corner is an automatic rejection.
+- Keep headlines, callouts, URLs, focal subjects, and hard-edged signature blocks out of that corner so the composited mark stays readable.
 - Do NOT redraw, recreate, or paint the logo yourself anywhere on the canvas.`;
   };
+
 
   if (kind === "avatar") {
     return `AVATAR SYSTEM
@@ -585,7 +585,7 @@ ${suppressHeadline ? suppressBlock : `- HEADLINE (${isCustomHeadline ? "verbatim
     ? ""
     : `\n- HEADLINE LANDING AREA: reserve the TOP ${headlineBandPct}% of the canvas (full width, minus 8% side insets) exclusively for the headline text. NO sidebar stripe, NO signature block, NO focal shape, NO photo subject, NO logo may enter or cross this rectangle. The headline text is left-anchored inside this band, ranged left, max two lines, tight tracking, must fit fully within the band without any character clipping at the left or right edge. Do NOT wrap so tightly that any letterform touches or crosses the band's left/right/top edges — pull the type in by another 3% if in doubt.`;
   const sidebarCap = isSquareOrPortrait
-    ? `\n- SIDEBAR / SIGNATURE BLOCK CAP: on this square or portrait canvas, any sidebar stripe or full-height signature block MUST NOT exceed 28% of canvas width, MUST sit on the OPPOSITE side of the canvas from the LOGO LANDING AREA, MUST START BELOW the HEADLINE LANDING AREA (never full-height across the headline band), and MUST NOT contain any lettering (no vertical headline, no rotated text, no glyphs). Reach the signature coverage target through additional flat shapes elsewhere on the canvas, not by widening or lengthening the sidebar.`
+    ? `\n- SIDEBAR / SIGNATURE BLOCK CAP: on this square or portrait canvas, any sidebar stripe or full-height signature block MUST NOT exceed 28% of canvas width, MUST sit on the OPPOSITE side of the canvas from the QUIET CORNER, MUST START BELOW the HEADLINE LANDING AREA (never full-height across the headline band), and MUST NOT contain any lettering (no vertical headline, no rotated text, no glyphs). Reach the signature coverage target through additional flat shapes elsewhere on the canvas, not by widening or lengthening the sidebar.`
     : "";
   return `POST / COVER SYSTEM (${ratio})
 - Treat as a single editorial frame. One focal element, ≥60% negative space.
@@ -666,7 +666,7 @@ export function buildCoverArtPrompt(args: {
 - Image #1: the venture's official logo. Use its colors and forms as-is. Do NOT redraw. For non-avatar assets, leave an unmarked area of negative space where the logo will land — no container, no frame, no border, no plate, no card, no outline, no ghosted rectangle around it. We composite the actual logo directly on top of the raw composition.
 - Image #2: the canvas palette tile. The FOUR colors in this tile (surface, ink, signature, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
     : `## Reference imagery
-- No logo file was uploaded; do NOT invent a logo. Compose around a clean reserved rectangle in a non-focal corner.`;
+- No logo file was uploaded; do NOT invent a logo. Simply keep one non-focal corner visually quiet — do not draw a rectangle or placeholder there.`;
 
   const feedbackBlock = userFeedback && userFeedback.trim()
     ? `\n## Founder feedback on the previous version (BINDING — honor every note)\nThe founder reviewed the last render and said:\n"""${userFeedback.trim().slice(0, 600)}"""\nTreat this as binding art-direction notes from the client. Apply every note unless it would violate the canvas plan or contrast rules above (those always win).\n`

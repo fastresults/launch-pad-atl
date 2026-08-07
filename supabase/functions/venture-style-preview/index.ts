@@ -86,10 +86,10 @@ function mimeFromPath(p: string): string {
 async function fetchPrimaryLogo(
   admin: any,
   kit: any,
-): Promise<{ dataUrl: string | null; bytes: Uint8Array | null }> {
+): Promise<{ dataUrl: string | null; bytes: Uint8Array | null; svgText: string | null }> {
   // Shared loader — rasterises SVG marks so the logo is never silently dropped.
-  const { dataUrl, bytes } = await fetchPrimaryLogoBitmap(admin, kit);
-  return { dataUrl, bytes };
+  const { dataUrl, bytes, svgText } = await fetchPrimaryLogoBitmap(admin, kit);
+  return { dataUrl, bytes, svgText };
 }
 
 
@@ -244,7 +244,7 @@ Deno.serve(async (req) => {
 
 
     const ctx = await loadVentureContext(admin, snapshotId);
-    const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
+    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
 
     let plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
     plan = applyPaletteOverride(plan, paletteOverride);
@@ -344,13 +344,16 @@ Deno.serve(async (req) => {
     let logoComposited = false;
     if (logoBytes) {
       try {
-        bytes = await compositeLogo(bytes, logoBytes, {
+        const res = await compositeLogo(bytes, logoBytes, {
           placement: logoPlacement,
           surfaceHex: plan.surface,
           inkHex: plan.ink,
           logoSize,
+          svgText: logoSvgText,
         });
+        bytes = res.bytes;
         logoComposited = true;
+        (qa as any).logo_contrast = Number(res.contrast.toFixed(2));
       } catch (e) {
         console.warn("style preview logo composite failed", e);
       }

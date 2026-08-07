@@ -7,7 +7,7 @@
 // rasterises the SVG on demand and caches the PNG back to storage so the next
 // call is a straight download.
 
-import { rasterizeSvgToBytes } from "./logo-raster.ts";
+import { rasterizeSvgToBytes, stripSvgBackground } from "./logo-raster.ts";
 
 const BUCKET = "user-media";
 const RASTER_WIDTH = 1024;
@@ -23,6 +23,9 @@ export type LogoSkipReason =
 export type LogoBitmap = {
   dataUrl: string | null;
   bytes: Uint8Array | null;
+  /** Source SVG text when the primary mark is a vector — lets consumers
+   *  re-render the mark in any knockout color instead of tinting pixels. */
+  svgText: string | null;
   skipReason: LogoSkipReason | null;
 };
 
@@ -63,13 +66,13 @@ export async function fetchPrimaryLogoBitmap(admin: any, kit: any): Promise<Logo
     const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
     if (!logos.length) {
       console.warn("[brand-logo] skipped: no_logos on brand kit");
-      return { dataUrl: null, bytes: null, skipReason: "no_logos" };
+      return { dataUrl: null, bytes: null, svgText: null, skipReason: "no_logos" };
     }
     const primary = logos.find((l) => l?.primary) ?? logos[0];
     const rawPath: string | undefined = primary?.path || primary?.storage_path;
     if (!rawPath) {
       console.warn("[brand-logo] skipped: primary entry has no path");
-      return { dataUrl: null, bytes: null, skipReason: "no_path" };
+      return { dataUrl: null, bytes: null, svgText: null, skipReason: "no_path" };
     }
 
     const declaredMime = primary?.contentType || mimeFromPath(rawPath);
@@ -80,32 +83,34 @@ export async function fetchPrimaryLogoBitmap(admin: any, kit: any): Promise<Logo
       const buf = await download(admin, rawPath);
       if (!buf) {
         console.warn("[brand-logo] skipped: download_failed", rawPath);
-        return { dataUrl: null, bytes: null, skipReason: "download_failed" };
+        return { dataUrl: null, bytes: null, svgText: null, skipReason: "download_failed" };
       }
       if (buf.byteLength > 4 * 1024 * 1024) {
-        return { dataUrl: null, bytes: null, skipReason: "too_large" };
+        return { dataUrl: null, bytes: null, svgText: null, skipReason: "too_large" };
       }
-      return { dataUrl: `data:${declaredMime};base64,${bytesToB64(buf)}`, bytes: buf, skipReason: null };
+      return { dataUrl: `data:${declaredMime};base64,${bytesToB64(buf)}`, bytes: buf, svgText: null, skipReason: null };
     }
+
+    // Source SVG is always needed now (consumers re-color the vector), so it
+    // is fetched even when a cached raster exists.
+    const svgBytes = await download(admin, rawPath);
+    if (!svgBytes) {
+      console.warn("[brand-logo] skipped: download_failed", rawPath);
+      return { dataUrl: null, bytes: null, svgText: null, skipReason: "download_failed" };
+    }
+    const svgText = stripSvgBackground(new TextDecoder().decode(svgBytes));
 
     // Cached raster?
     const cachePath = primary?.png_path || pngPathFor(rawPath);
     const cached = await download(admin, cachePath);
     if (cached && cached.byteLength) {
-      return { dataUrl: `data:image/png;base64,${bytesToB64(cached)}`, bytes: cached, skipReason: null };
+      return { dataUrl: `data:image/png;base64,${bytesToB64(cached)}`, bytes: cached, svgText, skipReason: null };
     }
 
-    // Rasterise on demand.
-    const svgBytes = await download(admin, rawPath);
-    if (!svgBytes) {
-      console.warn("[brand-logo] skipped: download_failed", rawPath);
-      return { dataUrl: null, bytes: null, skipReason: "download_failed" };
-    }
-    const svgText = new TextDecoder().decode(svgBytes);
     const png = await rasterizeSvgToBytes(svgText, RASTER_WIDTH);
     if (!png || !png.byteLength) {
       console.warn("[brand-logo] rasterisation unavailable for", rawPath);
-      return { dataUrl: null, bytes: null, skipReason: "svg_unsupported" };
+      return { dataUrl: null, bytes: null, svgText: null, skipReason: "svg_unsupported" };
     }
 
     // Best-effort cache — a failure here just means we rasterise again later.
@@ -117,9 +122,9 @@ export async function fetchPrimaryLogoBitmap(admin: any, kit: any): Promise<Logo
       console.warn("[brand-logo] raster cache upload failed", e);
     }
 
-    return { dataUrl: `data:image/png;base64,${bytesToB64(png)}`, bytes: png, skipReason: null };
+    return { dataUrl: `data:image/png;base64,${bytesToB64(png)}`, bytes: png, svgText, skipReason: null };
   } catch (e) {
     console.error("[brand-logo] fetchPrimaryLogoBitmap failed", e);
-    return { dataUrl: null, bytes: null, skipReason: "exception" };
+    return { dataUrl: null, bytes: null, svgText: null, skipReason: "exception" };
   }
 }
