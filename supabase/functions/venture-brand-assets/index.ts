@@ -512,7 +512,10 @@ ${BANNED_FORMS}`;
   const list: any[] = Array.isArray(parsed) ? parsed : (parsed?.directions ?? []);
   const directions = (Array.isArray(list) ? list : []).filter((d: any) => d && d.direction_name);
   if (!directions.length) throw new Error("Creative Director returned no directions");
-  return directions.slice(0, count) as LogoDirection[];
+  // The set law is written once and stamped onto every direction so all the
+  // render briefs in this run carry the same construction contract.
+  const setLaw = typeof (parsed as any)?.set_law === "string" ? (parsed as any).set_law.trim() : "";
+  return directions.slice(0, count).map((d: any) => ({ ...d, set_law: d.set_law || setLaw })) as LogoDirection[];
 }
 
 
@@ -1144,6 +1147,8 @@ Deno.serve(async (req) => {
           logoType: row.logo_type,
           readsAs: concept.reads_as,
           meaning: concept.meaning,
+          secondRead: concept.second_read,
+          setLaw: concept.set_law,
         },
         {
           brandName: snap.company_name ?? undefined,
