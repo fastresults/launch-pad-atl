@@ -128,8 +128,11 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
               ))}
             </div>
           )}
+
+          <BrandCollateral snapshot={snapshot} locked={locked} />
         </div>
       )}
+
       <BrandWizard snapshot={snapshot} open={open} onOpenChange={setOpen} />
     </div>
   );
