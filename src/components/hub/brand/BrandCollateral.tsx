@@ -3,17 +3,20 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Eye, Loader2, Package, RotateCcw, Sparkles } from "lucide-react";
+import { Download, Eye, Loader2, Package, RotateCcw, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   COLLATERAL_TIERS,
   clearCollateral,
   downloadCollateralZip,
   generateCollateral,
+  getCollateralDetails,
   listCollateral,
 } from "@/lib/collateral.functions";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { CollateralPreviewDialog } from "@/components/hub/brand/CollateralPreviewDialog";
+import { CollateralDetailsDialog } from "@/components/hub/brand/CollateralDetailsDialog";
+
 
 export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: boolean }) {
   const qc = useQueryClient();
