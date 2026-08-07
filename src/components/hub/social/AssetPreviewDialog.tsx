@@ -286,7 +286,18 @@ export function AssetPreviewDialog({
                   </div>
                   <div className="mt-1 rounded border border-border bg-background/40 p-2 text-[11px]">
                     <span className="font-medium">{label}</span>
-                    <span className="text-muted-foreground"> — composited over a reserved zone for guaranteed legibility.</span>
+                    <span className="text-muted-foreground"> — your mark is composited as vector ink, recolored for contrast, with no plate behind it.</span>
+                    {typeof asset.qaNotes?.logo_contrast === "number" && (
+                      <span
+                        className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                          asset.qaNotes.logo_contrast >= 3 ? "bg-emerald-500/15 text-emerald-600" : "bg-amber-500/15 text-amber-600"
+                        }`}
+                      >
+                        contrast {asset.qaNotes.logo_contrast.toFixed(1)}:1
+                        {asset.qaNotes.logo_scrim ? " · softened" : ""}
+                      </span>
+                    )}
+
                   </div>
                   {showWarning && (
                     <div className="mt-1 rounded border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-900 dark:text-amber-200">
