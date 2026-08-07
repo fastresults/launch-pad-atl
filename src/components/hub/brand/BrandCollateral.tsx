@@ -57,15 +57,17 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
       const all = kinds?.length ? kinds : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind));
       const generated: any[] = [];
       const failed: any[] = [];
+      const qcIssues: any[] = [];
       let artDirection: any = null;
       for (let i = 0; i < all.length; i += 2) {
         const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 2));
         generated.push(...(res?.generated ?? []));
         failed.push(...(res?.failed ?? []));
+        qcIssues.push(...(res?.qcIssues ?? []));
         artDirection ??= res?.artDirection ?? null;
         qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       }
-      return { ok: true, generated, failed, artDirection };
+      return { ok: true, generated, failed, qcIssues, artDirection };
     },
     onMutate: (kinds) => setBusyKind(kinds?.length === 1 ? kinds[0] : "all"),
     onSettled: () => setBusyKind(null),
@@ -74,8 +76,13 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
       qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       const failed = res?.failed ?? [];
       const arch = res?.artDirection?.archetype;
+      const issues = res?.qcIssues ?? [];
       if (failed.length) toast.warning(`Generated with ${failed.length} skipped: ${failed.map((f: any) => f.kind).join(", ")}`);
-      else toast.success(arch ? `Collateral generated — art direction: ${String(arch).replace(/_/g, " ")}.` : "Collateral generated.");
+      else if (issues.length) {
+        toast.warning(`${issues.length} page${issues.length === 1 ? "" : "s"} failed the print check`, {
+          description: issues.slice(0, 3).map((i: any) => `${i.page}: ${i.reasons[0]}`).join("  ·  "),
+        });
+      } else toast.success(arch ? `Collateral generated — art direction: ${String(arch).replace(/_/g, " ")}.` : "Collateral generated.");
     },
     onError: (e: any) => {
       // Missing text is a fixable gap, not a failure — send them to the form.
@@ -127,6 +134,14 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
   };
 
   const isStale = (kind: string) => (byKind[kind] ?? []).some((i) => i?.meta?.stale);
+
+  /** Print-check state for a piece: every page measured against its standard. */
+  const qcState = (kind: string) => {
+    const verdicts = (byKind[kind] ?? []).map((i) => i?.meta?.qc).filter(Boolean) as any[];
+    if (!verdicts.length) return null;
+    const reasons = [...new Set(verdicts.flatMap((v) => (v.ok ? [] : v.reasons ?? [])))];
+    return { ok: reasons.length === 0, reasons };
+  };
 
 
   return (
@@ -226,8 +241,16 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
                           Details changed
                         </Badge>
                       )}
+                      {qcState(k.kind)?.ok && (
+                        <Badge variant="outline" className="border-emerald-500/50 text-[10px] text-emerald-500">
+                          Print-checked
+                        </Badge>
+                      )}
                     </button>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">{k.note}</p>
+                    {qcState(k.kind)?.ok === false && (
+                      <p className="mt-1 text-[11px] text-amber-500">{qcState(k.kind)!.reasons[0]}</p>
+                    )}
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <Button
                         size="sm"

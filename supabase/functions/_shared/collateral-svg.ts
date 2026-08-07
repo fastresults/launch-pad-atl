@@ -19,6 +19,13 @@ import {
   step,
 } from "./brand-art-direction.ts";
 import { addressBlock, addressLine, type ContactDetails } from "./collateral-fields.ts";
+import {
+  logoBox,
+  type PageMetrics,
+  printMeta,
+  resolveSpec,
+  type ResolvedSpec,
+} from "./collateral-specs.ts";
 
 // Font loading has one hard requirement: the wasm rasteriser can only read a
 // real sfnt (TTF/OTF). It has no woff2 decoder and no @font-face support, so if
@@ -169,7 +176,7 @@ export const KIND_LABELS: Record<CollateralKind, string> = {
   design_tokens: "Design tokens",
 };
 
-export type Page = { name: string; svg: string; width: number; height: number };
+export type Page = { name: string; svg: string; width: number; height: number; metrics?: PageMetrics };
 
 function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
@@ -353,7 +360,9 @@ function markAt(
   const s = Math.min(boxW / vw, boxH / vh);
   const dx = x + (boxW - vw * s) / 2;
   const dy = y + (boxH - vh * s) / 2;
-  return `<g transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  // The drawn size is recorded on the group so QC can verify the mark landed
+  // inside the size band this piece's standard allows.
+  return `<g data-mark-w="${r(vw * s)}" data-mark-h="${r(vh * s)}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
 
 
@@ -372,6 +381,23 @@ function isLockup(ctx: CollateralCtx): boolean {
 /** Clear space the mark demands on every side, from its own height. */
 function clearSpace(height: number): number {
   return Math.round(height * 0.55);
+}
+
+/**
+ * The mark box this piece's standard calls for — height inside the spec band,
+ * width from the artwork's own aspect. Templates never hand-pick a logo size.
+ */
+function markBoxFor(ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.62, fillWidth = false) {
+  return logoBox(rs, logoAspect(ctx), isLockup(ctx), maxWidth, bias, fillWidth);
+}
+
+/** Draw the mark at its spec size, top-left anchored at (x, y). */
+function specMark(
+  ctx: CollateralCtx, rs: ResolvedSpec, x: number, y: number, maxWidth: number,
+  ink: string | null, bg: string, bias = 0.62,
+): { svg: string; w: number; h: number; clear: number } {
+  const box = markBoxFor(ctx, rs, maxWidth, bias);
+  return { svg: markAt(ctx, x, y, box.w, box.h, ink, bg), ...box };
 }
 
 /**
@@ -469,67 +495,70 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const invert = inverted(ctx, "business_card");
   const faceInk = invert ? inkOn(primary) : fg;
 
-  // FRONT — an asymmetric card: a full-bleed colour field carries the mark,
-  // the paper side carries the name and a short descriptor. A centred logo on a
-  // blank field is not a design; this is the one page people actually look at.
-  const fieldW = Math.round(W * 0.34);
-  const fieldX = W - fieldW;
+  const rsF = resolveSpec("business-card-front", W, H);
+  const rsB = resolveSpec("business-card-back", W, H);
+  // Never let the art-direction margin fall inside the printer's safe area.
+  const M = Math.max(g.M, rsF.safe);
+
+  // FRONT — an asymmetric card: a full-bleed colour field carries the mark at
+  // the size a 3.5×2in card actually calls for, the paper side carries the name
+  // and a short descriptor.
   const fieldBg = invert ? paper : primary;
   const fieldInk = inkOn(fieldBg);
-  const pad = Math.round(fieldW * 0.2);
-  const colW = fieldX - g.M * 2;
+  const markBox = markBoxFor(ctx, rsF, W * 0.32, 1, true);
+  const clear = markBox.clear;
+  const fieldW = Math.round(Math.min(W * 0.44, Math.max(W * 0.3, markBox.w + clear * 2)));
+  const fieldX = W - fieldW;
+  const colW = fieldX - M - Math.round(clear * 0.5);
 
-  const nameSize = step(ad, 1.2);
-  const descSize = step(ad, -0.5);
+  const nameSize = Math.max(rsF.minType * 2.2, step(ad, 1.2));
+  const descSize = Math.max(rsF.minType, step(ad, -0.5));
   const desc = cardDescriptor(d);
-  const showName = !isLockup(ctx) || true; // the field mark reads as a device; the name is set in type
   const stackH = nameSize * 1.05 + (desc ? descSize * 2.4 : 0);
   const nameBase = Math.round((H - stackH) / 2 + nameSize * 0.82);
 
   const front = page(W, H, defs, [
     invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
+    // Bleeds off three edges by design — the field is trim-to-trim.
     `<rect x="${fieldX}" y="0" width="${fieldW}" height="${H}" fill="${fieldBg}"/>`,
-    markAt(ctx, fieldX + pad, pad, fieldW - pad * 2, H - pad * 2, fieldInk, fieldBg),
-    showName
-      ? T.line(ctx.company, g.M, nameBase, nameSize, faceInk, {
-        family: "head", weight: 700, tracking: nameSize * ad.type.displayTracking, maxWidth: colW, minSize: 15,
-      })
-      : "",
+    markAt(ctx, fieldX + (fieldW - markBox.w) / 2, (H - markBox.h) / 2, markBox.w, markBox.h, fieldInk, fieldBg),
+    T.line(ctx.company, M, nameBase, nameSize, faceInk, {
+      family: "head", weight: 700, tracking: nameSize * ad.type.displayTracking, maxWidth: colW, minSize: rsF.minType,
+    }),
     desc
-      ? T.line(desc, g.M, nameBase + descSize * 2.1, descSize, invert ? faceInk : muted, {
-        tracking: descSize * ad.type.labelTracking * 0.5, maxWidth: colW, minSize: 11,
+      ? T.line(desc, M, nameBase + descSize * 2.1, descSize, invert ? faceInk : muted, {
+        tracking: descSize * ad.type.labelTracking * 0.5, maxWidth: colW, minSize: rsF.minType,
       })
       : "",
-    `<rect x="${g.M}" y="${r(nameBase + descSize * (desc ? 3.6 : 1.6))}" width="${r(g.span(1))}" height="${r(Math.max(2, ad.ink.ruleWeight))}" fill="${invert ? faceInk : accent}"/>`,
+    `<rect x="${M}" y="${r(nameBase + descSize * (desc ? 3.6 : 1.6))}" width="${r(Math.min(g.span(1), colW * 0.5))}" height="${r(Math.max(2, ad.ink.ruleWeight))}" fill="${invert ? faceInk : accent}"/>`,
   ].join(""));
 
 
   // BACK — the contact block, set on the grid and measured line by line.
   const rows = contactRows(d);
   const rule = ad.ink.ruleWeight;
-  const nameS = step(ad, 1);
-  const titleS = step(ad, -0.6);
-  const rowS = step(ad, -0.7);
-  const rowGap = rowS * 1.72;
-  const backColW = g.span(Math.max(4, Math.round(ad.grid.columns * 0.62)));
+  const nameS = Math.max(rsB.minType * 1.9, step(ad, 1));
+  const titleS = Math.max(rsB.minType, step(ad, -0.6));
+  const rowS = Math.max(rsB.minType, step(ad, -0.7));
+  const rowGap = rowS * 1.62;
+  const backMark = markBoxFor(ctx, rsB, W * 0.26, 0.8, true);
+  const backColW = Math.min(g.span(Math.max(4, Math.round(ad.grid.columns * 0.62))), W - M * 2 - backMark.w - backMark.clear);
 
   // Optically centre the whole back block. Pinning it to either trim edge left
   // half the card as dead space.
   const blockH = titleS * 1.7 + rowGap * 2.6 + (rows.length - 1) * rowGap;
-  const backTop = Math.max(g.M + nameS, (H - blockH) / 2 - nameS * 0.2);
+  const backTop = Math.max(M + nameS, (H - blockH) / 2 - nameS * 0.2);
   const backRowsTop = backTop + titleS * 1.7 + rowGap * 2.6;
-
-
 
   const back = page(W, H, defs, [
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="0" width="${r(rule * 3)}" height="${H}" fill="${primary}"/>`,
-    // mark, top-right, quiet
-    markAt(ctx, W - g.M - 190, g.M - 4, 190, 76, mix(fg, paper, 0.3), paper),
-    T.line(d.person_name || ctx.company, g.M, backTop, nameS, fg, { family: "head", weight: 700, maxWidth: backColW, tracking: nameS * ad.type.displayTracking, minSize: 13 }),
-    d.person_title ? label(T, ctx, d.person_title, g.M, backTop + titleS * 1.7, titleS, accent, "start", backColW) : "",
-    `<rect x="${g.M}" y="${r(backRowsTop - rowGap * 1.25)}" width="${r(g.span(2))}" height="${r(ad.ink.hairline * 2)}" fill="${accent}"/>`,
-    ...rows.map((t, i) => T.line(t, g.M, backRowsTop + i * rowGap, rowS, i === 0 ? fg : muted, { maxWidth: g.content, minSize: 10 })),
+    // Mark, top-right, at the back-of-card size band, inside its clear space.
+    markAt(ctx, W - M - backMark.w, M, backMark.w, backMark.h, mix(fg, paper, 0.25), paper),
+    T.line(d.person_name || ctx.company, M, backTop, nameS, fg, { family: "head", weight: 700, maxWidth: backColW, tracking: nameS * ad.type.displayTracking, minSize: rsB.minType }),
+    d.person_title ? label(T, ctx, d.person_title, M, backTop + titleS * 1.7, titleS, accent, "start", backColW) : "",
+    `<rect x="${M}" y="${r(backRowsTop - rowGap * 1.25)}" width="${r(Math.min(g.span(2), backColW))}" height="${r(ad.ink.hairline * 2)}" fill="${accent}"/>`,
+    ...rows.map((t, i) => T.line(t, M, backRowsTop + i * rowGap, rowS, i === 0 ? fg : muted, { maxWidth: W - M * 2, minSize: rsB.minType })),
   ].join(""));
 
   return [
@@ -545,8 +574,9 @@ function letterhead({ ctx, T, defs }: Args): Page[] {
   const { primary, paper, fg, accent, muted } = palette(ctx);
   const d = ctx.details;
 
-  const logoH = Math.round(H * 0.052);
-  const headBase = snap(ad, g.M + logoH);
+  const rs = resolveSpec("letterhead", W, H);
+  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.6)), 0.7).h;
+  const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const footerY = H - g.M;
   const footer = [d.website, d.email, d.phone].filter(Boolean).join("   ·   ");
   const addr = addressLine(d);
@@ -580,8 +610,9 @@ function envelope({ ctx, T, defs }: Args): Page[] {
   const g = gridFor(ad, W, H);
   const { primary, paper, fg, accent, muted } = palette(ctx);
   const d = ctx.details;
-  const logoH = Math.round(H * 0.13);
-  const base = snap(ad, g.M + logoH);
+  const rs = resolveSpec("envelope-no10", W, H);
+  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.45)), 0.7).h;
+  const base = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const lines = addressBlock(d);
 
   const body = [
@@ -607,8 +638,10 @@ function notecard({ ctx, T, defs }: Args): Page[] {
   const ink = invert ? inkOn(primary) : fg;
   const soft = invert ? inkOn(primary) : muted;
 
-  const markH = Math.round(H * 0.17);
-  const markW = Math.min(g.content * 0.6, markH * Math.max(logoAspect(ctx), 1));
+  const rs = resolveSpec("notecard", W, H);
+  const nBox = markBoxFor(ctx, rs, g.content * 0.62, 0.68);
+  const markH = nBox.h;
+  const markW = nBox.w;
   const top = snap(ad, H * 0.17);
   const nameS = step(ad, 1.1);
   const note = ctx.copy?.notecard || d.tagline || "";
@@ -631,8 +664,9 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
   const { primary, paper, fg, accent, muted } = palette(ctx);
   const d = ctx.details;
   const rows = [d.email, d.phone, d.website, d.social].filter(Boolean) as string[];
-  const markBox = 150;
-  const left = 60;
+  const rsSig = resolveSpec("email-signature", W, H);
+  const markBox = markBoxFor(ctx, rsSig, W * 0.25, 0.6).h;
+  const left = Math.max(60, rsSig.safe);
   const railX = left + markBox + clearSpace(markBox) * 0.7;
   const textX = railX + 34;
   const nameS = step(ad, 0.9);
@@ -661,8 +695,9 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   const cols = isInvoice ? ["Description", "Qty", "Rate", "Amount"] : ["Scope item", "Detail", "Timeline", "Investment"];
   const colX = [g.M, g.col(Math.round(ad.grid.columns * 0.55)), g.col(Math.round(ad.grid.columns * 0.72)), W - g.M];
 
-  const logoH = Math.round(H * 0.045);
-  const headBase = snap(ad, g.M + logoH);
+  const rs = resolveSpec(mode, W, H);
+  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.5)), 0.7).h;
+  const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const metaTop = snap(ad, headBase + clearSpace(logoH) + step(ad, 2.5));
   const tableTop = snap(ad, metaTop + step(ad, 9));
   const rowH = step(ad, 1.8);
@@ -724,8 +759,12 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const deck = ctx.copy?.deck ?? {};
   const points = (deck.points ?? []).slice(0, 3);
 
-  const markH = Math.round(H * 0.11);
-  const markW = Math.min(g.span(4), markH * Math.max(logoAspect(ctx), 1));
+  const rsCover = resolveSpec("slide-1-cover", W, H);
+  const rsSlide = resolveSpec("slide-2-section", W, H);
+  const coverBox = markBoxFor(ctx, rsCover, g.span(4), 0.65);
+  const slideBox = markBoxFor(ctx, rsSlide, g.span(3), 0.6);
+  const markH = coverBox.h;
+  const markW = coverBox.w;
 
   pages.push({
     name: "slide-1-cover", width: W, height: H,
@@ -747,7 +786,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
       label(T, ctx, "01", g.M, H * 0.32, step(ad, 0.6), accent),
       T.line(deck.section || "Section title", g.M, H * 0.46, step(ad, 3.8), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.72)), tracking: step(ad, 3.8) * ad.type.displayTracking }),
       T.block(deck.sectionSub || "One sentence that frames what this section proves.", g.M, H * 0.56, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.55)), muted, { leading: 1.5, maxLines: 2 }).svg,
-      markAt(ctx, W - g.M - 120, H - g.M - 120, 120, 120, mix(primary, paper, 0.25), paper),
+      markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, mix(primary, paper, 0.25), paper),
     ].join("")),
   });
 
@@ -772,7 +811,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
         ].join("");
       }),
       T.line(ctx.company, g.M, H - g.M, step(ad, -0.6), muted, { maxWidth: g.span(5) }),
-      markAt(ctx, W - g.M - 70, H - g.M - 60, 70, 70, mix(primary, paper, 0.3), paper),
+      markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, mix(primary, paper, 0.3), paper),
     ].join("")),
   });
 
@@ -780,7 +819,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     name: "slide-4-closing", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${fg}"/>`,
-      markAt(ctx, W / 2 - 100, H * 0.3, 200, 150, inkOn(fg), fg),
+      markAt(ctx, (W - coverBox.w) / 2, H * 0.3, coverBox.w, coverBox.h, inkOn(fg), fg),
       T.line(deck.closing || "Thank you", W / 2, H * 0.6, step(ad, 3.6), inkOn(fg), { family: "head", weight: 700, anchor: "middle", maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
       T.line([d.website, d.email].filter(Boolean).join("   ·   "), W / 2, H * 0.68, step(ad, 0.2), inkOn(fg), { anchor: "middle", opacity: 0.75, maxWidth: g.content }),
     ].join("")),
@@ -806,13 +845,15 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
     label(T, ctx, `${ctx.company} — Brand guidelines`, W - g.M, g.M + step(ad, 0.4), step(ad, -1.3), muted, "end", g.span(5)),
   ].join("");
 
+  const rsG = resolveSpec("guidelines-1-cover", W, H);
+  const gCover = markBoxFor(ctx, rsG, g.span(4), 0.68);
   const top = g.M + step(ad, 6.4);
 
   pages.push({
     name: "guidelines-1-cover", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-      markAt(ctx, g.M, g.M, g.span(3), Math.round(H * 0.16), ink, primary),
+      markAt(ctx, g.M, g.M, gCover.w, gCover.h, ink, primary),
       label(T, ctx, "Brand guidelines", g.M, H * 0.52, step(ad, 0.6), ink, "start", g.span(6)),
       T.line(ctx.company, g.M, H * 0.66, step(ad, 4), ink, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.8)), tracking: step(ad, 4) * ad.type.displayTracking }),
       d.tagline ? T.line(d.tagline, g.M, H * 0.73, step(ad, 0.4), ink, { opacity: 0.75, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)) }) : "",
@@ -929,6 +970,32 @@ function fallbackFor(family: string): string {
     : SANS_FALLBACK;
 }
 
+/**
+ * What the page actually contains, read back off the finished SVG: the drawn
+ * mark size, the smallest type on the page, and the longest line. QC compares
+ * these against the piece's standard.
+ */
+function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: ResolvedSpec): PageMetrics {
+  const markHs = [...svg.matchAll(/data-mark-h="([\d.]+)"/g)].map((m) => Number(m[1]));
+  const markWs = [...svg.matchAll(/data-mark-w="([\d.]+)"/g)].map((m) => Number(m[1]));
+  const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
+  const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
+  const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
+  const idx = primaryMark !== undefined ? markHs.indexOf(primaryMark) : -1;
+  return {
+    page: name,
+    markH: primaryMark,
+    markW: idx >= 0 ? markWs[idx] : undefined,
+    markBand: isLockup(ctx) ? rs.lockupBand : rs.logoBand,
+    safe: rs.safe,
+    bleed: rs.bleed,
+    minType: rs.minType,
+    textLines: texts.length,
+    smallestType: sizes.length ? Math.min(...sizes) : undefined,
+    longestLine: texts.length ? Math.max(...texts.map((t) => t.length)) : undefined,
+  };
+}
+
 export type RenderResult = { pages: Page[]; fontBuffers: Uint8Array[]; fontsOk: boolean };
 
 export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx): Promise<RenderResult> {
@@ -972,12 +1039,14 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
 
   const headStack = `${heading}, ${fallbackFor(heading)}`;
   const bodyStack = `${body}, ${fallbackFor(body)}`;
-  pages = pages.map((p) => ({
-    ...p,
-    svg: p.svg
+  pages = pages.map((p) => {
+    const rs = resolveSpec(p.name, p.width, p.height);
+    const svg = p.svg
       .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
-      .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`),
-  }));
+      .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
+      .replace("<svg ", `<svg${printMeta(rs)} `);
+    return { ...p, svg, metrics: pageMetrics(ctx, p.name, svg, rs) };
+  });
 
   const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
   return { pages, fontBuffers, fontsOk: fontBuffers.length > 0 };

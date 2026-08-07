@@ -30,6 +30,8 @@ import {
 import { type ArtDirection, directArt, hydrate } from "../_shared/brand-art-direction.ts";
 import { writeCollateralCopy } from "../_shared/collateral-copy.ts";
 import { mockupSvg } from "../_shared/collateral-mockup.ts";
+import { resolveSpec } from "../_shared/collateral-specs.ts";
+import { qcPage, type QcVerdict } from "../_shared/collateral-qc.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -211,12 +213,12 @@ async function generateKind(
   userId: string,
   kind: CollateralKind,
   ctx: CollateralCtx,
-): Promise<{ kind: CollateralKind; files: number }> {
+): Promise<{ kind: CollateralKind; files: number; qc: QcVerdict[] }> {
   if (kind === "design_tokens") {
     const { css, json: tokenJson } = designTokens(ctx);
     await store(admin, snapshotId, userId, kind, "brand-tokens", css, "text/css", null, null);
     await store(admin, snapshotId, userId, kind, "brand-tokens-json", tokenJson, "application/json", null, null);
-    return { kind, files: 2 };
+    return { kind, files: 2, qc: [] };
   }
 
   const { pages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx);
@@ -224,25 +226,39 @@ async function generateKind(
   // type, and we would store a "finished" page that is a logo on blank paper.
   if (!fontsOk) throw new Error("Brand fonts could not be loaded — refusing to render type-less pages");
   let count = 0;
+  const verdicts: QcVerdict[] = [];
   for (const p of pages) {
     const expectedText = (p.svg.match(/<text\b/g) || []).length;
     if (expectedText === 0 && !/design_tokens|email_signature/.test(kind)) {
       throw new Error(`${p.name}: no type was set on the page`);
     }
 
+    const rs = resolveSpec(p.name, p.width, p.height);
+    // Keep raster sizes modest — a 2400px page plus its base64 copy inside the
+    // mock-up scene is what pushed the worker past its memory ceiling.
+    let bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 1400), undefined, fontBuffers);
+
+    // Quality control: the drawn geometry against this piece's print standard,
+    // plus the pixels that came out. A page that fails is still stored so the
+    // founder can see it, but it carries the reason and is reported back.
+    const verdict = qcPage(bytes ?? null, p.metrics ?? {
+      page: p.name, safe: rs.safe, bleed: rs.bleed, minType: rs.minType, textLines: 0,
+    }, rs);
+    verdicts.push(verdict);
+    if (!verdict.ok) console.warn("[collateral qc]", p.name, verdict.reasons.join(" | "));
+
     // Vector master, so a printer can scale it without loss.
     await store(admin, snapshotId, userId, kind, p.name, p.svg, "image/svg+xml", p.width, p.height, {
       vector: true,
       archetype: ctx.ad.archetype,
+      qc: verdict,
     });
-    // Keep raster sizes modest — a 2400px page plus its base64 copy inside the
-    // mock-up scene is what pushed the worker past its memory ceiling.
-    let bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 1400), undefined, fontBuffers);
 
     if (bytes) {
       await store(admin, snapshotId, userId, kind, `${p.name}-preview`, bytes, "image/png", p.width, p.height, {
         preview: true,
         archetype: ctx.ad.archetype,
+        qc: verdict,
       });
       bytes = null as unknown as Uint8Array;
 
@@ -272,7 +288,7 @@ async function generateKind(
   if (kind === "email_signature") {
     await store(admin, snapshotId, userId, kind, "email-signature-html", signatureHtml(ctx), "text/html", null, null);
   }
-  return { kind, files: count };
+  return { kind, files: count, qc: verdicts };
 }
 
 Deno.serve(async (req) => {
@@ -417,7 +433,10 @@ Deno.serve(async (req) => {
           failed.push({ kind, error: (e as Error).message });
         }
       }
-      return json({ ok: true, generated: done, failed, artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale } });
+      const qcIssues = done.flatMap((r: any) =>
+        (r.qc ?? []).filter((v: QcVerdict) => !v.ok).map((v: QcVerdict) => ({ kind: r.kind, page: v.page, reasons: v.reasons })),
+      );
+      return json({ ok: true, generated: done, failed, qcIssues, artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale } });
     }
 
     return json({ error: `Unknown action: ${action}` }, 400);
