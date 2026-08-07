@@ -144,7 +144,7 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
   }
 }
 
-async function callChatAI(messages: any[], opts: { json?: boolean; model?: string } = {}) {
+async function callChatAI(messages: any[], opts: { json?: boolean; model?: string; timeoutMs?: number } = {}) {
   const model = opts.model ?? THINK_MODELS[0];
   const isOpenAI = model.startsWith("openai/");
   const res = await fetchWithTimeout("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -157,7 +157,8 @@ async function callChatAI(messages: any[], opts: { json?: boolean; model?: strin
       ...(isOpenAI ? { max_completion_tokens: 8000 } : { max_tokens: 8000 }),
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
-  }, 60_000);
+  }, opts.timeoutMs ?? 60_000);
+
   if (!res.ok) {
     const txt = await res.text();
     throw new Error(`AI chat ${res.status}: ${txt.slice(0, 300)}`);
