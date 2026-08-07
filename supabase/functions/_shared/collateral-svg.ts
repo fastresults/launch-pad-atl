@@ -6,43 +6,52 @@
 // rasterised, the same approach the editorial poster compositor uses.
 
 import { colorSpaces, inkOn } from "./color-spaces.ts";
+import { stripSvgBackground } from "./logo-raster.ts";
 
-const UA =
+// Modern UA gets woff2 (for the SVG's @font-face, used in browsers); the legacy
+// UA gets a plain TTF, which is the only format the wasm rasteriser can load.
+const UA_MODERN =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+const UA_LEGACY = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)";
 
-const fontCache = new Map<string, string | null>();
+const fontCache = new Map<string, { b64: string; bytes: Uint8Array } | null>();
 
-/** Fetch a Google font as an embedded base64 woff2 @font-face block. */
-async function embedFont(family: string, weight: number, alias: string): Promise<string> {
-  const key = `${family}:${weight}`;
-  let data = fontCache.get(key) ?? null;
-  if (!fontCache.has(key)) {
-    try {
-      const css = await fetch(
-        `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:wght@${weight}&display=swap`,
-        { headers: { "User-Agent": UA } },
-      );
-      if (css.ok) {
-        const text = await css.text();
-        const blocks = text.split("@font-face").filter((b) => b.includes("url("));
-        const latin = blocks.find((b) => /unicode-range:[^;]*U\+0000/i.test(b)) ?? blocks[blocks.length - 1];
-        const url = latin?.match(/url\((https:\/\/[^)]+\.woff2)\)/)?.[1];
-        if (url) {
-          const bin = await fetch(url);
-          if (bin.ok) {
-            const bytes = new Uint8Array(await bin.arrayBuffer());
-            let s = "";
-            for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-            data = btoa(s);
-          }
-        }
-      }
-    } catch { /* fall back to system stack */ }
-    fontCache.set(key, data);
-  }
-  if (!data) return "";
-  return `@font-face{font-family:'${alias}';font-style:normal;font-weight:${weight};src:url(data:font/woff2;base64,${data}) format('woff2');}`;
+async function fetchFont(family: string, weight: number, legacy: boolean) {
+  const cssUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:wght@${weight}&display=swap`;
+  const res = await fetch(cssUrl, { headers: { "User-Agent": legacy ? UA_LEGACY : UA_MODERN } });
+  if (!res.ok) return null;
+  const text = await res.text();
+  const blocks = text.split("@font-face").filter((b) => b.includes("url("));
+  const latin = blocks.find((b) => /unicode-range:[^;]*U\+0000/i.test(b)) ?? blocks[blocks.length - 1];
+  const url = latin?.match(/url\((https:\/\/[^)]+\.(?:woff2|ttf))\)/)?.[1];
+  if (!url) return null;
+  const bin = await fetch(url);
+  if (!bin.ok) return null;
+  return new Uint8Array(await bin.arrayBuffer());
 }
+
+/** Load one weight: base64 woff2 for the SVG, raw TTF bytes for the rasteriser. */
+async function loadFont(family: string, weight: number) {
+  const key = `${family}:${weight}`;
+  if (!fontCache.has(key)) {
+    let out: { b64: string; bytes: Uint8Array } | null = null;
+    try {
+      const [woff2, ttf] = await Promise.all([
+        fetchFont(family, weight, false).catch(() => null),
+        fetchFont(family, weight, true).catch(() => null),
+      ]);
+      if (woff2 || ttf) {
+        const forCss = woff2 ?? ttf!;
+        let s = "";
+        for (let i = 0; i < forCss.length; i += 0x8000) s += String.fromCharCode(...forCss.subarray(i, i + 0x8000));
+        out = { b64: btoa(s), bytes: ttf ?? new Uint8Array() };
+      }
+    } catch { /* fall back to system stacks */ }
+    fontCache.set(key, out);
+  }
+  return fontCache.get(key) ?? null;
+}
+
 
 export type CollateralCtx = {
   company: string;
