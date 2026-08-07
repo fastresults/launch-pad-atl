@@ -293,6 +293,19 @@ function b64FromBytes(bytes: Uint8Array): string {
   return btoa(s);
 }
 
+// Per-isolate memo: the same mark + ink is rebuilt for every ad in a run, and
+// each rebuild costs a wasm rasterize plus full-bitmap pixel loops.
+const inkCache = new Map<string, { dataUrl: string; aspect: number }>();
+
+function cheapHash(s: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
 /**
  * Produces a transparent, single-ink PNG of the brand mark for use as vector
  * ink on a poster — never a plate, chip or white box. Prefers re-rendering the
@@ -305,26 +318,46 @@ export async function buildVectorInkLogoPng(opts: {
   inkHex: string;
   targetWidthPx?: number;
 }): Promise<{ dataUrl: string; aspect: number } | null> {
-  const width = Math.max(512, Math.round(opts.targetWidthPx || 512) * 2);
+  // A mark never renders wider than a few hundred px on the poster; 768 is
+  // plenty of resolution and keeps the per-pixel passes cheap.
+  const width = Math.min(768, Math.max(384, Math.round(opts.targetWidthPx || 384) * 2));
+  const cacheKey = [
+    opts.inkHex,
+    width,
+    opts.svgText ? `s${cheapHash(opts.svgText)}` : "",
+    opts.bytes?.byteLength ? `b${opts.bytes.byteLength}` : "",
+  ].join("|");
+  const hit = inkCache.get(cacheKey);
+  if (hit) return hit;
+
+  const t0 = Date.now();
   try {
+    let built: { dataUrl: string; aspect: number } | null = null;
     if (opts.svgText) {
       const mono = await rasterizeSvgMono(opts.svgText, opts.inkHex, width);
       if (mono) {
         const img = knockoutAndTrim(await Image.decode(mono));
         const out = await img.encode();
-        return { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
+        built = { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
       }
     }
-    if (opts.bytes && opts.bytes.byteLength) {
+    if (!built && opts.bytes && opts.bytes.byteLength) {
       const img = tintMark(knockoutAndTrim(await Image.decode(opts.bytes)), opts.inkHex);
       const out = await img.encode();
-      return { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
+      built = { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
+    }
+    if (built) {
+      if (inkCache.size > 24) inkCache.clear();
+      inkCache.set(cacheKey, built);
+      console.log(`[logo-compositor] vector ink built in ${Date.now() - t0}ms (w=${width})`);
+      return built;
     }
   } catch (e) {
     console.warn("[logo-compositor] buildVectorInkLogoPng failed", e instanceof Error ? e.message : e);
   }
   return null;
 }
+
 
 
 // Soft radial falloff behind the mark — no rectangle, no hard edge. Used only
