@@ -78,13 +78,20 @@ Deno.serve(async (req) => {
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-  const [{ data: filing }, { data: legal }] = await Promise.all([
+  const [{ data: filing }, { data: legal }, { data: snapshot }] = await Promise.all([
     admin.from("member_filings").select("*").eq("user_id", userId).maybeSingle(),
     admin
       .from("legal_setup_progress")
       .select("*")
       .eq("user_id", userId)
       .is("snapshot_id", null)
+      .maybeSingle(),
+    admin
+      .from("venture_snapshots")
+      .select("city,region,updated_at")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
+      .limit(1)
       .maybeSingle(),
   ]);
 
@@ -93,7 +100,14 @@ Deno.serve(async (req) => {
   const memberName =
     [filing?.legal_first_name, filing?.legal_last_name].filter(Boolean).join(" ") ||
     "[Member Name]";
-  const stateCode: string = (legal?.entity_state || filing?.state || "GA").toUpperCase();
+  // GLOBAL RULE: the venture brief decides the formation state unless the founder overrode it.
+  const stateCode: string = resolveEntityState({
+    savedState: legal?.entity_state,
+    savedSource: legal?.entity_state_source,
+    briefRegion: snapshot?.region,
+    briefCity: snapshot?.city,
+    filingState: filing?.state,
+  }).code;
   const stateInfo = STATE_STATUTES[stateCode] ?? STATE_STATUTES.GA;
   const principalOffice =
     [filing?.address_line1, filing?.city, stateCode, filing?.postal_code]
