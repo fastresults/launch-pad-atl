@@ -322,6 +322,19 @@ Deno.serve(async (req) => {
 
     const isAvatar = asset.kind === "avatar";
 
+    // An avatar without the mark is just a colored square — never ship one
+    // silently. Covers still generate (the logo is composited afterwards), but
+    // the avatar IS the logo, so a missing mark is a hard failure.
+    if (isAvatar && !logoBytes) {
+      return json({
+        error:
+          "Your brand logo could not be loaded, so the avatar would be a blank square. Re-save the mark in Logo Studio, then try again.",
+        code: "LOGO_UNAVAILABLE",
+        reason: logoSkipReason,
+      }, 400);
+    }
+
+
     // --- Canvas plan: pre-decide exact surface/ink/accent/signature hexes ---
     let plan: CanvasPlan;
     if (isAvatar) {
