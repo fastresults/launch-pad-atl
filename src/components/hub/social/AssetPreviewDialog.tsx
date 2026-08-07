@@ -142,7 +142,7 @@ export function AssetPreviewDialog({
             )}
           </div>
 
-          <aside className="space-y-3 border-l border-border bg-card/40 p-4 text-xs">
+          <aside className="min-h-0 space-y-3 overflow-y-auto overscroll-contain border-t border-border bg-card/40 p-4 text-xs md:border-l md:border-t-0">
             <div className="flex flex-wrap gap-1.5">
               {asset.platform && <Badge variant="outline" className="text-[10px]">{asset.platform}</Badge>}
               {asset.assetKind && <Badge variant="outline" className="text-[10px] capitalize">{String(asset.assetKind).replace(/_/g, " ")}</Badge>}
