@@ -86,8 +86,8 @@ export function AssetPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl p-0 overflow-hidden">
-        <DialogHeader className="px-5 pt-5">
+      <DialogContent className="flex max-h-[92dvh] w-[min(1100px,96vw)] max-w-5xl flex-col overflow-hidden p-0">
+        <DialogHeader className="shrink-0 px-5 pt-5 pb-3">
           <DialogTitle className="text-base">{asset.title}</DialogTitle>
           <DialogDescription className="sr-only">
             Preview this generated startup asset, download it, or regenerate it.
@@ -97,8 +97,8 @@ export function AssetPreviewDialog({
           )}
         </DialogHeader>
 
-        <div className="grid gap-0 md:grid-cols-[1fr_280px]">
-          <div className="relative flex items-center justify-center p-4" style={{ background: checker, minHeight: 360 }}>
+        <div className="grid min-h-0 flex-1 gap-0 overflow-y-auto md:grid-cols-[1fr_300px] md:overflow-hidden">
+          <div className="relative flex min-h-0 items-center justify-center overflow-y-auto p-4" style={{ background: checker, minHeight: 280 }}>
             {onPrev && !busy && (
               <button
                 type="button"
@@ -142,7 +142,7 @@ export function AssetPreviewDialog({
             )}
           </div>
 
-          <aside className="space-y-3 border-l border-border bg-card/40 p-4 text-xs">
+          <aside className="min-h-0 space-y-3 overflow-y-auto overscroll-contain border-t border-border bg-card/40 p-4 pb-0 text-xs md:border-l md:border-t-0">
             <div className="flex flex-wrap gap-1.5">
               {asset.platform && <Badge variant="outline" className="text-[10px]">{asset.platform}</Badge>}
               {asset.assetKind && <Badge variant="outline" className="text-[10px] capitalize">{String(asset.assetKind).replace(/_/g, " ")}</Badge>}
@@ -394,7 +394,7 @@ export function AssetPreviewDialog({
               </div>
             )}
 
-            <div className="pt-2 space-y-2 border-t border-border">
+            <div className="sticky bottom-0 -mx-4 space-y-2 border-t border-border bg-card/95 px-4 pb-5 pt-3 backdrop-blur supports-[backdrop-filter]:bg-card/80">
               {asset.url && (
                 <>
                   <Button asChild variant="outline" size="sm" className="w-full justify-start">

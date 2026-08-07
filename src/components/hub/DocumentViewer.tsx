@@ -909,8 +909,8 @@ export function DocumentViewer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] max-w-4xl gap-0 overflow-hidden p-0">
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-white/10 bg-card/95 px-5 py-3 backdrop-blur">
+      <DialogContent className="flex max-h-[88dvh] max-w-4xl flex-col gap-0 overflow-hidden p-0">
+        <div className="z-10 flex shrink-0 items-start justify-between gap-3 border-b border-white/10 bg-card/95 px-5 py-3 backdrop-blur">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-primary" />
@@ -980,7 +980,7 @@ export function DocumentViewer({
           </div>
         </div>
 
-        <div className="max-h-[calc(88vh-72px)] overflow-y-auto bg-gradient-to-b from-background/40 to-transparent">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-gradient-to-b from-background/40 to-transparent">
           <div className="mx-auto mt-4 max-w-[72ch] px-6">
             <div className="group relative overflow-hidden rounded-lg ring-1 ring-white/10">
               <AspectRatio ratio={16 / 9}>

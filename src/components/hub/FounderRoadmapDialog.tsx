@@ -283,14 +283,14 @@ export function FounderRoadmapDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] w-[min(1100px,95vw)] overflow-hidden p-0 sm:max-w-[1100px]">
+      <DialogContent className="flex max-h-[92dvh] w-[min(1100px,95vw)] flex-col overflow-hidden p-0 sm:max-w-[1100px]">
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">
           Review, export, and print the synthesized roadmap for your startup.
         </DialogDescription>
 
         {/* Sticky header */}
-        <div className="flex items-center justify-between gap-3 border-b border-border bg-background/95 px-5 py-3 backdrop-blur">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 px-5 py-3 backdrop-blur">
           <div className="min-w-0">
             <div className="truncate text-base font-semibold">{title}</div>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
@@ -352,9 +352,9 @@ export function FounderRoadmapDialog({
         </div>
 
 
-        <div className="grid h-[calc(92vh-56px)] grid-cols-[220px_1fr] overflow-hidden">
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden md:grid-cols-[220px_1fr]">
           {/* Section nav */}
-          <aside className="hidden overflow-y-auto border-r border-border bg-muted/30 p-4 md:block">
+          <aside className="hidden min-h-0 overflow-y-auto border-r border-border bg-muted/30 p-4 md:block">
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Contents</div>
             <nav className="space-y-1">
               {sections.map((s) => (
@@ -373,7 +373,7 @@ export function FounderRoadmapDialog({
           </aside>
 
           {/* Body */}
-          <div className="overflow-y-auto px-6 py-6 md:px-12 md:py-10">
+          <div className="min-h-0 overflow-y-auto overscroll-contain px-6 py-6 md:px-12 md:py-10">
             <div ref={bodyRef} className="mx-auto max-w-[72ch]">
               {/* Cover band */}
               <div className="relative mb-10 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8">
