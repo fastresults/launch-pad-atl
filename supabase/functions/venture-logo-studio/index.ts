@@ -59,10 +59,12 @@ type Rough = {
   id: string;
   title: string;
   brief: string;
+  change_note?: string;
   path: string;
   url: string | null;
   provider: string;
 };
+
 
 type Step = {
   index: number;
