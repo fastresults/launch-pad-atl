@@ -217,7 +217,14 @@ export function isBrandKitUsable(kit: BrandKitRow | null): boolean {
  * derived ("auto") kits are labelled provisional so the model knows the founder
  * may still revise them. Returns "" when the kit is missing or unusable.
  */
-export function brandKitBlock(kit: BrandKitRow | null): string {
+export function brandLogoUrl(snapshotId: string, variant = "mark"): string {
+  const base = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/$/, "");
+  return variant === "mark"
+    ? `${base}/functions/v1/brand-logo/${snapshotId}`
+    : `${base}/functions/v1/brand-logo/${snapshotId}/${variant}`;
+}
+
+export function brandKitBlock(kit: BrandKitRow | null, snapshotId?: string): string {
   if (!isBrandKitUsable(kit) || !kit) return "";
   const lines: string[] = [];
   const track = kit.dna?.track;
@@ -232,14 +239,37 @@ export function brandKitBlock(kit: BrandKitRow | null): string {
 
   const logos = Array.isArray(kit.logos) ? kit.logos : [];
   const primaryLogo = logos.find((l: any) => l && l.primary) ?? logos[0];
-  if (primaryLogo?.url) {
-    lines.push(`- Primary logo URL: ${primaryLogo.url}`);
-    if (primaryLogo.alt || primaryLogo.title) {
-      lines.push(`  alt: "${primaryLogo.alt ?? primaryLogo.title}"`);
+  if (primaryLogo) {
+    const durable = snapshotId ? brandLogoUrl(snapshotId) : (primaryLogo.public_url ?? primaryLogo.url);
+    if (durable) {
+      lines.push(`- Primary logo URL (PERMANENT — embed exactly this, never a placeholder): ${durable}`);
+      lines.push(`  Markup to use in the site: <img src="${durable}" alt="${primaryLogo.alt ?? primaryLogo.title ?? primaryLogo.direction_name ?? "Logo"}" />`);
+    }
+    if (snapshotId && primaryLogo.variants) {
+      const available = ["horizontal", "stacked", "mono", "knockout"].filter((v) => primaryLogo.variants?.[v]);
+      for (const v of available) {
+        lines.push(`  - ${v} lockup: ${brandLogoUrl(snapshotId, v)}`);
+      }
+    }
+    if (primaryLogo.meaning) lines.push(`  Mark rationale: ${primaryLogo.meaning}`);
+  }
+  const colors = kit.palette?.colors ?? null;
+  if (colors && typeof colors === "object") {
+    lines.push("- Color tokens (exact hex, by role — use as CSS variables):");
+    lines.push("\n| Token | Hex | Use |\n| --- | --- | --- |");
+    for (const [k, v] of Object.entries(colors)) {
+      lines.push(`| \`--${k}\` | ${v} | ${k} |`);
     }
   }
   if (kit.palette) {
-    lines.push(`- Palette (use these exact hex values for every color token, dark mode included):\n\`\`\`json\n${JSON.stringify(kit.palette, null, 2)}\n\`\`\``);
+    lines.push(`- Full palette object (use these exact hex values for every color token, dark mode included):\n\`\`\`json\n${JSON.stringify(kit.palette, null, 2)}\n\`\`\``);
+  }
+  const heading = kit.typography?.heading?.family;
+  const body = kit.typography?.body?.family;
+  if (heading || body) {
+    const fams = [heading, body].filter(Boolean).map((f: string) => `family=${f.replace(/\s+/g, "+")}:wght@400;500;600;700`);
+    lines.push(`- Fonts: headings "${heading ?? body}", body "${body ?? heading}".`);
+    lines.push(`  Google Fonts import: \`<link href="https://fonts.googleapis.com/css2?${fams.join("&")}&display=swap" rel="stylesheet">\``);
   }
   if (kit.typography) {
     lines.push(`- Typography (use these exact Google Fonts for heading + body — do not substitute):\n\`\`\`json\n${JSON.stringify(kit.typography, null, 2)}\n\`\`\``);
