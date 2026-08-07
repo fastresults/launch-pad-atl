@@ -7,6 +7,7 @@ import { Palette, Sparkles, Lock, RotateCcw } from "lucide-react";
 import { getBrandKit, resetBrandKit, upsertBrandKit } from "@/lib/brandKit.functions";
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
 import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
+import { BrandCollateral } from "@/components/hub/brand/BrandCollateral";
 import { SectionHeader } from "@/components/hub/SectionHeader";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/ui/confirm-dialog";
