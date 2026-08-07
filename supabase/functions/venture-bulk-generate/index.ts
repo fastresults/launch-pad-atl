@@ -241,7 +241,7 @@ async function generateOne(
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
   const preamble = compactPreamble(ctx);
 
-  const brandBlock = brandKitBlock(brandKit);
+  const brandBlock = brandKitBlock(brandKit, snapshotId);
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
 
   // Founder's Second Brain corpus, retrieved for this deliverable.
