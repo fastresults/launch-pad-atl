@@ -127,6 +127,16 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {locked && (
+            <Button
+              size="sm"
+              variant={verifiedAt ? "ghost" : "secondary"}
+              onClick={() => { setPendingKinds(undefined); setDetailsOpen(true); }}
+            >
+              <ShieldCheck className={`mr-1 h-3 w-3 ${verifiedAt ? "text-emerald-500" : ""}`} />
+              {verifiedAt ? "Details verified" : "Confirm details"}
+            </Button>
+          )}
           {items.length > 0 && (
             <>
               <Button size="sm" variant="ghost" onClick={onClearAll} disabled={wipe.isPending}>
@@ -137,7 +147,7 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
               </Button>
             </>
           )}
-          <Button size="sm" onClick={() => gen.mutate(undefined)} disabled={!locked || gen.isPending}>
+          <Button size="sm" onClick={() => requestGen(undefined)} disabled={!locked || gen.isPending}>
             {busyKind === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
             Generate all
           </Button>
@@ -149,6 +159,21 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
           Lock your brand kit (palette, typography and a saved vector logo) first — collateral is typeset around the mark.
         </p>
       )}
+
+      {locked && !verifiedAt && (
+        <button
+          type="button"
+          onClick={() => { setPendingKinds(undefined); setDetailsOpen(true); }}
+          className="w-full rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-left text-xs hover:bg-amber-500/10"
+        >
+          <strong>Confirm your details first.</strong> Name, title, email, phone and web address get typeset into
+          every piece — check them once and nothing goes to a printer with a typo.
+          {detailsAudit?.missingRequired?.length
+            ? ` ${detailsAudit.missingRequired.length} required field${detailsAudit.missingRequired.length === 1 ? " is" : "s are"} still blank.`
+            : ""}
+        </button>
+      )}
+
 
       {COLLATERAL_TIERS.map((tier) => (
         <div key={tier.tier} className="space-y-2">
