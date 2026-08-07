@@ -797,7 +797,7 @@ Deno.serve(async (req) => {
     const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // Durable logo stages share the logo preset.
-    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_render_status", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_remove_direction"];
+    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_render_status", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_force_reset", "logo_remove_direction"];
     const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
@@ -937,6 +937,27 @@ Deno.serve(async (req) => {
       await supabase.from("brand_logo_directions").update({ status: "canceled" }).eq("run_id", runId).not("status", "in", '("ready","needs_review")');
       return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Hard reset: kill every in-flight run for this snapshot, drop all logo
+    // directions (leases, retries, half-finished stages) and clear the kit's
+    // logo list, so the studio returns to a clean slate with no ghost spinners.
+    if (kind === "logo_force_reset") {
+      const now = new Date().toISOString();
+      const { data: runs } = await supabase.from("brand_logo_runs").select("id").eq("snapshot_id", snapshotId);
+      const runIds = (runs ?? []).map((r: any) => r.id);
+      let clearedDirections = 0;
+      if (runIds.length) {
+        const { count } = await supabase.from("brand_logo_directions").delete({ count: "exact" }).in("run_id", runIds);
+        clearedDirections = count ?? 0;
+        await supabase.from("brand_logo_runs")
+          .update({ status: "canceled", canceled_at: now, heartbeat_at: now, last_error: null })
+          .in("id", runIds)
+          .not("status", "in", '("completed","completed_with_review","failed","canceled")');
+      }
+      await supabase.from("venture_brand_kits").update({ logos: [] }).eq("snapshot_id", snapshotId);
+      return new Response(JSON.stringify({ ok: true, clearedRuns: runIds.length, clearedDirections }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
 
     if (kind === "logo_remove_direction") {
       if (!runId || !directionId) throw new Error("runId and directionId required");

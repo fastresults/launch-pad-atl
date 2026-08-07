@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy, AlertTriangle, CircleCheck, ExternalLink } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy, AlertTriangle, CircleCheck, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   getBrandKit,
@@ -581,6 +581,28 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     }
   };
 
+  // Escape hatch: a stuck queue (dead leases, spinners that never resolve)
+  // is cleared outright and the provider status re-read from scratch.
+  const [clearing, setClearing] = useState(false);
+  const forceClear = async () => {
+    setClearing(true);
+    try {
+      const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_force_reset" } });
+      setLogos([]);
+      setLogoPhase("idle");
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["brandLogoRun", snapshot.id] }),
+        qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] }),
+        renderStatusQ.refetch(),
+      ]);
+      toast.success(`Queue cleared — ${out?.clearedDirections ?? 0} concept slot(s) removed. Render status refreshed.`);
+    } catch (e: any) {
+      toast.error(e?.message || "Could not clear the logo queue");
+    } finally {
+      setClearing(false);
+    }
+  };
+
   // Concepts that were vectored without a Higgsfield render behind them.
   const fellBack = runDirections.filter(
     (d) => d.render_status && d.render_status !== "ready" && d.render_status !== "pending",
@@ -907,7 +929,18 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                       Top up platform credits <ExternalLink className="h-3 w-3" />
                     </a>
                   )}
+                  <button
+                    type="button"
+                    onClick={forceClear}
+                    disabled={clearing}
+                    className="inline-flex items-center gap-1 font-medium text-destructive underline-offset-2 hover:underline disabled:opacity-50"
+                  >
+                    {clearing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                    {clearing ? "Clearing…" : "Force clear queue & refresh status"}
+                  </button>
+                  <span className="text-[10px] text-muted-foreground">Cancels every run and deletes stuck concepts.</span>
                 </div>
+
               </div>
             </div>
           </div>
