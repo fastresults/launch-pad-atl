@@ -176,7 +176,8 @@ export default function LogoStudio({
 
   const busy =
     start.isPending || answer.isPending || refine.isPending || back.isPending ||
-    approve.isPending || commit.isPending || uploadOwn.isPending;
+    approve.isPending || commit.isPending || uploadOwn.isPending ||
+    approveBrief.isPending || reviseBrief.isPending;
 
   const submitAnswer = (chosenRoughId?: string | null) => {
     const text = [...picked, freeText.trim()].filter(Boolean).join("; ");
@@ -204,14 +205,68 @@ export default function LogoStudio({
           <h3 className="text-sm font-semibold">Logo Studio</h3>
           <p className="text-xs leading-relaxed text-muted-foreground">
             An art director who has already read your venture — your concept, customer, positioning and brand
-            personality. It asks a handful of pointed questions and sketches three marks alongside every answer,
-            so you steer by looking, not by describing. Approve one and it's vectored on the spot, in your colours.
+            personality. It opens with a short written brief proposing one mark. Approve the brief and it draws
+            that mark, then refines it with you one question at a time. Approve the mark and it's vectored on
+            the spot, in your colours.
           </p>
         </div>
         <Button onClick={() => start.mutate()} disabled={start.isPending} size="sm">
           {start.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Wand2 className="mr-1 h-4 w-4" />}
           {start.isPending ? "Reading your venture…" : "Start the design session"}
         </Button>
+      </section>
+    );
+  }
+
+  /* ------------------------------ the brief ------------------------------ */
+
+  if (session.status === "briefing") {
+    return (
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-3">
+          <h3 className="text-sm font-semibold">Logo Studio — the brief</h3>
+          <Button variant="ghost" size="sm" onClick={() => reset.mutate()} disabled={busy || reset.isPending}>
+            <RotateCcw className="mr-1 h-4 w-4" /> Start over
+          </Button>
+        </div>
+
+        <div className="space-y-4 rounded-xl border border-primary/30 bg-primary/5 p-5">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-primary">
+            <PenLine className="h-3.5 w-3.5" /> Design brief
+          </div>
+          <p className="whitespace-pre-line text-sm leading-relaxed">{session.brief?.proposal}</p>
+          {session.brief?.direction?.title && (
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">The mark:</span> {session.brief.direction.title}
+            </p>
+          )}
+
+          <div className="space-y-2 border-t border-white/10 pt-3">
+            <Textarea
+              value={briefNote}
+              onChange={(e) => setBriefNote(e.target.value)}
+              rows={2}
+              disabled={busy}
+              placeholder="Anything to correct before it draws? e.g. we're not playful, we're steady and precise."
+              className="text-sm"
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" disabled={busy} onClick={() => approveBrief.mutate()}>
+                {approveBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
+                {approveBrief.isPending ? "Drawing the first mark…" : "Approve the brief & draw it"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy || !briefNote.trim()}
+                onClick={() => reviseBrief.mutate(briefNote.trim())}
+              >
+                {reviseBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+                Rewrite the brief
+              </Button>
+            </div>
+          </div>
+        </div>
       </section>
     );
   }
@@ -233,6 +288,7 @@ export default function LogoStudio({
           <RotateCcw className="mr-1 h-4 w-4" /> Start over
         </Button>
       </div>
+
 
       {session.last_error && (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[11px] text-amber-200">
