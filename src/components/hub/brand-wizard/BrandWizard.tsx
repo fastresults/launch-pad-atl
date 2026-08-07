@@ -988,7 +988,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div>
             <h3 className="text-sm font-semibold">Logo concepts</h3>
             <p className="text-xs text-muted-foreground">
-              References first: we read the construction of your three inspirations, read what your business actually does from your own copy, then concept, render and judge four marks against both. Vectoring happens only on the mark you approve.
+              References first: we read the construction of your inspiration mark(s), read what your business actually does from your own copy, then concept, render and judge marks against both. Vectoring happens only on the mark you approve.
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
