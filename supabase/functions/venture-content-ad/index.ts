@@ -11,7 +11,7 @@ import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-til
 import { runContrastQa } from "../_shared/image-qa.ts";
 import { placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
-import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
+import { buildContentAdPrompt, specForAspect, resolveAdHeadline, HEADLINE_CAP, type AdAspect } from "../_shared/content-ad-director.ts";
 import { buildContentAdSvgBytes, type PosterLayout } from "../_shared/content-ad-svg.ts";
 import { buildPosterCopy, shortenHeadline } from "../_shared/poster-copy.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
@@ -429,12 +429,13 @@ Deno.serve(async (req) => {
     // The model paints only the photographic plate; the kicker / display
     // headline / CTA lockup is typeset here in real brand fonts.
     const resolvedHeadline = resolveAdHeadline(post.hook, headlineOverride, aspect);
-    const headlineCap = aspect === "1:1" ? 62 : aspect === "4:5" ? 70 : 76;
+    const headlineCap = HEADLINE_CAP[aspect] ?? 52;
     const posterCopy = await buildPosterCopy({
       apiKey,
       brandName: ctx?.company_name ?? kit?.company_name ?? null,
       valueProp: ctx?.value_proposition ?? null,
       headlineCap,
+      // The hook/body are source material — the copy pass writes the headline.
       post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
       headlineOverride: resolvedHeadline.mode === "none"
         ? { mode: "none" }
@@ -442,7 +443,13 @@ Deno.serve(async (req) => {
         ? { mode: "custom", text: resolvedHeadline.text }
         : { mode: "auto" },
     });
-    step("poster copy distilled", { headline: !!posterCopy.headline, truncated: posterCopy.truncated });
+    step("poster copy written", {
+      headline: posterCopy.headline,
+      source: posterCopy.source,
+      issue: posterCopy.headlineIssue ?? null,
+      rationale: posterCopy.rationale ?? null,
+    });
+
 
     const headlineComposited = !!posterCopy.headline;
     const logoComposited = !!(logoSvgText || logoBytes || logoDataUrl);
@@ -494,6 +501,8 @@ Deno.serve(async (req) => {
     (qa as any).poster_layout = posterLayout;
     (qa as any).poster_copy = { ...posterCopy, headline: finalHeadline };
     (qa as any).copy_truncated = posterCopy.truncated;
+    (qa as any).headline_source = posterCopy.source;
+    (qa as any).headline_issue = posterCopy.headlineIssue ?? null;
     Object.assign(qa as any, poster.metrics);
     if (clipped(poster.metrics)) {
       qa.ok = false;
