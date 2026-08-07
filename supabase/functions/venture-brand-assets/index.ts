@@ -1000,32 +1000,71 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, logos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // STAGE 0 — the inspiration gate. Three reference marks are the art
+    // direction; without them the studio was guessing, which is exactly what
+    // produced the previous generation of slop.
     if (kind === "logo_create_run") {
+      const refs = Array.isArray(referenceImages) ? referenceImages.filter((u: any) => typeof u === "string" && u.startsWith("http")) : [];
+      if (refs.length < 3) {
+        return new Response(JSON.stringify({
+          error: "Upload three logos you admire before generating. They set the craft standard for this run.",
+          code: "references_required",
+          have: refs.length,
+        }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       await supabase.from("brand_logo_runs").update({ status: "canceled", canceled_at: new Date().toISOString() }).eq("snapshot_id", snapshotId).not("status", "in", '("completed","completed_with_review","failed","canceled")');
       const { data: previous } = await supabase.from("brand_logo_runs").select("version").eq("snapshot_id", snapshotId).order("version", { ascending: false }).limit(1);
       const version = Number(previous?.[0]?.version ?? 0) + 1;
-      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "developing_brief", requested_count: n, reference_images: referenceImages ?? [], heartbeat_at: new Date().toISOString() }).select().single();
+      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "reading_context", requested_count: n, reference_images: refs, heartbeat_at: new Date().toISOString() }).select().single();
       if (error) throw error;
       return new Response(JSON.stringify({ ok: true, run }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    if (kind === "logo_develop_brief") {
+    // STAGES 1 + 2 — read the references, then read the business. Both are
+    // persisted on the run so every later stage judges against the same spec.
+    if (kind === "logo_read_context" || kind === "logo_develop_brief") {
       if (!runId) throw new Error("runId required");
+      const current = await getRun(runId);
+      if (!current.run) throw new Error("Logo run not found");
+      const refs: string[] = Array.isArray(current.run.reference_images) ? current.run.reference_images : [];
+      if (refs.length < 3) throw new Error("This run has no reference marks. Clear the queue and start again with three reference logos.");
+
       const docsBlock = await loadBrandDocs(supabase, snapshotId);
-      const strategy = await buildBrandStrategy(ctx, tokens, docsBlock);
-      if (!strategy) throw new Error("Creative Director returned no strategy");
-      const { error } = await supabase.from("brand_logo_runs").update({ strategy, status: "developing_directions", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId).eq("snapshot_id", snapshotId);
+      const [craftSpec, businessProfile] = await Promise.all([
+        readReferenceCraftSpec(refs),
+        readBusinessProfile(ctx, tokens, docsBlock),
+      ]);
+      if (!craftSpec) throw new Error("Could not read the reference marks. Re-upload clearer logo images (PNG or JPG, mark clearly visible).");
+      if (!businessProfile) throw new Error("Could not read the business from its own copy. Generate the positioning and messaging assets first.");
+
+      const { error } = await supabase.from("brand_logo_runs").update({
+        craft_spec: craftSpec,
+        business_profile: businessProfile,
+        status: "developing_directions",
+        heartbeat_at: new Date().toISOString(),
+        last_error: null,
+      }).eq("id", runId).eq("snapshot_id", snapshotId);
       if (error) throw error;
-      return new Response(JSON.stringify({ ok: true, strategy }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true, craftSpec, businessProfile }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // STAGE 3 — concepting against both reads.
     if (kind === "logo_develop_directions") {
       if (!runId) throw new Error("runId required");
       const current = await getRun(runId);
       if (!current.run) throw new Error("Logo run not found");
       const docsBlock = await loadBrandDocs(supabase, snapshotId);
       const moodboardImages = await moodboardImageUrls(supabase, kit);
-      const directions = await generateLogoConcepts(ctx, tokens, current.run.requested_count, current.run.strategy as BrandStrategy, docsBlock, current.run.reference_images, moodboardImages);
+      const directions = await generateLogoConcepts(
+        ctx,
+        tokens,
+        current.run.requested_count,
+        (current.run.business_profile ?? null) as BusinessProfile | null,
+        (current.run.craft_spec ?? null) as CraftSpec | null,
+        docsBlock,
+        current.run.reference_images,
+        moodboardImages,
+      );
 
       const rows = directions.map((d, slot) => ({ run_id: runId, snapshot_id: snapshotId, slot, idempotency_key: `${runId}:${slot}`, direction_name: d.direction_name, logo_type: d.logo_type, concept: d, status: "queued", current_stage: "render_concept", render_status: "pending", render_path: null, render_error: null }));
       const { error } = await supabase.from("brand_logo_directions").upsert(rows, { onConflict: "run_id,slot" });
@@ -1033,6 +1072,7 @@ Deno.serve(async (req) => {
       await supabase.from("brand_logo_runs").update({ status: "rendering", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
       return new Response(JSON.stringify({ ok: true, directions }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
 
     // Stage 3 — render the concept as a real designed mark before any vector
     // math happens. This stage never fails a direction: an unavailable provider
