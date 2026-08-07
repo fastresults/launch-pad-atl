@@ -87,17 +87,24 @@ export async function rasterizeSvgToBytes(
   svg: string,
   width = 1024,
   background?: string,
+  fontBuffers?: Uint8Array[],
 ): Promise<Uint8Array | null> {
   try {
     const mod = await getResvg();
     if (!mod) return null;
     const opts: Record<string, unknown> = { fitTo: { mode: "width", value: width } };
     if (background) opts.background = background;
+    // resvg has no @font-face support — real TTF buffers must be handed in or
+    // every <text> node renders as nothing at all.
+    if (fontBuffers?.length) {
+      opts.font = { fontBuffers, loadSystemFonts: false, defaultFontFamily: "BrandBody" };
+    }
     const resvg = new mod.Resvg(svg, opts);
     return new Uint8Array(resvg.render().asPng());
   } catch (e) {
     console.warn("rasterize failed", e instanceof Error ? e.message : e);
     return null;
+
   }
 }
 
