@@ -112,11 +112,22 @@ export default function LogoStudio({
     onError: (e: any) => toast.error(e.message),
   });
 
+  // Approving carries any note still sitting in the box — a typed correction is
+  // never silently dropped on the way to the first drawing.
   const approveBrief = useMutation({
-    mutationFn: () => studio({ action: "approve_brief", snapshotId, sessionId: session?.id }),
+    mutationFn: (instruction?: string) =>
+      studio({ action: "approve_brief", snapshotId, sessionId: session?.id, instruction: instruction ?? "" }),
     onSuccess: (data) => { land(data); setBriefNote(""); toast.success("Drawing your first mark"); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const dropRequirement = useMutation({
+    mutationFn: (requirement: string) =>
+      studio({ action: "drop_requirement", snapshotId, sessionId: session?.id, requirement }),
+    onSuccess: land,
+    onError: (e: any) => toast.error(e.message),
+  });
+
 
 
   const answer = useMutation({
