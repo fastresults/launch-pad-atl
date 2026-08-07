@@ -31,7 +31,10 @@ It claims: ${claimedIdea || "unstated"}
 Craft move claimed: ${craftMove || "unstated"}
 Logo type: ${logoType || "unstated"}
 ${profile ? `Business: ${profile.category}. It must communicate: ${profile.must_communicate}` : ""}
+${profile?.human_truth ? `Human truth behind this business: ${profile.human_truth}` : ""}
+${profile?.emotional_promise ? `Emotional promise it must carry: ${profile.emotional_promise}` : ""}
 ${profile?.cliche_blacklist?.length ? `Banned category clichés: ${profile.cliche_blacklist.join(", ")}` : ""}
+
 ${brand?.palette?.length ? `Locked brand palette it must use: ${brand.palette.join(", ")}` : ""}
 ${brand?.mood ? `Brand visual world: ${brand.mood}` : ""}
 ${spec ? `Reference craft spec it must match: ${spec.construction} construction, abstraction ${spec.abstraction}/5, at most ${spec.element_count} elements, ${spec.colour_count} ink(s), ${spec.shared_quality}` : ""}
