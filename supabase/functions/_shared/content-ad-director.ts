@@ -45,16 +45,42 @@ export function specForAspect(aspect: AdAspect): AssetSpec {
 // Per-aspect soft caps for the on-image headline. The SVG compositor tiers by
 // length (1–4 lines) and shrinks font size, so we allow generous caps here and
 // only trim at natural clause boundaries when a headline is truly excessive.
-const HEADLINE_CAP: Record<AdAspect, number> = { "1:1": 180, "4:5": 200, "9:16": 220 };
+// Display budgets: what actually fits the poster column at a readable size.
+const HEADLINE_CAP: Record<AdAspect, number> = { "1:1": 62, "4:5": 70, "9:16": 76 };
 
 // Length-safe headline sanitizer. Never appends an ellipsis and never chops
 // mid-word. If the raw string exceeds `cap`, prefer trimming at the last clause
 // boundary (comma, em-dash, colon, semicolon) inside the cap; otherwise back off
 // to the last whole-word boundary. The SVG layer handles wrapping/sizing.
+export const DANGLING_WORDS = new Set([
+  "a", "an", "the", "and", "or", "but", "nor", "so", "yet", "of", "to", "in", "on", "at", "by",
+  "for", "with", "from", "into", "onto", "over", "under", "about", "as", "than", "that", "which",
+  "who", "whom", "whose", "is", "are", "was", "were", "be", "been", "being", "has", "have", "had",
+  "will", "would", "can", "could", "should", "may", "might", "must", "do", "does", "did", "your",
+  "our", "their", "its", "his", "her", "my", "not", "no", "if", "when", "while", "because", "how",
+  "why", "what", "you", "we", "they", "it",
+]);
+
+/** Drop trailing function words so a shortened line never ends mid-thought. */
+export function trimDangling(s: string): string {
+  let out = s.replace(/[\s,;:.!?\-–—("']+$/g, "");
+  for (let i = 0; i < 4; i++) {
+    const words = out.split(/\s+/).filter(Boolean);
+    if (words.length <= 2) break;
+    const last = words[words.length - 1].toLowerCase().replace(/[^a-z'’-]/g, "");
+    if (!DANGLING_WORDS.has(last)) break;
+    out = words.slice(0, -1).join(" ");
+  }
+  return out.replace(/[\s,;:.!?\-–—("']+$/g, "");
+}
+
 export function truncateHeadline(raw: string, cap: number): string {
   const s = (raw || "").trim().replace(/\s+/g, " ");
-  if (s.length <= cap) return s;
+  if (s.length <= cap) return trimDangling(s);
   const hard = s.slice(0, cap);
+  // Prefer a full sentence, then a clause boundary, then a whole word.
+  const sentence = Math.max(hard.lastIndexOf(". "), hard.lastIndexOf("? "), hard.lastIndexOf("! "));
+  if (sentence >= Math.floor(cap * 0.4)) return trimDangling(hard.slice(0, sentence));
   const clause = Math.max(
     hard.lastIndexOf(", "),
     hard.lastIndexOf(" — "),
@@ -62,12 +88,10 @@ export function truncateHeadline(raw: string, cap: number): string {
     hard.lastIndexOf(": "),
     hard.lastIndexOf("; "),
   );
-  if (clause >= Math.floor(cap * 0.5)) {
-    return hard.slice(0, clause).replace(/[\s,;:.!?\-–—(]+$/g, "");
-  }
+  if (clause >= Math.floor(cap * 0.5)) return trimDangling(hard.slice(0, clause));
   const lastSpace = hard.lastIndexOf(" ");
   const stem = lastSpace >= Math.floor(cap * 0.5) ? hard.slice(0, lastSpace) : hard;
-  return stem.replace(/[\s,;:.!?\-–—(]+$/g, "");
+  return trimDangling(stem);
 }
 
 // Resolve the headline the ad should carry. Rules:
