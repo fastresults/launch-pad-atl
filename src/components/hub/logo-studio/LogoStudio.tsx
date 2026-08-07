@@ -596,3 +596,77 @@ export default function LogoStudio({
     </section>
   );
 }
+
+/**
+ * The standing instructions the founder has given. Every one of these is
+ * re-sent to the art director and the image model on every redraw, so they
+ * stay visible and retractable.
+ */
+function RequirementLedger({
+  requirements,
+  busy,
+  onDrop,
+}: {
+  requirements: string[];
+  busy: boolean;
+  onDrop: (requirement: string) => void;
+}) {
+  if (!requirements.length) return null;
+  return (
+    <div className="space-y-1.5 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+        Locked in — carried into every redraw
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {requirements.map((requirement) => (
+          <span
+            key={requirement}
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] text-foreground"
+          >
+            {requirement}
+            <button
+              type="button"
+              disabled={busy}
+              aria-label={`Remove requirement: ${requirement}`}
+              className="text-muted-foreground transition hover:text-foreground disabled:opacity-40"
+              onClick={() => onDrop(requirement)}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A live horizontal lockup so a "company name to the right" request is answered
+ * with real typesetting rather than letters hallucinated inside the symbol.
+ */
+function LockupPreview({
+  markUrl,
+  name,
+  font,
+}: {
+  markUrl: string | null;
+  name: string;
+  font: string | null;
+}) {
+  if (!markUrl || !name) return null;
+  return (
+    <div className="border-t border-white/10 bg-white px-4 py-3">
+      <div className="flex items-center gap-3">
+        <img src={markUrl} alt="" className="h-10 w-10 shrink-0 object-contain" />
+        <span
+          className="truncate text-lg font-semibold leading-none tracking-tight text-neutral-900"
+          style={font ? { fontFamily: `${font}, sans-serif` } : undefined}
+        >
+          {name}
+        </span>
+      </div>
+      <p className="mt-2 text-[10px] uppercase tracking-wider text-neutral-400">Horizontal lockup preview</p>
+    </div>
+  );
+}
+
