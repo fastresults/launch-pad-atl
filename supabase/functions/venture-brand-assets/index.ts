@@ -31,8 +31,11 @@ import { fontStackFor, outlineWordmark } from "../_shared/logo-type.ts";
 import { rasterizeSvg } from "../_shared/logo-raster.ts";
 import {
   HiggsfieldError,
+  checkHiggsfieldAuth,
   fetchRenderBytes,
   higgsfieldConfigured,
+  isCreditExhaustion,
+  probeHiggsfield,
   renderLogoConcept,
 } from "../_shared/higgsfield.ts";
 import {
