@@ -174,9 +174,53 @@ export async function fetchRenderBytes(url: string): Promise<Uint8Array> {
   return new Uint8Array(await res.arrayBuffer());
 }
 
+export type HiggsfieldAuthState = "not_configured" | "ok" | "invalid" | "unreachable";
+
+export interface HiggsfieldAuthCheck {
+  state: HiggsfieldAuthState;
+  detail: string | null;
+}
+
 /**
- * Cheap reachability + entitlement probe. Returns a human-readable reason when
- * Higgsfield cannot be used right now, or null when it is good to go.
+ * FREE credential probe — costs no render credits.
+ *
+ * The platform exposes no balance endpoint (every /v1/credits-style path 404s),
+ * so the only free signal is whether auth passes. We GET a job-set that cannot
+ * exist: valid credentials answer 404 "Job set not found", missing or wrong
+ * credentials answer 401/422. Credit state is NOT observable here — it only
+ * shows up when a real render is submitted, so the UI reports credits from the
+ * last actual render outcome instead of guessing.
+ */
+export async function checkHiggsfieldAuth(): Promise<HiggsfieldAuthCheck> {
+  if (!higgsfieldConfigured()) {
+    return { state: "not_configured", detail: "Higgsfield API key and secret are not set." };
+  }
+  const probeId = "00000000-0000-0000-0000-000000000000";
+  try {
+    const res = await aiFetch(`${BASE}/v1/job-sets/${probeId}`, { method: "GET", headers: headers() }, {
+      timeoutMs: 15_000,
+      retries: 1,
+    });
+    if (res.status === 404) return { state: "ok", detail: null };
+    if (res.status === 401 || res.status === 422) {
+      return { state: "invalid", detail: "Higgsfield rejected the API key or secret." };
+    }
+    if (res.ok) return { state: "ok", detail: null };
+    return { state: "unreachable", detail: `Higgsfield returned ${res.status}.` };
+  } catch (e) {
+    return { state: "unreachable", detail: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/** True when an error string is Higgsfield telling us the API wallet is empty. */
+export function isCreditExhaustion(message: string): boolean {
+  return /not enough credits|insufficient credits/i.test(message);
+}
+
+/**
+ * PAID probe — submits a real render and therefore spends one credit when the
+ * wallet is funded. Only call this from an explicit user action.
+ * Returns a human-readable reason, or null when Higgsfield is good to go.
  */
 export async function probeHiggsfield(): Promise<string | null> {
   if (!higgsfieldConfigured()) return "Higgsfield credentials are not configured.";
