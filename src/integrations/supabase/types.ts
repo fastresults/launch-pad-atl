@@ -950,6 +950,11 @@ export type Database = {
           lease_token: string | null
           logo_type: string | null
           preview_path: string | null
+          render_error: string | null
+          render_job_id: string | null
+          render_path: string | null
+          render_provider: string | null
+          render_status: string
           retry_at: string | null
           review_attempts: number
           review_note: string | null
@@ -979,6 +984,11 @@ export type Database = {
           lease_token?: string | null
           logo_type?: string | null
           preview_path?: string | null
+          render_error?: string | null
+          render_job_id?: string | null
+          render_path?: string | null
+          render_provider?: string | null
+          render_status?: string
           retry_at?: string | null
           review_attempts?: number
           review_note?: string | null
@@ -1008,6 +1018,11 @@ export type Database = {
           lease_token?: string | null
           logo_type?: string | null
           preview_path?: string | null
+          render_error?: string | null
+          render_job_id?: string | null
+          render_path?: string | null
+          render_provider?: string | null
+          render_status?: string
           retry_at?: string | null
           review_attempts?: number
           review_note?: string | null

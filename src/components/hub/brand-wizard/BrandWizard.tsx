@@ -544,7 +544,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "drawing">("idle");
+  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "rendering" | "drawing">("idle");
   const logoRunQ = useQuery({
     queryKey: ["brandLogoRun", snapshot.id],
     queryFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run" } }),
@@ -575,6 +575,23 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_directions", runId: run.id } });
       state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     }
+    // Render each concept as a real designed mark before tracing it to vector.
+    // This stage self-heals: a direction whose render is unavailable advances to
+    // drawing anyway, so the loop below never blocks on the image provider.
+    const pending = (state.directions ?? []).filter(
+      (d: any) => d.current_stage === "render_concept" && !["ready", "needs_review", "canceled"].includes(d.status),
+    );
+    if (pending.length) {
+      setLogoPhase("rendering");
+      for (let i = 0; i < pending.length; i += 2) {
+        await Promise.allSettled(pending.slice(i, i + 2).map((d: any) =>
+          generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_concept", runId: run.id, directionId: d.id } })
+        ));
+        await logoRunQ.refetch();
+      }
+      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+    }
+
     setLogoPhase("drawing");
     for (let round = 0; round < 3; round++) {
       const work = (state.directions ?? []).filter((d: any) => !["ready", "needs_review", "canceled"].includes(d.status) && Number(d.attempt_count ?? 0) < 3);
@@ -787,7 +804,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div className="flex flex-col items-end gap-1">
             <Button onClick={() => runBusy ? resumeLogos.mutate() : genLogos.mutate()} disabled={genLogos.isPending || resumeLogos.isPending || !gatePassed} size="sm">
               {(genLogos.isPending || resumeLogos.isPending) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-              {logoPhase === "brief" ? "Writing the brief…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : "Generate 4 logo directions"}
+              {logoPhase === "brief" ? "Writing the brief…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "rendering" ? "Art-directing the marks…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : "Generate 4 logo directions"}
             </Button>
             {(genLogos.isPending || resumeLogos.isPending || runBusy) && (
               <span className="text-[10px] text-muted-foreground">Progress is saved. You can close this window and resume later.</span>

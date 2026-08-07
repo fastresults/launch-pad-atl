@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     const { data: staleLogoDirections } = await supabase
       .from("brand_logo_directions")
       .select("id, run_id, snapshot_id")
-      .in("status", ["developing_vector", "drawing", "reviewing"])
+      .in("status", ["developing_vector", "drawing", "reviewing", "rendering_concept"])
       .lt("lease_expires_at", now);
     if (staleLogoDirections?.length) {
       await supabase.from("brand_logo_directions").update({
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
         callLogoStage(run.snapshot_id, "logo_develop_directions", run.id);
       } else {
         const { data: next } = await supabase.from("brand_logo_directions")
-          .select("id")
+          .select("id, current_stage")
           .eq("run_id", run.id)
           .in("status", ["queued", "retry_wait"])
           .lt("attempt_count", 3)
@@ -146,7 +146,12 @@ Deno.serve(async (req) => {
           .order("slot")
           .limit(1)
           .maybeSingle();
-        if (next) callLogoStage(run.snapshot_id, "logo_draw_vector", run.id, next.id);
+        // Resume the exact stage the direction stopped on, so a stalled render
+        // is not silently skipped straight into the vector step.
+        if (next) {
+          const stage = next.current_stage === "render_concept" ? "logo_render_concept" : "logo_draw_vector";
+          callLogoStage(run.snapshot_id, stage, run.id, next.id);
+        }
       }
     }
 

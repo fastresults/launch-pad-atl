@@ -3,11 +3,19 @@
 // grounded in the FULL venture context (snapshot + brief + sources + brain)
 // and the wizard's locked palette/typography/personality.
 //
-// LOGOS use a two-stage Creative Director → Designer pipeline:
-//   Stage 1: a chat model (multimodal with reference logos) produces a
-//            structured logo design brief with 4 distinct directions.
-//   Stage 2: each direction is rendered as its own image with a long,
-//            art-directed prompt.
+// LOGOS use a durable, art-directed pipeline of atomic stages:
+//   Stage 1 (brief):     a chat model produces the brand strategy.
+//   Stage 2 (concepts):  four distinct directions are written as briefs.
+//   Stage 3 (render):    Higgsfield renders each direction as a real designed
+//                        mark. This is what stops output looking auto-generated
+//                        — the vector step then has a target to reproduce
+//                        instead of inventing geometry from a text brief.
+//   Stage 4 (vector):    the approved render is traced into clean SVG paths.
+//   Stage 5 (jury):      a vision model judges the finished mark and can fail
+//                        it back into the retry engine.
+// Stage 3 degrades gracefully: if Higgsfield is unreachable or out of API
+// credits, the direction falls through to drawing from the brief alone and
+// records why on the row.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
@@ -21,6 +29,17 @@ import {
 } from "../_shared/logo-geometry.ts";
 import { fontStackFor, outlineWordmark } from "../_shared/logo-type.ts";
 import { rasterizeSvg } from "../_shared/logo-raster.ts";
+import {
+  HiggsfieldError,
+  fetchRenderBytes,
+  higgsfieldConfigured,
+  renderLogoConcept,
+} from "../_shared/higgsfield.ts";
+import {
+  buildLogoRenderPrompt,
+  logoNegativePrompt,
+  seedForConcept,
+} from "../_shared/logo-render-prompt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -498,8 +517,21 @@ function drawInstruction(
   companyName: string,
   wantsType: boolean,
   fixNotes: string[],
+  hasRender = false,
 ): string {
-  return `Draw the approved direction below as a finished 1000×1000 vector mark. You are drawing, not assembling — the result has to look like a designer's hand made it.
+  return `${hasRender
+    ? `Reproduce the approved mark in the attached image as a finished 1000×1000 vector. The image is the design decision — it has already been approved. Your job is faithful reconstruction in clean paths, NOT reinterpretation.
+
+HOW TO TRACE IT
+- Match the silhouette, proportion, counterforms, and stroke rhythm of the attached image as closely as the primitive vocabulary allows.
+- Where the raster is soft or imprecise, resolve it into the cleanest confident curve — tighten the drawing, never redesign it.
+- Ignore any anti-aliasing artefacts, background texture, or stray marks in the image.
+- If the image contains lettering, do NOT trace it; reproduce the symbol only.
+- Keep the same visual weight and optical balance. Do not add elements the image does not have, and do not remove any it does.
+
+The written direction below is context for what the mark means — the image outranks it wherever they disagree.`
+    : `Draw the approved direction below as a finished 1000×1000 vector mark. You are drawing, not assembling — the result has to look like a designer's hand made it.`}
+
 
 ${dossier}
 
@@ -553,16 +585,25 @@ async function developVectorSpec(
   tokens: any,
   dossier: string,
   reviewNote?: string,
+  renderUrl?: string | null,
 ): Promise<{ spec: VectorSpec; lint: ReturnType<typeof lintVectorSpec> }> {
   const companyName = String(ctx?.snap?.company_name ?? "").trim();
   const wantsType = /wordmark|lettermark|monogram|combination|emblem/i.test(d.logo_type ?? "");
   const fixNotes = reviewNote ? [reviewNote] : [];
   let best: { spec: VectorSpec; lint: ReturnType<typeof lintVectorSpec> } | null = null;
+  const hasRender = typeof renderUrl === "string" && renderUrl.length > 0;
 
   for (let pass = 0; pass < 2; pass++) {
+    const instruction = drawInstruction(d, dossier, companyName, wantsType, fixNotes, hasRender);
+    const userContent = hasRender
+      ? [
+          { type: "text", text: instruction },
+          { type: "image_url", image_url: { url: renderUrl } },
+        ]
+      : instruction;
     const normalized = await requestVectorResponse([
       { role: "system", content: DRAW_SYSTEM },
-      { role: "user", content: drawInstruction(d, dossier, companyName, wantsType, fixNotes) },
+      { role: "user", content: userContent },
     ]);
     const parsed = normalized.root;
     const primitives = normalized.primitives;
@@ -753,7 +794,7 @@ Deno.serve(async (req) => {
     const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // Durable logo stages share the logo preset.
-    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_remove_direction"];
+    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_remove_direction"];
     const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
@@ -857,12 +898,114 @@ Deno.serve(async (req) => {
       const moodboardImages = await moodboardImageUrls(supabase, kit);
       const directions = await generateLogoConcepts(ctx, tokens, current.run.requested_count, current.run.strategy as BrandStrategy, docsBlock, current.run.reference_images, moodboardImages);
 
-      const rows = directions.map((d, slot) => ({ run_id: runId, snapshot_id: snapshotId, slot, idempotency_key: `${runId}:${slot}`, direction_name: d.direction_name, logo_type: d.logo_type, concept: d, status: "queued", current_stage: "develop_vector" }));
+      const rows = directions.map((d, slot) => ({ run_id: runId, snapshot_id: snapshotId, slot, idempotency_key: `${runId}:${slot}`, direction_name: d.direction_name, logo_type: d.logo_type, concept: d, status: "queued", current_stage: "render_concept", render_status: "pending", render_path: null, render_error: null }));
       const { error } = await supabase.from("brand_logo_directions").upsert(rows, { onConflict: "run_id,slot" });
       if (error) throw error;
       await supabase.from("brand_logo_runs").update({ status: "rendering", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
       return new Response(JSON.stringify({ ok: true, directions }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Stage 3 — render the concept as a real designed mark before any vector
+    // math happens. This stage never fails a direction: an unavailable provider
+    // records why and hands the direction to the vector stage regardless, so a
+    // Higgsfield outage degrades quality rather than breaking the run.
+    if (kind === "logo_render_concept") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      const run = current.run;
+      const row = current.directions.find((item: any) => item.id === directionId);
+      if (!run || !row) throw new Error("Logo direction not found");
+
+      const advance = async (patch: Record<string, unknown>) => {
+        await supabase.from("brand_logo_directions").update({
+          current_stage: "develop_vector",
+          status: "queued",
+          lease_token: null,
+          lease_expires_at: null,
+          ...patch,
+        }).eq("id", directionId);
+        await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString() }).eq("id", runId);
+      };
+
+      // Already rendered, or already past this stage — nothing to do.
+      if (row.render_path || (row.current_stage !== "render_concept" && kind === "logo_render_concept" && row.render_status !== "pending")) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Concept already rendered" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      if (!higgsfieldConfigured()) {
+        await advance({ render_status: "unavailable", render_error: "Higgsfield credentials are not configured." });
+        return new Response(JSON.stringify({ ok: true, rendered: false, reason: "not_configured" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const leaseToken = crypto.randomUUID();
+      const { data: claimed } = await supabase.from("brand_logo_directions").update({
+        status: "rendering_concept",
+        render_status: "rendering",
+        lease_token: leaseToken,
+        lease_expires_at: new Date(Date.now() + 3 * 60 * 1000).toISOString(),
+      }).eq("id", directionId).in("status", ["queued", "retry_wait", "failed"]).select("id").maybeSingle();
+      if (!claimed) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Direction is already being processed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
+
+      const strategy = (run.strategy ?? null) as BrandStrategy | null;
+      const concept = (row.concept ?? {}) as any;
+      const prompt = buildLogoRenderPrompt(
+        {
+          name: row.direction_name,
+          humanTruth: concept.human_link || strategy?.human_truth,
+          craftMove: concept.craft_move || concept.geometric_operation,
+          imagery: concept.symbol_concept || concept.one_line_idea,
+          mood: concept.why_memorable,
+        },
+        {
+          brandName: snap.company_name ?? undefined,
+          positioning: strategy?.core_idea ?? ctx?.snap?.one_liner ?? undefined,
+          palette: Array.isArray(tokens?.colors)
+            ? tokens.colors
+            : Object.values(tokens?.colors ?? {}).filter((v): v is string => typeof v === "string"),
+          moodboard: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
+          personality: Array.isArray(kit?.dna?.personality) ? kit.dna.personality : undefined,
+        },
+      );
+
+      try {
+        const render = await renderLogoConcept({
+          prompt,
+          negativePrompt: logoNegativePrompt(),
+          seed: seedForConcept(directionId),
+        });
+        const bytes = await fetchRenderBytes(render.imageUrl);
+        const path = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
+        const { error: upErr } = await supabase.storage.from("user-media")
+          .upload(path, bytes, { contentType: "image/png", upsert: true });
+        if (upErr) throw upErr;
+
+        await advance({
+          render_status: "ready",
+          render_path: path,
+          render_provider: "higgsfield",
+          render_job_id: render.jobId,
+          render_error: null,
+        });
+        return new Response(JSON.stringify({ ok: true, rendered: true, path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (error) {
+        // Terminal provider problems (no credits, bad key) must not burn the
+        // direction's three attempts — fall through to the brief-only path.
+        const terminal = error instanceof HiggsfieldError && error.terminal;
+        const message = errorMessage(error);
+        await advance({
+          render_status: terminal ? "unavailable" : "failed",
+          render_error: message.slice(0, 500),
+          render_provider: "higgsfield",
+        });
+        console.warn("logo render skipped", message);
+        return new Response(JSON.stringify({ ok: true, rendered: false, reason: message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
+
 
     if (kind === "logo_draw_vector" || kind === "logo_retry_direction") {
       if (!runId || !directionId) throw new Error("runId and directionId required");
@@ -886,7 +1029,16 @@ Deno.serve(async (req) => {
         const strategy = (run.strategy ?? null) as BrandStrategy | null;
         const dossier = buildDossier(ctx, tokens, strategy, docsBlock);
 
-        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, strategy, ctx, tokens, dossier, reviewNote ?? row.review_note ?? undefined);
+        // When stage 3 produced a render, the vector model traces it instead of
+        // inventing geometry from the written brief.
+        let renderUrl: string | null = null;
+        if (row.render_path) {
+          const { data: signedRender } = await supabase.storage.from("user-media")
+            .createSignedUrl(row.render_path, 60 * 30);
+          renderUrl = signedRender?.signedUrl ?? null;
+        }
+
+        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, strategy, ctx, tokens, dossier, reviewNote ?? row.review_note ?? undefined, renderUrl);
         const variants = await buildLogoVariants(spec, tokens, companyName);
 
         const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, variants.mark, "mark");
@@ -939,6 +1091,9 @@ Deno.serve(async (req) => {
             wordmark_font: variants.wordmark_family,
           },
           direction_name: row.direction_name, logo_type: row.logo_type,
+          render: row.render_path
+            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "higgsfield" }
+            : null,
           human_link: row.concept?.human_link ?? "",
           craft_move: row.concept?.craft_move ?? row.concept?.geometric_operation ?? "",
           one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
