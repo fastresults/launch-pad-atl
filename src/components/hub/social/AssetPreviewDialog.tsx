@@ -228,9 +228,26 @@ export function AssetPreviewDialog({
                       {typeof asset.qaNotes?.longest_line_pct === "number"
                         ? ` · widest line ${asset.qaNotes.longest_line_pct}% of column`
                         : ""}
-                      {asset.qaNotes?.copy_truncated ? " · copy shortened" : ""}
                     </div>
                   )}
+                  {asset.qaNotes?.headline_source && (
+                    <div
+                      className={`mt-1 text-[10px] ${
+                        asset.qaNotes.headline_source === "fallback" ? "text-amber-600" : "text-muted-foreground"
+                      }`}
+                    >
+                      Headline:{" "}
+                      {asset.qaNotes.headline_source === "written"
+                        ? "written by the copywriter"
+                        : asset.qaNotes.headline_source === "founder"
+                        ? "your custom text"
+                        : asset.qaNotes.headline_source === "none"
+                        ? "suppressed"
+                        : "fallback (trimmed from the post)"}
+                      {asset.qaNotes.headline_issue ? ` · ${asset.qaNotes.headline_issue}` : ""}
+                    </div>
+                  )}
+
 
 
 
