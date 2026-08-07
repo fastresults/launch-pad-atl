@@ -16,7 +16,7 @@ import { invokeEdge } from "@/lib/edge-invoke";
  * question. The rough they approve is the artwork that gets vectored.
  */
 
-type Rough = { id: string; title: string; brief: string; url: string | null; provider: string };
+type Rough = { id: string; title: string; brief: string; change_note?: string; url: string | null; provider: string };
 type Step = {
   index: number;
   question: string;
@@ -34,13 +34,23 @@ type Step = {
 type Session = {
   id: string;
   status: "briefing" | "interviewing" | "approved" | "committed";
-  brief: { summary?: string; proposal?: string; direction?: { title: string; render_brief: string } } | null;
+  brief: {
+    summary?: string;
+    proposal?: string;
+    direction?: { title: string; render_brief: string };
+    requirements?: string[];
+  } | null;
   steps: Step[];
   approved_rough: Rough | null;
   vector_svg: string | null;
   traced: boolean | null;
   last_error: string | null;
+  brand?: { companyName: string; headingFont: string | null; primary: string | null } | null;
 };
+
+/** True when the founder has asked for the company name to sit beside the symbol. */
+const LOCKUP_RE = /\b(wordmark|company name|text to the|type to the|lockup|name beside|letters beside|name to the right)\b/i;
+
 
 
 async function studio(payload: Record<string, unknown>): Promise<any> {
