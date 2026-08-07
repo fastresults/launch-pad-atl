@@ -18,8 +18,24 @@ export function edgeStatus(err: any): number | null {
  * Prefer this over raw `err.message` in toasts on the Content Hub.
  */
 export function edgeErrorMessage(err: any, fallback = "Something went wrong. Please try again."): string {
+  const code = (err as any)?.code;
+  if (code === "UPSTREAM_TIMEOUT") {
+    return "The image model took too long. Retry — it usually succeeds on the second pass.";
+  }
+  if (code === "WORKER_LIMIT" || code === "RENDER_TIMEOUT") {
+    return "The render ran out of time. Retry — we'll finish it with a lighter pass.";
+  }
+  if (code === "PAYMENT_REQUIRED" || code === "AI_CREDIT_LIMIT_REACHED") {
+    return "AI credits are exhausted for this workspace. Add credits and retry.";
+  }
+  if (code === "BRAND_NOT_LOCKED") {
+    return "Lock the Brand Wizard before generating ads.";
+  }
   const status = edgeStatus(err);
   if (status === 401) {
+    return "Your session expired. Please sign in again and retry.";
+  }
+
     return "Your session expired. Please sign in again and retry.";
   }
   if (status === 403) {
