@@ -8,13 +8,14 @@ import { ShareSection } from "@/components/share/ShareSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Loader2, Lock, Menu } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Lock, Menu } from "lucide-react";
 
 export default function VentureSharePage() {
   const { token = "" } = useParams();
   const [password, setPassword] = useState("");
   const [submitted, setSubmitted] = useState<string | undefined>(undefined);
   const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [navOpen, setNavOpen] = useState(false);
   const tracked = useRef(false);
 
   const q = useQuery({
