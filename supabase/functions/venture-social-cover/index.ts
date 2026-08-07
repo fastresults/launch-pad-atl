@@ -19,6 +19,8 @@ import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
+import { compositeHeadline, type AdAspect } from "../_shared/headline-compositor.ts";
+import { PNG } from "npm:pngjs@7.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,6 +69,22 @@ function b64ToBytes(b64: string): Uint8Array {
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
+
+// Flat single-color PNG — used for deterministic avatars (brand surface, then
+// the real logo composited on top).
+function solidPngBytes(width: number, height: number, hex: string): Uint8Array {
+  const h = String(hex || "#0B0F19").replace("#", "");
+  const ok = /^[0-9a-fA-F]{6}$/.test(h) ? h : "0B0F19";
+  const r = parseInt(ok.slice(0, 2), 16);
+  const g = parseInt(ok.slice(2, 4), 16);
+  const b = parseInt(ok.slice(4, 6), 16);
+  const png = new PNG({ width, height });
+  for (let i = 0; i < png.data.length; i += 4) {
+    png.data[i] = r; png.data[i + 1] = g; png.data[i + 2] = b; png.data[i + 3] = 255;
+  }
+  return new Uint8Array(PNG.sync.write(png));
+}
+
 
 function bytesToB64(bytes: Uint8Array): string {
   let s = "";
@@ -129,7 +147,9 @@ async function callMultimodal(
   return b64;
 }
 
-// Fallback: text-only OpenAI image gen at medium quality.
+// Fallback: text-only OpenAI image gen. This path CANNOT see the logo or the
+// palette tile, so the caller appends an inline palette description and we run
+// it at high quality — a fallback render still has to be shippable.
 async function callTextOnly(prompt: string, size: string, apiKey: string): Promise<string> {
   const res = await fetch(AI_GATEWAY, {
     method: "POST",
@@ -138,7 +158,7 @@ async function callTextOnly(prompt: string, size: string, apiKey: string): Promi
       model: MODEL_FALLBACK,
       prompt,
       size,
-      quality: "medium",
+      quality: "high",
       n: 1,
     }),
   });
@@ -377,6 +397,14 @@ Deno.serve(async (req) => {
     // and the model returns a near-duplicate image).
     const variationSeed = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
 
+    // Server-rendered headline: the model paints ZERO glyphs and reserves the
+    // top band; we typeset the founder's headline afterwards in real type.
+    // This is the only way to guarantee correct spelling.
+    const serverHeadline =
+      !isAvatar && headlineOverride?.mode === "custom" && (headlineOverride.text ?? "").trim()
+        ? (headlineOverride.text ?? "").trim()
+        : "";
+
     const buildPrompt = (retryNote?: string) =>
       isAvatar
         ? buildAvatarPrompt({
@@ -400,24 +428,54 @@ Deno.serve(async (req) => {
             variationSeed,
             headlineOverride,
             logoZone: logoZoneHint,
+            serverRenderedHeadline: true,
           });
+
+    // The text-only fallback never sees the palette tile or the logo, so spell
+    // the palette out inline for that path.
+    const inlinePalette = [
+      "",
+      "## Palette (no reference images available on this path — obey these hexes literally)",
+      `- Background surface: ${plan.surface}`,
+      `- Ink / marks: ${plan.ink}`,
+      `- Signature brand color (must be a confident visible shape): ${plan.displaySignature}`,
+      `- Accent, used sparingly: ${plan.accent}`,
+      "- Use no other colors. No gradients between them. Zero lettering of any kind.",
+      "",
+    ].join("\n");
+
+    let usedFallback = false;
 
     const generate = async (retryNote?: string) => {
       const prompt = buildPrompt(retryNote);
       const refs = [logoDataUrl, paletteTileDataUrl].filter(Boolean) as string[];
+      const runFallback = async () => {
+        usedFallback = true;
+        return await callTextOnly(prompt + inlinePalette, asset.modelSize, apiKey);
+      };
       try {
         if (refs.length) {
-          const b64 = await callMultimodal(prompt, refs, apiKey);
-          return { b64, modelUsed: MODEL_MULTIMODAL, prompt };
+          try {
+            const b64 = await callMultimodal(prompt, refs, apiKey);
+            return { b64, modelUsed: MODEL_MULTIMODAL, prompt };
+          } catch (e: any) {
+            const status = e?.status;
+            // One retry on a transient upstream failure before dropping to the
+            // blind, lower-fidelity fallback model.
+            if ([401, 402, 403, 429].includes(status)) throw e;
+            console.warn("[social-cover] multimodal failed, retrying once", status, e?.message);
+            const b64 = await callMultimodal(prompt, refs, apiKey);
+            return { b64, modelUsed: MODEL_MULTIMODAL + " (retry)", prompt };
+          }
         }
-        const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+        const b64 = await runFallback();
         return { b64, modelUsed: MODEL_FALLBACK, prompt };
       } catch (e: any) {
         const status = e?.status;
         // Do not mask billing/auth/rate-limit errors by making a second fallback
         // request; preserve the real gateway message for the UI.
         if (refs.length && ![401, 402, 403, 429].includes(status)) {
-          const b64 = await callTextOnly(prompt, asset.modelSize, apiKey);
+          const b64 = await runFallback();
           return { b64, modelUsed: MODEL_FALLBACK + " (multimodal fallback)", prompt };
         }
         throw e;
@@ -426,7 +484,17 @@ Deno.serve(async (req) => {
 
     let result: { b64: string; modelUsed: string; prompt: string };
     try {
-      result = await generate();
+      if (isAvatar) {
+        // Avatars are deterministic: a flat brand surface plus the real mark,
+        // composited below. No model call — nothing for it to get wrong.
+        result = {
+          b64: bytesToB64(solidPngBytes(asset.width, asset.height, plan.surface)),
+          modelUsed: "deterministic (flat brand surface + composited mark)",
+          prompt: buildPrompt(),
+        };
+      } else {
+        result = await generate();
+      }
     } catch (e: any) {
       const status = e?.status;
       const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: status };
@@ -506,6 +574,22 @@ Deno.serve(async (req) => {
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
     if (!logoComposited && logoSkipReason) (qa as any).logo_skipped = logoSkipReason;
+    (qa as any).used_fallback = usedFallback;
+
+    // --- Server-rendered headline: real typography, correctly spelled.
+    if (serverHeadline) {
+      try {
+        const aspect: AdAspect = asset.height > asset.width ? "4:5" : "1:1";
+        const withText = await compositeHeadline(bytes, plan, aspect, serverHeadline);
+        const changed = withText !== bytes;
+        bytes = withText;
+        (qa as any).headline_composited = changed;
+      } catch (e) {
+        console.warn("headline composite failed", e);
+        (qa as any).headline_composited = false;
+      }
+    }
+
 
     const fileId = crypto.randomUUID();
     const storagePath = `social-cover/${userId}/${snapshotId}/${platform.platform}/${asset.kind}/${direction}-${fileId}.png`;

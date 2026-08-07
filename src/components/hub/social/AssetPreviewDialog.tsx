@@ -141,7 +141,13 @@ export function AssetPreviewDialog({
                   {asset.qaStatus === "pass" ? "QA pass" : signatureVisible === false ? "Brand color missing" : "QA fail"}{ratio ? ` · ${ratio}:1` : ""}
                 </Badge>
               )}
+              {asset.qaNotes?.used_fallback && (
+                <Badge variant="outline" className="text-[10px] border-status-warning/40 text-status-warning">
+                  Backup renderer — brand refs not seen
+                </Badge>
+              )}
             </div>
+
 
             {(asset.width || asset.height) && (
               <div>

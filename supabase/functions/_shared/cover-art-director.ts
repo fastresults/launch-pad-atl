@@ -285,11 +285,29 @@ const LIBRARY_MOBILITY: SceneVariant[] = [
   { depict: "Flat-lay of blueprints, calipers, and a coffee cup on a steel workbench.", subjects: ["blueprints", "tools"], setting: "workbench flat-lay", mood: "engineered", camera: CAMERAS[3], composition: COMPOSITIONS[5] },
 ];
 
+// Human-care ventures: elder care, home care, assisted living, childcare,
+// caregiving, in-home support. Previously these fell through to
+// LIBRARY_STARTUP, which is how a passport flat-lay ended up representing an
+// elderly residence.
+const LIBRARY_CARE: SceneVariant[] = [
+  { depict: "An older adult and a caregiver seated together in a sunlit living room, mid-conversation, both relaxed and smiling naturally.", subjects: ["older adult", "caregiver", "living room"], setting: "warm residential living room, late-morning light", mood: "warm, dignified", camera: CAMERAS[1], composition: COMPOSITIONS[7], tags: ["care", "customer", "trust"] },
+  { depict: "A caregiver's hand steadying an older adult's hand on a wooden banister — cropped close, respectful, no faces.", subjects: ["hands", "banister"], setting: "home staircase macro", mood: "steady, trusted", camera: CAMERAS[4], composition: COMPOSITIONS[4], tags: ["trust", "care"] },
+  { depict: "An older adult tending potted herbs on a back porch, a caregiver nearby holding the watering can.", subjects: ["older adult", "caregiver", "porch plants"], setting: "residential back porch", mood: "independent, tended", camera: CAMERAS[0], composition: COMPOSITIONS[0], tags: ["independence", "care"] },
+  { depict: "A quiet, made-up bedroom in a residential care home — soft linens, a reading lamp, a framed family photo on the nightstand.", subjects: ["bedroom", "reading lamp", "family photo"], setting: "residential care bedroom", mood: "safe, homelike", camera: CAMERAS[3], composition: COMPOSITIONS[3], tags: ["home", "brand"] },
+  { depict: "A family member and a care coordinator talking across a kitchen table, a mug between them, calm daylight.", subjects: ["family member", "care coordinator", "kitchen table"], setting: "home kitchen", mood: "reassuring", camera: CAMERAS[1], composition: COMPOSITIONS[7], tags: ["family", "customer"] },
+  { depict: "Three generations walking slowly along a tree-lined neighborhood sidewalk, the eldest arm-in-arm in the middle.", subjects: ["older adult", "family", "sidewalk"], setting: "leafy residential street", mood: "connected", camera: CAMERAS[2], composition: COMPOSITIONS[0], tags: ["family", "community"] },
+  { depict: "A caregiver setting a warm meal in front of an older adult at a small dining table, steam rising.", subjects: ["caregiver", "older adult", "meal"], setting: "home dining nook", mood: "nourishing, everyday", camera: CAMERAS[0], composition: COMPOSITIONS[2], tags: ["daily", "care"] },
+  { depict: "Macro of a weekly care schedule handwritten on a paper planner beside reading glasses on a kitchen counter.", subjects: ["planner", "reading glasses"], setting: "kitchen counter macro", mood: "organized, human", camera: CAMERAS[4], composition: COMPOSITIONS[5], tags: ["process", "trust"] },
+];
+
 function pickLibrary(track: string, industry: string): SceneVariant[] {
+  // Care matching runs FIRST: an elder-care venture on the main-street track
+  // is still a care business, not a storefront.
+  if (/(elder|senior|aging|geriatric|assisted living|residential care|nursing|home care|homecare|caregiv|hospice|memory care|child ?care|day ?care|in-home)/.test(industry)) return LIBRARY_CARE;
   if (track.includes("main_street") || track.includes("main street")) return LIBRARY_MAIN_STREET;
   if (/food|restaurant|bever|cafe|coffee/.test(industry)) return LIBRARY_FOOD;
   if (/fitness|wellness|health club|gym/.test(industry)) return LIBRARY_FITNESS;
-  if (/(life ?sci|biotech|pharma|medical|health tech)/.test(industry)) return LIBRARY_HEALTH;
+  if (/(life ?sci|biotech|pharma|medical|health tech|clinic|therap)/.test(industry)) return LIBRARY_HEALTH;
   if (/auto|vehicle|mobility/.test(industry)) return LIBRARY_MOBILITY;
   return LIBRARY_STARTUP;
 }
@@ -415,8 +433,52 @@ function sceneDirectiveBlock(scene: SceneDirective): string {
     `  COMPOSITION: ${scene.composition}`,
     `  DO NOT DEPICT: ${avoid}`,
     `  ANTI-CLICHÉ: unless the DEPICT line above explicitly names them, do NOT include any of: sticky notes, Post-it notes, a whiteboard with notes, "team standing in front of a whiteboard", cofounders around a laptop, a facilitator pointing at notes, hands pressing notes onto glass. These are banned defaults.`,
+    `  PROP BAN (unless the DEPICT line names the prop explicitly): no passports, boarding passes, luggage, maps or globes, business-card mockups, stationery/brand-mockup flat-lays, stock-photo handshakes in suits, generic open-plan tech offices, server racks, currency, stock charts, or screens displaying UI. These props read as generic stock imagery and are off-brief for this venture.`,
+    `  ON-TOPIC TEST: a stranger seeing this image alone must be able to guess this venture's actual line of work. If the frame could belong to any company in any industry, it is wrong — rebuild it around the DEPICT line.`,
     `  IMPORTANT: this scene is UNIQUE to this post — deliver exactly the scene described above. Do not blend it with a generic startup-office fallback.`,
   ].join("\n");
+}
+
+// Per-platform composition rules. Social crops are unforgiving: LinkedIn
+// banners get center-cropped behind the profile photo, Facebook covers crop
+// differently on mobile vs desktop. Give the model the real safe zones.
+function platformCompositionBlock(platform: string, asset: AssetSpec): string {
+  const p = platform.toLowerCase();
+  const kind = String(asset.kind || "").toLowerCase();
+  const lines: string[] = [
+    `PLATFORM CROP SAFETY (${platform} ${asset.label}) — the render must survive real-world cropping:`,
+  ];
+  if (kind === "avatar") {
+    lines.push(
+      `  - The avatar is displayed as a CIRCLE at 40-64px. Keep everything inside the middle 70% circle; corners will be cut off.`,
+      `  - Single centered element on a flat field. No scene, no photograph, no text, no border ring.`,
+    );
+  } else if (/linkedin/.test(p)) {
+    lines.push(
+      `  - The bottom-left ~22% of the banner is covered by the profile photo — keep it as empty surface, no subject, no focal detail.`,
+      `  - Place the subject in the right two-thirds; leave the left third as calm negative space.`,
+      `  - On mobile the outer ~12% at each side is cropped away. Nothing important within 12% of either edge.`,
+    );
+  } else if (/facebook/.test(p)) {
+    lines.push(
+      `  - Desktop and mobile crop differently: only the CENTER 60% horizontally and the middle 80% vertically is guaranteed visible. Keep the subject fully inside that region.`,
+      `  - The bottom-left quarter is overlapped by the page name and profile photo — keep it clean surface.`,
+    );
+  } else if (/instagram/.test(p)) {
+    lines.push(
+      `  - Feed previews center-crop to a square. Keep the subject within the central square of the canvas.`,
+      `  - Leave the outer 8% as bleed; nothing meaningful there.`,
+    );
+  } else {
+    lines.push(
+      `  - Keep the subject within the central 80% of the canvas; treat the outer 10% on all sides as crop bleed.`,
+    );
+  }
+  lines.push(
+    `  - One subject, one focal point. No collage, no split-panel montage, no multiple unrelated photographs stitched together.`,
+    `  - Horizon lines stay level; do not crop a face or the primary object at an edge.`,
+  );
+  return lines.join("\n");
 }
 
 
@@ -650,6 +712,8 @@ The Scene Directive governs WHAT is depicted. The Canvas plan governs COLORS. Th
 
 ## Composition system
 ${system}
+
+## ${platformCompositionBlock(platform, asset)}
 
 ## Art direction
 ${brief}
