@@ -222,7 +222,18 @@ function avgLuminance(base: Image, x: number, y: number, w: number, h: number): 
 // A vector mark must arrive as ink on transparency. Marks exported with a
 // baked white plate get that plate knocked out here, then the bitmap is
 // trimmed to its ink bounding box so no dead margin ships with the logo.
-function knockoutAndTrim(logo: Image): Image {
+// Hard ceiling on the bitmap we run per-pixel work over. A mark only ever
+// renders a few hundred px wide on the poster, so processing a 2000px raster
+// burns edge-function CPU for no visible gain.
+const MARK_MAX_DIM = 768;
+
+function knockoutAndTrim(input: Image): Image {
+  const logo = Math.max(input.width, input.height) > MARK_MAX_DIM
+    ? input.clone().resize(
+        input.width >= input.height ? MARK_MAX_DIM : Image.RESIZE_AUTO,
+        input.height > input.width ? MARK_MAX_DIM : Image.RESIZE_AUTO,
+      )
+    : input;
   const w = logo.width;
   const h = logo.height;
   const corner = logo.getPixelAt(1, 1);
@@ -230,6 +241,7 @@ function knockoutAndTrim(logo: Image): Image {
   const cg = (corner >>> 16) & 0xff;
   const cb = (corner >>> 8) & 0xff;
   const ca = corner & 0xff;
+
   const near = (r: number, g: number, b: number) =>
     Math.abs(r - cr) < 14 && Math.abs(g - cg) < 14 && Math.abs(b - cb) < 14;
 
@@ -281,6 +293,19 @@ function b64FromBytes(bytes: Uint8Array): string {
   return btoa(s);
 }
 
+// Per-isolate memo: the same mark + ink is rebuilt for every ad in a run, and
+// each rebuild costs a wasm rasterize plus full-bitmap pixel loops.
+const inkCache = new Map<string, { dataUrl: string; aspect: number }>();
+
+function cheapHash(s: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
 /**
  * Produces a transparent, single-ink PNG of the brand mark for use as vector
  * ink on a poster — never a plate, chip or white box. Prefers re-rendering the
@@ -293,26 +318,46 @@ export async function buildVectorInkLogoPng(opts: {
   inkHex: string;
   targetWidthPx?: number;
 }): Promise<{ dataUrl: string; aspect: number } | null> {
-  const width = Math.max(512, Math.round(opts.targetWidthPx || 512) * 2);
+  // A mark never renders wider than a few hundred px on the poster; 768 is
+  // plenty of resolution and keeps the per-pixel passes cheap.
+  const width = Math.min(768, Math.max(384, Math.round(opts.targetWidthPx || 384) * 2));
+  const cacheKey = [
+    opts.inkHex,
+    width,
+    opts.svgText ? `s${cheapHash(opts.svgText)}` : "",
+    opts.bytes?.byteLength ? `b${opts.bytes.byteLength}` : "",
+  ].join("|");
+  const hit = inkCache.get(cacheKey);
+  if (hit) return hit;
+
+  const t0 = Date.now();
   try {
+    let built: { dataUrl: string; aspect: number } | null = null;
     if (opts.svgText) {
       const mono = await rasterizeSvgMono(opts.svgText, opts.inkHex, width);
       if (mono) {
         const img = knockoutAndTrim(await Image.decode(mono));
         const out = await img.encode();
-        return { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
+        built = { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
       }
     }
-    if (opts.bytes && opts.bytes.byteLength) {
+    if (!built && opts.bytes && opts.bytes.byteLength) {
       const img = tintMark(knockoutAndTrim(await Image.decode(opts.bytes)), opts.inkHex);
       const out = await img.encode();
-      return { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
+      built = { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
+    }
+    if (built) {
+      if (inkCache.size > 24) inkCache.clear();
+      inkCache.set(cacheKey, built);
+      console.log(`[logo-compositor] vector ink built in ${Date.now() - t0}ms (w=${width})`);
+      return built;
     }
   } catch (e) {
     console.warn("[logo-compositor] buildVectorInkLogoPng failed", e instanceof Error ? e.message : e);
   }
   return null;
 }
+
 
 
 // Soft radial falloff behind the mark — no rectangle, no hard edge. Used only

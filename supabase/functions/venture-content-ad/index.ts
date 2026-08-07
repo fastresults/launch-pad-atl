@@ -131,10 +131,17 @@ async function callTextOnly(prompt: string, size: string, apiKey: string) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const startedAt = Date.now();
+  const reqId = crypto.randomUUID().slice(0, 8);
+  const step = (label: string, extra?: unknown) =>
+    console.log(`[content-ad ${reqId}] +${Date.now() - startedAt}ms ${label}${extra === undefined ? "" : " " + JSON.stringify(extra)}`);
+
   try {
-    const requestStartedAt = Date.now();
+    const requestStartedAt = startedAt;
+    step("request received");
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ error: "LOVABLE_API_KEY not configured" }, 500);
+
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
@@ -291,7 +298,9 @@ Deno.serve(async (req) => {
 
     const asset = specForAspect(aspect);
     const ctx = await loadVentureContext(admin, snapshotId);
+    step("venture context loaded");
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
+    step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText });
 
     let plan: CanvasPlan = buildCanvasPlan({ kit, asset, direction, signature: signatureCfg });
     plan = applyPaletteOverride(plan, paletteOverride);
@@ -303,6 +312,7 @@ Deno.serve(async (req) => {
     let paletteTileDataUrl: string | null = null;
     try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
     catch (e) { console.warn("palette tile build failed", e); }
+
 
     const variationSeed = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
 
@@ -357,24 +367,31 @@ Deno.serve(async (req) => {
     };
 
     let result: { b64: string; modelUsed: string; prompt: string };
+    step("image gateway call start");
     try { result = await generate(); }
     catch (e: any) {
       const status = e?.status;
+      console.error(`[content-ad ${reqId}] gateway failed`, { name: e?.name, status, code: e?.code, message: e?.message });
       const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: status };
       if (status === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
       else if (status === 403 && e?.code === "credit_limit_reached") { out.code = "AI_CREDIT_LIMIT_REACHED"; out.reason = "workspace_credit_limit"; }
       else if (status === 429) { out.code = "RATE_LIMITED"; }
+      else if (status === 504 || e?.code === "UPSTREAM_TIMEOUT") { out.code = "UPSTREAM_TIMEOUT"; }
       else if (e?.code) { out.code = e.code; }
       if (e?.details) out.details = e.details;
       return json(out, 200);
     }
+    step("image gateway call done", { model: result.modelUsed });
 
     let bytes = b64ToBytes(result.b64);
     let qa = runContrastQa(bytes, plan);
-    // Skip the QA retry if we've already burned most of our 150s budget on the
-    // first generation — a second slow call would push us past IDLE_TIMEOUT.
-    // Reserve ~35s for compositing, storage upload, and signed URL work.
-    const timeBudgetOkForRetry = (Date.now() - requestStartedAt) < 60_000;
+    step("contrast QA done", { ok: qa.ok, plateBytes: bytes.byteLength });
+    // The client (and the edge proxy) give up well before Deno's 150s idle
+    // limit, so total wall time — not just the function budget — is what makes
+    // regeneration "fail". A second image call costs ~25-30s, so only retry
+    // when the first pass came back fast.
+    const timeBudgetOkForRetry = (Date.now() - requestStartedAt) < 25_000;
+
     if (!qa.ok && timeBudgetOkForRetry) {
       try {
         const sigVisible = qa.observed.signatureVisible !== false;
@@ -394,6 +411,7 @@ Deno.serve(async (req) => {
           retrySig > currentSig ||
           retryQa.observed.ratio > qa.observed.ratio;
         if (retryBetter) { bytes = retryBytes; qa = retryQa; result = retry; }
+        step("QA retry done", { used: retryBetter });
       } catch (e) { console.warn("QA retry failed", e); }
     }
 
@@ -403,7 +421,9 @@ Deno.serve(async (req) => {
       bytes = compositeSignatureSplash(bytes, plan);
       qa = runContrastQa(bytes, plan);
       (qa as any).signature_composited = true;
+      step("signature splash composited");
     }
+
 
     // ---- Editorial poster typography (server-side SVG overlay) ----
     // The model paints only the photographic plate; the kicker / display
@@ -420,6 +440,7 @@ Deno.serve(async (req) => {
         ? { mode: "custom", text: resolvedHeadline.text }
         : { mode: "auto" },
     });
+    step("poster copy distilled", { headline: !!posterCopy.headline });
 
     const headlineComposited = !!posterCopy.headline;
     const logoComposited = !!(logoSvgText || logoBytes || logoDataUrl);
@@ -445,6 +466,7 @@ Deno.serve(async (req) => {
       // the starting preference when the headline is suppressed.
       logoCorner: undefined,
     });
+    step("poster composited", poster.metrics);
     bytes = poster.bytes;
     (qa as any).headline_composited = headlineComposited;
     (qa as any).logo_composited = logoComposited;
@@ -452,6 +474,7 @@ Deno.serve(async (req) => {
     (qa as any).poster_layout = posterLayout;
     (qa as any).poster_copy = posterCopy;
     Object.assign(qa as any, poster.metrics);
+
 
 
 
@@ -463,6 +486,7 @@ Deno.serve(async (req) => {
       .from(BUCKET)
       .upload(storagePath, bytes, { contentType: "image/svg+xml", upsert: false });
     if (upErr) throw upErr;
+    step("uploaded", { bytes: bytes.byteLength });
 
     const { data: signed } = await admin.storage.from(BUCKET).createSignedUrl(storagePath, SIGNED_TTL);
     const expiresAt = new Date(Date.now() + SIGNED_TTL * 1000).toISOString();
@@ -497,9 +521,17 @@ Deno.serve(async (req) => {
       .single();
     if (insErr) throw insErr;
 
+    step("done");
     return json({ ad: row });
-  } catch (e) {
-    console.error("venture-content-ad error", e);
-    return json({ error: (e as Error).message ?? "Internal error" }, 500);
+  } catch (e: any) {
+    console.error(`[content-ad ${reqId}] +${Date.now() - startedAt}ms FAILED`, {
+      name: e?.name,
+      status: e?.status,
+      code: e?.code,
+      message: e?.message,
+      stack: typeof e?.stack === "string" ? e.stack.split("\n").slice(0, 4).join(" | ") : undefined,
+    });
+    return json({ error: e?.message ?? "Internal error", code: e?.code ?? "INTERNAL_ERROR" }, 500);
+
   }
 });

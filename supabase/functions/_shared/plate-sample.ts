@@ -45,13 +45,24 @@ export class PlateSampler {
 
   static from(bytes: Uint8Array | null | undefined, fallbackW: number, fallbackH: number): PlateSampler {
     if (!bytes || bytes.byteLength === 0) return new PlateSampler(null, fallbackW, fallbackH);
+    // Decoding is the single most expensive CPU step in the poster pipeline.
+    // Refuse absurdly large plates rather than risk a runtime kill — the
+    // compositor falls back to plan colors when sampling is unavailable.
+    if (bytes.byteLength > 12_000_000) {
+      console.warn(`[plate-sample] skipping decode, plate too large (${bytes.byteLength} bytes)`);
+      return new PlateSampler(null, fallbackW, fallbackH);
+    }
+    const t0 = Date.now();
     try {
       const png = PNG.sync.read(Buffer.from(bytes));
+      console.log(`[plate-sample] decoded ${png.width}x${png.height} in ${Date.now() - t0}ms`);
       return new PlateSampler(png, png.width, png.height);
-    } catch {
+    } catch (e) {
+      console.warn("[plate-sample] decode failed", e instanceof Error ? e.message : e);
       return new PlateSampler(null, fallbackW, fallbackH);
     }
   }
+
 
   get available(): boolean {
     return !!this.png;
