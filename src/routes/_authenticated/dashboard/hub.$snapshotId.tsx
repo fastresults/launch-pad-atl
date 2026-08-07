@@ -62,7 +62,6 @@ import { SocialStudio } from "@/components/hub/SocialStudio";
 import { ContentStudio } from "@/components/hub/ContentStudio";
 import { FounderRoadmapCard } from "@/components/hub/FounderRoadmapCard";
 import { LaunchPlanner14Day } from "@/components/hub/LaunchPlanner14Day";
-import { AIStackPanel } from "@/components/hub/AIStackPanel";
 import { SectionIntro } from "@/components/hub/SectionIntro";
 import { DashboardWelcomeStrip } from "@/components/hub/DashboardWelcomeStrip";
 import { HUB_DASHBOARD_INTROS } from "@/lib/hub-dashboard-copy";
@@ -1342,29 +1341,6 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       </div>
 
 
-      <div className="space-y-3">
-        <SectionIntro copy={HUB_DASHBOARD_INTROS.toolkit} variant={isGuided ? "minimal" : "full"} />
-        <AIStackPanel
-          snapshotId={snapshot.id}
-          userId={snapshot.user_id}
-          stackDoc={docs.find((d: any) => d.document_type === "ai_tool_stack_recommendation") ?? null}
-          onGenerateStack={() => genOne.mutate({ documentType: "ai_tool_stack_recommendation" })}
-          onScrollToDoc={(key) => {
-            const el = document.getElementById(`doc-${key}`);
-            if (el) {
-              el.scrollIntoView({ behavior: "smooth", block: "center" });
-              el.classList.add("ring-2", "ring-primary");
-              setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 1600);
-            }
-          }}
-          onOpenDoc={(key) => {
-            const d = docs.find((x: any) => x.document_type === key);
-            if (d) setViewerDoc(d);
-          }}
-          isGenerating={genOne.isPending && genOne.variables?.documentType === "ai_tool_stack_recommendation"}
-          compact={isGuided}
-        />
-      </div>
 
       {/* Stale-concept banner — full in advanced, compact chip in guided */}
       {staleCount > 0 && (
