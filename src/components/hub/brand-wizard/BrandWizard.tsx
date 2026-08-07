@@ -589,7 +589,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     try {
       const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_force_reset" } });
       setLogos([]);
-      setLogoPhase(null);
+      setLogoPhase("idle");
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["logoRun", snapshot.id] }),
         qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] }),
