@@ -31,7 +31,10 @@ It claims: ${claimedIdea || "unstated"}
 Craft move claimed: ${craftMove || "unstated"}
 Logo type: ${logoType || "unstated"}
 ${profile ? `Business: ${profile.category}. It must communicate: ${profile.must_communicate}` : ""}
+${profile?.human_truth ? `Human truth behind this business: ${profile.human_truth}` : ""}
+${profile?.emotional_promise ? `Emotional promise it must carry: ${profile.emotional_promise}` : ""}
 ${profile?.cliche_blacklist?.length ? `Banned category clichés: ${profile.cliche_blacklist.join(", ")}` : ""}
+
 ${brand?.palette?.length ? `Locked brand palette it must use: ${brand.palette.join(", ")}` : ""}
 ${brand?.mood ? `Brand visual world: ${brand.mood}` : ""}
 ${spec ? `Reference craft spec it must match: ${spec.construction} construction, abstraction ${spec.abstraction}/5, at most ${spec.element_count} elements, ${spec.colour_count} ink(s), ${spec.shared_quality}` : ""}
@@ -50,11 +53,15 @@ Fail it if ANY of these are true:
 - It would work unchanged for a different company in the same category.
 - It ignores the locked brand palette, or introduces colours that are not in it.
 - It does not belong in the brand's visual world (wrong temperature, softness or register).
+- NAMING TEST: name what you see in three words, without being told what it is meant to be. If the honest answer is "an abstract shape", "a ribbon", "a swirl" or anything with no subject in it, this fails.
+- MEANING TEST: it is decoration. It carries no human idea about this business — nothing about the customer's situation, the promise, or the life being served.
+- CROSS-SECTOR TEST: it would work unchanged for a business in an unrelated sector (a yoga studio, a consultancy, a crypto fund). Automatic fail regardless of how well it is drawn.
 
-Score honestly 1-5 on: fusion, curve_quality, silhouette_read, structure_match, craft, relevance, distinctiveness, scalability, palette_fidelity, moodboard_fit.
+Score honestly 1-5 on: fusion, curve_quality, silhouette_read, structure_match, craft, relevance, distinctiveness, scalability, palette_fidelity, moodboard_fit, meaning_read, subject_legibility.
 Pass only if every score is 4 or higher. If there is any lettering, set every score to 1 and fail.
 
-Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact change to make on the next render","scores":{"fusion":1,"curve_quality":1,"silhouette_read":1,"structure_match":1,"craft":1,"relevance":1,"distinctiveness":1,"scalability":1,"palette_fidelity":1,"moodboard_fit":1}}`;
+Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact change to make on the next render","scores":{"fusion":1,"curve_quality":1,"silhouette_read":1,"structure_match":1,"craft":1,"relevance":1,"distinctiveness":1,"scalability":1,"palette_fidelity":1,"moodboard_fit":1,"meaning_read":1,"subject_legibility":1}}`;
+
 }
 
 export function parseJuryVerdict(parsed: any): JuryVerdict | null {

@@ -19,6 +19,12 @@ export interface BusinessProfile {
   moment_of_need: string;
   /** premium | practical | warm | clinical | rugged | playful | institutional */
   register: string;
+  /** What is actually happening in the customer's life at the moment of need. */
+  human_truth: string;
+  /** What the business promises that person, emotionally. */
+  emotional_promise: string;
+  /** 4-6 entries of "symbol = the meanings it carries". */
+  meaning_symbols: string[];
   /** 5-8 concrete nouns/forms drawn from the real work of this business. */
   symbol_vocabulary: string[];
   /** 5-8 category-specific clichés that are banned for this venture. */
@@ -26,6 +32,7 @@ export interface BusinessProfile {
   /** One sentence: what the mark must communicate at a glance. */
   must_communicate: string;
 }
+
 
 export const BUSINESS_READ_SYSTEM =
   `You are a brand strategist who reads a company's own finished copy and reports what the business literally is — not what it aspires to feel like. You never write abstractions ("empowerment", "innovation", "trust"). You name the trade, the customer, the transaction, and the physical world the work happens in. You are also an identity designer, so you know exactly which symbols are honest for a category and which ones are the tired defaults every competitor already uses.`;
@@ -45,9 +52,12 @@ Rules:
 - category and what_is_sold must be specific enough that a stranger could identify the competitor set.
 - symbol_vocabulary must come from the actual work: the tools, materials, gestures, spaces, produce, documents or motions involved. No abstractions, no metaphors about growth or journeys.
 - cliche_blacklist must be the specific defaults for THIS category (e.g. for a bakery: wheat sheaf, rolling pin, chef hat; for a law firm: scales, columns, gavel).
+- human_truth: what is actually happening in the customer's life at the moment they need this. Write it as a human situation, not a market statement.
+- emotional_promise: what this business promises that person — the thing they are really buying.
+- meaning_symbols: 4-6 entries, each written as "symbol = the meanings it carries", where the meanings come from human_truth and emotional_promise. Example for an elder-care residence: "tree = roots, generations, shelter, a long life". These must be things that can be DRAWN and instantly named on sight, and they must carry more than one true idea at once. Not abstract gestures, not swooshes, not "connection" or "journey".
 
 Return STRICT JSON:
-{"category":"","archetype":"","what_is_sold":"","customer":"","moment_of_need":"","register":"","symbol_vocabulary":["",""],"cliche_blacklist":["",""],"must_communicate":""}`;
+{"category":"","archetype":"","what_is_sold":"","customer":"","moment_of_need":"","register":"","human_truth":"","emotional_promise":"","meaning_symbols":["",""],"symbol_vocabulary":["",""],"cliche_blacklist":["",""],"must_communicate":""}`;
 }
 
 export function parseBusinessProfile(parsed: any): BusinessProfile | null {
@@ -60,6 +70,9 @@ export function parseBusinessProfile(parsed: any): BusinessProfile | null {
     customer: String(parsed.customer ?? ""),
     moment_of_need: String(parsed.moment_of_need ?? ""),
     register: String(parsed.register ?? ""),
+    human_truth: String(parsed.human_truth ?? ""),
+    emotional_promise: String(parsed.emotional_promise ?? ""),
+    meaning_symbols: arr(parsed.meaning_symbols),
     symbol_vocabulary: arr(parsed.symbol_vocabulary),
     cliche_blacklist: arr(parsed.cliche_blacklist),
     must_communicate: String(parsed.must_communicate ?? ""),
@@ -75,8 +88,12 @@ export function businessProfileBlock(profile: BusinessProfile | null): string {
     profile.customer ? `Customer: ${profile.customer}` : "",
     profile.moment_of_need ? `Moment of need: ${profile.moment_of_need}` : "",
     profile.register ? `Register: ${profile.register}` : "",
+    profile.human_truth ? `Human truth: ${profile.human_truth}` : "",
+    profile.emotional_promise ? `Emotional promise: ${profile.emotional_promise}` : "",
+    profile.meaning_symbols?.length ? `MEANING-CARRYING SYMBOLS (draw from these first): ${profile.meaning_symbols.join("; ")}` : "",
     profile.symbol_vocabulary.length ? `Honest symbol vocabulary: ${profile.symbol_vocabulary.join(", ")}` : "",
     profile.cliche_blacklist.length ? `BANNED for this category: ${profile.cliche_blacklist.join(", ")}` : "",
     profile.must_communicate ? `Must communicate: ${profile.must_communicate}` : "",
   ].filter(Boolean).join("\n");
+
 }
