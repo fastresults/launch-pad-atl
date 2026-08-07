@@ -9,7 +9,7 @@ const RESPONSES_URL = "https://ai.gateway.lovable.dev/v1/responses";
 const MODEL = "openai/gpt-5.6-sol";
 
 export type Choice = { label: string; description: string };
-export type RoughDirection = { title: string; render_brief: string };
+export type RoughDirection = { title: string; render_brief: string; change_note: string };
 
 export type InterviewTurn = {
   read_back: string | null;
@@ -19,6 +19,7 @@ export type InterviewTurn = {
   allow_free_text: boolean;
   multi_select: boolean;
   direction: RoughDirection;
+  requirements: string[];
   brief_summary: string;
   done: boolean;
 };
@@ -26,30 +27,40 @@ export type InterviewTurn = {
 export type OpeningBrief = {
   design_brief: string;
   direction: RoughDirection;
+  requirements: string[];
 };
 
 const DIRECTION_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["title", "render_brief"],
+  required: ["title", "render_brief", "change_note"],
   properties: {
     title: { type: "string", description: "Two to four words naming the idea, e.g. 'Open porch'." },
-    render_brief: { type: "string", description: "One paragraph of concrete drawing instructions for this single mark: the subject, how it is constructed, stroke weight, and which brand colours carry it." },
+    render_brief: { type: "string", description: "One paragraph of concrete drawing instructions for this single mark: the subject, how it is constructed, stroke weight, and which brand colours carry it. It must satisfy every locked requirement." },
+    change_note: { type: "string", description: "One short sentence naming exactly what changed in this drawing versus the previous one, in the founder's terms. On the first drawing say 'First pass.'" },
   },
+} as const;
+
+const REQUIREMENTS_SCHEMA = {
+  type: "array",
+  description: "The full running list of non-negotiable constraints the founder has stated, carried forward verbatim in meaning and added to. Each item is one short literal sentence, e.g. 'The symbol must show an older adult and a caregiver together.' Never drop an item the founder has not retracted.",
+  items: { type: "string" },
 } as const;
 
 const BRIEF_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["design_brief", "direction"],
+  required: ["design_brief", "direction", "requirements"],
   properties: {
     design_brief: {
       type: "string",
       description: "Roughly 100 words of plain prose addressed to the founder: who this business is, the human truth the mark must carry, the subject you propose to draw, how it is constructed, and which brand colours carry it. No headings, no bullet lists.",
     },
     direction: DIRECTION_SCHEMA,
+    requirements: REQUIREMENTS_SCHEMA,
   },
 } as const;
+
 
 const SCHEMA = {
   type: "object",
