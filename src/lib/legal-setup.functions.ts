@@ -7,6 +7,8 @@ export type LegalSetupProgress = {
   snapshot_id: string | null;
   entity_choice: string | null;
   entity_state: string | null;
+  /** 'user' when the founder picked the state; 'auto' when derived from the venture brief */
+  entity_state_source: "user" | "auto" | null;
   business_name: string | null;
   name_reserved: boolean;
   registered_agent_choice: string | null;

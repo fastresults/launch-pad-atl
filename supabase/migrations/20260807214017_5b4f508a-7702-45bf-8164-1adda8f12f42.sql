@@ -1,0 +1,1 @@
+ALTER TABLE public.legal_setup_progress ADD COLUMN IF NOT EXISTS entity_state_source TEXT NOT NULL DEFAULT 'auto';
