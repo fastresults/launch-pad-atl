@@ -63,19 +63,19 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${to(r)}${to(g)}${to(b)}`;
 }
 
-// If the chosen signature hex is too dark or too desaturated to read on screen
-// as a brand splash, derive a displayable tint that preserves the hue but
-// raises lightness and saturation into a visible band.
+// The brand's own hex is the truth. We only intervene when a color is so dark
+// it would read as black at thumbnail size — and even then we lift LIGHTNESS
+// only, preserving hue and saturation, so a muted slate green never becomes a
+// neon teal. Desaturated brand colors are a deliberate brand choice, not a bug.
 export function deriveDisplaySignature(hex: string): string {
   const L = lightness(hex);   // 0..1 perceived
-  const S = saturation(hex);  // 0..1
-  if (L >= 0.18 && S >= 0.35) return hex;
+  if (L >= 0.16) return hex;
   const h = hue(hex);
-  // Target a punchy, visible mid-tone of the same hue family.
-  const targetL = 0.50;
-  const targetS = Math.max(S, 0.65);
-  return hslToHex(h, targetS, targetL);
+  const S = saturation(hex);
+  // Minimal lift: same hue, same saturation, just out of the near-black band.
+  return hslToHex(h, S, 0.28);
 }
+
 
 export type PaletteOverride = {
   surface?: string;

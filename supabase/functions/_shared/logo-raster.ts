@@ -24,21 +24,33 @@ async function getResvg(): Promise<any | null> {
   return await initPromise;
 }
 
-/** Returns a base64 PNG, or null when rasterisation is not available. */
-export async function rasterizeSvg(svg: string, width = 512): Promise<string | null> {
+/** Returns raw PNG bytes, or null when rasterisation is not available. */
+export async function rasterizeSvgToBytes(
+  svg: string,
+  width = 1024,
+  background?: string,
+): Promise<Uint8Array | null> {
   try {
     const mod = await getResvg();
     if (!mod) return null;
-    const resvg = new mod.Resvg(svg, { fitTo: { mode: "width", value: width }, background: "#FFFFFF" });
-    const png = resvg.render().asPng();
-    let binary = "";
-    const bytes = new Uint8Array(png);
-    for (let i = 0; i < bytes.length; i += 0x8000) {
-      binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-    }
-    return btoa(binary);
+    const opts: Record<string, unknown> = { fitTo: { mode: "width", value: width } };
+    if (background) opts.background = background;
+    const resvg = new mod.Resvg(svg, opts);
+    return new Uint8Array(resvg.render().asPng());
   } catch (e) {
     console.warn("rasterize failed", e instanceof Error ? e.message : e);
     return null;
   }
 }
+
+/** Returns a base64 PNG, or null when rasterisation is not available. */
+export async function rasterizeSvg(svg: string, width = 512): Promise<string | null> {
+  const bytes = await rasterizeSvgToBytes(svg, width, "#FFFFFF");
+  if (!bytes) return null;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+

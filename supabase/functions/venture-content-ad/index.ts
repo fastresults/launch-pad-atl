@@ -14,6 +14,7 @@ import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
 import { buildContentAdSvgBytes } from "../_shared/content-ad-svg.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
+import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,24 +68,11 @@ function mimeFromPath(p: string): string {
 }
 
 async function fetchPrimaryLogo(admin: any, kit: any) {
-  try {
-    const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
-    if (!logos.length) return { dataUrl: null as string | null, bytes: null as Uint8Array | null };
-    const primary = logos.find((l) => l?.primary) ?? logos[0];
-    const path = primary?.path || primary?.storage_path;
-    if (!path) return { dataUrl: null, bytes: null };
-    const { data, error } = await admin.storage.from(BUCKET).download(path);
-    if (error || !data) return { dataUrl: null, bytes: null };
-    const buf = new Uint8Array(await data.arrayBuffer());
-    if (buf.byteLength > 4 * 1024 * 1024) return { dataUrl: null, bytes: null };
-    const mime = primary?.contentType || mimeFromPath(path);
-    if (mime === "image/svg+xml") return { dataUrl: null, bytes: null };
-    return { dataUrl: `data:${mime};base64,${bytesToB64(buf)}`, bytes: buf };
-  } catch (e) {
-    console.error("fetchPrimaryLogo failed", e);
-    return { dataUrl: null, bytes: null };
-  }
+  // Shared loader — rasterises SVG marks so the logo is never silently dropped.
+  const { dataUrl, bytes } = await fetchPrimaryLogoBitmap(admin, kit);
+  return { dataUrl, bytes };
 }
+
 
 // Per-call timeout so a hung upstream doesn't idle the whole 150s request.
 // gemini-3-pro-image can take 60–90s; cap at 110s to leave headroom for

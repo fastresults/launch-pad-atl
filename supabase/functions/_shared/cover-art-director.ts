@@ -66,8 +66,14 @@ function paletteBlock(kit: Kit) {
 function typoBlock(kit: Kit) {
   const t = kit?.typography ?? {};
   const h = t.heading?.family ?? "—";
+  const hw = t.heading?.weight ?? "";
   const b = t.body?.family ?? "—";
-  return `  - Heading family: ${h}\n  - Body family: ${b}`;
+  const bw = t.body?.weight ?? "";
+  return [
+    `  - Heading family: ${h}${hw ? ` (weight ${hw})` : ""} — if ANY glyph is rendered it must be set in this exact typeface, or the closest available cut of it. Do not substitute a geometric sans for a serif, or a serif for a sans.`,
+    `  - Body family: ${b}${bw ? ` (weight ${bw})` : ""}`,
+    `  - No decorative, script, condensed-display, or novelty type. No fake letterforms, no lorem glyphs, no scrambled characters.`,
+  ].join("\n");
 }
 
 // Words in a company name that innocently collide with unrelated real-world
@@ -556,9 +562,13 @@ export function buildCoverArtPrompt(args: {
   // If the headline will be composited server-side, force the model into
   // zero-glyph mode — otherwise Gemini paints its own (badly-fit) headline
   // AND ours ends up on top, producing duplicate text.
-  const effectiveOverride: HeadlineOverride | undefined = serverRenderedHeadline
+  //
+  // With no explicit override we ALSO stay silent. Auto-derived taglines were
+  // getting painted in whatever font the model felt like, off-brand and often
+  // mangled. Text only lands on a cover when the founder asks for it.
+  const effectiveOverride: HeadlineOverride = serverRenderedHeadline
     ? { mode: "none" }
-    : headlineOverride;
+    : (headlineOverride ?? { mode: "none" });
   const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, effectiveOverride);
   const isCustomHeadline = effectiveOverride?.mode === "custom" && !!headline;
   const venture = ventureBlock(ctx, effectiveOverride);
