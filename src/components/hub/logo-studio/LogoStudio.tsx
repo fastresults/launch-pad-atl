@@ -324,6 +324,14 @@ export default function LogoStudio({
         </Button>
       </div>
 
+      <RequirementLedger
+        requirements={session.brief?.requirements ?? []}
+        busy={busy}
+        onDrop={(r) => dropRequirement.mutate(r)}
+      />
+
+
+
 
       {session.last_error && (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[11px] text-amber-200">
