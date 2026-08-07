@@ -1902,6 +1902,7 @@ export type Database = {
           ein_obtained_at: string | null
           entity_choice: string | null
           entity_state: string | null
+          entity_state_source: string
           id: string
           name_reserved: boolean
           notes: string | null
@@ -1924,6 +1925,7 @@ export type Database = {
           ein_obtained_at?: string | null
           entity_choice?: string | null
           entity_state?: string | null
+          entity_state_source?: string
           id?: string
           name_reserved?: boolean
           notes?: string | null
@@ -1946,6 +1948,7 @@ export type Database = {
           ein_obtained_at?: string | null
           entity_choice?: string | null
           entity_state?: string | null
+          entity_state_source?: string
           id?: string
           name_reserved?: boolean
           notes?: string | null
