@@ -923,7 +923,55 @@ function Step5BuildKit({
     }
   };
 
+  /** Wipe every generated image for one channel, or for the whole kit, so the
+   *  founder can start over from a clean slate instead of regenerating on top
+   *  of art they've already rejected. */
+  const clearAssets = async (scope: { platform?: string }) => {
+    const targets = tasks.filter(
+      (t) => t.asset_id && (!scope.platform || t.platform === scope.platform),
+    );
+    if (targets.length === 0) {
+      toast.info("Nothing to clear here yet.");
+      return;
+    }
+    const what = scope.platform
+      ? `all ${targets.length} ${platformLabel(scope.platform)} image${targets.length === 1 ? "" : "s"}`
+      : `all ${targets.length} generated image${targets.length === 1 ? "" : "s"} across every channel`;
+    const ok = await confirm({
+      title: scope.platform ? `Clear ${platformLabel(scope.platform)} images?` : "Clear all generated images?",
+      description: `This permanently deletes ${what}. Your brand kit, style and channel choices stay put — you'll just start the artwork over.`,
+      destructive: true,
+      confirmText: "Clear",
+    });
+    if (!ok) return;
+
+    setRunning(true);
+    let failed = 0;
+    try {
+      for (const t of targets) {
+        const k = taskKey(t);
+        setTaskRunning(k, true);
+        try {
+          await deleteSocialAsset(snapshotId, t.asset_id);
+          setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
+          setKept((prev) => { const n = { ...prev }; delete n[k]; return n; });
+        } catch {
+          failed += 1;
+        } finally {
+          setTaskRunning(k, false);
+        }
+      }
+      await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+      if (failed) toast.error(`Cleared, but ${failed} image${failed === 1 ? "" : "s"} could not be deleted.`);
+      else toast.success(scope.platform ? `${platformLabel(scope.platform)} cleared — generate a fresh set.` : "All images cleared — start over whenever you're ready.");
+    } finally {
+      setRunning(false);
+    }
+  };
+
   const anyDone = tasks.some((t) => t.status === "done");
+  const anyGenerated = tasks.some((t) => !!t.asset_id);
+
 
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
@@ -945,6 +993,19 @@ function Step5BuildKit({
               <RefreshCw className="mr-1 h-3 w-3" /> Regenerate all
             </Button>
           )}
+          {anyGenerated && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-[11px] text-destructive hover:text-destructive"
+              disabled={running}
+              onClick={() => clearAssets({})}
+              title="Delete every generated image and start the artwork over"
+            >
+              <Trash2 className="mr-1 h-3 w-3" /> Clear all
+            </Button>
+          )}
+
         </div>
       </header>
 
@@ -987,7 +1048,22 @@ function Step5BuildKit({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="border-t border-white/5 pb-0 pt-0">
+                    {items.some((t) => !!t.asset_id) && (
+                      <div className="flex justify-end px-2 pt-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-[10px] text-destructive hover:text-destructive"
+                          disabled={running}
+                          onClick={() => clearAssets({ platform })}
+                          title={`Delete every generated ${platformLabel(platform)} image`}
+                        >
+                          <Trash2 className="mr-1 h-3 w-3" /> Clear {platformLabel(platform)}
+                        </Button>
+                      </div>
+                    )}
                     <ul className="grid gap-2 p-2 sm:grid-cols-2">
+
                       {items.map((t) => {
                         const k = taskKey(t);
                         const done = t.status === "done";
@@ -1301,8 +1377,41 @@ function Step6Launch({
   const setLive = (platform: string, live: boolean) =>
     onUpdate({ ...launchStatus, [platform]: { live } });
 
+  const qc = useQueryClient();
+  const confirm = useConfirm();
+  const [clearing, setClearing] = useState(false);
+
+  /** Delete the generated images for one channel, or for every channel, so the
+   *  founder can go back and build a fresh set rather than living with these. */
+  const clearImages = async (platform?: string) => {
+    const targets = assets.filter((a: any) => a.id && (!platform || a.platform === platform));
+    if (targets.length === 0) { toast.info("No images to clear here."); return; }
+    const ok = await confirm({
+      title: platform ? `Clear ${platform} images?` : "Clear all generated images?",
+      description: platform
+        ? `Deletes the ${targets.length} generated image${targets.length === 1 ? "" : "s"} for ${platform}. Go back to Build kit to generate a fresh set.`
+        : `Deletes all ${targets.length} generated image${targets.length === 1 ? "" : "s"} across every channel. Your brand kit, style and channel choices stay put — go back to Build kit to start the artwork over.`,
+      destructive: true,
+      confirmText: "Clear",
+    });
+    if (!ok) return;
+    setClearing(true);
+    let failed = 0;
+    try {
+      for (const a of targets) {
+        try { await deleteSocialAsset(snapshotId, a.id); } catch { failed += 1; }
+      }
+      await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+      if (failed) toast.error(`Cleared, but ${failed} image${failed === 1 ? "" : "s"} could not be deleted.`);
+      else toast.success(platform ? `${platform} images cleared.` : "All images cleared — head back to Build kit to start over.");
+    } finally {
+      setClearing(false);
+    }
+  };
+
   const liveCount = platforms.filter((p) => launchStatus[p]?.live).length;
   const allLive = platforms.length > 0 && liveCount === platforms.length;
+  const anyImages = assets.length > 0;
 
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
@@ -1311,8 +1420,23 @@ function Step6Launch({
           <h3 className="text-base font-semibold">You're ready to launch</h3>
           <p className="text-xs text-muted-foreground">One card per channel. Sign in, paste, post — done.</p>
         </div>
-        <Badge variant="outline" className="text-[10px]">{liveCount} / {platforms.length} live</Badge>
+        <div className="flex items-center gap-2">
+          {anyImages && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-[11px] text-destructive hover:text-destructive"
+              disabled={clearing}
+              onClick={() => clearImages()}
+              title="Delete every generated image and start the artwork over"
+            >
+              <Trash2 className="mr-1 h-3 w-3" /> Clear all images
+            </Button>
+          )}
+          <Badge variant="outline" className="text-[10px]">{liveCount} / {platforms.length} live</Badge>
+        </div>
       </header>
+
 
       {allLive && (
         <div className="flex items-center gap-2 rounded-lg border border-status-success/30 bg-status-success/10 p-3 text-xs">
@@ -1358,7 +1482,19 @@ function Step6Launch({
                     Download cover
                   </a>
                 )}
+                {(avatar || cover) && (
+                  <button
+                    type="button"
+                    disabled={clearing}
+                    onClick={() => clearImages(p)}
+                    className="inline-flex h-6 items-center rounded border border-destructive/30 px-1.5 text-[10px] text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                    title={`Delete the generated images for ${p}`}
+                  >
+                    <Trash2 className="mr-1 h-3 w-3" /> Clear
+                  </button>
+                )}
               </div>
+
 
               <div className="mt-2 space-y-1 text-[11px]">
                 <Row label="Handle" value={`@${handle}`} onCopy={() => copy(handle, "Handle copied")} />
