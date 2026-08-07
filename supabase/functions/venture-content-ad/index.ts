@@ -298,7 +298,9 @@ Deno.serve(async (req) => {
 
     const asset = specForAspect(aspect);
     const ctx = await loadVentureContext(admin, snapshotId);
+    step("venture context loaded");
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
+    step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText });
 
     let plan: CanvasPlan = buildCanvasPlan({ kit, asset, direction, signature: signatureCfg });
     plan = applyPaletteOverride(plan, paletteOverride);
@@ -310,6 +312,7 @@ Deno.serve(async (req) => {
     let paletteTileDataUrl: string | null = null;
     try { paletteTileDataUrl = bytesToDataUrl(buildPaletteTilePngBytes(plan)); }
     catch (e) { console.warn("palette tile build failed", e); }
+
 
     const variationSeed = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
 
