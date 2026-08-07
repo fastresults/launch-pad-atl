@@ -427,9 +427,10 @@ export default function LogoStudio({
                   <div className="flex items-center gap-2">
                     <Button size="sm" disabled={busy} onClick={() => submitAnswer(null)}>
                       {answer.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                      {answer.isPending ? "Sketching…" : step.done ? "Draw the final round" : "Answer & sketch"}
+                      {answer.isPending ? "Redrawing…" : step.done ? "Draw the final pass" : "Answer & redraw"}
                     </Button>
-                    {busy && <span className="text-[11px] text-muted-foreground">Drawing three marks — about 20 seconds.</span>}
+                    {busy && <span className="text-[11px] text-muted-foreground">Redrawing the mark — about 15 seconds.</span>}
+
                   </div>
                 </div>
               )}
