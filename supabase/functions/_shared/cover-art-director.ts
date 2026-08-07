@@ -585,7 +585,7 @@ ${suppressHeadline ? suppressBlock : `- HEADLINE (${isCustomHeadline ? "verbatim
     ? ""
     : `\n- HEADLINE LANDING AREA: reserve the TOP ${headlineBandPct}% of the canvas (full width, minus 8% side insets) exclusively for the headline text. NO sidebar stripe, NO signature block, NO focal shape, NO photo subject, NO logo may enter or cross this rectangle. The headline text is left-anchored inside this band, ranged left, max two lines, tight tracking, must fit fully within the band without any character clipping at the left or right edge. Do NOT wrap so tightly that any letterform touches or crosses the band's left/right/top edges — pull the type in by another 3% if in doubt.`;
   const sidebarCap = isSquareOrPortrait
-    ? `\n- SIDEBAR / SIGNATURE BLOCK CAP: on this square or portrait canvas, any sidebar stripe or full-height signature block MUST NOT exceed 28% of canvas width, MUST sit on the OPPOSITE side of the canvas from the LOGO LANDING AREA, MUST START BELOW the HEADLINE LANDING AREA (never full-height across the headline band), and MUST NOT contain any lettering (no vertical headline, no rotated text, no glyphs). Reach the signature coverage target through additional flat shapes elsewhere on the canvas, not by widening or lengthening the sidebar.`
+    ? `\n- SIDEBAR / SIGNATURE BLOCK CAP: on this square or portrait canvas, any sidebar stripe or full-height signature block MUST NOT exceed 28% of canvas width, MUST sit on the OPPOSITE side of the canvas from the QUIET CORNER, MUST START BELOW the HEADLINE LANDING AREA (never full-height across the headline band), and MUST NOT contain any lettering (no vertical headline, no rotated text, no glyphs). Reach the signature coverage target through additional flat shapes elsewhere on the canvas, not by widening or lengthening the sidebar.`
     : "";
   return `POST / COVER SYSTEM (${ratio})
 - Treat as a single editorial frame. One focal element, ≥60% negative space.
@@ -666,7 +666,7 @@ export function buildCoverArtPrompt(args: {
 - Image #1: the venture's official logo. Use its colors and forms as-is. Do NOT redraw. For non-avatar assets, leave an unmarked area of negative space where the logo will land — no container, no frame, no border, no plate, no card, no outline, no ghosted rectangle around it. We composite the actual logo directly on top of the raw composition.
 - Image #2: the canvas palette tile. The FOUR colors in this tile (surface, ink, signature, accent) are the ONLY colors permitted in the composition. No other colors. No tints. No gradients between them.`
     : `## Reference imagery
-- No logo file was uploaded; do NOT invent a logo. Compose around a clean reserved rectangle in a non-focal corner.`;
+- No logo file was uploaded; do NOT invent a logo. Simply keep one non-focal corner visually quiet — do not draw a rectangle or placeholder there.`;
 
   const feedbackBlock = userFeedback && userFeedback.trim()
     ? `\n## Founder feedback on the previous version (BINDING — honor every note)\nThe founder reviewed the last render and said:\n"""${userFeedback.trim().slice(0, 600)}"""\nTreat this as binding art-direction notes from the client. Apply every note unless it would violate the canvas plan or contrast rules above (those always win).\n`
