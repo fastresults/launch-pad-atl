@@ -1559,9 +1559,11 @@ Deno.serve(async (req) => {
             wordmark_font: variants.wordmark_family,
           },
           direction_name: row.direction_name, logo_type: row.logo_type,
+          source: redrawn ? "redrawn" : "approved_vector",
           render: row.render_path
-            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "gateway_reference" }
+            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "vector" }
             : null,
+
           business_link: row.concept?.business_link ?? row.concept?.human_link ?? "",
           reads_as: row.concept?.reads_as ?? "",
           meaning: row.concept?.meaning ?? "",
