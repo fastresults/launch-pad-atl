@@ -623,12 +623,16 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     const myToken = abortToken.current;
     // Thrown to unwind the loop silently when the queue was cleared mid-run.
     const aborted = () => abortToken.current !== myToken;
+
+    // Stages 1+2 — read the founder's reference marks, then read the business.
     setLogoPhase("brief");
-    if (run.status === "developing_brief" || run.status === "queued") {
-      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_brief", runId: run.id } });
+    if (["reading_context", "developing_brief", "queued"].includes(run.status)) {
+      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_read_context", runId: run.id } });
       run = { ...run, status: "developing_directions" };
     }
     if (aborted()) return;
+
+    // Stage 3 — concepting.
     setLogoPhase("concepting");
     let state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     if (!state.directions?.length) {
@@ -638,39 +642,46 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     }
     if (aborted()) return;
 
-    // Render each concept as a real designed mark before tracing it to vector.
-    // This stage self-heals: a direction whose render is unavailable advances to
-    // drawing anyway, so the loop below never blocks on the image provider.
-    const pending = (state.directions ?? []).filter(
-      (d: any) => d.current_stage === "render_concept" && !["ready", "needs_review", "canceled"].includes(d.status),
-    );
-    if (pending.length) {
-      setLogoPhase("rendering");
-      for (let i = 0; i < pending.length; i += 2) {
-        if (aborted()) return;
-        await Promise.allSettled(pending.slice(i, i + 2).map((d: any) =>
-          generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_concept", runId: run.id, directionId: d.id } })
-        ));
-        await logoRunQ.refetch();
-      }
-      if (aborted()) return;
-      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
-    }
-
-    setLogoPhase("drawing");
+    // Stages 4+5 — render each concept against the references, then let the
+    // jury judge the render. A failed verdict sends that concept back for one
+    // corrective re-render, so the loop alternates until every slot settles.
     for (let round = 0; round < 3; round++) {
       if (aborted()) return;
-      const work = (state.directions ?? []).filter((d: any) => !["ready", "needs_review", "canceled"].includes(d.status) && Number(d.attempt_count ?? 0) < 3);
-      if (!work.length) break;
-      for (let i = 0; i < work.length; i += 2) {
-        if (aborted()) return;
-        await Promise.allSettled(work.slice(i, i + 2).map((d: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_draw_vector", runId: run.id, directionId: d.id } })));
-        await logoRunQ.refetch();
-      }
-      if (aborted()) return;
-      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
 
+      const toRender = (state.directions ?? []).filter(
+        (d: any) => d.current_stage === "render_concept" && !["ready", "needs_review", "canceled"].includes(d.status),
+      );
+      if (toRender.length) {
+        setLogoPhase("rendering");
+        for (let i = 0; i < toRender.length; i += 2) {
+          if (aborted()) return;
+          await Promise.allSettled(toRender.slice(i, i + 2).map((d: any) =>
+            generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_concept", runId: run.id, directionId: d.id } })
+          ));
+          await logoRunQ.refetch();
+        }
+        if (aborted()) return;
+        state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+      }
+
+      const toJudge = (state.directions ?? []).filter(
+        (d: any) => d.render_path && !["ready", "needs_review", "canceled"].includes(d.status),
+      );
+      if (!toJudge.length && !toRender.length) break;
+      if (toJudge.length) {
+        setLogoPhase("reviewing");
+        for (let i = 0; i < toJudge.length; i += 2) {
+          if (aborted()) return;
+          await Promise.allSettled(toJudge.slice(i, i + 2).map((d: any) =>
+            generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_jury", runId: run.id, directionId: d.id } })
+          ));
+          await logoRunQ.refetch();
+        }
+        if (aborted()) return;
+        state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+      }
     }
+
     const finished = (state.directions ?? []).filter((d: any) => ["ready", "needs_review"].includes(d.status)).length;
     await logoRunQ.refetch();
     if (finished < Number(run.requested_count ?? 4)) throw new Error(`${Number(run.requested_count ?? 4) - finished} direction${Number(run.requested_count ?? 4) - finished === 1 ? "" : "s"} paused after three safe attempts`);
@@ -678,15 +689,23 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   const genLogos = useMutation({
     mutationFn: async () => {
+      if (refs.length < 3) throw new Error("Upload three logos you admire first — they set the craft standard for this run.");
       const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 4, referenceImages: refs } });
       setLogos([]);
       await processLogoRun(created.run);
       return created;
     },
-    onSuccess: () => toast.success("Your four vector directions are ready"),
+    onSuccess: () => toast.success("Your four concept marks are ready — approve one to vectorize it"),
     onError: (e: any) => toast.error(e?.message ?? "Logo run paused. You can resume it here."),
     onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
   });
+
+  const vectorizeDirection = useMutation({
+    mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_vectorize", runId: item.run_id, directionId: item.id } }),
+    onSuccess: () => { toast.success("Mark vectorized — SVG lockups are ready"); logoRunQ.refetch(); },
+    onError: (e: any) => toast.error(e?.message ?? "Could not vectorize this mark"),
+  });
+
 
   const resumeLogos = useMutation({
     mutationFn: () => processLogoRun(activeRun),
