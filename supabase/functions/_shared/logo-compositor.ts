@@ -222,7 +222,18 @@ function avgLuminance(base: Image, x: number, y: number, w: number, h: number): 
 // A vector mark must arrive as ink on transparency. Marks exported with a
 // baked white plate get that plate knocked out here, then the bitmap is
 // trimmed to its ink bounding box so no dead margin ships with the logo.
-function knockoutAndTrim(logo: Image): Image {
+// Hard ceiling on the bitmap we run per-pixel work over. A mark only ever
+// renders a few hundred px wide on the poster, so processing a 2000px raster
+// burns edge-function CPU for no visible gain.
+const MARK_MAX_DIM = 768;
+
+function knockoutAndTrim(input: Image): Image {
+  const logo = Math.max(input.width, input.height) > MARK_MAX_DIM
+    ? input.clone().resize(
+        input.width >= input.height ? MARK_MAX_DIM : Image.RESIZE_AUTO,
+        input.height > input.width ? MARK_MAX_DIM : Image.RESIZE_AUTO,
+      )
+    : input;
   const w = logo.width;
   const h = logo.height;
   const corner = logo.getPixelAt(1, 1);
@@ -230,6 +241,7 @@ function knockoutAndTrim(logo: Image): Image {
   const cg = (corner >>> 16) & 0xff;
   const cb = (corner >>> 8) & 0xff;
   const ca = corner & 0xff;
+
   const near = (r: number, g: number, b: number) =>
     Math.abs(r - cr) < 14 && Math.abs(g - cg) < 14 && Math.abs(b - cb) < 14;
 
