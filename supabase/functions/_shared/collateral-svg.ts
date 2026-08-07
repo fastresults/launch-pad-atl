@@ -552,28 +552,57 @@ export function designTokens(ctx: CollateralCtx): { css: string; json: string } 
   return { css, json };
 }
 
-export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx): Promise<Page[]> {
+const SERIF_FALLBACK = "Georgia, 'Times New Roman', serif";
+const SANS_FALLBACK = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+function fallbackFor(family: string): string {
+  return /(serif|playfair|lora|merriweather|garamond|baskerv|crimson|spectral|cormorant|bitter|domine)/i.test(family)
+    ? SERIF_FALLBACK
+    : SANS_FALLBACK;
+}
+
+export type RenderResult = { pages: Page[]; fontBuffers: Uint8Array[] };
+
+export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx): Promise<RenderResult> {
   const heading = ctx.fonts?.heading || "Inter";
   const body = ctx.fonts?.body || "Inter";
-  const css = [
-    await embedFont(heading, 700, "BrandHead"),
-    await embedFont(body, 400, "BrandBody"),
+  const [head, bodyFont] = await Promise.all([loadFont(heading, 700), loadFont(body, 400)]);
+
+  // Browsers read the embedded @font-face; the rasteriser matches the TTF's own
+  // family name, so the SVG must ask for the real family, not an alias.
+  const faces = [
+    head?.b64 ? `@font-face{font-family:'${heading}';font-style:normal;font-weight:700;src:url(data:font/woff2;base64,${head.b64});}` : "",
+    bodyFont?.b64 ? `@font-face{font-family:'${body}';font-style:normal;font-weight:400;src:url(data:font/woff2;base64,${bodyFont.b64});}` : "",
     "text{ -webkit-font-smoothing:antialiased; }",
   ].join("");
 
+  let pages: Page[];
   switch (kind) {
-    case "business_card": return businessCard(ctx, css);
-    case "letterhead": return letterhead(ctx, css);
-    case "envelope": return envelope(ctx, css);
-    case "notecard": return notecard(ctx, css);
-    case "email_signature": return emailSignature(ctx, css);
-    case "invoice": return docTemplate(ctx, css, "invoice");
-    case "proposal": return docTemplate(ctx, css, "proposal");
-    case "presentation": return presentation(ctx, css);
-    case "guidelines": return guidelines(ctx, css);
-    default: return [];
+    case "business_card": pages = businessCard(ctx, faces); break;
+    case "letterhead": pages = letterhead(ctx, faces); break;
+    case "envelope": pages = envelope(ctx, faces); break;
+    case "notecard": pages = notecard(ctx, faces); break;
+    case "email_signature": pages = emailSignature(ctx, faces); break;
+    case "invoice": pages = docTemplate(ctx, faces, "invoice"); break;
+    case "proposal": pages = docTemplate(ctx, faces, "proposal"); break;
+    case "presentation": pages = presentation(ctx, faces); break;
+    case "guidelines": pages = guidelines(ctx, faces); break;
+    default: pages = [];
   }
+
+  const headStack = `${heading}, ${fallbackFor(heading)}`;
+  const bodyStack = `${body}, ${fallbackFor(body)}`;
+  pages = pages.map((p) => ({
+    ...p,
+    svg: p.svg
+      .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
+      .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`),
+  }));
+
+  const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
+  return { pages, fontBuffers };
 }
+
 
 /** Ready-to-paste HTML email signature (matches the PNG variant). */
 export function signatureHtml(ctx: CollateralCtx, logoUrl?: string | null): string {
