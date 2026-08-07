@@ -31,8 +31,11 @@ import { fontStackFor, outlineWordmark } from "../_shared/logo-type.ts";
 import { rasterizeSvg } from "../_shared/logo-raster.ts";
 import {
   HiggsfieldError,
+  checkHiggsfieldAuth,
   fetchRenderBytes,
   higgsfieldConfigured,
+  isCreditExhaustion,
+  probeHiggsfield,
   renderLogoConcept,
 } from "../_shared/higgsfield.ts";
 import {
@@ -794,7 +797,7 @@ Deno.serve(async (req) => {
     const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // Durable logo stages share the logo preset.
-    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_remove_direction"];
+    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_render_status", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_remove_direction"];
     const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
@@ -848,6 +851,83 @@ Deno.serve(async (req) => {
     if (kind === "logo_get_run") {
       return new Response(JSON.stringify({ ok: true, ...(await getRun(runId)) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Render-provider health for the wizard banner. The free path only proves
+    // the credentials work — the platform has no balance endpoint — so credit
+    // state is reported from the most recent real render attempt on this
+    // snapshot. `probe: true` submits a throwaway render and SPENDS a credit,
+    // so it is only ever triggered by an explicit click.
+    if (kind === "logo_render_status") {
+      const auth = await checkHiggsfieldAuth();
+      const { data: recent } = await supabase.from("brand_logo_directions")
+        .select("render_status, render_error, render_path, updated_at, direction_name")
+        .eq("snapshot_id", snapshotId)
+        .not("render_status", "is", null)
+        .order("updated_at", { ascending: false })
+        .limit(12);
+
+      const rows = recent ?? [];
+      const lastFailure = rows.find((r: any) => r.render_status === "unavailable" || r.render_status === "failed");
+      const lastSuccess = rows.find((r: any) => r.render_status === "ready");
+      const outOfCredits = !!lastFailure?.render_error && isCreditExhaustion(String(lastFailure.render_error));
+
+      let state: string;
+      let headline: string;
+      let detail: string | null = null;
+
+      if (auth.state !== "ok") {
+        state = auth.state === "not_configured" ? "not_configured" : "auth_error";
+        headline = auth.state === "not_configured"
+          ? "Higgsfield not connected"
+          : "Higgsfield credentials rejected";
+        detail = auth.detail;
+      } else if (outOfCredits) {
+        state = "no_credits";
+        headline = "Higgsfield platform credits exhausted";
+        detail = "Platform API credits are a separate wallet from your Higgsfield app subscription. Top up at platform.higgsfield.ai to re-enable art-directed renders.";
+      } else if (lastFailure && (!lastSuccess || new Date(lastFailure.updated_at) > new Date(lastSuccess.updated_at))) {
+        state = "degraded";
+        headline = "Last Higgsfield render failed";
+        detail = String(lastFailure.render_error ?? "").slice(0, 300) || null;
+      } else if (lastSuccess) {
+        state = "ready";
+        headline = "Higgsfield connected";
+        detail = "Concepts are being rendered before vectoring.";
+      } else {
+        state = "untested";
+        headline = "Higgsfield connected";
+        detail = "Credit balance is unknown until the first render runs — the platform exposes no balance endpoint.";
+      }
+
+      let probeResult: string | null | undefined;
+      if (body?.probe === true) {
+        probeResult = await probeHiggsfield();
+        if (probeResult === null) {
+          state = "ready";
+          headline = "Higgsfield connected and funded";
+          detail = "Test render accepted — credits are available.";
+        } else {
+          state = isCreditExhaustion(probeResult) ? "no_credits" : "degraded";
+          headline = isCreditExhaustion(probeResult) ? "Higgsfield platform credits exhausted" : "Higgsfield test render failed";
+          detail = probeResult;
+        }
+      }
+
+      const fallbacks = rows.filter((r: any) => r.render_status === "unavailable" || r.render_status === "failed").length;
+
+      return new Response(JSON.stringify({
+        ok: true,
+        state,
+        headline,
+        detail,
+        auth: auth.state,
+        fallbackCount: fallbacks,
+        renderedCount: rows.filter((r: any) => r.render_status === "ready").length,
+        probed: body?.probe === true,
+        topUpUrl: "https://platform.higgsfield.ai",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
 
     if (kind === "logo_cancel_run") {
       if (!runId) throw new Error("runId required");

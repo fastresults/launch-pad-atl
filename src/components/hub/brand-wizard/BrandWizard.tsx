@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy, AlertTriangle, CircleCheck, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import {
   getBrandKit,
@@ -557,6 +557,35 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const runDirections: any[] = logoRunQ.data?.directions ?? [];
   const runBusy = !!activeRun && !["completed", "completed_with_review", "failed", "canceled"].includes(activeRun.status);
 
+  // Higgsfield render-provider health. The free check only proves the key works
+  // — the platform publishes no balance endpoint — so credit state is inferred
+  // from real render outcomes, and the explicit test below spends one credit.
+  const renderStatusQ = useQuery({
+    queryKey: ["higgsfieldStatus", snapshot.id],
+    queryFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_status" } }),
+    staleTime: 60_000,
+    refetchInterval: runBusy ? 15_000 : false,
+  });
+  const renderStatus = renderStatusQ.data as any;
+  const [probing, setProbing] = useState(false);
+  const probeRender = async () => {
+    setProbing(true);
+    try {
+      const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_status", probe: true } });
+      qc.setQueryData(["higgsfieldStatus", snapshot.id], out);
+      out?.state === "ready" ? toast.success(out.headline) : toast.error(out?.headline ?? "Test render failed");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not reach Higgsfield");
+    } finally {
+      setProbing(false);
+    }
+  };
+
+  // Concepts that were vectored without a Higgsfield render behind them.
+  const fellBack = runDirections.filter(
+    (d) => d.render_status && d.render_status !== "ready" && d.render_status !== "pending",
+  );
+
   useEffect(() => {
     const ready = runDirections.filter((d) => d.status === "ready" || d.status === "needs_review").map((d) => d.asset).filter((a) => a?.url);
     if (ready.length) setLogos(ready);
@@ -816,6 +845,76 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         </div>
 
+        {/* Render-provider status. Higgsfield renders each concept as a real
+            designed mark before it is vectored; when it is unavailable the
+            pipeline still finishes, but from the written brief alone. */}
+        {renderStatus && (
+          <div
+            className={`rounded-lg border p-3 text-[11px] ${
+              renderStatus.state === "ready"
+                ? "border-emerald-500/25 bg-emerald-500/5"
+                : renderStatus.state === "untested"
+                  ? "border-white/10 bg-background/40"
+                  : "border-amber-500/35 bg-amber-500/10"
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              {renderStatus.state === "ready"
+                ? <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                : renderStatus.state === "untested"
+                  ? <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  : <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />}
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold">{renderStatus.headline}</span>
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Render engine
+                  </span>
+                </div>
+                {renderStatus.detail && (
+                  <p className="leading-relaxed text-muted-foreground">{renderStatus.detail}</p>
+                )}
+                {renderStatus.state !== "ready" && renderStatus.state !== "untested" && (
+                  <p className="leading-relaxed text-amber-200/90">
+                    Concepts are still being produced — but they are drawn from the written brief instead of an
+                    art-directed render, which is the lower-quality path.
+                  </p>
+                )}
+                {(renderStatus.renderedCount > 0 || renderStatus.fallbackCount > 0) && (
+                  <p className="text-muted-foreground">
+                    Recent concepts: {renderStatus.renderedCount} rendered · {renderStatus.fallbackCount} fell back to
+                    brief-only drawing.
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-3 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={probeRender}
+                    disabled={probing}
+                    className="inline-flex items-center gap-1 font-medium text-primary underline-offset-2 hover:underline disabled:opacity-50"
+                  >
+                    {probing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                    {probing ? "Testing…" : "Run a live credit test"}
+                  </button>
+                  <span className="text-[10px] text-muted-foreground">Spends 1 Higgsfield credit if funded.</span>
+                  {renderStatus.state === "no_credits" && (
+                    <a
+                      href={renderStatus.topUpUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      Top up platform credits <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+
         {runDirections.some((d) => !["ready", "needs_review"].includes(d.status)) && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {runDirections.filter((d) => !["ready", "needs_review"].includes(d.status)).map((p: any) => (
@@ -841,6 +940,16 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
               </div>
             ))}
           </div>
+        )}
+
+        {fellBack.length > 0 && (
+          <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-amber-400">
+            <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+            <span>
+              {fellBack.length} of {runDirections.length} concepts in this set skipped the Higgsfield render and were
+              drawn from the brief alone{fellBack[0]?.render_error ? ` — ${String(fellBack[0].render_error).slice(0, 140)}` : ""}. Re-run the set once renders are available for noticeably stronger marks.
+            </span>
+          </p>
         )}
 
         {logos.length > 0 && (
@@ -882,11 +991,27 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="truncate text-xs font-semibold">{a.direction_name ?? `Concept ${i + 1}`}</div>
-                        {a.logo_type && (
-                          <div className="mt-0.5 inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-primary">
-                            {a.logo_type}
-                          </div>
-                        )}
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                          {a.logo_type && (
+                            <span className="inline-block rounded-full bg-primary/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-primary">
+                              {a.logo_type}
+                            </span>
+                          )}
+                          {directionRow?.render_status === "ready" && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-emerald-400">
+                              <CircleCheck className="h-2.5 w-2.5" /> Rendered
+                            </span>
+                          )}
+                          {directionRow?.render_status && !["ready", "pending"].includes(directionRow.render_status) && (
+                            <span
+                              title={directionRow.render_error ?? "Higgsfield render unavailable"}
+                              className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-amber-400"
+                            >
+                              <AlertTriangle className="h-2.5 w-2.5" /> Brief-only
+                            </span>
+                          )}
+                        </div>
+
                       </div>
                     </div>
                     {a.human_link && (
