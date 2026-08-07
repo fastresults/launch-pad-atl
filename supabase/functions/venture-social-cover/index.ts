@@ -18,6 +18,7 @@ import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-til
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
+import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
