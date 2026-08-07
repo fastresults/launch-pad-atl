@@ -1330,7 +1330,95 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
         </Dialog>
       </section>
 
+      {/* YOUR OWN MARK */}
+      <section className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Already have a logo?</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Upload your own mark (PNG, JPG or SVG). It becomes the selected primary logo in your Live Brand straight away.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-white/20 px-3 py-2 text-xs hover:border-primary/60">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              className="hidden"
+              disabled={uploadOwnLogo.isPending}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) uploadOwnLogo.mutate(file);
+              }}
+            />
+            {uploadOwnLogo.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {uploadOwnLogo.isPending ? "Uploading…" : "Use my own logo"}
+          </label>
+          {selectedLogo && (
+            <div className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2">
+              {selectedLogo.url && (
+                <img src={selectedLogo.url} alt="Selected logo" className="h-8 w-8 rounded bg-white object-contain" />
+              )}
+              <div className="text-[11px]">
+                <div className="font-semibold text-primary">Selected mark</div>
+                <div className="text-muted-foreground">
+                  {selectedLogo.source === "upload" ? "Your uploaded logo" : selectedLogo.direction_name || "Generated concept"}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
+      {/* WEBSITE PRD — brand-infused */}
+      <section className={`space-y-3 rounded-xl border p-4 ${selectedLogo ? "border-primary/40 bg-primary/5" : "border-white/10 bg-background/40"}`}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <FileText className="h-4 w-4 text-primary" /> Website PRD
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {selectedLogo
+                ? "Rebuild the PRD so your palette, typography, voice and selected mark are baked in — paste-ready for a site builder."
+                : "Select a mark above (or upload your own) to fold the brand into your website PRD."}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            disabled={!selectedLogo || regeneratePrd.isPending}
+            onClick={() => regeneratePrd.mutate()}
+          >
+            {regeneratePrd.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
+            {regeneratePrd.isPending ? "Regenerating…" : "Regenerate website PRD"}
+          </Button>
+        </div>
+
+        {prd?.content ? (
+          <div className="overflow-hidden rounded-lg border border-white/10 bg-card">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
+              <div className="text-[11px] text-muted-foreground">
+                {prd.content.split(/\s+/).filter(Boolean).length} words
+                {prd.updated_at ? ` · updated ${new Date(prd.updated_at).toLocaleString()}` : ""}
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" className="h-7 text-[11px]" onClick={copyPrd}>
+                  <Copy className="mr-1 h-3.5 w-3.5" /> Copy
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-[11px]" onClick={downloadPrd}>
+                  <Download className="mr-1 h-3.5 w-3.5" /> Download
+                </Button>
+              </div>
+            </div>
+            <pre className="max-h-72 overflow-auto whitespace-pre-wrap p-3 text-[11px] leading-relaxed text-foreground/80">
+              {prd.content}
+            </pre>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-white/10 p-4 text-center text-xs text-muted-foreground">
+            No website PRD yet. Regenerate to produce one with your brand baked in.
+          </div>
+        )}
+      </section>
 
       <div className="flex justify-between">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
