@@ -861,15 +861,14 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         )}
 
-        <div className="flex items-center justify-between text-xs">
-          {skipped ? (
-            <button onClick={undoSkip} className="text-primary underline-offset-2 hover:underline">Reconsider — I'll upload inspirations</button>
+        <div className="text-xs">
+          {gatePassed ? (
+            <span className="text-emerald-700 dark:text-emerald-400">Craft standard set — these three marks now drive every concept.</span>
           ) : (
-            <button onClick={skipRefs} className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
-              Skip — generate without references
-            </button>
+            <span className="text-amber-700 dark:text-amber-400">
+              {3 - refs.length} more to go. Generation stays locked until all three are here — they are the art direction, not a nice-to-have.
+            </span>
           )}
-          {skipped && <span className="text-amber-700 dark:text-amber-400">Skipped — concepts will be context-only</span>}
         </div>
       </section>
 
@@ -879,7 +878,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div>
             <h3 className="text-sm font-semibold">Logo concepts</h3>
             <p className="text-xs text-muted-foreground">
-              Strategy first: we read your finished brand assets, write an identity brief, sketch ten ideas, keep only the strongest four — then render and review each mark before you see it. {refs.length ? "Inspired (never copied) by your references." : ""}
+              References first: we read the construction of your three inspirations, read what your business actually does from your own copy, then concept, render and judge four marks against both. Vectoring happens only on the mark you approve.
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -890,9 +889,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
               </Button>
               <Button onClick={() => runBusy ? resumeLogos.mutate() : genLogos.mutate()} disabled={genLogos.isPending || resumeLogos.isPending || !gatePassed} size="sm">
                 {(genLogos.isPending || resumeLogos.isPending) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                {logoPhase === "brief" ? "Writing the brief…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "rendering" ? "Art-directing the marks…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : "Generate 4 logo directions"}
+                {logoPhase === "brief" ? "Reading references & business…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "rendering" ? "Art-directing the marks…" : logoPhase === "reviewing" ? "Jury reviewing…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : !gatePassed ? "Add 3 inspirations to unlock" : "Generate 4 logo directions"}
               </Button>
             </div>
+
 
             {(genLogos.isPending || resumeLogos.isPending || runBusy) && (
               <span className="text-[10px] text-muted-foreground">Progress is saved. You can close this window and resume later.</span>
