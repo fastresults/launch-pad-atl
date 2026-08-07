@@ -1288,13 +1288,91 @@ Deno.serve(async (req) => {
     }
 
 
-    // Founder picks ONE mark to carry forward. Single selection per run.
+    // Founder picks ONE mark to carry forward. Single selection per run, and
+    // the pick is committed to the Live Brand as the primary logo.
     if (kind === "logo_select_direction") {
       if (!runId || !directionId) throw new Error("runId and directionId required");
       await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
       const { error: selErr } = await supabase.from("brand_logo_directions").update({ selected: true }).eq("id", directionId).eq("run_id", runId);
       if (selErr) throw selErr;
-      return new Response(JSON.stringify({ ok: true, selected: directionId }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const { data: chosen } = await supabase
+        .from("brand_logo_directions")
+        .select("id, asset, render_path, svg_path, direction_name")
+        .eq("id", directionId)
+        .maybeSingle();
+
+      let primaryAsset: any = chosen?.asset ? { ...chosen.asset } : null;
+      if (primaryAsset) {
+        const path = primaryAsset.path ?? chosen?.svg_path ?? chosen?.render_path;
+        if (path) {
+          const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(path, 60 * 60 * 24 * 7);
+          if (signed?.signedUrl) {
+            primaryAsset.url = signed.signedUrl;
+            primaryAsset.preview_url = signed.signedUrl;
+          }
+          primaryAsset.path = path;
+        }
+        primaryAsset.direction_id = directionId;
+        primaryAsset.primary = true;
+        primaryAsset.source = "generated";
+      }
+
+      const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos, dna").eq("snapshot_id", snapshotId).maybeSingle();
+      const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
+      const demoted = existing
+        // an earlier uploaded primary is replaced by this pick
+        .filter((l: any) => !(l?.source === "upload" && l?.primary))
+        .map((l: any) => ({ ...l, primary: false }))
+        .filter((l: any) => !(primaryAsset && (l?.path === primaryAsset.path || l?.direction_id === directionId)));
+      const nextLogos = primaryAsset ? [primaryAsset, ...demoted] : demoted;
+      const { error: kitErr } = await supabase
+        .from("venture_brand_kits")
+        .update({ logos: nextLogos, dna: { ...(kitRow?.dna ?? {}), selected_logo_direction_id: directionId } })
+        .eq("snapshot_id", snapshotId);
+      if (kitErr) throw new Error(`Could not save the selected mark: ${kitErr.message}`);
+
+      return new Response(JSON.stringify({ ok: true, selected: directionId, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Founder uploads their own mark and it becomes the selected primary logo.
+    if (kind === "logo_upload_own") {
+      const dataUrl = typeof body?.dataUrl === "string" ? body.dataUrl : "";
+      const filename = typeof body?.filename === "string" ? body.filename : "logo.png";
+      const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) throw new Error("Upload a PNG, JPG or SVG file.");
+      const contentType = match[1];
+      const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
+      const ext = contentType.includes("svg") ? "svg" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : contentType.includes("webp") ? "webp" : "png";
+      const path = `${userId}/brand/${snapshotId}/logo-upload-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("user-media").upload(path, bytes, { contentType, upsert: true });
+      if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
+      const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(path, 60 * 60 * 24 * 7);
+
+      const uploaded = {
+        ok: true,
+        kind: "upload",
+        source: "upload",
+        primary: true,
+        url: signed?.signedUrl ?? null,
+        preview_url: signed?.signedUrl ?? null,
+        path,
+        direction_name: filename,
+        created_at: new Date().toISOString(),
+      };
+
+      const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos, dna").eq("snapshot_id", snapshotId).maybeSingle();
+      const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
+      const nextLogos = [uploaded, ...existing.filter((l: any) => l?.source !== "upload").map((l: any) => ({ ...l, primary: false }))];
+      const { error: kitErr } = await supabase
+        .from("venture_brand_kits")
+        .update({ logos: nextLogos, dna: { ...(kitRow?.dna ?? {}), selected_logo_direction_id: null } })
+        .eq("snapshot_id", snapshotId);
+      if (kitErr) throw new Error(`Could not save your logo: ${kitErr.message}`);
+
+      if (runId) await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
+
+      return new Response(JSON.stringify({ ok: true, logo: uploaded, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Founder-written refinement: archive the current render, then re-render the
