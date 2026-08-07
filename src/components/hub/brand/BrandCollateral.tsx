@@ -146,141 +146,102 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
   };
 
 
+  const totalKinds = COLLATERAL_TIERS.reduce((n, t) => n + t.kinds.length, 0);
+  const generatedKinds = COLLATERAL_TIERS.flatMap((t) => t.kinds).filter((k) => (byKind[k.kind] ?? []).length > 0).length;
+
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Package className="h-4 w-4 text-primary" />
-            Brand collateral
-            <Badge variant="outline" className="text-[10px]">{items.length} files</Badge>
+    <div className="space-y-5">
+      {/* Value banner — one clear statement of what the founder gets */}
+      <div className="rounded-xl border border-white/10 bg-background/40 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Package className="h-4 w-4 text-primary" />
+              Brand collateral
+            </div>
+            <p className="mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
+              {!locked
+                ? `Lock your brand kit and we typeset ${totalKinds} print-ready pieces — business card, letterhead, envelope, invoice, guidelines and more — straight from your palette, type and vector mark.`
+                : items.length === 0
+                  ? `${totalKinds} print-ready pieces, typeset from your locked palette, typography and vector mark. No AI guesswork on the type — hand these straight to a printer.`
+                  : `${items.length} files ready across ${generatedKinds} of ${totalKinds} pieces — print-checked and ready for a printer or your inbox.`}
+            </p>
+            {locked && (
+              <button
+                type="button"
+                onClick={() => { setPendingKinds(undefined); setDetailsOpen(true); }}
+                className="mt-2 inline-flex items-center gap-1.5 text-[11px] hover:underline"
+              >
+                <ShieldCheck className={`h-3.5 w-3.5 ${verifiedAt ? "text-status-success" : "text-status-warning"}`} />
+                <span className={verifiedAt ? "text-muted-foreground" : "text-status-warning"}>
+                  {verifiedAt
+                    ? "Contact details verified — edit"
+                    : `Confirm your contact details first${detailsAudit?.missingRequired?.length ? ` · ${detailsAudit.missingRequired.length} blank` : ""}`}
+                </span>
+              </button>
+            )}
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Print and office pieces typeset directly from your locked palette, typography and vector mark — no AI guesswork on the type.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {locked && (
-            <Button
-              size="sm"
-              variant={verifiedAt ? "ghost" : "secondary"}
-              onClick={() => { setPendingKinds(undefined); setDetailsOpen(true); }}
-            >
-              <ShieldCheck className={`mr-1 h-3 w-3 ${verifiedAt ? "text-emerald-500" : ""}`} />
-              {verifiedAt ? "Details verified" : "Confirm details"}
+
+          <div className="flex flex-wrap items-center gap-2">
+            {items.length > 0 && (
+              <>
+                <Button size="sm" variant="ghost" onClick={onClearAll} disabled={wipe.isPending}>
+                  <RotateCcw className="mr-1 h-3 w-3" />Clear
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => downloadCollateralZip(items, snapshot?.company_name)}>
+                  <Download className="mr-1 h-3 w-3" />Download ZIP
+                </Button>
+              </>
+            )}
+            <Button size="sm" onClick={() => requestGen(undefined)} disabled={!locked || gen.isPending}>
+              {busyKind === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {items.length > 0 ? "Regenerate all" : "Generate all"}
             </Button>
-          )}
-          {items.length > 0 && (
-            <>
-              <Button size="sm" variant="ghost" onClick={onClearAll} disabled={wipe.isPending}>
-                <RotateCcw className="mr-1 h-3 w-3" />Clear
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => downloadCollateralZip(items, snapshot?.company_name)}>
-                <Download className="mr-1 h-3 w-3" />Download ZIP
-              </Button>
-            </>
-          )}
-          <Button size="sm" onClick={() => requestGen(undefined)} disabled={!locked || gen.isPending}>
-            {busyKind === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-            Generate all
-          </Button>
+          </div>
         </div>
+
+        {!locked && (
+          <p className="mt-3 rounded-lg border border-status-warning/30 bg-status-warning/5 p-3 text-xs text-status-warning">
+            Lock your brand kit (palette, typography and a saved vector logo) first — collateral is typeset around the mark.
+          </p>
+        )}
       </div>
 
-      {!locked && (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
-          Lock your brand kit (palette, typography and a saved vector logo) first — collateral is typeset around the mark.
-        </p>
-      )}
-
-      {locked && !verifiedAt && (
-        <button
-          type="button"
-          onClick={() => { setPendingKinds(undefined); setDetailsOpen(true); }}
-          className="w-full rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-left text-xs hover:bg-amber-500/10"
-        >
-          <strong>Confirm your details first.</strong> Name, title, email, phone and web address get typeset into
-          every piece — check them once and nothing goes to a printer with a typo.
-          {detailsAudit?.missingRequired?.length
-            ? ` ${detailsAudit.missingRequired.length} required field${detailsAudit.missingRequired.length === 1 ? " is" : "s are"} still blank.`
-            : ""}
-        </button>
-      )}
-
-
-      {COLLATERAL_TIERS.map((tier) => (
-        <div key={tier.tier} className="space-y-2">
-          <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{tier.label}</div>
-            <p className="text-[11px] text-muted-foreground">{tier.blurb}</p>
+      {COLLATERAL_TIERS.map((tier) => {
+        const doneInTier = tier.kinds.filter((k) => (byKind[k.kind] ?? []).length > 0).length;
+        return (
+          <div key={tier.tier} className="space-y-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 pb-2">
+              <div className="min-w-0">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/80">{tier.label}</div>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{tier.blurb}</p>
+              </div>
+              <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                {doneInTier} of {tier.kinds.length} generated
+              </span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {tier.kinds.map((k) => (
+                <CollateralPieceCard
+                  key={k.kind}
+                  label={k.label}
+                  note={k.note}
+                  preview={previewOf(k.kind)}
+                  fileCount={(byKind[k.kind] ?? []).length}
+                  stale={isStale(k.kind)}
+                  qc={qcState(k.kind)}
+                  busy={busyKind === k.kind || (busyKind === "all" && gen.isPending)}
+                  canGenerate={!!locked}
+                  disabled={!locked || gen.isPending}
+                  onPreview={() => setOpenKind(k.kind)}
+                  onGenerate={() => requestGen([k.kind])}
+                />
+              ))}
+            </div>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {tier.kinds.map((k) => {
-              const files = byKind[k.kind] ?? [];
-              const preview = previewOf(k.kind);
-              return (
-                <div key={k.kind} className="flex gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
-                  <button
-                    type="button"
-                    onClick={() => setOpenKind(k.kind)}
-                    aria-label={`Preview ${k.label}`}
-                    className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded border border-white/10 bg-white transition hover:ring-2 hover:ring-primary"
-                  >
-                    {preview
-                      ? <img src={preview} alt={k.label} className="h-full w-full object-contain" loading="lazy" />
-                      : <Package className="h-5 w-5 text-muted-foreground" />}
-                  </button>
-                  <div className="min-w-0 flex-1">
-                    <button
-                      type="button"
-                      onClick={() => setOpenKind(k.kind)}
-                      className="flex items-center gap-1.5 text-left"
-                    >
-                      <span className="truncate text-sm font-medium hover:underline">{k.label}</span>
-                      {files.length > 0 && <Badge variant="secondary" className="text-[10px]">{files.length}</Badge>}
-                      {isStale(k.kind) && (
-                        <Badge variant="outline" className="border-amber-500/50 text-[10px] text-amber-500">
-                          Details changed
-                        </Badge>
-                      )}
-                      {qcState(k.kind)?.ok && (
-                        <Badge variant="outline" className="border-emerald-500/50 text-[10px] text-emerald-500">
-                          Print-checked
-                        </Badge>
-                      )}
-                    </button>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">{k.note}</p>
-                    {qcState(k.kind)?.ok === false && (
-                      <p className="mt-1 text-[11px] text-amber-500">{qcState(k.kind)!.reasons[0]}</p>
-                    )}
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-6 px-2 text-[11px]"
-                        onClick={() => setOpenKind(k.kind)}
-                      >
-                        <Eye className="mr-1 h-3 w-3" />Preview
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 px-2 text-[11px]"
-                        disabled={!locked || gen.isPending}
-                        onClick={() => requestGen([k.kind])}
-                      >
-                        {busyKind === k.kind ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
-                        {files.length ? "Regenerate" : "Generate"}
-                      </Button>
-                    </div>
+        );
+      })}
 
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
 
       <CollateralPreviewDialog
         open={!!openKind}
