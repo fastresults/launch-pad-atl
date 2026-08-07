@@ -557,6 +557,35 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const runDirections: any[] = logoRunQ.data?.directions ?? [];
   const runBusy = !!activeRun && !["completed", "completed_with_review", "failed", "canceled"].includes(activeRun.status);
 
+  // Higgsfield render-provider health. The free check only proves the key works
+  // — the platform publishes no balance endpoint — so credit state is inferred
+  // from real render outcomes, and the explicit test below spends one credit.
+  const renderStatusQ = useQuery({
+    queryKey: ["higgsfieldStatus", snapshot.id],
+    queryFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_status" } }),
+    staleTime: 60_000,
+    refetchInterval: runBusy ? 15_000 : false,
+  });
+  const renderStatus = renderStatusQ.data as any;
+  const [probing, setProbing] = useState(false);
+  const probeRender = async () => {
+    setProbing(true);
+    try {
+      const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_status", probe: true } });
+      queryClient.setQueryData(["higgsfieldStatus", snapshot.id], out);
+      out?.state === "ready" ? toast.success(out.headline) : toast.error(out?.headline ?? "Test render failed");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not reach Higgsfield");
+    } finally {
+      setProbing(false);
+    }
+  };
+
+  // Concepts that were vectored without a Higgsfield render behind them.
+  const fellBack = runDirections.filter(
+    (d) => d.render_status && d.render_status !== "ready" && d.render_status !== "pending",
+  );
+
   useEffect(() => {
     const ready = runDirections.filter((d) => d.status === "ready" || d.status === "needs_review").map((d) => d.asset).filter((a) => a?.url);
     if (ready.length) setLogos(ready);
