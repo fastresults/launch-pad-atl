@@ -291,7 +291,7 @@ Deno.serve(async (req) => {
 
     const asset = specForAspect(aspect);
     const ctx = await loadVentureContext(admin, snapshotId);
-    const { dataUrl: logoDataUrl, bytes: logoBytes } = await fetchPrimaryLogo(admin, kit);
+    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
 
     let plan: CanvasPlan = buildCanvasPlan({ kit, asset, direction, signature: signatureCfg });
     plan = applyPaletteOverride(plan, paletteOverride);
