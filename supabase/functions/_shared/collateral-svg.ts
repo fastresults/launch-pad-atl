@@ -225,15 +225,37 @@ type LineOpts = {
 function makeType(fonts: Fonts) {
   const bytesFor = (f: "head" | "body") => (f === "head" ? fonts.head : fonts.body);
 
+  // The legal minimum type size for the page currently being drawn. Set once
+  // per page from its print spec, so no call site can set 6pt caption type on
+  // a piece whose standard is 8pt — and nothing shrinks below it to fit.
+  let floorPx = 0;
+  // Comfortable line length for the page, in characters. Long measures are a
+  // readability defect on letter-size and slide pages, so blocks wrap early.
+  let measureChars = 0;
+  const setFloor = (px: number, chars = 0) => {
+    floorPx = Math.max(0, px || 0);
+    measureChars = Math.max(0, chars || 0);
+  };
+  const min = (o: { minSize?: number }) => Math.max(o.minSize ?? 0, floorPx);
+
   /** One line, shrunk if needed so it can never leave its box. */
   function line(text: string, x: number, y: number, size: number, fill: string, o: LineOpts = {}): string {
     const t = String(text ?? "").trim();
     if (!t) return "";
     const family = o.family ?? "body";
     const tracking = o.tracking ?? 0;
-    let out = t, s = size;
+    const floor = min(o);
+    let out = t, s = Math.max(size, floor);
+    // A single line longer than the piece's comfortable measure is a paragraph
+    // masquerading as a headline — cut it at a word, don't set it in agate.
+    if (measureChars && t.length > measureChars * 1.15) {
+      let cut = t.slice(0, measureChars);
+      const sp = cut.lastIndexOf(" ");
+      if (sp > measureChars * 0.5) cut = cut.slice(0, sp);
+      out = `${cut.replace(/[\s,;:.\-–—]+$/, "")}…`;
+    }
     if (o.maxWidth) {
-      const fit = fitLine(t, { size, maxWidth: o.maxWidth, bytes: bytesFor(family), tracking, minSize: o.minSize });
+      const fit = fitLine(out, { size: s, maxWidth: o.maxWidth, bytes: bytesFor(family), tracking, minSize: floor || undefined });
       out = fit.text; s = fit.size;
       if (!out) return "";
     }
@@ -252,13 +274,21 @@ function makeType(fonts: Fonts) {
   ): { svg: string; height: number; size: number; lines: number } {
     const family = o.family ?? "body";
     const leading = o.leading ?? 1.55;
+    const floor = min(o);
+    const base = Math.max(size, floor);
+    // Cap the measure: an alphabet's average advance times the comfortable
+    // character count is the widest this block should ever set.
+    const cap = measureChars
+      ? (measure("abcdefghijklmnopqrstuvwxyz", base, bytesFor(family), o.tracking ?? 0) / 26) * measureChars
+      : width;
+    const boxW = Math.min(width, Math.max(cap, base * 8));
     const fit = fitBox(String(text ?? ""), {
-      size,
-      maxWidth: width,
+      size: base,
+      maxWidth: boxW,
       maxLines: o.maxLines ?? 40,
       bytes: bytesFor(family),
       tracking: o.tracking ?? 0,
-      minSize: o.minSize,
+      minSize: floor || undefined,
     });
     const svg = fit.lines
       .map((l, i) => (l ? line(l, x, y + i * fit.size * leading, fit.size, fill, { family, weight: o.weight, tracking: o.tracking, opacity: o.opacity, anchor: o.anchor }) : ""))
@@ -269,7 +299,7 @@ function makeType(fonts: Fonts) {
   const width = (t: string, size: number, family: "head" | "body" = "body", tracking = 0) =>
     measure(t, size, bytesFor(family), tracking);
 
-  return { line, block, width };
+  return { line, block, width, setFloor };
 }
 
 type TypeKit = ReturnType<typeof makeType>;
@@ -497,6 +527,7 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
 
   const rsF = resolveSpec("business-card-front", W, H);
   const rsB = resolveSpec("business-card-back", W, H);
+  T.setFloor(Math.min(rsF.minType, rsB.minType), rsF.measureMax);
   // Never let the art-direction margin fall inside the printer's safe area.
   const M = Math.max(g.M, rsF.safe);
 
@@ -575,6 +606,7 @@ function letterhead({ ctx, T, defs }: Args): Page[] {
   const d = ctx.details;
 
   const rs = resolveSpec("letterhead", W, H);
+  T.setFloor(rs.minType, rs.measureMax);
   const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.6)), 0.7).h;
   const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const footerY = H - g.M;
@@ -611,6 +643,7 @@ function envelope({ ctx, T, defs }: Args): Page[] {
   const { primary, paper, fg, accent, muted } = palette(ctx);
   const d = ctx.details;
   const rs = resolveSpec("envelope-no10", W, H);
+  T.setFloor(rs.minType, rs.measureMax);
   const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.45)), 0.7).h;
   const base = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const lines = addressBlock(d);
@@ -639,6 +672,7 @@ function notecard({ ctx, T, defs }: Args): Page[] {
   const soft = invert ? inkOn(primary) : muted;
 
   const rs = resolveSpec("notecard", W, H);
+  T.setFloor(rs.minType, rs.measureMax);
   const nBox = markBoxFor(ctx, rs, g.content * 0.62, 0.68);
   const markH = nBox.h;
   const markW = nBox.w;
@@ -665,9 +699,13 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
   const d = ctx.details;
   const rows = [d.email, d.phone, d.website, d.social].filter(Boolean) as string[];
   const rsSig = resolveSpec("email-signature", W, H);
-  const markBox = markBoxFor(ctx, rsSig, W * 0.25, 0.6).h;
+  T.setFloor(rsSig.minType, rsSig.measureMax);
+  // Use the box's real aspect: fitting a wide lockup inside a square slot is
+  // what kept the mark a third under its standard height.
+  const mb = markBoxFor(ctx, rsSig, W * 0.4, 1, true);
+  const markBox = mb.h;
   const left = Math.max(60, rsSig.safe);
-  const railX = left + markBox + clearSpace(markBox) * 0.7;
+  const railX = left + mb.w + clearSpace(markBox) * 0.7;
   const textX = railX + 34;
   const nameS = step(ad, 0.9);
   const rowS = step(ad, -0.9);
@@ -675,7 +713,7 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
 
   const body = [
     surface(W, H, paper, ad.material.grain * 0.4),
-    markAt(ctx, left, (H - markBox) / 2, markBox, markBox, null, paper),
+    markAt(ctx, left, (H - mb.h) / 2, mb.w, mb.h, null, paper),
     `<rect x="${r(railX)}" y="${r(H * 0.2)}" width="${r(Math.max(3, ad.ink.ruleWeight))}" height="${r(H * 0.6)}" fill="${primary}"/>`,
     T.line(d.person_name || ctx.company, textX, top, nameS, fg, { family: "head", weight: 700, maxWidth: W - textX - 60 }),
     T.line([d.person_title, ctx.company].filter(Boolean).join(" · "), textX, top + nameS * 1.35, rowS, accent, { maxWidth: W - textX - 60 }),
@@ -696,6 +734,7 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   const colX = [g.M, g.col(Math.round(ad.grid.columns * 0.55)), g.col(Math.round(ad.grid.columns * 0.72)), W - g.M];
 
   const rs = resolveSpec(mode, W, H);
+  T.setFloor(rs.minType, rs.measureMax);
   const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.5)), 0.7).h;
   const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const metaTop = snap(ad, headBase + clearSpace(logoH) + step(ad, 2.5));
@@ -761,6 +800,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
 
   const rsCover = resolveSpec("slide-1-cover", W, H);
   const rsSlide = resolveSpec("slide-2-section", W, H);
+  T.setFloor(Math.min(rsCover.minType, rsSlide.minType), rsSlide.measureMax);
   const coverBox = markBoxFor(ctx, rsCover, g.span(4), 0.65);
   const slideBox = markBoxFor(ctx, rsSlide, g.span(3), 0.6);
   const markH = coverBox.h;
@@ -846,6 +886,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   ].join("");
 
   const rsG = resolveSpec("guidelines-1-cover", W, H);
+  T.setFloor(Math.min(rsG.minType, resolveSpec("guidelines-3-colour", W, H).minType), rsG.measureMax);
   const gCover = markBoxFor(ctx, rsG, g.span(4), 0.68);
   const top = g.M + step(ad, 6.4);
 
@@ -1044,6 +1085,12 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
     const svg = p.svg
       .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
       .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
+      // Backstop: any literal <text> written outside the type kit still obeys
+      // the piece's legal minimum. Fitted lines are already at or above it.
+      .replace(/font-size="([\d.]+)"/g, (m, v) => {
+        const n = Number(v);
+        return n && n < rs.minType ? `font-size="${Math.round(rs.minType * 10) / 10}"` : m;
+      })
       .replace("<svg ", `<svg${printMeta(rs)} `);
     return { ...p, svg, metrics: pageMetrics(ctx, p.name, svg, rs) };
   });

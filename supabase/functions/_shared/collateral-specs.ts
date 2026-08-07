@@ -87,7 +87,8 @@ export const PIECE_SPECS: PieceSpec[] = [
     logo: [0.18, 0.28], logoLockup: [0.13, 0.22],
     clearSpace: 0.6, minTypePt: 7, measureMax: 55,
     bleedEdges: ["top", "right", "bottom", "left"], cropMarks: true,
-    coverage: [0.01, 0.95],
+    // A notecard is meant to be mostly empty — the writing area is the design.
+    coverage: [0.004, 0.95],
   },
   {
     page: "email-signature",
@@ -135,6 +136,17 @@ export const PIECE_SPECS: PieceSpec[] = [
     coverage: [0.005, 0.98], screen: true,
   },
   {
+    // The closing slide signs off with the mark — it is the subject, like a
+    // title card, so it carries a display band rather than the running one.
+    page: "slide-4-closing",
+    widthIn: 1920, heightIn: 1080, trimW: 1920, trimH: 1080,
+    bleedIn: 0, safeIn: 0.06 * 1080,
+    logo: [0.08, 0.16], logoLockup: [0.06, 0.13],
+    clearSpace: 0.5, minTypePt: 22, measureMax: 65,
+    bleedEdges: ["top", "right", "bottom", "left"], cropMarks: false,
+    coverage: [0.005, 0.98], screen: true,
+  },
+  {
     page: "guidelines-cover",
     widthIn: 1600, heightIn: 1000, trimW: 1600, trimH: 1000,
     bleedIn: 0, safeIn: 0.05 * 1000,
@@ -142,6 +154,17 @@ export const PIECE_SPECS: PieceSpec[] = [
     clearSpace: 0.5, minTypePt: 18, measureMax: 75,
     bleedEdges: ["top", "right", "bottom", "left"], cropMarks: false,
     coverage: [0.005, 0.98], screen: true,
+  },
+  {
+    // The logo page *is* a specimen sheet — the mark is the subject, so it is
+    // shown far larger than it would sit on a running page.
+    page: "guidelines-2-logo",
+    widthIn: 1600, heightIn: 1000, trimW: 1600, trimH: 1000,
+    bleedIn: 0, safeIn: 0.05 * 1000,
+    logo: [0.18, 0.34], logoLockup: [0.14, 0.28],
+    clearSpace: 0.5, minTypePt: 16, measureMax: 75,
+    bleedEdges: [], cropMarks: false,
+    coverage: [0.005, 0.9], screen: true,
   },
   {
     page: "guidelines",

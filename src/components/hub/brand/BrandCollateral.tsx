@@ -51,16 +51,18 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
   }, [items]);
 
   const gen = useMutation({
-    // Rasterising every piece in one call blows the edge worker's memory
-    // budget, so we walk through them two at a time.
+    // Rasterising several pieces in one call blows the edge worker's CPU and
+    // memory budget, so we walk through them one at a time.
     mutationFn: async (kinds?: string[]) => {
       const all = kinds?.length ? kinds : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind));
       const generated: any[] = [];
       const failed: any[] = [];
       const qcIssues: any[] = [];
       let artDirection: any = null;
-      for (let i = 0; i < all.length; i += 2) {
-        const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 2));
+      // One piece per call. Multi-page pieces (deck, guidelines) rasterise five
+      // pages, and pairing them exhausts the edge worker's CPU budget.
+      for (let i = 0; i < all.length; i += 1) {
+        const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 1));
         generated.push(...(res?.generated ?? []));
         failed.push(...(res?.failed ?? []));
         qcIssues.push(...(res?.qcIssues ?? []));
