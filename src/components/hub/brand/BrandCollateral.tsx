@@ -3,23 +3,39 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Eye, Loader2, Package, RotateCcw, Sparkles } from "lucide-react";
+import { Download, Eye, Loader2, Package, RotateCcw, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   COLLATERAL_TIERS,
   clearCollateral,
   downloadCollateralZip,
   generateCollateral,
+  getCollateralDetails,
   listCollateral,
 } from "@/lib/collateral.functions";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { CollateralPreviewDialog } from "@/components/hub/brand/CollateralPreviewDialog";
+import { CollateralDetailsDialog } from "@/components/hub/brand/CollateralDetailsDialog";
+
 
 export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: boolean }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [busyKind, setBusyKind] = useState<string | null>(null);
   const [openKind, setOpenKind] = useState<string | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  /** Set when a generate attempt was blocked, so we can retry after confirming. */
+  const [pendingKinds, setPendingKinds] = useState<string[] | undefined>(undefined);
+
+  const detailsQ = useQuery({
+    queryKey: ["collateralDetails", snapshot.id],
+    queryFn: () => getCollateralDetails(snapshot.id),
+    enabled: !!snapshot?.id && !!locked,
+    retry: false,
+  });
+  const verifiedAt = detailsQ.data?.verifiedAt ?? null;
+  const detailsAudit = detailsQ.data?.audit ?? null;
+
 
   const q = useQuery({
     queryKey: ["brandCollateral", snapshot.id],
@@ -41,11 +57,30 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
     onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       const failed = res?.failed ?? [];
+      const arch = res?.artDirection?.archetype;
       if (failed.length) toast.warning(`Generated with ${failed.length} skipped: ${failed.map((f: any) => f.kind).join(", ")}`);
-      else toast.success("Collateral generated.");
+      else toast.success(arch ? `Collateral generated — art direction: ${String(arch).replace(/_/g, " ")}.` : "Collateral generated.");
     },
-    onError: (e: any) => toast.error(e.message || "Generation failed"),
+    onError: (e: any) => {
+      // Missing text is a fixable gap, not a failure — send them to the form.
+      if (e?.code === "DETAILS_INCOMPLETE") {
+        toast.warning(e.message);
+        setDetailsOpen(true);
+        return;
+      }
+      toast.error(e.message || "Generation failed");
+    },
   });
+
+  /** Generate, but confirm the text inventory first if it has never been signed off. */
+  const requestGen = (kinds?: string[]) => {
+    setPendingKinds(kinds);
+    if (!verifiedAt) {
+      setDetailsOpen(true);
+      return;
+    }
+    gen.mutate(kinds);
+  };
 
   const wipe = useMutation({
     mutationFn: (kind?: string) => clearCollateral(snapshot.id, kind),
@@ -67,8 +102,16 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
     [openKind],
   );
 
-  const previewOf = (kind: string) =>
-    (byKind[kind] ?? []).find((i) => i.mime_type === "image/png")?.url ?? null;
+  // Prefer the staged mock-up for the library thumbnail — a flat card on white
+  // reads like a wireframe at 64px.
+  const previewOf = (kind: string) => {
+    const files = byKind[kind] ?? [];
+    const mock = files.find((i) => i.mime_type === "image/png" && /-mockup$/.test(i.name ?? ""));
+    return (mock ?? files.find((i) => i.mime_type === "image/png"))?.url ?? null;
+  };
+
+  const isStale = (kind: string) => (byKind[kind] ?? []).some((i) => i?.meta?.stale);
+
 
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
@@ -84,6 +127,16 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {locked && (
+            <Button
+              size="sm"
+              variant={verifiedAt ? "ghost" : "secondary"}
+              onClick={() => { setPendingKinds(undefined); setDetailsOpen(true); }}
+            >
+              <ShieldCheck className={`mr-1 h-3 w-3 ${verifiedAt ? "text-emerald-500" : ""}`} />
+              {verifiedAt ? "Details verified" : "Confirm details"}
+            </Button>
+          )}
           {items.length > 0 && (
             <>
               <Button size="sm" variant="ghost" onClick={onClearAll} disabled={wipe.isPending}>
@@ -94,7 +147,7 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
               </Button>
             </>
           )}
-          <Button size="sm" onClick={() => gen.mutate(undefined)} disabled={!locked || gen.isPending}>
+          <Button size="sm" onClick={() => requestGen(undefined)} disabled={!locked || gen.isPending}>
             {busyKind === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
             Generate all
           </Button>
@@ -106,6 +159,21 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
           Lock your brand kit (palette, typography and a saved vector logo) first — collateral is typeset around the mark.
         </p>
       )}
+
+      {locked && !verifiedAt && (
+        <button
+          type="button"
+          onClick={() => { setPendingKinds(undefined); setDetailsOpen(true); }}
+          className="w-full rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-left text-xs hover:bg-amber-500/10"
+        >
+          <strong>Confirm your details first.</strong> Name, title, email, phone and web address get typeset into
+          every piece — check them once and nothing goes to a printer with a typo.
+          {detailsAudit?.missingRequired?.length
+            ? ` ${detailsAudit.missingRequired.length} required field${detailsAudit.missingRequired.length === 1 ? " is" : "s are"} still blank.`
+            : ""}
+        </button>
+      )}
+
 
       {COLLATERAL_TIERS.map((tier) => (
         <div key={tier.tier} className="space-y-2">
@@ -137,6 +205,11 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
                     >
                       <span className="truncate text-sm font-medium hover:underline">{k.label}</span>
                       {files.length > 0 && <Badge variant="secondary" className="text-[10px]">{files.length}</Badge>}
+                      {isStale(k.kind) && (
+                        <Badge variant="outline" className="border-amber-500/50 text-[10px] text-amber-500">
+                          Details changed
+                        </Badge>
+                      )}
                     </button>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">{k.note}</p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -153,12 +226,13 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
                         variant="ghost"
                         className="h-6 px-2 text-[11px]"
                         disabled={!locked || gen.isPending}
-                        onClick={() => gen.mutate([k.kind])}
+                        onClick={() => requestGen([k.kind])}
                       >
                         {busyKind === k.kind ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
                         {files.length ? "Regenerate" : "Generate"}
                       </Button>
                     </div>
+
                   </div>
                 </div>
               );
@@ -174,7 +248,7 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
         files={openKind ? (byKind[openKind] ?? []) : []}
         busy={gen.isPending && (busyKind === openKind || busyKind === "all")}
         canGenerate={!!locked}
-        onRegenerate={() => openKind && gen.mutate([openKind])}
+        onRegenerate={() => openKind && requestGen([openKind])}
         onClear={async () => {
           if (!openKind) return;
           if (await confirm({ title: `Clear ${openMeta?.label ?? "this piece"}?`, description: "The generated files for this piece are removed. You can regenerate at any time.", destructive: true, confirmText: "Clear" })) {
@@ -182,6 +256,17 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
           }
         }}
       />
+
+      <CollateralDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        snapshotId={snapshot.id}
+        onVerified={() => {
+          detailsQ.refetch();
+          gen.mutate(pendingKinds);
+        }}
+      />
+
     </div>
   );
 }
