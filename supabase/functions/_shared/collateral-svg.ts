@@ -8,6 +8,8 @@
 
 import { colorSpaces, inkOn } from "./color-spaces.ts";
 import { stripSvgBackground } from "./logo-raster.ts";
+import { inkAspect, inkBox } from "./logo-geometry.ts";
+
 import { fitBox, fitLine, measure } from "./text-metrics.ts";
 import {
   type ArtDirection,
