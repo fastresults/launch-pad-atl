@@ -113,6 +113,7 @@ export function buildContentAdPrompt(args: {
   headlineOverride?: HeadlineOverride;
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
   serverRenderedHeadline?: boolean;
+  posterLayout?: string;
 }): string {
   const { aspect, post } = args;
   const asset = specForAspect(aspect);
@@ -129,6 +130,24 @@ export function buildContentAdPrompt(args: {
     post.asset_notes && `- Asset notes from the calendar: ${post.asset_notes}`,
     post.body && `- Caption context (do NOT render on canvas — background context only): ${String(post.body).slice(0, 400)}`,
   ].filter(Boolean).join("\n");
+
+  const reserved = args.posterLayout === "centered-plate"
+    ? "the CENTER third of the canvas"
+    : "the BOTTOM 45% of the canvas";
+  const posterBrief = `
+## EDITORIAL POSTER PHOTOGRAPHY (highest priority after brand palette)
+This image is the photographic plate of a magazine-quality poster. All typography is typeset
+server-side afterwards — render ZERO letters, numerals, glyphs, signage, captions or watermarks.
+- Treat it as one cinematic, single-subject photograph: real people or real environments, natural
+  light (golden hour, window light, or soft overcast), shallow depth of field, filmic grain.
+- Composition must leave ${reserved} as calm, low-detail negative space (sky, wall, water, table,
+  shadow, or soft bokeh) so display type can sit there legibly. Do not center the subject there.
+- No collage, no illustration, no 3D render, no flat vector shapes, no UI mockups, no stock-photo
+  clichés (handshakes in suits, thumbs-up, generic laptops on white desks).
+- Colour grade the photograph toward the brand palette; avoid saturated colours outside it.
+- Keep the far bottom-right corner quiet — a small vector mark is composited there. Do not paint any
+  box, plate, chip, badge or panel anywhere on the image.`;
+
 
   const base = buildCoverArtPrompt({
     platform: post.platform || "Social",
@@ -154,7 +173,7 @@ export function buildContentAdPrompt(args: {
     },
   });
 
-  return `${base}\n${postBrief}\n`;
+  return `${base}\n${postBrief}\n${posterBrief}\n`;
 }
 
 // Re-export for callers that need to know the finally-rendered headline text.

@@ -12,7 +12,8 @@ import { runContrastQa } from "../_shared/image-qa.ts";
 import { placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
-import { buildContentAdSvgBytes } from "../_shared/content-ad-svg.ts";
+import { buildContentAdSvgBytes, type PosterLayout } from "../_shared/content-ad-svg.ts";
+import { buildPosterCopy } from "../_shared/poster-copy.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 
@@ -237,6 +238,9 @@ Deno.serve(async (req) => {
     const aspect = (["1:1", "4:5", "9:16"] as const).includes(body?.aspect) ? body.aspect as AdAspect : "1:1";
     const direction = String(body?.direction || "editorial") as ArtDirectionId;
     if (!ART_DIRECTIONS.some((d) => d.id === direction)) return json({ error: `Unknown direction: ${direction}` }, 400);
+    const posterLayout: PosterLayout = (["bottom-scrim", "centered-plate", "edge-rule"] as const).includes(body?.posterLayout)
+      ? body.posterLayout
+      : "bottom-scrim";
 
     const { data: post } = await admin
       .from("venture_content_calendar_posts")
@@ -319,6 +323,7 @@ Deno.serve(async (req) => {
       // Headline is composited server-side by compositeHeadline() below; the
       // model must leave the top band as unmarked negative space.
       serverRenderedHeadline: true,
+      posterLayout,
     });
 
 
@@ -397,25 +402,35 @@ Deno.serve(async (req) => {
       (qa as any).signature_composited = true;
     }
 
-    // ---- Server-side SVG overlay typography ----
-    // Keep typography out of the edge CPU hot path: the function stores a
-    // final SVG that layers the generated image, fitted live text, and logo.
-    // Browser SVG text rendering is fast/reliable and avoids worker CPU limits.
+    // ---- Editorial poster typography (server-side SVG overlay) ----
+    // The model paints only the photographic plate; the kicker / display
+    // headline / CTA lockup is typeset here in real brand fonts.
     const resolvedHeadline = resolveAdHeadline(post.hook, headlineOverride, aspect);
-    let finalHeadlineText = "";
-    if (resolvedHeadline.mode === "custom" && resolvedHeadline.text?.trim()) {
-      finalHeadlineText = resolvedHeadline.text.trim();
-    }
-    const headlineComposited = !!finalHeadlineText;
+    const posterCopy = await buildPosterCopy({
+      apiKey,
+      brandName: ctx?.company_name ?? kit?.company_name ?? null,
+      valueProp: ctx?.value_proposition ?? null,
+      post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
+      headlineOverride: resolvedHeadline.mode === "none"
+        ? { mode: "none" }
+        : resolvedHeadline.mode === "custom"
+        ? { mode: "custom", text: resolvedHeadline.text }
+        : { mode: "auto" },
+    });
+
+    const headlineComposited = !!posterCopy.headline;
     const logoComposited = !!logoDataUrl;
-    bytes = buildContentAdSvgBytes({
+    bytes = await buildContentAdSvgBytes({
       baseImageB64: bytesToB64(bytes),
       baseMime: "image/png",
       width: asset.width,
       height: asset.height,
       plan,
       aspect,
-      headline: finalHeadlineText,
+      layout: posterLayout,
+      kicker: posterCopy.kicker,
+      headline: posterCopy.headline,
+      ctaLine: posterCopy.ctaLine,
       logoDataUrl,
       logoAspect,
       logoSize,
@@ -424,6 +439,9 @@ Deno.serve(async (req) => {
     (qa as any).headline_composited = headlineComposited;
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
+    (qa as any).poster_layout = posterLayout;
+    (qa as any).poster_copy = posterCopy;
+
 
     const fileId = crypto.randomUUID();
     const safeAspect = aspect.replace(":", "x");
@@ -459,12 +477,7 @@ Deno.serve(async (req) => {
         qa_notes: qa as any,
         last_feedback: userFeedback || null,
         last_regenerated_at: userFeedback ? new Date().toISOString() : null,
-        last_headline: (() => {
-          const resolved = resolveAdHeadline(post.hook, headlineOverride, aspect);
-          if (resolved.mode === "none") return "";
-          if (resolved.mode === "custom") return resolved.text ?? "";
-          return post.hook ?? null;
-        })(),
+        last_headline: posterCopy.headline || (resolvedHeadline.mode === "none" ? "" : post.hook ?? null),
         last_logo_size: logoSize,
 
       })

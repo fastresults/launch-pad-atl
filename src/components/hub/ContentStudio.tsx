@@ -39,6 +39,14 @@ const ASPECTS: { id: AdAspect; label: string; hint: string }[] = [
   { id: "9:16", label: "9:16 story", hint: "Stories/Reels/TikTok (1080×1920)" },
 ];
 
+// Editorial poster lockups — mirrors POSTER_LAYOUTS in the ad compositor.
+const POSTER_LAYOUTS: { id: string; label: string; blurb: string }[] = [
+  { id: "bottom-scrim", label: "Bottom scrim", blurb: "Cinematic gradient, type anchored bottom-left" },
+  { id: "centered-plate", label: "Centered plate", blurb: "Soft brand plate, type centered" },
+  { id: "edge-rule", label: "Edge rule", blurb: "Accent rule at the left edge, type stacked" },
+];
+
+
 // Prefer the source hook over a stored last_headline when the stored value
 // looks like a truncated prefix (older versions appended "…"). This keeps the
 // regenerate dialog from re-sending a chopped headline.
@@ -93,6 +101,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
   const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]);
   const [direction, setDirection] = useState<string>("editorial");
   const [aspects, setAspects] = useState<AdAspect[]>(["1:1"]);
+  const [posterLayout, setPosterLayout] = useState<string>("bottom-scrim");
   const [autoRunWeek, setAutoRunWeek] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(true);
 
@@ -103,6 +112,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
     if (progress.selected_weeks?.length) setSelectedWeeks(progress.selected_weeks);
     if (progress.art_direction) setDirection(progress.art_direction);
     if (progress.default_aspects?.length) setAspects(progress.default_aspects);
+    if ((progress as any).poster_layout) setPosterLayout((progress as any).poster_layout);
   }, [progress?.snapshot_id]);
 
   const persist = async (patch: any) => {
@@ -278,13 +288,15 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
         <Step3Style
           direction={direction}
           onDirection={setDirection}
+          posterLayout={posterLayout}
+          onPosterLayout={setPosterLayout}
           aspects={aspects}
           onAspects={setAspects}
           onBack={() => setStep(2)}
           onNext={async () => {
             if (!aspects.length) { toast.error("Pick at least one aspect ratio"); return; }
             setStep(4);
-            await persist({ current_step: 4, art_direction: direction, default_aspects: aspects });
+            await persist({ current_step: 4, art_direction: direction, default_aspects: aspects, poster_layout: posterLayout } as any);
           }}
         />
       )}
@@ -293,6 +305,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
         <Step4BuildAds
           snapshotId={snapshotId}
           direction={direction}
+          posterLayout={posterLayout}
           aspects={aspects}
           selectedWeeks={selectedWeeks}
           posts={posts}
@@ -501,9 +514,10 @@ function Step2Weeks({
 // STEP 3 — Style
 // ============================================================
 function Step3Style({
-  direction, onDirection, aspects, onAspects, onBack, onNext,
+  direction, onDirection, posterLayout, onPosterLayout, aspects, onAspects, onBack, onNext,
 }: {
   direction: string; onDirection: (d: string) => void;
+  posterLayout: string; onPosterLayout: (l: string) => void;
   aspects: AdAspect[]; onAspects: (a: AdAspect[]) => void;
   onBack: () => void; onNext: () => void;
 }) {
@@ -532,6 +546,23 @@ function Step3Style({
             <div className="font-semibold">{d.label}</div>
           </button>
         ))}
+      </div>
+
+      <div>
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1.5">Poster layout</div>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {POSTER_LAYOUTS.map((l) => (
+            <button
+              key={l.id}
+              type="button"
+              onClick={() => onPosterLayout(l.id)}
+              className={`rounded-lg border p-3 text-left text-xs transition ${posterLayout === l.id ? "border-primary bg-primary/10" : "border-white/10 bg-background/40 hover:border-white/30"}`}
+            >
+              <div className="font-semibold">{l.label}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">{l.blurb}</div>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>
@@ -576,10 +607,10 @@ type AdTask = {
 };
 
 function Step4BuildAds({
-  snapshotId, direction, aspects, selectedWeeks, posts, ads,
+  snapshotId, direction, posterLayout, aspects, selectedWeeks, posts, ads,
   autoRunWeek, onAutoRunConsumed, onAddWeek, onBack, onDone,
 }: {
-  snapshotId: string; direction: string; aspects: AdAspect[];
+  snapshotId: string; direction: string; posterLayout?: string; aspects: AdAspect[];
   selectedWeeks: number[]; posts: ContentPost[]; ads: ContentAd[];
   autoRunWeek?: number | null; onAutoRunConsumed?: () => void;
   onAddWeek?: (week: number) => Promise<void> | void;
@@ -634,7 +665,7 @@ function Step4BuildAds({
     const knownIds = new Set(ads.filter((ad) => ad.post_id === t.post.id && ad.aspect === t.aspect).map((ad) => ad.id));
     setBusy(k, true);
     try {
-      await generateContentAd(snapshotId, t.post.id, t.aspect, direction, opts);
+      await generateContentAd(snapshotId, t.post.id, t.aspect, direction, { posterLayout, ...(opts ?? {}) });
       await qc.invalidateQueries({ queryKey: ["content-ads", snapshotId] });
       setErrors((p) => { const n = { ...p }; delete n[k]; return n; });
     } catch (e: any) {

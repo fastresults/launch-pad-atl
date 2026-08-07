@@ -2960,6 +2960,7 @@ export type Database = {
           current_step: number
           default_aspects: string[] | null
           launch_status: Json | null
+          poster_layout: string
           selected_weeks: number[] | null
           snapshot_id: string
           updated_at: string
@@ -2971,6 +2972,7 @@ export type Database = {
           current_step?: number
           default_aspects?: string[] | null
           launch_status?: Json | null
+          poster_layout?: string
           selected_weeks?: number[] | null
           snapshot_id: string
           updated_at?: string
@@ -2982,6 +2984,7 @@ export type Database = {
           current_step?: number
           default_aspects?: string[] | null
           launch_status?: Json | null
+          poster_layout?: string
           selected_weeks?: number[] | null
           snapshot_id?: string
           updated_at?: string

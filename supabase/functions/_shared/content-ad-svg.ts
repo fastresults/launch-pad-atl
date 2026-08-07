@@ -1,6 +1,19 @@
+// Editorial poster compositor. Layers the generated photograph, a soft gradient
+// scrim (never an opaque band), a three-part type lockup rendered in real brand
+// fonts, and the vector logo. Output is an SVG so text stays crisp at any size.
+
 import type { CanvasPlan } from "./canvas-plan.ts";
 import type { AdAspect } from "./content-ad-director.ts";
 import type { LogoSize } from "./logo-compositor.ts";
+import { loadPosterFonts } from "./poster-fonts.ts";
+
+export type PosterLayout = "bottom-scrim" | "centered-plate" | "edge-rule";
+
+export const POSTER_LAYOUTS: { id: PosterLayout; label: string; blurb: string }[] = [
+  { id: "bottom-scrim", label: "Bottom scrim", blurb: "Cinematic gradient, type anchored bottom-left" },
+  { id: "centered-plate", label: "Centered plate", blurb: "Soft brand plate, type centered" },
+  { id: "edge-rule", label: "Edge rule", blurb: "Accent rule at the left edge, type stacked" },
+];
 
 type SvgArgs = {
   baseImageB64: string;
@@ -9,12 +22,14 @@ type SvgArgs = {
   height: number;
   plan: CanvasPlan;
   aspect: AdAspect;
+  layout?: PosterLayout;
+  kicker?: string | null;
   headline?: string | null;
+  ctaLine?: string | null;
   logoDataUrl?: string | null;
   logoAspect?: number | null;
   logoSize?: LogoSize;
   logoCorner?: "top-left" | "bottom-right";
-  logoChip?: boolean;
 };
 
 const enc = new TextEncoder();
@@ -51,148 +66,81 @@ function contrast(a: string, b: string): number {
   return (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
 }
 
-// Base band % (2-line target). Grown dynamically by fitHeadline for longer titles.
-function baseBandPct(aspect: AdAspect): number {
-  if (aspect === "9:16") return 0.16;
-  if (aspect === "4:5") return 0.20;
-  return 0.22;
-}
-
-function maxBandPct(aspect: AdAspect): number {
-  if (aspect === "9:16") return 0.32;
-  if (aspect === "4:5") return 0.42;
-  return 0.46;
-}
-
-function aspectMaxLines(aspect: AdAspect): number {
-  if (aspect === "9:16") return 5;
-  return 4;
-}
-
-// Tiered length classification. Returns target line count based on character length.
-function targetLinesForLength(len: number, aspect: AdAspect): number {
-  const cap = aspectMaxLines(aspect);
-  if (len <= 28) return 1;
-  if (len <= 60) return Math.min(2, cap);
-  if (len <= 110) return Math.min(3, cap);
-  return cap;
-}
-
-// Font size range per line-count tier (based on 1080px canvas; scaled by minDim).
-function sizeRangeForTier(targetLines: number, minDim: number): { min: number; max: number } {
-  const s = minDim / 1080;
-  if (targetLines <= 1) return { min: Math.round(60 * s), max: Math.round(104 * s) };
-  if (targetLines === 2) return { min: Math.round(52 * s), max: Math.round(84 * s) };
-  if (targetLines === 3) return { min: Math.round(42 * s), max: Math.round(68 * s) };
-  return { min: Math.round(28 * s), max: Math.round(54 * s) };
-}
+// ---------- type fitting ----------
 
 function charUnits(s: string): number {
   let out = 0;
   for (const ch of s) {
-    if (ch === " ") { out += 0.38; continue; }
-    if (/[,.;:!|'’`]/.test(ch)) out += 0.28;
-    else if (/[ilI1]/.test(ch)) out += 0.34;
-    else if (/[mwMW]/.test(ch)) out += 0.95;
-    else if (/[A-Z]/.test(ch)) out += 0.72;
-    else out += 0.62;
+    if (ch === " ") { out += 0.30; continue; }
+    if (/[,.;:!|'’`]/.test(ch)) out += 0.26;
+    else if (/[ilI1jt]/.test(ch)) out += 0.32;
+    else if (/[mwMW]/.test(ch)) out += 0.92;
+    else if (/[A-Z]/.test(ch)) out += 0.68;
+    else out += 0.54;
   }
   return out;
 }
 
-function estimatedWidth(s: string, size: number): number {
+function estWidth(s: string, size: number): number {
   return charUnits(s) * size;
 }
 
-function wrap(words: string[], size: number, maxW: number, maxL: number): string[] | null {
+function wrap(text: string, size: number, maxW: number, maxLines: number): string[] | null {
+  const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let cur = "";
   for (const w of words) {
-    // If a single word is wider than the canvas at this size, this size fails.
-    if (estimatedWidth(w, size) > maxW) return null;
+    if (estWidth(w, size) > maxW) return null;
     const next = cur ? `${cur} ${w}` : w;
-    if (estimatedWidth(next, size) <= maxW) {
-      cur = next;
-    } else {
+    if (estWidth(next, size) <= maxW) cur = next;
+    else {
       if (cur) lines.push(cur);
-      if (lines.length >= maxL) return null;
+      if (lines.length >= maxLines) return null;
       cur = w;
     }
   }
   if (cur) lines.push(cur);
-  if (!lines.length || lines.length > maxL) return null;
-  for (const line of lines) {
-    if (estimatedWidth(line, size) > maxW * 0.98) return null;
-  }
+  if (!lines.length || lines.length > maxLines) return null;
   return lines;
 }
 
-// Fit the full headline — never truncate. Escalates through line-count tiers,
-// growing the band as needed, until the entire string fits.
-function fitHeadline(text: string, W: number, H: number, aspect: AdAspect) {
+function fitDisplay(text: string, maxW: number, minDim: number, maxLines: number) {
   const clean = text.trim().replace(/\s+/g, " ");
   if (!clean) return null;
-  const x = Math.round(W * 0.075);
-  const bandY = Math.round(H * 0.035);
-  const textW = W - x * 2 - Math.round(W * 0.02);
-  const words = clean.split(/\s+/).filter(Boolean);
-  const minDim = Math.min(W, H);
-  const capLines = aspectMaxLines(aspect);
-  const startTier = targetLinesForLength(clean.length, aspect);
-  const maxBandH = Math.round(H * maxBandPct(aspect));
-
-  // Try each tier from length-implied target up to the aspect cap.
-  for (let tier = startTier; tier <= capLines; tier += 1) {
-    const range = sizeRangeForTier(tier, minDim);
-    // Grow band to comfortably hold `tier` lines.
-    const growPct = baseBandPct(aspect) + Math.max(0, tier - 2) * 0.05;
-    const bandH = Math.min(maxBandH, Math.round(H * growPct));
-    const textH = Math.round(bandH * 0.72);
-    for (let size = range.max; size >= range.min; size -= 2) {
-      const lines = wrap(words, size, textW, tier);
-      if (!lines) continue;
-      const lineHeight = Math.round(size * 1.08);
-      if (lines.length * lineHeight <= textH) {
-        return { lines, size, lineHeight, x, bandY, bandH, textH };
-      }
-    }
+  const s = minDim / 1080;
+  const max = Math.round(96 * s);
+  const min = Math.round(34 * s);
+  for (let size = max; size >= min; size -= 2) {
+    const lines = wrap(clean, size, maxW, maxLines);
+    if (lines) return { lines, size, lineHeight: Math.round(size * 1.12) };
   }
-
-  // Last-resort emergency shrink at max tier — still no truncation.
-  const tier = capLines;
-  const bandH = maxBandH;
-  const textH = Math.round(bandH * 0.78);
-  const emergencyMin = Math.max(22, Math.round(24 * (minDim / 1080)));
-  const emergencyMax = sizeRangeForTier(tier, minDim).min;
-  for (let size = emergencyMax; size >= emergencyMin; size -= 1) {
-    const lines = wrap(words, size, textW, tier);
-    if (!lines) continue;
-    const lineHeight = Math.round(size * 1.08);
-    if (lines.length * lineHeight <= textH) {
-      return { lines, size, lineHeight, x, bandY, bandH, textH };
-    }
-  }
-  return null;
+  const lines = wrap(clean, min, maxW, maxLines + 1) ?? [clean];
+  return { lines, size: min, lineHeight: Math.round(min * 1.12) };
 }
 
+function maxHeadlineLines(aspect: AdAspect): number {
+  return aspect === "1:1" ? 3 : 4;
+}
+
+// ---------- logo ----------
 
 function logoBox(W: number, H: number, logoAspect: number, size: LogoSize, corner: "top-left" | "bottom-right") {
   const tiers = {
-    sm: { h: 0.10, w: 0.28, maxW: 0.42, inset: 0.05 },
-    md: { h: 0.14, w: 0.36, maxW: 0.52, inset: 0.05 },
-    lg: { h: 0.20, w: 0.46, maxW: 0.66, inset: 0.05 },
+    sm: { h: 0.085, w: 0.24, maxW: 0.38, inset: 0.055 },
+    md: { h: 0.12, w: 0.32, maxW: 0.48, inset: 0.055 },
+    lg: { h: 0.17, w: 0.42, maxW: 0.60, inset: 0.055 },
   } as const;
   const t = tiers[size || "sm"] ?? tiers.sm;
   const short = Math.min(W, H);
-  const aspect = Math.max(0.2, logoAspect || 1);
+  const a = Math.max(0.2, logoAspect || 1);
   let boxW: number;
   let boxH: number;
-  if (aspect >= 2) {
+  if (a >= 2) {
     boxW = Math.min(Math.round(short * t.w), Math.round(W * t.maxW));
-    boxH = Math.max(1, Math.round(boxW / aspect));
+    boxH = Math.max(1, Math.round(boxW / a));
   } else {
     boxH = Math.round(short * t.h);
-    boxW = Math.round(boxH * aspect);
+    boxW = Math.round(boxH * a);
   }
   const inset = Math.round(short * t.inset);
   const x = corner === "bottom-right" ? W - boxW - inset : inset;
@@ -200,61 +148,117 @@ function logoBox(W: number, H: number, logoAspect: number, size: LogoSize, corne
   return { x, y, boxW, boxH };
 }
 
-export function buildContentAdSvgBytes(args: SvgArgs): Uint8Array {
+// ---------- compositor ----------
+
+export async function buildContentAdSvgBytes(args: SvgArgs): Promise<Uint8Array> {
   const W = Math.max(1, Math.round(args.width || 1080));
   const H = Math.max(1, Math.round(args.height || 1080));
+  const minDim = Math.min(W, H);
+  const layout: PosterLayout = args.layout ?? "bottom-scrim";
   const surface = hex(args.plan.surface, "#0B0F19");
-  const preferredInk = hex(args.plan.ink, "#FFFFFF");
-  const ink = contrast(preferredInk, surface) >= 4.5 ? preferredInk : contrast("#FFFFFF", surface) >= contrast("#0B0F19", surface) ? "#FFFFFF" : "#0B0F19";
-  const signature = hex(args.plan.displaySignature || args.plan.signature, "#7C3AED");
-  const headline = fitHeadline(args.headline || "", W, H, args.aspect);
+  const signature = hex(args.plan.displaySignature || args.plan.signature, "#C29B46");
+  const accent = hex(args.plan.accent, signature);
+
+  const headlineText = (args.headline || "").trim();
+  const kickerText = (args.kicker || "").trim();
+  const ctaText = (args.ctaLine || "").trim();
+  const hasType = !!(headlineText || kickerText || ctaText);
+
+  const fonts = hasType ? await loadPosterFonts() : null;
+
   const mime = args.baseMime || "image/png";
   const imageHref = `data:${mime};base64,${args.baseImageB64}`;
 
   const parts: string[] = [];
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">`);
+  if (fonts?.styleBlock) parts.push(fonts.styleBlock);
+
+  // Gradient scrim definition — soft, never a hard band.
+  parts.push(
+    `<defs><linearGradient id="scrim" x1="0" y1="1" x2="0" y2="0">` +
+    `<stop offset="0" stop-color="${surface}" stop-opacity="0.92"/>` +
+    `<stop offset="0.42" stop-color="${surface}" stop-opacity="0.62"/>` +
+    `<stop offset="0.78" stop-color="${surface}" stop-opacity="0.16"/>` +
+    `<stop offset="1" stop-color="${surface}" stop-opacity="0"/>` +
+    `</linearGradient></defs>`,
+  );
+
   parts.push(`<image href="${imageHref}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/>`);
 
-  if (headline) {
-    const bandPadX = Math.round(W * 0.045);
-    const bandH = Math.max(headline.bandH, Math.round(H * 0.18));
-    const stripeH = Math.max(8, Math.round(H * 0.008));
-    parts.push(`<rect x="0" y="0" width="${W}" height="${bandH}" fill="${surface}" opacity="0.96"/>`);
-    parts.push(`<rect x="0" y="${bandH - stripeH}" width="${W}" height="${stripeH}" fill="${signature}"/>`);
-    const totalTextH = headline.lines.length * headline.lineHeight;
-    let y = Math.round(headline.bandY + (headline.textH - totalTextH) / 2 + headline.size * 0.86);
-    parts.push(`<text x="${bandPadX + Math.round(W * 0.03)}" y="${y}" fill="${ink}" font-family="Arial, Helvetica, sans-serif" font-size="${headline.size}" font-weight="800" letter-spacing="0">`);
-    for (let i = 0; i < headline.lines.length; i += 1) {
-      const dy = i === 0 ? 0 : headline.lineHeight;
-      parts.push(`<tspan x="${bandPadX + Math.round(W * 0.03)}" dy="${dy}">${escapeXml(headline.lines[i])}</tspan>`);
+  if (hasType) {
+    const padX = Math.round(W * (layout === "edge-rule" ? 0.10 : 0.075));
+    const textW = W - padX * 2;
+    const head = headlineText ? fitDisplay(headlineText, textW, minDim, maxHeadlineLines(args.aspect)) : null;
+
+    const kickerSize = Math.round(minDim * 0.026);
+    const ctaSize = Math.round(minDim * 0.030);
+    const gapKicker = kickerText ? Math.round(kickerSize * 2.0) : 0;
+    const gapCta = ctaText ? Math.round(ctaSize * 2.6) : 0;
+    const headH = head ? head.lines.length * head.lineHeight : 0;
+    const blockH = gapKicker + headH + gapCta;
+
+    // Ink is white over photography by default; flip if the plan surface is light.
+    const light = lum(surface) > 0.62;
+    const ink = light ? "#0B0F19" : "#FFFFFF";
+    const kickerColor = contrast(signature, light ? "#FFFFFF" : "#000000") >= 2.2 ? signature : (light ? "#0B0F19" : "#FFFFFF");
+
+    let blockTop: number;
+    if (layout === "centered-plate") {
+      const plateW = Math.round(W * 0.86);
+      const plateH = Math.min(Math.round(H * 0.72), blockH + Math.round(minDim * 0.14));
+      const plateX = Math.round((W - plateW) / 2);
+      const plateY = Math.round((H - plateH) / 2);
+      parts.push(`<rect x="${plateX}" y="${plateY}" width="${plateW}" height="${plateH}" rx="${Math.round(minDim * 0.012)}" fill="${surface}" opacity="0.72"/>`);
+      blockTop = plateY + Math.round((plateH - blockH) / 2);
+    } else {
+      const scrimH = Math.min(Math.round(H * 0.82), blockH + Math.round(minDim * 0.28));
+      parts.push(`<rect x="0" y="${H - scrimH}" width="${W}" height="${scrimH}" fill="url(#scrim)"/>`);
+      blockTop = H - Math.round(minDim * 0.085) - blockH;
+      if (layout === "edge-rule") {
+        const ruleW = Math.max(3, Math.round(minDim * 0.006));
+        parts.push(`<rect x="${Math.round(W * 0.048)}" y="${blockTop}" width="${ruleW}" height="${blockH}" fill="${accent}" opacity="0.95"/>`);
+      }
     }
-    parts.push(`</text>`);
+
+    const centered = layout === "centered-plate";
+    const anchorX = centered ? Math.round(W / 2) : padX;
+    const anchorAttr = centered ? ` text-anchor="middle"` : "";
+
+    let y = blockTop;
+
+    if (kickerText) {
+      y += Math.round(kickerSize * 1.05);
+      parts.push(
+        `<text x="${anchorX}" y="${y}"${anchorAttr} fill="${kickerColor}" font-family="${fonts!.sansBoldFamily}" font-size="${kickerSize}" font-weight="700" letter-spacing="${(kickerSize * 0.22).toFixed(1)}">${escapeXml(kickerText.toUpperCase())}</text>`,
+      );
+      y += Math.round(kickerSize * 0.95);
+    }
+
+    if (head) {
+      y += Math.round(head.size * 0.86);
+      parts.push(
+        `<text x="${anchorX}" y="${y}"${anchorAttr} fill="${ink}" font-family="${fonts!.serifFamily}" font-size="${head.size}" font-weight="700" letter-spacing="${(-head.size * 0.012).toFixed(2)}">` +
+        head.lines.map((l, i) => `<tspan x="${anchorX}" dy="${i === 0 ? 0 : head.lineHeight}">${escapeXml(l)}</tspan>`).join("") +
+        `</text>`,
+      );
+      y += (head.lines.length - 1) * head.lineHeight + Math.round(head.size * 0.28);
+    }
+
+    if (ctaText) {
+      const ruleY = y + Math.round(ctaSize * 0.9);
+      if (!centered) {
+        parts.push(`<rect x="${anchorX}" y="${ruleY}" width="${Math.round(minDim * 0.075)}" height="${Math.max(2, Math.round(minDim * 0.0025))}" fill="${accent}" opacity="0.9"/>`);
+      }
+      const ctaY = ruleY + Math.round(ctaSize * 1.9);
+      parts.push(
+        `<text x="${anchorX}" y="${ctaY}"${anchorAttr} fill="${ink}" font-family="${fonts!.sansFamily}" font-size="${ctaSize}" font-weight="500" opacity="0.94" letter-spacing="${(ctaSize * 0.02).toFixed(2)}">${escapeXml(ctaText)}</text>`,
+      );
+    }
   }
 
   if (args.logoDataUrl) {
     const corner = args.logoCorner || "bottom-right";
     const box = logoBox(W, H, args.logoAspect || 1, args.logoSize || "sm", corner);
-    const wantChip = args.logoChip ?? (corner === "bottom-right");
-    if (wantChip) {
-      const surfLum = lum(surface);
-      let chipFill = "#FFFFFF";
-      let chipOpacity = 0.92;
-      if (surfLum > 0.7) {
-        chipFill = ink === "#0B0F19" ? ink : "#0B0F19";
-        chipOpacity = 0.88;
-      } else if (surfLum >= 0.35) {
-        chipFill = contrast("#FFFFFF", surface) >= contrast("#0B0F19", surface) ? "#FFFFFF" : "#0B0F19";
-        chipOpacity = 0.9;
-      }
-      const padX = Math.round(box.boxW * 0.12);
-      const padY = Math.round(box.boxH * 0.18);
-      const rx = Math.round(box.boxH * 0.22);
-      const cx = box.x - padX;
-      const cy = box.y - padY;
-      const cw = box.boxW + padX * 2;
-      const ch = box.boxH + padY * 2;
-      parts.push(`<rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" rx="${rx}" ry="${rx}" fill="${chipFill}" opacity="${chipOpacity}"/>`);
-    }
     parts.push(`<image href="${escapeXml(args.logoDataUrl)}" x="${box.x}" y="${box.y}" width="${box.boxW}" height="${box.boxH}" preserveAspectRatio="xMidYMid meet"/>`);
   }
 
