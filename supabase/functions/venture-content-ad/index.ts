@@ -70,9 +70,12 @@ function mimeFromPath(p: string): string {
 
 async function fetchPrimaryLogo(admin: any, kit: any) {
   // Shared loader — rasterises SVG marks so the logo is never silently dropped.
-  const { dataUrl, bytes } = await fetchPrimaryLogoBitmap(admin, kit);
-  return { dataUrl, bytes };
+  // svgText is kept so the poster compositor can re-render the mark as vector
+  // ink (no plate, recolored for contrast).
+  const { dataUrl, bytes, svgText } = await fetchPrimaryLogoBitmap(admin, kit);
+  return { dataUrl, bytes, svgText };
 }
+
 
 
 // Per-call timeout so a hung upstream doesn't idle the whole 150s request.
