@@ -1073,8 +1073,15 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                   toast.error(e?.message || "Could not remove");
                 }
               };
+              const isSelected = !!directionRow?.selected;
               return (
-                <div key={i} className="relative flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
+                <div
+                  key={i}
+                  className={`relative flex flex-col overflow-hidden rounded-lg border bg-background/40 transition ${
+                    isSelected ? "border-primary ring-2 ring-primary/40" : "border-white/10"
+                  }`}
+                >
+
                   <button
                     onClick={removeLogo}
                     disabled={busy || retryDirection.isPending}
