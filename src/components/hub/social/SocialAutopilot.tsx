@@ -204,6 +204,7 @@ export function SocialAutopilot({
           snapshot={snapshot}
           snapshotId={snapshotId}
           platforms={selectedPlatforms}
+          direction={direction || "editorial"}
           launchStatus={launchStatus}
           onBack={() => setStep(5)}
           onUpdate={(ls) => save({ launch_status: ls })}
@@ -1379,9 +1380,9 @@ function Step5BuildKit({
 
 // ====================== STEP 6 — Launch ======================
 function Step6Launch({
-  snapshot, snapshotId, platforms, launchStatus, onBack, onUpdate,
+  snapshot, snapshotId, platforms, direction, launchStatus, onBack, onUpdate,
 }: {
-  snapshot: any; snapshotId: string; platforms: string[];
+  snapshot: any; snapshotId: string; platforms: string[]; direction: string;
   launchStatus: Record<string, { live?: boolean }>;
   onBack: () => void; onUpdate: (ls: any) => void;
 }) {
@@ -1408,6 +1409,43 @@ function Step6Launch({
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [clearing, setClearing] = useState(false);
+  const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
+
+  const kitTasks = useMemo(
+    () => buildKitTasks(platforms, direction, PLATFORM_SPECS as any),
+    [platforms, direction],
+  );
+
+  const regenerate = async (platform?: string, asset?: string) => {
+    const targets = kitTasks.filter((task) =>
+      (!platform || task.platform === platform) && (!asset || task.asset === asset),
+    );
+    if (targets.length === 0) {
+      toast.error("No matching creative found to regenerate.");
+      return;
+    }
+    const scopeKey = platform ? `${platform}:${asset || "all"}` : "all";
+    setRegenerating((current) => ({ ...current, [scopeKey]: true }));
+    let failed = 0;
+    try {
+      for (const task of targets) {
+        try {
+          await generateOneKitTask(snapshotId, task);
+          await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
+        } catch (error) {
+          failed += 1;
+          toast.error(generationErrorMessage(error));
+        }
+      }
+      if (!failed) toast.success(platform ? `${platform} creative regenerated.` : "All creative regenerated.");
+    } finally {
+      setRegenerating((current) => {
+        const next = { ...current };
+        delete next[scopeKey];
+        return next;
+      });
+    }
+  };
 
   /** Delete the generated images for one channel, or for every channel, so the
    *  founder can go back and build a fresh set rather than living with these. */
@@ -1451,6 +1489,15 @@ function Step6Launch({
         <div className="flex items-center gap-2">
           <Button
             size="sm"
+            className="h-7 text-[11px]"
+            disabled={Object.keys(regenerating).length > 0}
+            onClick={() => regenerate()}
+          >
+            {regenerating.all ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+            Regenerate all
+          </Button>
+          <Button
+            size="sm"
             variant="outline"
             className="h-7 text-[11px] text-destructive hover:text-destructive"
             disabled={clearing}
@@ -1486,19 +1533,32 @@ function Step6Launch({
               </div>
 
               <div className="mt-2 grid grid-cols-[56px_1fr] gap-2">
-                <div className="h-14 w-14 overflow-hidden rounded-full border border-white/10 bg-muted/40">
-                  {avatar?.signed_url
-                    ? <img src={avatar.signed_url} alt="" className="h-full w-full object-cover" />
-                    : <div className="flex h-full w-full items-center justify-center text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>}
+                <div>
+                  <div className="h-14 w-14 overflow-hidden rounded-full border border-white/10 bg-muted/40">
+                    {avatar?.signed_url
+                      ? <img src={avatar.signed_url} alt={`${p} avatar`} className="h-full w-full object-cover" />
+                      : <div className="flex h-full w-full items-center justify-center text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>}
+                  </div>
+                  <Button size="sm" variant="ghost" className="mt-1 h-6 w-full px-1 text-[9px]" disabled={!!regenerating[`${p}:avatar`]} onClick={() => regenerate(p, "avatar")}>
+                    {regenerating[`${p}:avatar`] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
+                  </Button>
                 </div>
-                <div className="aspect-[4/1] overflow-hidden rounded-md border border-white/10 bg-muted/40">
-                  {cover?.signed_url
-                    ? <img src={cover.signed_url} alt="" className="h-full w-full object-cover" />
-                    : <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">no cover</div>}
+                <div>
+                  <div className="aspect-[4/1] overflow-hidden rounded-md border border-white/10 bg-muted/40">
+                    {cover?.signed_url
+                      ? <img src={cover.signed_url} alt={`${p} cover`} className="h-full w-full object-cover" />
+                      : <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">no cover</div>}
+                  </div>
+                  <Button size="sm" variant="ghost" className="mt-1 h-6 px-1.5 text-[9px]" disabled={!!regenerating[`${p}:${kitTasks.find((task) => task.platform === p && task.asset !== "avatar")?.asset}`]} onClick={() => regenerate(p, kitTasks.find((task) => task.platform === p && task.asset !== "avatar")?.asset)}>
+                    <RefreshCw className="mr-1 h-3 w-3" /> Regenerate cover
+                  </Button>
                 </div>
               </div>
 
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <Button size="sm" className="h-6 px-1.5 text-[10px]" disabled={!!regenerating[`${p}:all`]} onClick={() => regenerate(p)}>
+                  {regenerating[`${p}:all`] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate {p}
+                </Button>
                 {avatar?.signed_url && (
                   <a href={avatar.signed_url} download className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5">
                     Download avatar
