@@ -142,7 +142,7 @@ export function AssetPreviewDialog({
             )}
           </div>
 
-          <aside className="min-h-0 space-y-3 overflow-y-auto overscroll-contain border-t border-border bg-card/40 p-4 text-xs md:border-l md:border-t-0">
+          <aside className="min-h-0 space-y-3 overflow-y-auto overscroll-contain border-t border-border bg-card/40 p-4 pb-0 text-xs md:border-l md:border-t-0">
             <div className="flex flex-wrap gap-1.5">
               {asset.platform && <Badge variant="outline" className="text-[10px]">{asset.platform}</Badge>}
               {asset.assetKind && <Badge variant="outline" className="text-[10px] capitalize">{String(asset.assetKind).replace(/_/g, " ")}</Badge>}
@@ -394,7 +394,7 @@ export function AssetPreviewDialog({
               </div>
             )}
 
-            <div className="sticky bottom-0 -mx-4 -mb-4 space-y-2 border-t border-border bg-card/95 px-4 pb-5 pt-3 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+            <div className="sticky bottom-0 -mx-4 space-y-2 border-t border-border bg-card/95 px-4 pb-5 pt-3 backdrop-blur supports-[backdrop-filter]:bg-card/80">
               {asset.url && (
                 <>
                   <Button asChild variant="outline" size="sm" className="w-full justify-start">
