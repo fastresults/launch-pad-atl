@@ -690,7 +690,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   const genLogos = useMutation({
     mutationFn: async () => {
-      if (refs.length < 3) throw new Error("Upload three logos you admire first — they set the craft standard for this run.");
+      if (refs.length < 1) throw new Error("Upload at least one logo you admire first — it sets the craft standard for this run.");
       const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 3, referenceImages: refs } });
       setLogos([]);
       await processLogoRun(created.run);
