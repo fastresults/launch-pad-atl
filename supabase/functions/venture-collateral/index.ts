@@ -10,6 +10,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireUser, requireSnapshotOwner } from "../_shared/auth.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { rasterizeSvgToBytes } from "../_shared/logo-raster.ts";
+import { isolateSymbol } from "../_shared/logo-geometry.ts";
+
 import {
   COLLATERAL_KINDS,
   KIND_LABELS,
@@ -165,6 +167,11 @@ async function buildCtx(
     colors,
     fonts,
     logoSvg,
+    // A traced lockup ships its wordmark as polygons — rough stems, filled
+    // counters. When the symbol can be separated, collateral draws the symbol
+    // and sets the company name in the brand's real typeface.
+    symbolSvg: isolateSymbol(logoSvg)?.symbol ?? null,
+
     voice,
     ad,
     copy,
@@ -440,7 +447,17 @@ Deno.serve(async (req) => {
       const qcIssues = done.flatMap((r: any) =>
         (r.qc ?? []).filter((v: QcVerdict) => !v.ok).map((v: QcVerdict) => ({ kind: r.kind, page: v.page, reasons: v.reasons })),
       );
-      return json({ ok: true, generated: done, failed, qcIssues, artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale } });
+      return json({
+        ok: true,
+        generated: done,
+        failed,
+        qcIssues,
+        // Tells the library whether the wordmark on these pieces is real type
+        // (symbol isolated) or the tracer's polygons (nothing to isolate).
+        logo: { symbolIsolated: !!ctx.symbolSvg },
+        artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },
+      });
+
     }
 
     return json({ error: `Unknown action: ${action}` }, 400);

@@ -246,7 +246,7 @@ export function logoBox(
   aspect: number,
   isLockup: boolean,
   maxWidth: number,
-  bias = 0.62,
+  bias = 0.85,
   fillWidth = false,
 ): { w: number; h: number; clear: number } {
   const [lo, hi] = isLockup ? rs.lockupBand : rs.logoBand;
