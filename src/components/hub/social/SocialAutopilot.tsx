@@ -1248,7 +1248,7 @@ function Step5BuildKit({
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back</Button>
         <div className="flex items-center gap-2">
           {anyDone && tasks.some((t) => t.status !== "done") && (
-            <Button variant="outline" onClick={runAll} disabled={running}>
+            <Button variant="outline" onClick={() => runAll()} disabled={running}>
               {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               Generate missing ({tasks.filter((t) => t.status !== "done").length})
             </Button>
@@ -1258,11 +1258,12 @@ function Step5BuildKit({
               Continue to launch <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
           ) : (
-            <Button onClick={runAll} disabled={running}>
+            <Button onClick={() => runAll()} disabled={running}>
               {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               Generate all
             </Button>
           )}
+
         </div>
       </footer>
 
