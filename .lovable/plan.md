@@ -83,17 +83,20 @@ New files:
 - `supabase/functions/_shared/brand-art-direction.ts` — the AI director prompt, the archetype definitions, grid/scale math, and the saved record type.
 - `supabase/functions/_shared/text-metrics.ts` — TTF advance-width measurement, wrap, and fit-to-box.
 - `supabase/functions/_shared/collateral-mockup.ts` — surface/shadow mock-up compositor for thumbnails.
+- `src/lib/brand/collateral-fields.ts` — the field inventory, per-piece requirements, validators and normalisers (shared shape with the edge function).
+- `src/components/hub/brand/CollateralDetailsDialog.tsx` — the "Confirm your details" verification form.
 
 Changed:
-- `_shared/collateral-svg.ts` — templates take `(ctx, ad, css)` and lay out on the grid; `wrapText`/`paragraph` swap to measured text.
-- `venture-collateral/index.ts` — resolve-or-create the art direction record before rendering, run the copy pass, store mock-up + flat variants, run the QA gate.
-- Migration: add art direction JSON to the venture brand row; add mockup path column to `venture_brand_collateral`.
-- `BrandCollateral.tsx` / `CollateralPreviewDialog.tsx` — show mock-up thumbnails, expose "Re-direct" (new art direction) separately from "Regenerate" (same direction, fresh render).
+- `_shared/collateral-svg.ts` — templates take `(ctx, ad, css)` and lay out on the grid; `wrapText`/`paragraph` swap to measured text; layouts adapt when an optional field is skipped.
+- `venture-collateral/index.ts` — run the field audit and block on missing required fields; resolve-or-create the art direction record; run the copy pass; store mock-up + flat variants; run the QA gate.
+- Migration: add art direction JSON and a verified-contact-details JSON (with a verified-at stamp) to the venture brand row; add mockup path column to `venture_brand_collateral`.
+- `BrandCollateral.tsx` / `CollateralPreviewDialog.tsx` — "Details verified" chip with edit link, stale badges when details change, mock-up thumbnails, and "Re-direct" (new art direction) separate from "Regenerate" (same direction, fresh render).
 
 ## Order of work
 
-1. Art direction record + archetypes + text metrics.
-2. Rewrite the four highest-visibility pieces on the grid: business card, letterhead, presentation, guidelines.
-3. Remaining pieces: envelope, notecard, signature, invoice, proposal.
-4. Material pass + mock-up thumbnails.
-5. Real-copy pass + QA gate + UI controls.
+1. Field inventory, validators, verification dialog, and the generation gate.
+2. Art direction record + archetypes + text metrics.
+3. Rewrite the four highest-visibility pieces on the grid: business card, letterhead, presentation, guidelines.
+4. Remaining pieces: envelope, notecard, signature, invoice, proposal.
+5. Material pass + mock-up thumbnails.
+6. Real-copy pass + QA gate + UI controls.
