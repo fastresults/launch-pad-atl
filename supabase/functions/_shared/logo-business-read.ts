@@ -19,6 +19,12 @@ export interface BusinessProfile {
   moment_of_need: string;
   /** premium | practical | warm | clinical | rugged | playful | institutional */
   register: string;
+  /** What is actually happening in the customer's life at the moment of need. */
+  human_truth: string;
+  /** What the business promises that person, emotionally. */
+  emotional_promise: string;
+  /** 4-6 entries of "symbol = the meanings it carries". */
+  meaning_symbols: string[];
   /** 5-8 concrete nouns/forms drawn from the real work of this business. */
   symbol_vocabulary: string[];
   /** 5-8 category-specific clichés that are banned for this venture. */
@@ -26,6 +32,7 @@ export interface BusinessProfile {
   /** One sentence: what the mark must communicate at a glance. */
   must_communicate: string;
 }
+
 
 export const BUSINESS_READ_SYSTEM =
   `You are a brand strategist who reads a company's own finished copy and reports what the business literally is — not what it aspires to feel like. You never write abstractions ("empowerment", "innovation", "trust"). You name the trade, the customer, the transaction, and the physical world the work happens in. You are also an identity designer, so you know exactly which symbols are honest for a category and which ones are the tired defaults every competitor already uses.`;
