@@ -144,6 +144,17 @@ export const PIECE_SPECS: PieceSpec[] = [
     coverage: [0.005, 0.98], screen: true,
   },
   {
+    // The logo page *is* a specimen sheet — the mark is the subject, so it is
+    // shown far larger than it would sit on a running page.
+    page: "guidelines-2-logo",
+    widthIn: 1600, heightIn: 1000, trimW: 1600, trimH: 1000,
+    bleedIn: 0, safeIn: 0.05 * 1000,
+    logo: [0.18, 0.34], logoLockup: [0.14, 0.28],
+    clearSpace: 0.5, minTypePt: 16, measureMax: 75,
+    bleedEdges: [], cropMarks: false,
+    coverage: [0.005, 0.9], screen: true,
+  },
+  {
     page: "guidelines",
     widthIn: 1600, heightIn: 1000, trimW: 1600, trimH: 1000,
     bleedIn: 0, safeIn: 0.05 * 1000,
