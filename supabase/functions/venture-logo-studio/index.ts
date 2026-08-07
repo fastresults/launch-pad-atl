@@ -282,11 +282,13 @@ async function buildStep(
   steps: Step[],
   brief: string,
   instruction?: string,
+  overrideDirection?: RoughDirection,
 ): Promise<{ step: Step; turn: InterviewTurn }> {
   const turn = await nextTurn(LOVABLE_API_KEY, studio, historyOf(steps), brief, instruction);
-  const { roughs, error } = await drawSet(
-    supabase, userId, snapshotId, turn.art_direction, tokens, studio.companyName, references,
+  const { roughs, error } = await drawOne(
+    supabase, userId, snapshotId, overrideDirection ?? turn.direction, tokens, studio.companyName, references,
   );
+
   return {
     turn,
     step: {
