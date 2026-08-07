@@ -1166,53 +1166,52 @@ Deno.serve(async (req) => {
         typeof body?.correction === "string" ? body.correction : row.review_note ?? null,
       );
 
-      // Attachment order matters and is described in the prompt: marks first,
-      // then the moodboard tiles.
-      const visionRefs: string[] = [...refImages, ...moodTiles.slice(0, 4)];
-
-      const path = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
-      const store = async (bytes: Uint8Array) => {
-        const { error: upErr } = await supabase.storage.from("user-media")
-          .upload(path, bytes, { contentType: "image/png", upsert: true });
-        if (upErr) throw upErr;
-      };
-
-      // Primary: reference-conditioned gateway render — it sees the founder's
-      // three marks, so the output inherits their construction, not a guess.
+      // The concept IS the vector. We draw the mark as SVG here, then
+      // rasterise that same SVG for the card preview and the jury — so what
+      // the founder approves is literally the final artwork.
+      const previewPath = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
       try {
-        const b64 = await renderMark(prompt, "1024x1024", visionRefs);
-        await store(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
-        await advance({ render_status: "ready", render_path: path, render_provider: "gateway_reference", render_error: null });
-        return new Response(JSON.stringify({ ok: true, rendered: true, provider: "gateway_reference", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      } catch (primaryError) {
-        console.warn("reference-conditioned render failed", errorMessage(primaryError));
-        if (!higgsfieldConfigured()) {
-          await advance({ render_status: "failed", render_error: errorMessage(primaryError).slice(0, 500), render_provider: "gateway_reference" });
-          return new Response(JSON.stringify({ ok: true, rendered: false, reason: errorMessage(primaryError) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const docsBlock = await loadBrandDocs(supabase, snapshotId);
+        const dossier = `${buildDossier(ctx, tokens, profile, craftSpec, docsBlock)}\n\nART DIRECTION FOR THIS CONCEPT\n${prompt}`;
+        const { spec } = await developVectorSpec(
+          row.concept as LogoDirection,
+          ctx,
+          tokens,
+          dossier,
+          typeof body?.correction === "string" ? body.correction : row.review_note ?? null,
+          null,
+        );
+        const companyName = snap.company_name ?? "Venture";
+        const variants = await buildLogoVariants(spec, tokens, companyName);
+        const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, variants.mark, "mark");
+
+        // Preview raster from the very same SVG — card image and downloaded
+        // vector can never diverge.
+        let renderPath: string | null = null;
+        const png = await rasterizeSvg(variants.mark, 1024);
+        if (png) {
+          const { error: upErr } = await supabase.storage.from("user-media")
+            .upload(previewPath, Uint8Array.from(atob(png), (c) => c.charCodeAt(0)), { contentType: "image/png", upsert: true });
+          if (!upErr) renderPath = previewPath;
         }
-        // Fallback: Higgsfield, text-only but art-directed by the same brief.
-        try {
-          const render = await renderLogoConcept({
-            prompt,
-            negativePrompt: logoNegativePrompt(),
-            seed: seedForConcept(directionId, Number(row.attempt_count ?? 0)),
-          });
-          await store(await fetchRenderBytes(render.imageUrl));
-          await advance({ render_status: "ready", render_path: path, render_provider: "higgsfield", render_job_id: render.jobId, render_error: null });
-          return new Response(JSON.stringify({ ok: true, rendered: true, provider: "higgsfield", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        } catch (error) {
-          const terminal = error instanceof HiggsfieldError && error.terminal;
-          const message = errorMessage(error);
-          await advance({
-            render_status: terminal ? "unavailable" : "failed",
-            render_error: message.slice(0, 500),
-            render_provider: "higgsfield",
-          });
-          console.warn("logo render failed on both providers", message);
-          return new Response(JSON.stringify({ ok: true, rendered: false, reason: message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
+
+        await advance({
+          render_status: "ready",
+          render_path: renderPath,
+          render_provider: "vector",
+          render_error: null,
+          vector_spec: spec as unknown as Record<string, unknown>,
+          svg_path: uploaded.path,
+        });
+        return new Response(JSON.stringify({ ok: true, rendered: true, provider: "vector", path: uploaded.path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (error) {
+        const message = errorMessage(error);
+        console.warn("vector concept draw failed", message);
+        await advance({ render_status: "failed", render_error: message.slice(0, 500), render_provider: "vector" });
+        return new Response(JSON.stringify({ ok: true, rendered: false, reason: message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
+
 
     // STAGE 5 — the jury. Judges the render itself, allows exactly one
     // corrective re-render, then publishes the raster mark for the founder to
