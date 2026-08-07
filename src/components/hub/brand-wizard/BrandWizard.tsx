@@ -1089,18 +1089,30 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                     )}
 
                     <div className="flex gap-1.5">
+                      {directionRow && !directionRow.svg_path && (
+                        <Button
+                          size="sm"
+                          className="h-7 flex-1 text-[11px]"
+                          disabled={busy || vectorizeDirection.isPending}
+                          onClick={() => vectorizeDirection.mutate(directionRow)}
+                        >
+                          {vectorizeDirection.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <CircleCheck className="mr-1 h-3 w-3" />}
+                          Approve & vectorize
+                        </Button>
+                      )}
                       {a.direction && (
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || retryDirection.isPending || !directionRow}
+                          disabled={busy || retryDirection.isPending}
                           onClick={() => directionRow && retryDirection.mutate(directionRow)}
                         >
                           {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
                           More like this
                         </Button>
                       )}
+
                       <Button
                         variant="ghost"
                         size="sm"
