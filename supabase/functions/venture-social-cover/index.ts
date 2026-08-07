@@ -84,54 +84,15 @@ function mimeFromPath(p: string): string {
   return "image/png";
 }
 
-// Fetch the brand kit's primary logo as raw bytes + data URL.
-// Returns nulls + a reason if no logo is available or anything fails — caller
-// degrades and surfaces the reason in qa_notes so the UI can warn the user.
-export type LogoSkipReason =
-  | "no_logos"
-  | "no_path"
-  | "download_failed"
-  | "too_large"
-  | "svg_unsupported"
-  | "exception";
+// Brand-kit primary logo as a bitmap the model + compositor can both read.
+// SVG marks (what Logo Studio saves) are rasterised on demand by the shared
+// helper, so covers are never generated blind to the brand mark.
+export type { LogoSkipReason } from "../_shared/brand-logo-bitmap.ts";
 
-async function fetchPrimaryLogo(
-  admin: any,
-  kit: any,
-): Promise<{ dataUrl: string | null; bytes: Uint8Array | null; skipReason: LogoSkipReason | null }> {
-  try {
-    const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
-    if (!logos.length) {
-      console.warn("[social-cover] logo skipped: no_logos on brand kit");
-      return { dataUrl: null, bytes: null, skipReason: "no_logos" };
-    }
-    const primary = logos.find((l) => l?.primary) ?? logos[0];
-    const path = primary?.path || primary?.storage_path;
-    if (!path) {
-      console.warn("[social-cover] logo skipped: primary entry has no path");
-      return { dataUrl: null, bytes: null, skipReason: "no_path" };
-    }
-    const { data, error } = await admin.storage.from(BUCKET).download(path);
-    if (error || !data) {
-      console.warn("[social-cover] logo skipped: download_failed", error);
-      return { dataUrl: null, bytes: null, skipReason: "download_failed" };
-    }
-    const buf = new Uint8Array(await data.arrayBuffer());
-    if (buf.byteLength > 4 * 1024 * 1024) {
-      console.warn(`[social-cover] logo skipped: too_large (${buf.byteLength} bytes)`);
-      return { dataUrl: null, bytes: null, skipReason: "too_large" };
-    }
-    const mime = primary?.contentType || mimeFromPath(path);
-    if (mime === "image/svg+xml") {
-      console.warn("[social-cover] logo skipped: svg_unsupported (upload PNG/JPG)");
-      return { dataUrl: null, bytes: null, skipReason: "svg_unsupported" };
-    }
-    return { dataUrl: `data:${mime};base64,${bytesToB64(buf)}`, bytes: buf, skipReason: null };
-  } catch (e) {
-    console.error("fetchPrimaryLogo failed", e);
-    return { dataUrl: null, bytes: null, skipReason: "exception" };
-  }
+async function fetchPrimaryLogo(admin: any, kit: any) {
+  return await fetchPrimaryLogoBitmap(admin, kit);
 }
+
 
 // Multimodal call: Gemini image model via OpenRouter chat shape. Returns b64 PNG.
 async function callMultimodal(
