@@ -129,7 +129,9 @@ async function callMultimodal(
   return b64;
 }
 
-// Fallback: text-only OpenAI image gen at medium quality.
+// Fallback: text-only OpenAI image gen. This path CANNOT see the logo or the
+// palette tile, so the caller appends an inline palette description and we run
+// it at high quality — a fallback render still has to be shippable.
 async function callTextOnly(prompt: string, size: string, apiKey: string): Promise<string> {
   const res = await fetch(AI_GATEWAY, {
     method: "POST",
@@ -138,7 +140,7 @@ async function callTextOnly(prompt: string, size: string, apiKey: string): Promi
       model: MODEL_FALLBACK,
       prompt,
       size,
-      quality: "medium",
+      quality: "high",
       n: 1,
     }),
   });
