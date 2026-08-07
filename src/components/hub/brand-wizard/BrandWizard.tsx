@@ -779,17 +779,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     }
   };
 
-  const skipped = !!kit?.dna?._logoRefSkipped;
-  const gatePassed = refs.length > 0 || skipped;
+  // Hard gate: three reference marks ARE the art direction. Without them the
+  // studio invents a house style, which is what produced the earlier slop.
+  const gatePassed = refs.length >= 3;
 
-  const skipRefs = () => {
-    onSave({ dna: { ...(kit?.dna ?? {}), _logoRefSkipped: true } });
-  };
-  const undoSkip = () => {
-    const dna = { ...(kit?.dna ?? {}) };
-    delete dna._logoRefSkipped;
-    onSave({ dna });
-  };
 
   return (
     <div className="space-y-8">
