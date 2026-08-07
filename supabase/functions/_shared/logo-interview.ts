@@ -18,22 +18,50 @@ export type InterviewTurn = {
   choices: Choice[];
   allow_free_text: boolean;
   multi_select: boolean;
-  art_direction: RoughDirection[];
+  direction: RoughDirection;
   brief_summary: string;
   done: boolean;
 };
+
+export type OpeningBrief = {
+  design_brief: string;
+  direction: RoughDirection;
+};
+
+const DIRECTION_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["title", "render_brief"],
+  properties: {
+    title: { type: "string", description: "Two to four words naming the idea, e.g. 'Open porch'." },
+    render_brief: { type: "string", description: "One paragraph of concrete drawing instructions for this single mark: the subject, how it is constructed, stroke weight, and which brand colours carry it." },
+  },
+} as const;
+
+const BRIEF_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["design_brief", "direction"],
+  properties: {
+    design_brief: {
+      type: "string",
+      description: "Roughly 100 words of plain prose addressed to the founder: who this business is, the human truth the mark must carry, the subject you propose to draw, how it is constructed, and which brand colours carry it. No headings, no bullet lists.",
+    },
+    direction: DIRECTION_SCHEMA,
+  },
+} as const;
 
 const SCHEMA = {
   type: "object",
   additionalProperties: false,
   required: [
     "read_back", "question", "helper", "choices",
-    "allow_free_text", "multi_select", "art_direction", "brief_summary", "done",
+    "allow_free_text", "multi_select", "direction", "brief_summary", "done",
   ],
   properties: {
     read_back: {
       type: ["string", "null"],
-      description: "Only on the very first turn: one or two sentences reading the business back to the founder and naming the human truth the mark should carry. Null on every later turn.",
+      description: "Only on the very first turn: one or two sentences reading the business back to the founder. Null on every later turn.",
     },
     question: { type: "string", description: "The single next question, in a designer's voice. One question, never a list." },
     helper: { type: "string", description: "One short line telling the founder why this choice matters for the mark." },
@@ -52,49 +80,38 @@ const SCHEMA = {
     },
     allow_free_text: { type: "boolean" },
     multi_select: { type: "boolean" },
-    art_direction: {
-      type: "array",
-      description: "Exactly three roughs to draw right now, reflecting everything decided so far. Each render_brief describes ONE mark in concrete visual terms: the subject, how it is constructed, stroke weight, and which brand colours carry it.",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["title", "render_brief"],
-        properties: {
-          title: { type: "string", description: "Two to four words naming the idea, e.g. 'Open porch'." },
-          render_brief: { type: "string", description: "One paragraph of concrete drawing instructions for this single mark." },
-        },
-      },
-    },
+    direction: DIRECTION_SCHEMA,
     brief_summary: { type: "string", description: "The accumulated design brief in plain language — everything decided so far." },
-    done: { type: "boolean", description: "True when enough has been decided that the founder should be choosing a final mark rather than answering more questions." },
+    done: { type: "boolean", description: "True when enough has been decided that the founder should be approving the mark rather than answering more questions." },
   },
 } as const;
 
 const SYSTEM = `You are an award-winning identity designer running a live logo session with a founder. Your work has been in Dribbble's top shots and you have built marks for companies people recognise.
 
 How you work:
-- You draw while you talk. Every turn you ask ONE question and simultaneously put three fresh roughs on the table that reflect everything decided so far.
+- You develop ONE mark. Every turn you ask ONE question and put ONE fresh rough on the table — the same idea, evolved by what the founder just told you. You never offer alternatives side by side; you make a call and let them redirect you.
 - You already know this business. You have read its positioning, its customer, its offer and its brand system. Never ask something the context already answers. Never ask a generic questionnaire question.
 - You are opinionated. You lead with a recommendation and let the founder redirect you.
-- You stop early. Five or six questions is a full session. Set done=true as soon as the direction is settled enough to pick a final mark.
+- You stop early. Five or six questions is a full session. Set done=true as soon as the mark is settled enough to approve.
 
 The arc, adapted to what you learn:
-1. Read the business back and name the human truth the mark must carry. Ask them to confirm or correct it.
+1. Confirm or correct the human truth the mark must carry.
 2. Type of mark: symbol + wordmark, wordmark alone, lettermark, or emblem.
-3. What the symbol IS — two or three candidate subjects drawn from this specific business, each with a one-line reason. Never generic swooshes, globes, lightbulbs, handshakes, gears, checkmarks or abstract blobs.
+3. What the symbol IS — never generic swooshes, globes, lightbulbs, handshakes, gears, checkmarks or abstract blobs.
 4. Character: geometric or humanist, line or solid, weight, how much survives at 24 pixels.
 5. Colour and type inside the existing brand system.
 6. Free-form refinement.
 
-Art direction rules for every rough you request:
-- One mark per rough. Flat vector. Two or three colours from the brand palette, no more.
+Art direction rules for the rough you request:
+- One mark. Flat vector. Two or three colours from the brand palette, no more.
 - NEVER put letters, words or text in a rough. The wordmark is set separately in the real brand typeface.
 - Name a real subject a stranger could identify on sight. Say how it is constructed: what encloses what, what the negative space does, where strokes meet.
-- The three roughs on a turn must be genuinely different ideas, not three weights of the same shape.
+- The new rough must visibly answer the founder's last answer — evolve the mark, do not start over unless they asked you to.
 - No gradients, no 3D, no drop shadows, no photorealism, no mockups, no badges reading like stock icons.`;
 
-/** Stream a strict-JSON turn out of the Responses API and accumulate it server-side. */
-async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewTurn> {
+
+/** Stream a strict-JSON payload out of the Responses API and accumulate it server-side. */
+async function callDesigner(apiKey: string, input: any[], name: string, schema: unknown): Promise<any> {
   const res = await fetch(RESPONSES_URL, {
     method: "POST",
     headers: {
@@ -108,14 +125,7 @@ async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewT
       stream: true,
       store: false,
       reasoning: { effort: "low", summary: "auto" },
-      text: {
-        format: {
-          type: "json_schema",
-          name: "logo_interview_turn",
-          strict: true,
-          schema: SCHEMA,
-        },
-      },
+      text: { format: { type: "json_schema", name, strict: true, schema } },
     }),
   });
 
@@ -152,8 +162,19 @@ async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewT
     }
   }
 
-  if (!text.trim()) throw new Error("The designer returned an empty turn. Try again.");
-  const parsed = JSON.parse(text) as InterviewTurn;
+  if (!text.trim()) throw new Error("The designer returned an empty response. Try again.");
+  return JSON.parse(text);
+}
+
+function normalizeDirection(d: any): RoughDirection {
+  return {
+    title: typeof d?.title === "string" && d.title ? d.title : "The mark",
+    render_brief: typeof d?.render_brief === "string" ? d.render_brief : "",
+  };
+}
+
+async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewTurn> {
+  const parsed = await callDesigner(apiKey, input, "logo_interview_turn", SCHEMA);
   return {
     read_back: parsed.read_back ?? null,
     question: parsed.question ?? "",
@@ -161,11 +182,12 @@ async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewT
     choices: Array.isArray(parsed.choices) ? parsed.choices.slice(0, 4) : [],
     allow_free_text: parsed.allow_free_text !== false,
     multi_select: parsed.multi_select === true,
-    art_direction: Array.isArray(parsed.art_direction) ? parsed.art_direction.slice(0, 3) : [],
+    direction: normalizeDirection(parsed.direction),
     brief_summary: parsed.brief_summary ?? "",
     done: parsed.done === true,
   };
 }
+
 
 export type StudioContext = {
   companyName: string;
@@ -186,6 +208,42 @@ export function contextBlock(ctx: StudioContext): string {
 
 type PriorStep = { question: string; answer: string; chosen?: string | null };
 
+/**
+ * The opening move: a written design brief of about 100 words proposing the
+ * first mark, plus the art direction to draw it once the founder approves.
+ * Nothing is drawn until they say go.
+ */
+export async function openingBrief(
+  apiKey: string,
+  ctx: StudioContext,
+  correction?: string,
+  previous?: string,
+): Promise<OpeningBrief> {
+  const input = [
+    { role: "developer", content: [{ type: "input_text", text: SYSTEM }] },
+    {
+      role: "user",
+      content: [{
+        type: "input_text",
+        text: [
+          contextBlock(ctx),
+          previous ? `## The brief you proposed last time\n${previous}` : "",
+          correction ? `## The founder's correction\n${correction}` : "",
+          correction
+            ? `Rewrite the brief so it answers their correction. Same shape: about 100 words of prose, then the art direction for the single mark you will draw.`
+            : `Open the session with a written design brief of about 100 words, addressed to the founder in plain prose: who they are, the human truth the mark must carry, the single symbol you propose to draw, how it is constructed, and which brand colours carry it. Then give the art direction for that one mark. Do not draw anything yet and do not ask a question — this is the proposal they will approve.`,
+        ].filter(Boolean).join("\n\n"),
+      }],
+    },
+  ];
+
+  const parsed = await callDesigner(apiKey, input, "logo_opening_brief", BRIEF_SCHEMA);
+  return {
+    design_brief: typeof parsed.design_brief === "string" ? parsed.design_brief : "",
+    direction: normalizeDirection(parsed.direction),
+  };
+}
+
 export async function nextTurn(
   apiKey: string,
   ctx: StudioContext,
@@ -194,7 +252,7 @@ export async function nextTurn(
   freeInstruction?: string,
 ): Promise<InterviewTurn> {
   const transcript = history.length
-    ? history.map((s, i) => `Q${i + 1}: ${s.question}\nFounder: ${s.answer}${s.chosen ? `\n(They pointed at the rough titled "${s.chosen}")` : ""}`).join("\n\n")
+    ? history.map((s, i) => `Q${i + 1}: ${s.question}\nFounder: ${s.answer}${s.chosen ? `\n(They were looking at the rough titled "${s.chosen}")` : ""}`).join("\n\n")
     : "(nothing yet — this is the opening turn)";
 
   const input = [
@@ -208,13 +266,12 @@ export async function nextTurn(
           `## The session so far\n${transcript}`,
           brief ? `## Design brief accumulated so far\n${brief}` : "",
           freeInstruction ? `## The founder just said\n${freeInstruction}` : "",
-          history.length === 0
-            ? `Open the session: read this business back in one or two sentences, name the human truth the mark should carry, ask them to confirm or correct it, and put three opening roughs on the table.`
-            : `Give the next turn: one question plus three fresh roughs reflecting everything decided.`,
+          `Give the next turn: one question plus ONE fresh rough that evolves the mark to reflect everything decided.`,
         ].filter(Boolean).join("\n\n"),
       }],
     },
   ];
+
 
   return await callInterviewer(apiKey, input);
 }

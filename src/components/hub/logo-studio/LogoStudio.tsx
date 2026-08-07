@@ -11,9 +11,9 @@ import { invokeEdge } from "@/lib/edge-invoke";
 /**
  * Logo Studio — an AI art director interviewing the founder while it draws.
  *
- * No queue, no background run, nothing to resume. Each answer is one request
- * that returns the next question and three fresh roughs. The rough the founder
- * approves is the artwork that gets vectored — what they see is what they get.
+ * It opens with a written brief of about 100 words proposing one mark. Once the
+ * founder approves the brief, exactly one mark is drawn and evolved question by
+ * question. The rough they approve is the artwork that gets vectored.
  */
 
 type Rough = { id: string; title: string; brief: string; url: string | null; provider: string };
@@ -33,14 +33,15 @@ type Step = {
 };
 type Session = {
   id: string;
-  status: "interviewing" | "approved" | "committed";
-  brief: { summary?: string } | null;
+  status: "briefing" | "interviewing" | "approved" | "committed";
+  brief: { summary?: string; proposal?: string; direction?: { title: string; render_brief: string } } | null;
   steps: Step[];
   approved_rough: Rough | null;
   vector_svg: string | null;
   traced: boolean | null;
   last_error: string | null;
 };
+
 
 async function studio(payload: Record<string, unknown>): Promise<any> {
   const { data, error } = await invokeEdge("venture-logo-studio", { body: payload });
@@ -62,7 +63,9 @@ export default function LogoStudio({
   const [picked, setPicked] = useState<string[]>([]);
   const [refineFor, setRefineFor] = useState<Rough | null>(null);
   const [refineNote, setRefineNote] = useState("");
+  const [briefNote, setBriefNote] = useState("");
   const bottom = useRef<HTMLDivElement>(null);
+
 
   const existing = useQuery({
     queryKey: ["logoStudio", snapshotId],
@@ -88,9 +91,23 @@ export default function LogoStudio({
 
   const start = useMutation({
     mutationFn: () => studio({ action: "start", snapshotId }),
-    onSuccess: (data) => { land(data); toast.success("Your art director is sketching"); },
+    onSuccess: (data) => { land(data); toast.success("Your art director has written a brief"); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const reviseBrief = useMutation({
+    mutationFn: (instruction: string) =>
+      studio({ action: "revise_brief", snapshotId, sessionId: session?.id, instruction }),
+    onSuccess: (data) => { land(data); setBriefNote(""); toast.success("Brief rewritten"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const approveBrief = useMutation({
+    mutationFn: () => studio({ action: "approve_brief", snapshotId, sessionId: session?.id }),
+    onSuccess: (data) => { land(data); setBriefNote(""); toast.success("Drawing your first mark"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
 
   const answer = useMutation({
     mutationFn: (vars: { answer: string; chosenRoughId?: string | null }) =>
@@ -159,7 +176,8 @@ export default function LogoStudio({
 
   const busy =
     start.isPending || answer.isPending || refine.isPending || back.isPending ||
-    approve.isPending || commit.isPending || uploadOwn.isPending;
+    approve.isPending || commit.isPending || uploadOwn.isPending ||
+    approveBrief.isPending || reviseBrief.isPending;
 
   const submitAnswer = (chosenRoughId?: string | null) => {
     const text = [...picked, freeText.trim()].filter(Boolean).join("; ");
@@ -187,14 +205,68 @@ export default function LogoStudio({
           <h3 className="text-sm font-semibold">Logo Studio</h3>
           <p className="text-xs leading-relaxed text-muted-foreground">
             An art director who has already read your venture — your concept, customer, positioning and brand
-            personality. It asks a handful of pointed questions and sketches three marks alongside every answer,
-            so you steer by looking, not by describing. Approve one and it's vectored on the spot, in your colours.
+            personality. It opens with a short written brief proposing one mark. Approve the brief and it draws
+            that mark, then refines it with you one question at a time. Approve the mark and it's vectored on
+            the spot, in your colours.
           </p>
         </div>
         <Button onClick={() => start.mutate()} disabled={start.isPending} size="sm">
           {start.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Wand2 className="mr-1 h-4 w-4" />}
           {start.isPending ? "Reading your venture…" : "Start the design session"}
         </Button>
+      </section>
+    );
+  }
+
+  /* ------------------------------ the brief ------------------------------ */
+
+  if (session.status === "briefing") {
+    return (
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-3">
+          <h3 className="text-sm font-semibold">Logo Studio — the brief</h3>
+          <Button variant="ghost" size="sm" onClick={() => reset.mutate()} disabled={busy || reset.isPending}>
+            <RotateCcw className="mr-1 h-4 w-4" /> Start over
+          </Button>
+        </div>
+
+        <div className="space-y-4 rounded-xl border border-primary/30 bg-primary/5 p-5">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-primary">
+            <PenLine className="h-3.5 w-3.5" /> Design brief
+          </div>
+          <p className="whitespace-pre-line text-sm leading-relaxed">{session.brief?.proposal}</p>
+          {session.brief?.direction?.title && (
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">The mark:</span> {session.brief.direction.title}
+            </p>
+          )}
+
+          <div className="space-y-2 border-t border-white/10 pt-3">
+            <Textarea
+              value={briefNote}
+              onChange={(e) => setBriefNote(e.target.value)}
+              rows={2}
+              disabled={busy}
+              placeholder="Anything to correct before it draws? e.g. we're not playful, we're steady and precise."
+              className="text-sm"
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" disabled={busy} onClick={() => approveBrief.mutate()}>
+                {approveBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
+                {approveBrief.isPending ? "Drawing the first mark…" : "Approve the brief & draw it"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy || !briefNote.trim()}
+                onClick={() => reviseBrief.mutate(briefNote.trim())}
+              >
+                {reviseBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+                Rewrite the brief
+              </Button>
+            </div>
+          </div>
+        </div>
       </section>
     );
   }
@@ -216,6 +288,7 @@ export default function LogoStudio({
           <RotateCcw className="mr-1 h-4 w-4" /> Start over
         </Button>
       </div>
+
 
       {session.last_error && (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[11px] text-amber-200">
@@ -248,17 +321,31 @@ export default function LogoStudio({
                 )}
               </div>
 
-              {/* Roughs drawn for this turn */}
+              {/* The mark drawn for this turn — one, always */}
               {step.roughs.length > 0 && (
-                <div className="grid gap-3 pl-8 sm:grid-cols-3">
+                <div className="pl-8">
                   {step.roughs.map((rough) => {
                     const chosen = step.chosen_rough_id === rough.id;
+                    if (!isCurrent) {
+                      return (
+                        <div key={rough.id} className="flex items-center gap-3">
+                          {rough.url && (
+                            <img
+                              src={rough.url}
+                              alt={rough.title}
+                              className={`h-16 w-16 shrink-0 rounded border bg-white object-contain p-1 ${
+                                chosen ? "border-primary" : "border-white/10"
+                              }`}
+                            />
+                          )}
+                          <p className="text-[11px] text-muted-foreground">{rough.title}</p>
+                        </div>
+                      );
+                    }
                     return (
                       <div
                         key={rough.id}
-                        className={`overflow-hidden rounded-lg border transition ${
-                          chosen ? "border-primary ring-1 ring-primary/40" : "border-white/10 hover:border-white/25"
-                        }`}
+                        className="max-w-sm overflow-hidden rounded-xl border border-primary/40 ring-1 ring-primary/20"
                       >
                         {rough.url ? (
                           <img src={rough.url} alt={rough.title} className="aspect-square w-full bg-white object-contain" />
@@ -267,26 +354,20 @@ export default function LogoStudio({
                             Not drawn
                           </div>
                         )}
-                        <div className="space-y-2 p-2.5">
+                        <div className="space-y-2 p-3">
                           <div>
-                            <p className="text-xs font-semibold">{rough.title}</p>
-                            <p className="mt-0.5 line-clamp-3 text-[11px] leading-relaxed text-muted-foreground">
-                              {rough.brief}
-                            </p>
+                            <p className="text-sm font-semibold">{rough.title}</p>
+                            <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{rough.brief}</p>
                           </div>
-                          {isCurrent && !answered && (
+                          {!answered && (
                             <div className="flex flex-wrap gap-1.5">
-                              <Button size="sm" variant="secondary" className="h-7 px-2 text-[11px]" disabled={busy}
-                                onClick={() => submitAnswer(rough.id)}>
-                                This direction
-                              </Button>
                               <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" disabled={busy}
                                 onClick={() => { setRefineFor(rough); setRefineNote(""); }}>
-                                <PenLine className="mr-1 h-3 w-3" /> Tweak
+                                <PenLine className="mr-1 h-3 w-3" /> Tweak this mark
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" disabled={busy}
+                              <Button size="sm" variant="secondary" className="h-7 px-2 text-[11px]" disabled={busy}
                                 onClick={() => approve.mutate(rough.id)}>
-                                <Check className="mr-1 h-3 w-3" /> Approve
+                                <Check className="mr-1 h-3 w-3" /> Approve this mark
                               </Button>
                             </div>
                           )}
@@ -297,6 +378,7 @@ export default function LogoStudio({
                   })}
                 </div>
               )}
+
 
               {step.render_error && isCurrent && (
                 <p className="pl-8 text-[11px] text-amber-300">{step.render_error}</p>
@@ -345,9 +427,10 @@ export default function LogoStudio({
                   <div className="flex items-center gap-2">
                     <Button size="sm" disabled={busy} onClick={() => submitAnswer(null)}>
                       {answer.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                      {answer.isPending ? "Sketching…" : step.done ? "Draw the final round" : "Answer & sketch"}
+                      {answer.isPending ? "Redrawing…" : step.done ? "Draw the final pass" : "Answer & redraw"}
                     </Button>
-                    {busy && <span className="text-[11px] text-muted-foreground">Drawing three marks — about 20 seconds.</span>}
+                    {busy && <span className="text-[11px] text-muted-foreground">Redrawing the mark — about 15 seconds.</span>}
+
                   </div>
                 </div>
               )}

@@ -3,21 +3,24 @@
 // There is no queue, no job ledger, no background worker and nothing that can
 // stall. Every action is one synchronous request the founder is watching:
 //
-//   start    load the venture's real context, open the session, draw 3 roughs
-//   answer   record the answer, ask the next question, draw 3 fresh roughs
-//   back     step the conversation back and take a different branch
-//   refine   free-form direction on one rough -> 3 variations of it
-//   approve  TRACE the approved rough into brand-coloured vectors
-//   commit   assemble the lockup family and write it into the brand kit
+//   start          read the venture and write a ~100 word design brief proposing one mark
+//   revise_brief   the founder corrects the brief; the designer rewrites it
+//   approve_brief  draw the first mark and open the interview
+//   answer         record the answer, ask the next question, draw ONE evolved mark
+//   back           step the conversation back and take a different branch
+//   refine         free-form direction on the current mark -> one redraw
+//   approve        TRACE the approved rough into brand-coloured vectors
+//   commit         assemble the lockup family and write it into the brand kit
 //
-// Fidelity rule: approving traces the artwork the founder is looking at. The
-// mark is never redrawn between approval and delivery.
+// One mark at a time. Fidelity rule: approving traces the artwork the founder is
+// looking at. The mark is never redrawn between approval and delivery.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
 import {
   nextTurn,
+  openingBrief,
   roughPrompt,
   ROUGH_NEGATIVE,
   type InterviewTurn,
@@ -32,6 +35,7 @@ import {
   higgsfieldConfigured,
   renderLogoConcept,
 } from "../_shared/higgsfield.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -160,44 +164,36 @@ async function uploadSvg(supabase: any, userId: string, snapshotId: string, svg:
   return { path, url: data?.signedUrl ?? null };
 }
 
-async function drawSet(
+/** Draw the single mark for this turn. One rough, never a set. */
+async function drawOne(
   supabase: any,
   userId: string,
   snapshotId: string,
-  directions: RoughDirection[],
+  direction: RoughDirection,
   tokens: any,
   companyName: string,
   references: string[],
 ): Promise<{ roughs: Rough[]; error: string | null }> {
-  const settled = await Promise.allSettled(
-    directions.slice(0, 3).map(async (direction) => {
-      const prompt = roughPrompt(direction, tokens, companyName);
-      const { bytes, provider } = await drawRough(prompt, references);
-      const stored = await uploadPng(supabase, userId, snapshotId, bytes, "rough");
-      return {
+  try {
+    const prompt = roughPrompt(direction, tokens, companyName);
+    const { bytes, provider } = await drawRough(prompt, references);
+    const stored = await uploadPng(supabase, userId, snapshotId, bytes, "rough");
+    return {
+      roughs: [{
         id: crypto.randomUUID(),
         title: direction.title,
         brief: direction.render_brief,
         path: stored.path,
         url: stored.url,
         provider,
-      } satisfies Rough;
-    }),
-  );
-
-  const roughs: Rough[] = [];
-  const failures: string[] = [];
-  for (const item of settled) {
-    if (item.status === "fulfilled") roughs.push(item.value);
-    else failures.push(errorMessage(item.reason));
+      }],
+      error: null,
+    };
+  } catch (e) {
+    return { roughs: [], error: `The mark could not be drawn. ${errorMessage(e).slice(0, 240)}` };
   }
-  return {
-    roughs,
-    error: failures.length
-      ? `${failures.length} of ${directions.length} roughs could not be drawn. ${failures[0].slice(0, 220)}`
-      : null,
-  };
 }
+
 
 /* ----------------------------- context ----------------------------- */
 
@@ -286,11 +282,13 @@ async function buildStep(
   steps: Step[],
   brief: string,
   instruction?: string,
+  overrideDirection?: RoughDirection,
 ): Promise<{ step: Step; turn: InterviewTurn }> {
   const turn = await nextTurn(LOVABLE_API_KEY, studio, historyOf(steps), brief, instruction);
-  const { roughs, error } = await drawSet(
-    supabase, userId, snapshotId, turn.art_direction, tokens, studio.companyName, references,
+  const { roughs, error } = await drawOne(
+    supabase, userId, snapshotId, overrideDirection ?? turn.direction, tokens, studio.companyName, references,
   );
+
   return {
     turn,
     step: {
@@ -384,27 +382,73 @@ Deno.serve(async (req) => {
       return json({ ok: true, session: session ? await withFreshUrls(supabase, session) : null });
     }
 
-    /* ---------------- start ---------------- */
+    /* ---------------- start (write the brief — nothing is drawn yet) ---------------- */
     if (action === "start") {
-      const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
-      const { step, turn } = await buildStep(supabase, userId, snapshotId, studio, references, tokens, [], "");
+      const { studio } = await buildStudioContext(supabase, ctx, tokens, kit);
+      const proposal = await openingBrief(LOVABLE_API_KEY, studio);
 
       const { data, error } = await supabase.from("venture_logo_sessions").insert({
         snapshot_id: snapshotId,
         user_id: userId,
-        status: "interviewing",
-        brief: { summary: turn.brief_summary },
-        steps: [step],
-        last_error: step.render_error,
+        status: "briefing",
+        brief: {
+          summary: proposal.design_brief,
+          proposal: proposal.design_brief,
+          direction: proposal.direction,
+        },
+        steps: [],
+        last_error: null,
       }).select().single();
       if (error) throw error;
       return json({ ok: true, session: await withFreshUrls(supabase, data) });
     }
 
+
     const sessionId: string = body?.sessionId ?? "";
     const session = await loadSession(sessionId);
     if (!session) throw new Error("No logo session found. Start a new one.");
     const steps: Step[] = Array.isArray(session.steps) ? session.steps : [];
+
+    /* ---------------- revise_brief ---------------- */
+    if (action === "revise_brief") {
+      const correction = String(body?.instruction ?? "").trim();
+      if (!correction) throw new Error("Tell the designer what to change in the brief.");
+      const { studio } = await buildStudioContext(supabase, ctx, tokens, kit);
+      const proposal = await openingBrief(LOVABLE_API_KEY, studio, correction, session.brief?.proposal ?? "");
+
+      const { data, error } = await supabase.from("venture_logo_sessions").update({
+        status: "briefing",
+        brief: {
+          summary: proposal.design_brief,
+          proposal: proposal.design_brief,
+          direction: proposal.direction,
+        },
+        last_error: null,
+      }).eq("id", session.id).select().single();
+      if (error) throw error;
+      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+    }
+
+    /* ---------------- approve_brief (draw the first mark) ---------------- */
+    if (action === "approve_brief") {
+      const proposal: string = session.brief?.proposal ?? "";
+      const direction: RoughDirection | undefined = session.brief?.direction ?? undefined;
+      const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
+      const { step, turn } = await buildStep(
+        supabase, userId, snapshotId, studio, references, tokens, [], proposal,
+        `The founder approved this brief:\n${proposal}\n\nDraw that mark now and ask your first refining question about it.`,
+        direction,
+      );
+
+      const { data, error } = await supabase.from("venture_logo_sessions").update({
+        status: "interviewing",
+        steps: [step],
+        brief: { ...(session.brief ?? {}), summary: turn.brief_summary || proposal },
+        last_error: step.render_error,
+      }).eq("id", session.id).select().single();
+      if (error) throw error;
+      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+    }
 
     /* ---------------- answer ---------------- */
     if (action === "answer") {
@@ -425,12 +469,13 @@ Deno.serve(async (req) => {
 
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         steps: nextSteps,
-        brief: { summary: turn.brief_summary },
+        brief: { ...(session.brief ?? {}), summary: turn.brief_summary },
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
       return json({ ok: true, session: await withFreshUrls(supabase, data) });
     }
+
 
     /* ---------------- back ---------------- */
     if (action === "back") {
@@ -461,13 +506,14 @@ Deno.serve(async (req) => {
       const { step, turn } = await buildStep(
         supabase, userId, snapshotId, studio, references, tokens, steps, session.brief?.summary ?? "",
         source
-          ? `They are looking at the rough titled "${source.title}" (${source.brief}) and said: ${instruction}. Draw three refinements of THAT mark — same idea, their change applied.`
+          ? `They are looking at the mark titled "${source.title}" (${source.brief}) and said: ${instruction}. Redraw THAT mark — same idea, their change applied.`
           : instruction,
       );
       const nextSteps = [...steps, step];
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         steps: nextSteps,
-        brief: { summary: turn.brief_summary },
+        brief: { ...(session.brief ?? {}), summary: turn.brief_summary },
+
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
