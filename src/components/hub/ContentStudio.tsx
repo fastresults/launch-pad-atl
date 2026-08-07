@@ -39,6 +39,14 @@ const ASPECTS: { id: AdAspect; label: string; hint: string }[] = [
   { id: "9:16", label: "9:16 story", hint: "Stories/Reels/TikTok (1080×1920)" },
 ];
 
+// Editorial poster lockups — mirrors POSTER_LAYOUTS in the ad compositor.
+const POSTER_LAYOUTS: { id: string; label: string; blurb: string }[] = [
+  { id: "bottom-scrim", label: "Bottom scrim", blurb: "Cinematic gradient, type anchored bottom-left" },
+  { id: "centered-plate", label: "Centered plate", blurb: "Soft brand plate, type centered" },
+  { id: "edge-rule", label: "Edge rule", blurb: "Accent rule at the left edge, type stacked" },
+];
+
+
 // Prefer the source hook over a stored last_headline when the stored value
 // looks like a truncated prefix (older versions appended "…"). This keeps the
 // regenerate dialog from re-sending a chopped headline.
