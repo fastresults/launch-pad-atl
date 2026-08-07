@@ -585,16 +585,25 @@ async function developVectorSpec(
   tokens: any,
   dossier: string,
   reviewNote?: string,
+  renderUrl?: string | null,
 ): Promise<{ spec: VectorSpec; lint: ReturnType<typeof lintVectorSpec> }> {
   const companyName = String(ctx?.snap?.company_name ?? "").trim();
   const wantsType = /wordmark|lettermark|monogram|combination|emblem/i.test(d.logo_type ?? "");
   const fixNotes = reviewNote ? [reviewNote] : [];
   let best: { spec: VectorSpec; lint: ReturnType<typeof lintVectorSpec> } | null = null;
+  const hasRender = typeof renderUrl === "string" && renderUrl.length > 0;
 
   for (let pass = 0; pass < 2; pass++) {
+    const instruction = drawInstruction(d, dossier, companyName, wantsType, fixNotes, hasRender);
+    const userContent = hasRender
+      ? [
+          { type: "text", text: instruction },
+          { type: "image_url", image_url: { url: renderUrl } },
+        ]
+      : instruction;
     const normalized = await requestVectorResponse([
       { role: "system", content: DRAW_SYSTEM },
-      { role: "user", content: drawInstruction(d, dossier, companyName, wantsType, fixNotes) },
+      { role: "user", content: userContent },
     ]);
     const parsed = normalized.root;
     const primitives = normalized.primitives;
