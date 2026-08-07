@@ -16,6 +16,7 @@ import {
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { CollateralPreviewDialog } from "@/components/hub/brand/CollateralPreviewDialog";
 import { CollateralDetailsDialog } from "@/components/hub/brand/CollateralDetailsDialog";
+import { CollateralPieceCard } from "@/components/hub/brand/CollateralPieceCard";
 
 
 export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: boolean }) {
