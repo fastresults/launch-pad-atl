@@ -1479,6 +1479,20 @@ function Step6Launch({
   const allLive = platforms.length > 0 && liveCount === platforms.length;
   const anyImages = assets.length > 0;
 
+  // Click-to-magnify: flat list of every generated image on this screen.
+  const previewables = useMemo(
+    () => assets.filter((a: any) => a.signed_url),
+    [assets],
+  );
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const previewIdx = previewables.findIndex((a: any) => a.id === previewId);
+  const previewAsset = previewIdx >= 0 ? previewables[previewIdx] : null;
+  const stepPreview = (delta: number) => {
+    if (previewables.length < 2 || previewIdx < 0) return;
+    const next = (previewIdx + delta + previewables.length) % previewables.length;
+    setPreviewId(previewables[next].id);
+  };
+
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
       <header className="flex items-center justify-between gap-2">
@@ -1534,21 +1548,38 @@ function Step6Launch({
 
               <div className="mt-2 grid grid-cols-[56px_1fr] gap-2">
                 <div>
-                  <div className="h-14 w-14 overflow-hidden rounded-full border border-white/10 bg-muted/40">
+                  <button
+                    type="button"
+                    onClick={() => avatar?.signed_url && setPreviewId(avatar.id)}
+                    disabled={!avatar?.signed_url}
+                    title={avatar?.signed_url ? `Preview ${p} avatar` : undefined}
+                    className="group relative h-14 w-14 overflow-hidden rounded-full border border-white/10 bg-muted/40 transition hover:border-primary disabled:cursor-default"
+                  >
                     {avatar?.signed_url
-                      ? <img src={avatar.signed_url} alt={`${p} avatar`} className="h-full w-full object-cover" />
+                      ? <img src={avatar.signed_url} alt={`${p} avatar`} className="h-full w-full object-cover transition group-hover:scale-105" />
                       : <div className="flex h-full w-full items-center justify-center text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>}
-                  </div>
+                  </button>
                   <Button size="sm" variant="ghost" className="mt-1 h-6 w-full px-1 text-[9px]" disabled={!!regenerating[`${p}:avatar`]} onClick={() => regenerate(p, "avatar")}>
                     {regenerating[`${p}:avatar`] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
                   </Button>
                 </div>
                 <div>
-                  <div className="aspect-[4/1] overflow-hidden rounded-md border border-white/10 bg-muted/40">
+                  <button
+                    type="button"
+                    onClick={() => cover?.signed_url && setPreviewId(cover.id)}
+                    disabled={!cover?.signed_url}
+                    title={cover?.signed_url ? `Preview ${p} channel art` : undefined}
+                    className="group relative block aspect-[4/1] w-full overflow-hidden rounded-md border border-white/10 bg-muted/40 transition hover:border-primary disabled:cursor-default"
+                  >
                     {cover?.signed_url
-                      ? <img src={cover.signed_url} alt={`${p} cover`} className="h-full w-full object-cover" />
+                      ? <img src={cover.signed_url} alt={`${p} cover`} className="h-full w-full object-cover transition group-hover:scale-[1.03]" />
                       : <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">no cover</div>}
-                  </div>
+                    {cover?.signed_url && (
+                      <span className="pointer-events-none absolute inset-0 hidden items-center justify-center bg-background/50 text-[10px] font-medium group-hover:flex">
+                        Click to enlarge
+                      </span>
+                    )}
+                  </button>
                   <Button size="sm" variant="ghost" className="mt-1 h-6 px-1.5 text-[9px]" disabled={!!regenerating[`${p}:${kitTasks.find((task) => task.platform === p && task.asset !== "avatar")?.asset}`]} onClick={() => regenerate(p, kitTasks.find((task) => task.platform === p && task.asset !== "avatar")?.asset)}>
                     <RefreshCw className="mr-1 h-3 w-3" /> Regenerate cover
                   </Button>
@@ -1611,6 +1642,36 @@ function Step6Launch({
           );
         })}
       </div>
+
+      <AssetPreviewDialog
+        open={!!previewAsset}
+        onOpenChange={(v) => !v && setPreviewId(null)}
+        asset={
+          previewAsset
+            ? {
+                url: previewAsset.signed_url,
+                title: `${previewAsset.platform} — ${String(previewAsset.asset_kind || "").replace(/_/g, " ")}`,
+                subtitle: snapshot?.company_name || null,
+                platform: previewAsset.platform,
+                assetKind: previewAsset.asset_kind,
+                width: previewAsset.width,
+                height: previewAsset.height,
+                canvasPlan: previewAsset.canvas_plan ?? null,
+                qaStatus: previewAsset.qa_status ?? null,
+                qaNotes: previewAsset.qa_notes ?? null,
+                modelUsed: previewAsset.model_used ?? null,
+                lastFeedback: previewAsset.last_feedback ?? null,
+                lastHeadline: previewAsset.last_headline,
+                lastLogoSize: previewAsset.last_logo_size ?? null,
+                updatedAt: previewAsset.updated_at ?? null,
+              }
+            : null
+        }
+        busy={!!previewAsset && !!regenerating[`${previewAsset.platform}:${previewAsset.asset_kind}`]}
+        onRegenerate={previewAsset ? () => regenerate(previewAsset.platform, previewAsset.asset_kind) : undefined}
+        onPrev={previewables.length > 1 ? () => stepPreview(-1) : undefined}
+        onNext={previewables.length > 1 ? () => stepPreview(1) : undefined}
+      />
 
       <footer className="flex items-center justify-between gap-2">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-3 w-3" /> Back</Button>
