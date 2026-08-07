@@ -3368,6 +3368,62 @@ export type Database = {
           },
         ]
       }
+      venture_shares: {
+        Row: {
+          created_at: string
+          excluded_keys: string[]
+          expires_at: string | null
+          id: string
+          last_viewed_at: string | null
+          password_hash: string | null
+          revoked_at: string | null
+          snapshot_id: string
+          title: string | null
+          token: string
+          updated_at: string
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          excluded_keys?: string[]
+          expires_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          password_hash?: string | null
+          revoked_at?: string | null
+          snapshot_id: string
+          title?: string | null
+          token: string
+          updated_at?: string
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          excluded_keys?: string[]
+          expires_at?: string | null
+          id?: string
+          last_viewed_at?: string | null
+          password_hash?: string | null
+          revoked_at?: string | null
+          snapshot_id?: string
+          title?: string | null
+          token?: string
+          updated_at?: string
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_shares_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venture_snapshots: {
         Row: {
           brand_tokens: Json | null
