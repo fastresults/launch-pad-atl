@@ -711,15 +711,15 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       await processLogoRun(created.run);
       return created;
     },
-    onSuccess: () => toast.success("Your three concept marks are ready — pick one, refine it, then vectorize"),
+    onSuccess: () => toast.success("Your three concept marks are ready — pick one, refine it, then finalise"),
     onError: (e: any) => toast.error(e?.message ?? "Logo run paused. You can resume it here."),
     onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
   });
 
   const vectorizeDirection = useMutation({
     mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_vectorize", runId: item.run_id, directionId: item.id } }),
-    onSuccess: () => { toast.success("Mark vectorized — SVG lockups are ready"); logoRunQ.refetch(); },
-    onError: (e: any) => toast.error(e?.message ?? "Could not vectorize this mark"),
+    onSuccess: () => { toast.success("Mark finalised — SVG lockups are ready"); logoRunQ.refetch(); },
+    onError: (e: any) => toast.error(e?.message ?? "Could not finalise this mark"),
   });
 
 
@@ -1148,9 +1148,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-amber-400">
             <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
             <span>
-              {fellBack.length} of {runDirections.length} concepts in this set skipped the Higgsfield render and were
-              drawn from the brief alone{fellBack[0]?.render_error ? ` — ${String(fellBack[0].render_error).slice(0, 140)}` : ""}. Re-run the set once renders are available for noticeably stronger marks.
+              {fellBack.length} of {runDirections.length} concepts in this set could not be drawn
+              {fellBack[0]?.render_error ? ` — ${String(fellBack[0].render_error).slice(0, 140)}` : ""}. Re-run the set to redraw them.
             </span>
+
           </p>
         )}
 
@@ -1159,7 +1160,14 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {logos.map((a, i) => {
               const directionRow = runDirections.find((d) => d.asset?.path === a.path || d.id === a.direction_id);
-              const busy = retryDirection.isPending && retryDirection.variables?.id === directionRow?.id;
+              // Every pending state is scoped to THIS row — otherwise one
+              // action puts every card in the set into a spinner.
+              const rowId = directionRow?.id;
+              const retrying = retryDirection.isPending && retryDirection.variables?.id === rowId;
+              const selecting = selectDirection.isPending && (selectDirection.variables as any)?.id === rowId;
+              const finalising = vectorizeDirection.isPending && (vectorizeDirection.variables as any)?.id === rowId;
+              const rowBusy = retrying || selecting || finalising;
+              const finalised = !!directionRow?.asset?.vectorized;
               const removeLogo = async () => {
                 try {
                   if (directionRow && activeRun) {
@@ -1187,7 +1195,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
                   <button
                     onClick={removeLogo}
-                    disabled={busy || retryDirection.isPending}
+                    disabled={rowBusy}
                     aria-label="Remove this concept"
                     className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white shadow hover:bg-black disabled:opacity-40"
                   >
@@ -1271,10 +1279,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                           variant={isSelected ? "default" : "outline"}
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || selectDirection.isPending}
+                          disabled={rowBusy || selecting}
                           onClick={() => selectDirection.mutate(directionRow)}
                         >
-                          {isSelected ? <Check className="mr-1 h-3 w-3" /> : null}
+                          {selecting ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : isSelected ? <Check className="mr-1 h-3 w-3" /> : null}
                           {isSelected ? "Selected" : "Select"}
                         </Button>
                       )}
@@ -1283,34 +1291,40 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                           variant="secondary"
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || refineDirection.isPending}
+                          disabled={rowBusy}
                           onClick={() => { setRefineTarget(directionRow); setRefineNote(""); }}
                         >
                           <Sparkles className="mr-1 h-3 w-3" /> Refine this mark
                         </Button>
                       )}
-                      {directionRow && !directionRow.svg_path && (
+                      {directionRow && isSelected && !finalised && (
                         <Button
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || vectorizeDirection.isPending}
+                          disabled={rowBusy}
                           onClick={() => vectorizeDirection.mutate(directionRow)}
                         >
-                          {vectorizeDirection.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <CircleCheck className="mr-1 h-3 w-3" />}
-                          Approve & vectorize
+                          {finalising ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <CircleCheck className="mr-1 h-3 w-3" />}
+                          Approve &amp; finalise
                         </Button>
+                      )}
+                      {directionRow && finalised && (
+                        <span className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-md bg-emerald-500/15 px-2 text-[11px] font-medium text-emerald-400">
+                          <CircleCheck className="h-3 w-3" /> Finalised
+                        </span>
                       )}
 
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-7 px-2 text-[11px] text-destructive hover:text-destructive"
-                        disabled={busy || retryDirection.isPending}
+                        disabled={rowBusy}
                         onClick={removeLogo}
                       >
                         Remove
                       </Button>
                     </div>
+
 
                   </div>
                 </div>

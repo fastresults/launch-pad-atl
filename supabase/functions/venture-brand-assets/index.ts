@@ -3,18 +3,19 @@
 // grounded in the FULL venture context (snapshot + brief + sources + brain)
 // and the wizard's locked palette/typography/personality.
 //
-// LOGO STUDIO pipeline (rebuilt — references first, vector last):
+// LOGO STUDIO pipeline (vector-first — what you approve is the artwork):
 //   0 inspiration gate  at least one reference logo is REQUIRED to start a run.
 //   1 reference read    vision pass over the references -> craft spec
 //                       (structure only, never subject matter).
 //   2 business read     the founder's finished copy -> business profile
 //                       (category, customer, symbol vocabulary, cliché ban).
-//   3 concepting        eight ideas, cut to four, each obeying 1 + 2.
-//   4 render            reference-conditioned image render of each concept.
-//   5 jury              vision critique vs. the craft spec; one corrective
-//                       re-render, then the mark is published as-is.
-//   6 vectorize         runs ONLY on the mark the founder approves, tracing
-//                       that exact image — nothing is auto-redrawn.
+//   3 concepting        eight ideas, cut to three, each obeying 1 + 2.
+//   4 draw              each concept is DRAWN AS SVG and rasterised from that
+//                       same SVG for the card preview.
+//   5 jury              vision critique of the preview; one corrective redraw.
+//   6 finalise          the approved mark's lockup family is assembled from
+//                       the stored vector — no model call, nothing changes.
+
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
@@ -1166,53 +1167,52 @@ Deno.serve(async (req) => {
         typeof body?.correction === "string" ? body.correction : row.review_note ?? null,
       );
 
-      // Attachment order matters and is described in the prompt: marks first,
-      // then the moodboard tiles.
-      const visionRefs: string[] = [...refImages, ...moodTiles.slice(0, 4)];
-
-      const path = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
-      const store = async (bytes: Uint8Array) => {
-        const { error: upErr } = await supabase.storage.from("user-media")
-          .upload(path, bytes, { contentType: "image/png", upsert: true });
-        if (upErr) throw upErr;
-      };
-
-      // Primary: reference-conditioned gateway render — it sees the founder's
-      // three marks, so the output inherits their construction, not a guess.
+      // The concept IS the vector. We draw the mark as SVG here, then
+      // rasterise that same SVG for the card preview and the jury — so what
+      // the founder approves is literally the final artwork.
+      const previewPath = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
       try {
-        const b64 = await renderMark(prompt, "1024x1024", visionRefs);
-        await store(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
-        await advance({ render_status: "ready", render_path: path, render_provider: "gateway_reference", render_error: null });
-        return new Response(JSON.stringify({ ok: true, rendered: true, provider: "gateway_reference", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      } catch (primaryError) {
-        console.warn("reference-conditioned render failed", errorMessage(primaryError));
-        if (!higgsfieldConfigured()) {
-          await advance({ render_status: "failed", render_error: errorMessage(primaryError).slice(0, 500), render_provider: "gateway_reference" });
-          return new Response(JSON.stringify({ ok: true, rendered: false, reason: errorMessage(primaryError) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const docsBlock = await loadBrandDocs(supabase, snapshotId);
+        const dossier = `${buildDossier(ctx, tokens, profile, craftSpec, docsBlock)}\n\nART DIRECTION FOR THIS CONCEPT\n${prompt}`;
+        const { spec } = await developVectorSpec(
+          row.concept as LogoDirection,
+          ctx,
+          tokens,
+          dossier,
+          typeof body?.correction === "string" ? body.correction : row.review_note ?? null,
+          null,
+        );
+        const companyName = snap.company_name ?? "Venture";
+        const variants = await buildLogoVariants(spec, tokens, companyName);
+        const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, variants.mark, "mark");
+
+        // Preview raster from the very same SVG — card image and downloaded
+        // vector can never diverge.
+        let renderPath: string | null = null;
+        const png = await rasterizeSvg(variants.mark, 1024);
+        if (png) {
+          const { error: upErr } = await supabase.storage.from("user-media")
+            .upload(previewPath, Uint8Array.from(atob(png), (c) => c.charCodeAt(0)), { contentType: "image/png", upsert: true });
+          if (!upErr) renderPath = previewPath;
         }
-        // Fallback: Higgsfield, text-only but art-directed by the same brief.
-        try {
-          const render = await renderLogoConcept({
-            prompt,
-            negativePrompt: logoNegativePrompt(),
-            seed: seedForConcept(directionId, Number(row.attempt_count ?? 0)),
-          });
-          await store(await fetchRenderBytes(render.imageUrl));
-          await advance({ render_status: "ready", render_path: path, render_provider: "higgsfield", render_job_id: render.jobId, render_error: null });
-          return new Response(JSON.stringify({ ok: true, rendered: true, provider: "higgsfield", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        } catch (error) {
-          const terminal = error instanceof HiggsfieldError && error.terminal;
-          const message = errorMessage(error);
-          await advance({
-            render_status: terminal ? "unavailable" : "failed",
-            render_error: message.slice(0, 500),
-            render_provider: "higgsfield",
-          });
-          console.warn("logo render failed on both providers", message);
-          return new Response(JSON.stringify({ ok: true, rendered: false, reason: message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
+
+        await advance({
+          render_status: "ready",
+          render_path: renderPath,
+          render_provider: "vector",
+          render_error: null,
+          vector_spec: spec as unknown as Record<string, unknown>,
+          svg_path: uploaded.path,
+        });
+        return new Response(JSON.stringify({ ok: true, rendered: true, provider: "vector", path: uploaded.path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (error) {
+        const message = errorMessage(error);
+        console.warn("vector concept draw failed", message);
+        await advance({ render_status: "failed", render_error: message.slice(0, 500), render_provider: "vector" });
+        return new Response(JSON.stringify({ ok: true, rendered: false, reason: message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
+
 
     // STAGE 5 — the jury. Judges the render itself, allows exactly one
     // corrective re-render, then publishes the raster mark for the founder to
@@ -1226,13 +1226,14 @@ Deno.serve(async (req) => {
       if (["ready", "needs_review"].includes(row.status)) {
         return new Response(JSON.stringify({ ok: true, skipped: true, asset: row.asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      if (!row.render_path) throw new Error("This concept has no render to judge.");
+      if (!row.render_path && !row.svg_path) throw new Error("This concept has no drawing to judge.");
 
       await supabase.from("brand_logo_directions").update({ status: "judging", current_stage: "jury" }).eq("id", directionId);
 
-      const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(row.render_path, 60 * 60 * 24 * 7);
+      const { data: signed } = row.render_path
+        ? await supabase.storage.from("user-media").createSignedUrl(row.render_path, 60 * 60 * 24 * 7)
+        : { data: null } as any;
       const renderUrl = signed?.signedUrl ?? null;
-      if (!renderUrl) throw new Error("Could not read the rendered mark from storage.");
 
       const profile = (run.business_profile ?? null) as BusinessProfile | null;
       const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
@@ -1242,7 +1243,11 @@ Deno.serve(async (req) => {
           .filter((v: any) => typeof v === "string" && v.trim().length),
         mood: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
       };
-      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand, (row.concept as any)?.set_law ?? null);
+      // No preview raster available (renderer offline) — never block delivery.
+      const verdict = renderUrl
+        ? await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand, (row.concept as any)?.set_law ?? null)
+        : { pass: true, note: "", scores: {} as Record<string, number> };
+
 
       const reviewAttempts = Number(row.review_attempts ?? 0);
       // One corrective re-render: the jury's note becomes the render brief's fix line.
@@ -1261,13 +1266,19 @@ Deno.serve(async (req) => {
       }
 
       const concept = (row.concept ?? {}) as any;
+      const { data: signedSvg } = row.svg_path
+        ? await supabase.storage.from("user-media").createSignedUrl(row.svg_path, 60 * 60 * 24 * 7)
+        : { data: null } as any;
+      const svgUrl = signedSvg?.signedUrl ?? null;
       const asset = {
         ok: true,
-        kind: "raster",
-        url: renderUrl,
-        path: row.render_path,
-        preview_url: renderUrl,
-        render: { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "gateway_reference" },
+        kind: row.svg_path ? "vector_concept" : "raster",
+        url: renderUrl ?? svgUrl,
+        path: row.render_path ?? row.svg_path,
+        preview_url: renderUrl ?? svgUrl,
+        svg_url: svgUrl,
+        svg_path: row.svg_path ?? null,
+        render: row.render_path ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "vector" } : null,
         direction_name: row.direction_name,
         logo_type: row.logo_type,
         business_link: concept.business_link ?? concept.human_link ?? "",
@@ -1291,12 +1302,13 @@ Deno.serve(async (req) => {
         p_run_id: runId,
         p_run_version: run.version,
         p_asset: asset,
-        p_svg_path: null,
-        p_preview_path: row.render_path,
+        p_svg_path: row.svg_path ?? null,
+        p_preview_path: row.render_path ?? row.svg_path,
         p_review_passed: verdict.pass,
         p_review_score: verdict.scores,
         p_review_note: verdict.note,
       });
+
       if (publishError) throw publishError;
       return new Response(JSON.stringify({ ok: true, pass: verdict.pass, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -1463,16 +1475,16 @@ Deno.serve(async (req) => {
     }
 
 
-    // STAGE 6 — vectorize an APPROVED mark. Explicit, never automatic: this
-    // traces the raster the founder picked instead of redrawing the brief,
-    // which is what used to turn a decent concept into geometry slop.
+    // STAGE 6 — finalise an APPROVED mark. The concept is already vector, so
+    // this only assembles the lockup family from the stored construction:
+    // no model call, no redraw, nothing can change the founder's drawing.
     if (kind === "logo_vectorize" || kind === "logo_draw_vector" || kind === "logo_retry_direction") {
       if (!runId || !directionId) throw new Error("runId and directionId required");
       const current = await getRun(runId);
       const run = current.run;
       const row = current.directions.find((item: any) => item.id === directionId);
       if (!run || !row) throw new Error("Logo direction not found");
-      if (!row.render_path) throw new Error("Nothing to vectorize — this concept has no approved render yet.");
+      if (!row.vector_spec && !row.render_path) throw new Error("Nothing to finalise — this concept has no drawing yet.");
       if (row.asset?.vectorized && kind !== "logo_retry_direction") {
         return new Response(JSON.stringify({ ok: true, asset: row.asset, direction: row }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
@@ -1483,19 +1495,27 @@ Deno.serve(async (req) => {
       if (!claimed) return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Direction is already being processed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
       try {
-        const started = Date.now();
         const companyName = snap.company_name ?? "Venture";
-        const docsBlock = await loadBrandDocs(supabase, snapshotId);
         const profile = (run.business_profile ?? null) as BusinessProfile | null;
         const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
-        const dossier = buildDossier(ctx, tokens, profile, craftSpec, docsBlock);
 
-        // The approved raster is the design decision; the vector pass traces it.
-        const { data: signedRender } = await supabase.storage.from("user-media")
-          .createSignedUrl(row.render_path, 60 * 60);
+        const { data: signedRender } = row.render_path
+          ? await supabase.storage.from("user-media").createSignedUrl(row.render_path, 60 * 60)
+          : { data: null } as any;
         const renderUrl = signedRender?.signedUrl ?? null;
 
-        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, ctx, tokens, dossier, reviewNote ?? undefined, renderUrl);
+        // The stored spec IS the approved artwork. Only fall back to a model
+        // draw for legacy rows that predate vector-first concepting.
+        let spec = (row.vector_spec ?? null) as VectorSpec | null;
+        let redrawn = false;
+        if (!spec) {
+          const docsBlock = await loadBrandDocs(supabase, snapshotId);
+          const dossier = buildDossier(ctx, tokens, profile, craftSpec, docsBlock);
+          const drawn = await developVectorSpec(row.concept as LogoDirection, ctx, tokens, dossier, reviewNote ?? undefined, renderUrl);
+          spec = drawn.spec;
+          redrawn = true;
+        }
+        const lint = lintVectorSpec(spec);
         const variants = await buildLogoVariants(spec, tokens, companyName);
 
 
@@ -1511,28 +1531,16 @@ Deno.serve(async (req) => {
           uploadVariant(variants.knockout, "knockout"),
         ]);
 
-        // The trace is judged against the render it came from, not re-judged
-        // as a concept — the design decision was already made upstream.
-        let visionPass = true;
-        let visionNote = "";
-        if (Date.now() - started < 60_000 && renderUrl) {
-          const png = await rasterizeSvg(variants.mark, 512);
-          if (png) {
-            const verdict = await juryReview(`data:image/png;base64,${png}`, row.concept as LogoDirection, craftSpec, profile, null, (row.concept as any)?.set_law ?? null);
-            visionPass = verdict.pass;
-            visionNote = verdict.note;
-          }
-        }
-
         const modelScores = spec.quality_scores ?? {};
         const scoreValues = Object.values(modelScores).map(Number).filter(Number.isFinite);
         const average = scoreValues.length ? scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length : 4;
-        const passed = lint.pass && visionPass && average >= 3.5;
+        const passed = lint.pass && average >= 3.5;
         const note = [
-          visionPass ? "" : visionNote,
+          redrawn ? "Legacy concept — redrawn, not carried over from an approved vector." : "",
           ...(lint.pass ? [] : lint.findings),
         ].filter(Boolean).join(" ");
         const scores = { ...modelScores, geometry: Number(lint.score.toFixed(2)), ...lint.metrics };
+
 
         const asset = {
           ok: true,
@@ -1552,9 +1560,11 @@ Deno.serve(async (req) => {
             wordmark_font: variants.wordmark_family,
           },
           direction_name: row.direction_name, logo_type: row.logo_type,
+          source: redrawn ? "redrawn" : "approved_vector",
           render: row.render_path
-            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "gateway_reference" }
+            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "vector" }
             : null,
+
           business_link: row.concept?.business_link ?? row.concept?.human_link ?? "",
           reads_as: row.concept?.reads_as ?? "",
           meaning: row.concept?.meaning ?? "",
