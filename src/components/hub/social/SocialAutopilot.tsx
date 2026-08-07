@@ -843,11 +843,15 @@ function Step5BuildKit({
     });
   };
 
-  const runAll = async () => {
+  const runAll = async (platform?: string) => {
+    const targets = tasks.filter((t) => (!platform || t.platform === platform) && t.status !== "done");
+    if (targets.length === 0) {
+      toast.info(platform ? `${platformLabel(platform)} is already generated — reset it first to rebuild.` : "Everything is already generated — reset first to rebuild.");
+      return;
+    }
     setRunning(true);
     setErrors({});
-    for (const t of tasks) {
-      if (t.status === "done") continue;
+    for (const t of targets) {
       const k = taskKey(t);
       setTaskRunning(k, true);
       try {
@@ -861,6 +865,7 @@ function Step5BuildKit({
     }
     setRunning(false);
   };
+
 
   const regenerateSingle = async (
     t: any,
