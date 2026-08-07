@@ -31,7 +31,6 @@ import {
 } from "../_shared/collateral-fields.ts";
 import { type ArtDirection, directArt, hydrate } from "../_shared/brand-art-direction.ts";
 import { writeCollateralCopy } from "../_shared/collateral-copy.ts";
-import { mockupSvg } from "../_shared/collateral-mockup.ts";
 import { resolveSpec } from "../_shared/collateral-specs.ts";
 import { qcPage, type QcVerdict } from "../_shared/collateral-qc.ts";
 
@@ -233,7 +232,6 @@ async function generateKind(
   // type, and we would store a "finished" page that is a logo on blank paper.
   if (!fontsOk) throw new Error("Brand fonts could not be loaded — refusing to render type-less pages");
   let count = 0;
-  let pageIndex = 0;
   const verdicts: QcVerdict[] = [];
   for (const p of pages) {
     const expectedText = (p.svg.match(/<text\b/g) || []).length;
@@ -242,9 +240,13 @@ async function generateKind(
     }
 
     const rs = resolveSpec(p.name, p.width, p.height);
-    // Keep raster sizes modest — a 2400px page plus its base64 copy inside the
-    // mock-up scene is what pushed the worker past its memory ceiling.
-    let bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 1400), undefined, fontBuffers);
+    // One raster pass per page. The former thumbnail pipeline rendered the
+    // first page at full size, rendered it again at 700px, embedded that PNG in
+    // a mock-up SVG, then rendered the mock-up a third time. On complex traced
+    // marks those duplicate resvg passes exceed the worker CPU allowance.
+    // The stored preview is already suitable for both the library thumbnail
+    // and detailed preview, so do not manufacture a second presentation image.
+    let bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 1100), undefined, fontBuffers);
 
     // Quality control: the drawn geometry against this piece's print standard,
     // plus the pixels that came out. A page that fails is still stored so the
@@ -269,31 +271,9 @@ async function generateKind(
         qc: verdict,
       });
       bytes = null as unknown as Uint8Array;
-
-      // Presentation mock-up — the thumbnail the library shows. Only the first
-      // page of a piece gets one: three rasters per page is what pushed a
-      // five-page piece (guidelines, deck) past the worker's CPU ceiling.
-      try {
-        if (pageIndex > 0) throw new Error("skip");
-        const small = await rasterizeSvgToBytes(p.svg, 700, undefined, fontBuffers);
-        if (small) {
-          const h = Math.round((700 * p.height) / p.width);
-          const scene = mockupSvg(small, 700, h, kind);
-          const mock = await rasterizeSvgToBytes(scene.svg, Math.min(scene.width, 1000));
-          if (mock) {
-            await store(admin, snapshotId, userId, kind, `${p.name}-mockup`, mock, "image/png", scene.width, scene.height, {
-              mockup: true,
-              of: p.name,
-            });
-          }
-        }
-      } catch (e) {
-        if ((e as Error).message !== "skip") console.warn("mockup failed", kind, p.name, (e as Error).message);
-      }
     }
 
     count++;
-    pageIndex++;
   }
 
   if (kind === "email_signature") {
