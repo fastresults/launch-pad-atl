@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy, AlertTriangle, CircleCheck, ExternalLink, Trash2 } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy, AlertTriangle, CircleCheck, ExternalLink, Trash2, Upload, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
 import {
   getBrandKit,
@@ -24,7 +24,7 @@ import {
   PERSONALITY_AXES,
 } from "@/lib/brand-wizard";
 import { sanitizePaletteOption, validatePalette } from "@/lib/brand/palette-rules";
-import { generateBrandAsset } from "@/lib/foundersHub.functions";
+import { generateBrandAsset, generateDocument, listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import { brandKitToDocxBlob, validateBrandGuideDocxBlob } from "@/lib/brand-guide-docx";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
 import { LiveBrandPreview } from "./LiveBrandPreview";
@@ -528,6 +528,7 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
 
 /* ---------- STEP 4: Moodboard & Logo ---------- */
 function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
+  const qc = useQueryClient();
   const [logos, setLogos] = useState<any[]>(kit?.logos ?? []);
   const [moodboard, setMoodboard] = useState<any[]>(kit?.moodboard ?? []);
   const [refs, setRefs] = useState<string[]>(kit?.dna?._logoReferences ?? []);
@@ -725,9 +726,81 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   const selectDirection = useMutation({
     mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_select_direction", runId: item.run_id, directionId: item.id } }),
-    onSuccess: () => logoRunQ.refetch(),
+    onSuccess: (out: any) => {
+      if (Array.isArray(out?.logos)) setLogos(out.logos);
+      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      logoRunQ.refetch();
+      toast.success("Mark selected — it's now your primary logo in the Live Brand");
+    },
     onError: (e: any) => toast.error(e?.message ?? "Could not select this mark"),
   });
+
+  // Founder's own logo file becomes the selected primary mark.
+  const uploadOwnLogo = useMutation({
+    mutationFn: async (file: File) => {
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Could not read that file"));
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      return generateBrandAsset({
+        data: { snapshotId: snapshot.id, kind: "logo_upload_own", dataUrl, filename: file.name, runId: activeRun?.id },
+      });
+    },
+    onSuccess: (out: any) => {
+      if (Array.isArray(out?.logos)) setLogos(out.logos);
+      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      logoRunQ.refetch();
+      toast.success("Your logo is selected and saved to the Live Brand");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Upload failed"),
+  });
+
+  const selectedLogo = logos.find((l: any) => l?.primary) ?? null;
+
+  // Website PRD — regenerate with the locked brand + selected mark, then copy
+  // or download it without leaving the wizard.
+  const prdQ = useQuery({
+    queryKey: ["brandWizardPrd", snapshot.id],
+    queryFn: async () => {
+      const docs = await listSnapshotDocuments({ data: { snapshotId: snapshot.id } });
+      return docs.find((d: any) => d.document_type === "website_prd") ?? null;
+    },
+  });
+  const prd = prdQ.data;
+
+  const regeneratePrd = useMutation({
+    mutationFn: async () => {
+      await generateDocument({ data: { snapshotId: snapshot.id, documentType: "website_prd" } });
+      return prdQ.refetch();
+    },
+    onSuccess: () => toast.success("Website PRD regenerated with your brand"),
+    onError: (e: any) => toast.error(e?.message ?? "Could not regenerate the PRD"),
+  });
+
+  const copyPrd = async () => {
+    if (!prd?.content) return;
+    try {
+      await navigator.clipboard.writeText(prd.content);
+      toast.success("PRD markdown copied");
+    } catch {
+      toast.error("Copy failed");
+    }
+  };
+
+  const downloadPrd = () => {
+    if (!prd?.content) return;
+    const slug = String(snapshot.company_name || "venture").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const blob = new Blob([prd.content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slug}-website-prd.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
 
   const refineDirection = useMutation({
     mutationFn: async ({ item, note }: { item: any; note: string }) => {
@@ -1257,7 +1330,95 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
         </Dialog>
       </section>
 
+      {/* YOUR OWN MARK */}
+      <section className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Already have a logo?</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Upload your own mark (PNG, JPG or SVG). It becomes the selected primary logo in your Live Brand straight away.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-white/20 px-3 py-2 text-xs hover:border-primary/60">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              className="hidden"
+              disabled={uploadOwnLogo.isPending}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (file) uploadOwnLogo.mutate(file);
+              }}
+            />
+            {uploadOwnLogo.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            {uploadOwnLogo.isPending ? "Uploading…" : "Use my own logo"}
+          </label>
+          {selectedLogo && (
+            <div className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2">
+              {selectedLogo.url && (
+                <img src={selectedLogo.url} alt="Selected logo" className="h-8 w-8 rounded bg-white object-contain" />
+              )}
+              <div className="text-[11px]">
+                <div className="font-semibold text-primary">Selected mark</div>
+                <div className="text-muted-foreground">
+                  {selectedLogo.source === "upload" ? "Your uploaded logo" : selectedLogo.direction_name || "Generated concept"}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
+      {/* WEBSITE PRD — brand-infused */}
+      <section className={`space-y-3 rounded-xl border p-4 ${selectedLogo ? "border-primary/40 bg-primary/5" : "border-white/10 bg-background/40"}`}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="flex items-center gap-2 text-sm font-semibold">
+              <FileText className="h-4 w-4 text-primary" /> Website PRD
+            </h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {selectedLogo
+                ? "Rebuild the PRD so your palette, typography, voice and selected mark are baked in — paste-ready for a site builder."
+                : "Select a mark above (or upload your own) to fold the brand into your website PRD."}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            disabled={!selectedLogo || regeneratePrd.isPending}
+            onClick={() => regeneratePrd.mutate()}
+          >
+            {regeneratePrd.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
+            {regeneratePrd.isPending ? "Regenerating…" : "Regenerate website PRD"}
+          </Button>
+        </div>
+
+        {prd?.content ? (
+          <div className="overflow-hidden rounded-lg border border-white/10 bg-card">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
+              <div className="text-[11px] text-muted-foreground">
+                {prd.content.split(/\s+/).filter(Boolean).length} words
+                {prd.updated_at ? ` · updated ${new Date(prd.updated_at).toLocaleString()}` : ""}
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="sm" className="h-7 text-[11px]" onClick={copyPrd}>
+                  <Copy className="mr-1 h-3.5 w-3.5" /> Copy
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-[11px]" onClick={downloadPrd}>
+                  <Download className="mr-1 h-3.5 w-3.5" /> Download
+                </Button>
+              </div>
+            </div>
+            <pre className="max-h-72 overflow-auto whitespace-pre-wrap p-3 text-[11px] leading-relaxed text-foreground/80">
+              {prd.content}
+            </pre>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-white/10 p-4 text-center text-xs text-muted-foreground">
+            No website PRD yet. Regenerate to produce one with your brand baked in.
+          </div>
+        )}
+      </section>
 
       <div className="flex justify-between">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
