@@ -429,10 +429,12 @@ Deno.serve(async (req) => {
     // The model paints only the photographic plate; the kicker / display
     // headline / CTA lockup is typeset here in real brand fonts.
     const resolvedHeadline = resolveAdHeadline(post.hook, headlineOverride, aspect);
+    const headlineCap = aspect === "1:1" ? 62 : aspect === "4:5" ? 70 : 76;
     const posterCopy = await buildPosterCopy({
       apiKey,
       brandName: ctx?.company_name ?? kit?.company_name ?? null,
       valueProp: ctx?.value_proposition ?? null,
+      headlineCap,
       post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
       headlineOverride: resolvedHeadline.mode === "none"
         ? { mode: "none" }
@@ -440,13 +442,14 @@ Deno.serve(async (req) => {
         ? { mode: "custom", text: resolvedHeadline.text }
         : { mode: "auto" },
     });
-    step("poster copy distilled", { headline: !!posterCopy.headline });
+    step("poster copy distilled", { headline: !!posterCopy.headline, truncated: posterCopy.truncated });
 
     const headlineComposited = !!posterCopy.headline;
     const logoComposited = !!(logoSvgText || logoBytes || logoDataUrl);
     const platePngBytes = bytes;
-    const poster = await buildContentAdSvgBytes({
-      baseImageB64: bytesToB64(platePngBytes),
+    const plateB64 = bytesToB64(platePngBytes);
+    const composite = (headline: string) => buildContentAdSvgBytes({
+      baseImageB64: plateB64,
       basePngBytes: platePngBytes,
       baseMime: "image/png",
       width: asset.width,
@@ -455,7 +458,7 @@ Deno.serve(async (req) => {
       aspect,
       layout: posterLayout,
       kicker: posterCopy.kicker,
-      headline: posterCopy.headline,
+      headline,
       ctaLine: posterCopy.ctaLine,
       logoDataUrl,
       logoSvgText,
@@ -466,14 +469,38 @@ Deno.serve(async (req) => {
       // the starting preference when the headline is suppressed.
       logoCorner: undefined,
     });
+
+    let finalHeadline = posterCopy.headline;
+    let poster = await composite(finalHeadline);
     step("poster composited", poster.metrics);
+
+    // Type must never be clipped: if the block didn't fit, or a line ran past
+    // the column, re-typeset once with a shorter headline (no image call).
+    const clipped = (m: typeof poster.metrics) =>
+      m.headline_fits === false || (m.longest_line_pct ?? 0) > 100;
+    if (finalHeadline && clipped(poster.metrics)) {
+      const shorter = shortenHeadline(finalHeadline, headlineCap);
+      if (shorter && shorter !== finalHeadline) {
+        const retry = await composite(shorter);
+        step("poster refit with shorter headline", retry.metrics);
+        if (!clipped(retry.metrics)) { poster = retry; finalHeadline = shorter; }
+      }
+    }
+
     bytes = poster.bytes;
     (qa as any).headline_composited = headlineComposited;
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
     (qa as any).poster_layout = posterLayout;
-    (qa as any).poster_copy = posterCopy;
+    (qa as any).poster_copy = { ...posterCopy, headline: finalHeadline };
+    (qa as any).copy_truncated = posterCopy.truncated;
     Object.assign(qa as any, poster.metrics);
+    if (clipped(poster.metrics)) {
+      qa.ok = false;
+      (qa as any).failures = [...((qa as any).failures ?? []), "headline_clipped"];
+      console.warn(`[content-ad] headline still clipped after refit`, poster.metrics);
+    }
+
 
 
 
