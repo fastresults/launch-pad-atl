@@ -457,23 +457,27 @@ async function generateLogoConcepts(
     : "";
 
   const instruction = `PROCESS — follow it exactly:
-1. Silently restate what this business does and who buys it, in one sentence.
-2. Silently generate 8 candidate marks, each drawn from the honest symbol vocabulary and each obeying the craft spec.
-3. Score each 1-5 on: structure match to the craft spec, craft (is there a real drawing move, or is it assembled from primitives?), relevance to the business, scalability at 24px, memorability.
-4. Kill every candidate that is merely tidy, and every one that uses a banned category cliché.
+1. Silently restate what this business does, who buys it, and what is happening in that person's life at the moment of need.
+2. Silently generate 8 candidate marks. Each one starts from a MEANING-CARRYING SYMBOL — a thing that can be named on sight and that holds more than one true idea about this business at once (the way a tree holds roots, generations, shelter and a long life). Never start from a shape.
+3. Score each 1-5 on: meaning depth (does it hold more than one true idea?), structure match to the craft spec, craft (is there a real drawing move, or is it assembled from primitives?), relevance to the business, scalability at 24px, memorability.
+4. Kill every candidate that is merely tidy, every one that uses a banned category cliché, and every one whose subject a stranger could not name.
 5. Return ONLY the ${count} strongest survivors, each a DIFFERENT form family.
 
 Return STRICT JSON:
-{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","business_link":"one sentence tracing this mark back to what the business actually does","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark","craft_move":"counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the real work","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed from the references" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"structure_match":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
+{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","reads_as":"the literal subject a stranger names on sight, e.g. 'people sheltered under a tree' — never a shape description","meaning":"one sentence: what this mark MEANS, in human terms, to someone who sees it","business_link":"one sentence tracing this mark back to what the business actually does","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark","craft_move":"counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the real work","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed from the references" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"meaning_depth":5,"structure_match":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
 
 Hard rules:
-- Exactly ${count} directions, each a different form family. Four variations of one shape is a failed submission.
+- Exactly ${count} directions, each a different form family. Variations of one shape is a failed submission.
+- MEANING IS THE BRIEF. At least ${Math.max(1, count - 1)} of the ${count} directions must be representational or semi-representational: a recognisable subject, stylised. Pure abstraction is allowed for AT MOST one direction, and only when it carries an explicit second read stated in reads_as.
+- If reads_as is a shape description ("a flowing ribbon", "an infinity loop", "a spiral of leaves") rather than a subject, that candidate is dead — replace it.
+- Draw from MEANING-CARRYING SYMBOLS first; the honest symbol vocabulary is secondary raw material, not the starting point.
 - Obey the craft spec's element ceiling, abstraction level and ink count exactly.
 - Every mark must be drawable as flat vector art in 1-2 flat colours. No scenes, no depth, no rendered detail.
 - Every mark must have ONE named craft move. "Three shapes arranged neatly" is not a craft move.
 - Anything on the business profile's banned list is an instant fail; it outranks your instincts.
 - Never propose any of these:
 ${BANNED_FORMS}`;
+
 
   const userContent: any[] = [{
     type: "text",
