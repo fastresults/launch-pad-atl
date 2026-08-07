@@ -583,9 +583,13 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   // Escape hatch: a stuck queue (dead leases, spinners that never resolve)
   // is cleared outright and the provider status re-read from scratch.
+  // The abort token stops any in-flight generate loop from writing new
+  // directions (or raising "run not found") right after the wipe.
   const [clearing, setClearing] = useState(false);
+  const abortToken = useRef(0);
   const forceClear = async () => {
     setClearing(true);
+    abortToken.current += 1;
     try {
       const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_force_reset" } });
       setLogos([]);
@@ -602,6 +606,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       setClearing(false);
     }
   };
+
 
   // Concepts that were vectored without a Higgsfield render behind them.
   const fellBack = runDirections.filter(
