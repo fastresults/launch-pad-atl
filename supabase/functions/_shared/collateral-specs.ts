@@ -238,21 +238,12 @@ export function logoBox(
   return { w: Math.round(w), h: Math.round(h), clear: Math.round(h * rs.clearSpace) };
 }
 
-/** Crop marks + a trim guide for the vector master a printer receives. */
-export function cropMarks(rs: ResolvedSpec, color = "#000000"): string {
-  if (!rs.cropMarks || !rs.bleed) return "";
-  const b = rs.bleed;
-  const len = Math.round(b * 0.7);
-  const w = Math.max(1, Math.round(rs.dpi / 300));
-  const seg = (x1: number, y1: number, x2: number, y2: number) =>
-    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${w}" opacity="0.55"/>`;
-  const { W, H } = rs;
-  return [
-    seg(0, b, len, b), seg(b, 0, b, len),
-    seg(W - len, b, W, b), seg(W - b, 0, W - b, len),
-    seg(0, H - b, len, H - b), seg(b, H - len, b, H),
-    seg(W - len, H - b, W, H - b), seg(W - b, H - len, W - b, H),
-  ].join("");
+/**
+ * Machine-readable print metadata for the vector master, so a printer (or any
+ * downstream tool) knows the trim, bleed and safe area the page was built to.
+ */
+export function printMeta(rs: ResolvedSpec): string {
+  return ` data-trim="${rs.W}x${rs.H}" data-bleed="${rs.bleed}" data-safe="${rs.safe}" data-piece="${rs.spec.page}"`;
 }
 
 /** Per-page geometry recorded at render time so QC can verify it. */
