@@ -45,7 +45,8 @@ export function specForAspect(aspect: AdAspect): AssetSpec {
 // Per-aspect soft caps for the on-image headline. The SVG compositor tiers by
 // length (1–4 lines) and shrinks font size, so we allow generous caps here and
 // only trim at natural clause boundaries when a headline is truly excessive.
-const HEADLINE_CAP: Record<AdAspect, number> = { "1:1": 180, "4:5": 200, "9:16": 220 };
+// Display budgets: what actually fits the poster column at a readable size.
+const HEADLINE_CAP: Record<AdAspect, number> = { "1:1": 62, "4:5": 70, "9:16": 76 };
 
 // Length-safe headline sanitizer. Never appends an ellipsis and never chops
 // mid-word. If the raw string exceeds `cap`, prefer trimming at the last clause
