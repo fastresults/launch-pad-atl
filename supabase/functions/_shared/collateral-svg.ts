@@ -144,6 +144,13 @@ export type CollateralCtx = {
   fonts: { heading?: string | null; body?: string | null };
   /** Traced vector mark (preferred) — inlined so the ink stays vector. */
   logoSvg?: string | null;
+  /**
+   * Symbol isolated from a traced lockup. When present it is the artwork every
+   * piece draws, and the company name is set in real type beside it instead of
+   * shipping the tracer's polygon letterforms.
+   */
+  symbolSvg?: string | null;
+
   voice?: string | null;
   ad: ArtDirection;
   copy?: CollateralCopy | null;
