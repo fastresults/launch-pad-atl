@@ -262,6 +262,7 @@ export async function openingBrief(
   ctx: StudioContext,
   correction?: string,
   previous?: string,
+  carried: string[] = [],
 ): Promise<OpeningBrief> {
   const input = [
     { role: "developer", content: [{ type: "input_text", text: SYSTEM }] },
@@ -271,11 +272,12 @@ export async function openingBrief(
         type: "input_text",
         text: [
           contextBlock(ctx),
+          requirementsBlock(carried),
           previous ? `## The brief you proposed last time\n${previous}` : "",
-          correction ? `## The founder's correction\n${correction}` : "",
+          correction ? `## The founder's correction — this is not optional, it becomes a locked requirement\n${correction}` : "",
           correction
-            ? `Rewrite the brief so it answers their correction. Same shape: about 100 words of prose, then the art direction for the single mark you will draw.`
-            : `Open the session with a written design brief of about 100 words, addressed to the founder in plain prose: who they are, the human truth the mark must carry, the single symbol you propose to draw, how it is constructed, and which brand colours carry it. Then give the art direction for that one mark. Do not draw anything yet and do not ask a question — this is the proposal they will approve.`,
+            ? `Rewrite the brief so it visibly answers their correction, and return the requirements list with their correction captured as literal constraints. Same shape: about 100 words of prose, then the art direction for the single mark you will draw.`
+            : `Open the session with a written design brief of about 100 words, addressed to the founder in plain prose: who they are, the human truth the mark must carry, the single symbol you propose to draw, how it is constructed, and which brand colours carry it. Then give the art direction for that one mark, and the requirements list (empty is fine if they have not stated any yet). Do not draw anything yet and do not ask a question — this is the proposal they will approve.`,
         ].filter(Boolean).join("\n\n"),
       }],
     },
@@ -285,6 +287,7 @@ export async function openingBrief(
   return {
     design_brief: typeof parsed.design_brief === "string" ? parsed.design_brief : "",
     direction: normalizeDirection(parsed.direction),
+    requirements: mergeRequirements(carried, parsed.requirements),
   };
 }
 
@@ -294,6 +297,8 @@ export async function nextTurn(
   history: PriorStep[],
   brief: string,
   freeInstruction?: string,
+  carried: string[] = [],
+  currentDirection?: RoughDirection | null,
 ): Promise<InterviewTurn> {
   const transcript = history.length
     ? history.map((s, i) => `Q${i + 1}: ${s.question}\nFounder: ${s.answer}${s.chosen ? `\n(They were looking at the rough titled "${s.chosen}")` : ""}`).join("\n\n")
@@ -307,27 +312,44 @@ export async function nextTurn(
         type: "input_text",
         text: [
           contextBlock(ctx),
+          requirementsBlock(carried),
           `## The session so far\n${transcript}`,
           brief ? `## Design brief accumulated so far\n${brief}` : "",
-          freeInstruction ? `## The founder just said\n${freeInstruction}` : "",
-          `Give the next turn: one question plus ONE fresh rough that evolves the mark to reflect everything decided.`,
+          currentDirection?.render_brief
+            ? `## The mark currently on the table — "${currentDirection.title}"\n${currentDirection.render_brief}\n\nYour new render_brief must read as an EDIT of this one, not a new idea.`
+            : "",
+          freeInstruction ? `## The founder just said — this is not optional, capture it in the requirements list\n${freeInstruction}` : "",
+          `Give the next turn: one question, the full carried-forward requirements list, and ONE fresh rough that evolves the mark and satisfies every locked requirement.`,
         ].filter(Boolean).join("\n\n"),
       }],
     },
   ];
 
-
-  return await callInterviewer(apiKey, input);
+  return await callInterviewer(apiKey, input, carried);
 }
 
 /** Turn one art-direction line into a full image-model prompt. */
-export function roughPrompt(direction: RoughDirection, tokens: any, companyName: string): string {
+export function roughPrompt(
+  direction: RoughDirection,
+  tokens: any,
+  companyName: string,
+  requirements: string[] = [],
+  isEdit = false,
+): string {
   const colors = tokens?.colors ?? {};
   const palette = [colors.primary, colors.secondary, colors.accent]
     .filter((c: unknown) => typeof c === "string" && c)
     .join(", ");
+  // Lockup/typography asks are honoured in the typeset lockup, never inside the symbol.
+  const drawable = requirements.filter((r) => !/\b(wordmark|company name|text to the|type to the|lockup|letters beside)\b/i.test(r));
   return [
-    `Flat vector logo mark. ${direction.render_brief}`,
+    isEdit
+      ? `Edit the attached logo mark. Keep its composition, subject and construction; change ONLY what is described next.`
+      : `Flat vector logo mark.`,
+    direction.render_brief,
+    drawable.length
+      ? `These are non-negotiable and must all be visible in the drawing: ${drawable.map((r) => r.replace(/\s+/g, " ").trim()).join(" ")}`
+      : "",
     palette ? `Use only these colours: ${palette}, plus white.` : "",
     `Single centered mark on a pure white background, generous margin, nothing else in frame.`,
     `Crisp geometric construction, confident even stroke weights, clean closed shapes, readable at 24 pixels.`,
