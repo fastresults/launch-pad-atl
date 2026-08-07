@@ -999,7 +999,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
               </Button>
               <Button onClick={() => runBusy ? resumeLogos.mutate() : genLogos.mutate()} disabled={genLogos.isPending || resumeLogos.isPending || !gatePassed} size="sm">
                 {(genLogos.isPending || resumeLogos.isPending) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                {logoPhase === "brief" ? "Reading references & business…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "rendering" ? "Art-directing the marks…" : logoPhase === "reviewing" ? "Jury reviewing…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : !gatePassed ? "Add 3 inspirations to unlock" : "Generate 4 logo directions"}
+                {logoPhase === "brief" ? "Reading references & business…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "rendering" ? "Art-directing the marks…" : logoPhase === "reviewing" ? "Jury reviewing…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : !gatePassed ? "Add 1 inspiration to unlock" : "Generate 3 logo directions"}
               </Button>
             </div>
 
