@@ -3,7 +3,8 @@
 // Business cards, letterhead, envelopes, notecards, the email signature,
 // invoice/proposal templates, presentation masters, guideline pages and design
 // tokens are all typeset from the LOCKED brand kit (palette, typography, vector
-// mark) and rasterised. No image model touches them: type has to be exact.
+// mark) plus the founder's VERIFIED text inventory, laid out on the grid the
+// art director chose. No image model touches them: type has to be exact.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireUser, requireSnapshotOwner } from "../_shared/auth.ts";
@@ -15,9 +16,20 @@ import {
   designTokens,
   renderCollateral,
   signatureHtml,
+  type CollateralCopy,
   type CollateralCtx,
   type CollateralKind,
 } from "../_shared/collateral-svg.ts";
+import {
+  auditDetails,
+  type ContactDetails,
+  FIELD_SPECS,
+  KIND_LABEL,
+  normalizeDetails,
+} from "../_shared/collateral-fields.ts";
+import { type ArtDirection, directArt, hydrate } from "../_shared/brand-art-direction.ts";
+import { writeCollateralCopy } from "../_shared/collateral-copy.ts";
+import { mockupSvg } from "../_shared/collateral-mockup.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,13 +50,44 @@ function tidy(s: unknown): string {
   return String(s ?? "").trim();
 }
 
-async function buildCtx(admin: any, snapshotId: string): Promise<CollateralCtx> {
+/** Best-guess starting values, so the founder confirms rather than types. */
+function seedDetails(kit: any, ctxData: any): ContactDetails {
+  const snap = ctxData?.snap ?? {};
+  const profile = ctxData?.profile ?? {};
+  const brain = ctxData?.brain ?? {};
+  const company = tidy(brain?.identity?.company_name) || tidy(snap.business_name) || tidy(snap.title);
+  const website = tidy(snap.website_url) || tidy(profile.website);
+  return normalizeDetails({
+    company,
+    tagline: tidy(kit?.dna?.tagline) || tidy(brain?.identity?.one_liner),
+    person_name: tidy(profile.full_name) || tidy(brain?.identity?.founder),
+    person_title: tidy(profile.role) || "Founder",
+    email: tidy(profile.email),
+    phone: tidy(profile.phone),
+    website,
+    address_street: tidy(profile.address),
+    address_city: tidy(profile.city),
+    address_state: tidy(profile.state),
+    address_zip: tidy(profile.postal_code) || tidy(profile.zip),
+    voice: typeof kit?.voice === "string" ? kit.voice : tidy(kit?.voice?.summary),
+  });
+}
+
+async function loadKit(admin: any, snapshotId: string) {
   const { data: kit } = await admin
     .from("venture_brand_kits")
-    .select("palette, typography, logos, voice, dna, status")
+    .select("palette, typography, logos, voice, dna, status, contact_details, contact_verified_at, art_direction")
     .eq("snapshot_id", snapshotId)
     .maybeSingle();
+  return kit;
+}
 
+async function buildCtx(
+  admin: any,
+  snapshotId: string,
+  opts: { redirect?: boolean } = {},
+): Promise<{ ctx: CollateralCtx; details: ContactDetails }> {
+  const kit = await loadKit(admin, snapshotId);
   if (!kit) throw new Error("NO_BRAND_KIT");
 
   const colors: Record<string, string> = {};
@@ -56,45 +99,75 @@ async function buildCtx(admin: any, snapshotId: string): Promise<CollateralCtx> 
   if (!Object.keys(colors).length) throw new Error("NO_PALETTE");
 
   const logos: any[] = Array.isArray(kit.logos) ? kit.logos : [];
-  const primary = logos.find((l) => l?.primary) ?? logos[0] ?? null;
+  const primaryLogo = logos.find((l) => l?.primary) ?? logos[0] ?? null;
   let logoSvg: string | null = null;
-  const svgPath = primary?.svg_path ?? primary?.path;
+  const svgPath = primaryLogo?.svg_path ?? primaryLogo?.path;
   if (svgPath && String(svgPath).endsWith(".svg")) {
     const { data: file } = await admin.storage.from(BUCKET).download(svgPath);
     if (file) logoSvg = await file.text();
   }
   if (!logoSvg) throw new Error("NO_VECTOR_LOGO");
 
-  const ctx = await loadVentureContext(admin, snapshotId).catch(() => null);
-  const snap = ctx?.snap ?? {};
-  const profile = ctx?.profile ?? {};
-  const brain = ctx?.brain ?? {};
+  const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
+  const brain = vctx?.brain ?? {};
 
-  const company =
-    tidy(brain?.identity?.company_name) ||
-    tidy(snap.business_name) ||
-    tidy(snap.title) ||
-    "Your Company";
+  const details: ContactDetails = kit.contact_details && Object.keys(kit.contact_details).length
+    ? normalizeDetails(kit.contact_details)
+    : seedDetails(kit, vctx);
 
-  return {
-    company,
-    tagline: tidy(kit.dna?.tagline) || tidy(brain?.identity?.one_liner) || null,
-    person: {
-      name: tidy(profile.full_name) || tidy(brain?.identity?.founder) || null,
-      title: tidy(profile.role) || "Founder",
-      email: tidy(profile.email) || null,
-      phone: tidy(profile.phone) || null,
-      website: tidy(snap.website_url) || tidy(profile.website) || null,
-      address: tidy(profile.city && profile.state ? `${profile.city}, ${profile.state}` : profile.address) || null,
-    },
-    colors,
-    fonts: {
-      heading: tidy(kit.typography?.heading?.family) || null,
-      body: tidy(kit.typography?.body?.family) || null,
-    },
-    logoSvg,
-    voice: typeof kit.voice === "string" ? kit.voice : tidy(kit.voice?.summary) || null,
+  const company = details.company || tidy(brain?.identity?.company_name) || "Your Company";
+  const fonts = {
+    heading: tidy(kit.typography?.heading?.family) || null,
+    body: tidy(kit.typography?.body?.family) || null,
   };
+  const voice = details.voice || (typeof kit.voice === "string" ? kit.voice : tidy(kit.voice?.summary)) || null;
+
+  // Art direction: reuse the locked record unless the founder asked to re-direct.
+  let ad: ArtDirection | null = opts.redirect ? null : hydrate(kit.art_direction);
+  if (!ad) {
+    ad = await directArt({
+      company,
+      tagline: details.tagline ?? null,
+      category: tidy((vctx?.snap ?? {}).industry) || tidy((vctx?.snap ?? {}).sic_description) || null,
+      audience: tidy(brain?.customer) || null,
+      voice,
+      colors,
+      fonts,
+    });
+    await admin.from("venture_brand_kits").update({ art_direction: ad }).eq("snapshot_id", snapshotId);
+  }
+
+  const copy: CollateralCopy | null = await writeCollateralCopy({
+    company,
+    tagline: details.tagline ?? null,
+    oneLiner: tidy(brain?.identity?.one_liner) || null,
+    problem: tidy(brain?.problem) || null,
+    solution: tidy(brain?.solution) || null,
+    customer: tidy(brain?.customer) || null,
+    differentiators: Array.isArray(brain?.differentiators) ? brain.differentiators.slice(0, 4) : null,
+    voice,
+  });
+
+  const ctx: CollateralCtx = {
+    company,
+    tagline: details.tagline ?? null,
+    person: {
+      name: details.person_name ?? null,
+      title: details.person_title ?? null,
+      email: details.email ?? null,
+      phone: details.phone ?? null,
+      website: details.website ?? null,
+      address: details.address_street ?? null,
+    },
+    details,
+    colors,
+    fonts,
+    logoSvg,
+    voice,
+    ad,
+    copy,
+  };
+  return { ctx, details };
 }
 
 async function store(
@@ -150,11 +223,31 @@ async function generateKind(
   let count = 0;
   for (const p of pages) {
     // Vector master, so a printer can scale it without loss.
-    await store(admin, snapshotId, userId, kind, p.name, p.svg, "image/svg+xml", p.width, p.height, { vector: true });
+    await store(admin, snapshotId, userId, kind, p.name, p.svg, "image/svg+xml", p.width, p.height, {
+      vector: true,
+      archetype: ctx.ad.archetype,
+    });
     const bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 2400), undefined, fontBuffers);
 
     if (bytes) {
-      await store(admin, snapshotId, userId, kind, `${p.name}-preview`, bytes, "image/png", p.width, p.height, { preview: true });
+      await store(admin, snapshotId, userId, kind, `${p.name}-preview`, bytes, "image/png", p.width, p.height, {
+        preview: true,
+        archetype: ctx.ad.archetype,
+      });
+
+      // Presentation mock-up — the thumbnail the library shows.
+      try {
+        const scene = mockupSvg(bytes, p.width, p.height, kind);
+        const mock = await rasterizeSvgToBytes(scene.svg, Math.min(scene.width, 1600));
+        if (mock) {
+          await store(admin, snapshotId, userId, kind, `${p.name}-mockup`, mock, "image/png", scene.width, scene.height, {
+            mockup: true,
+            of: p.name,
+          });
+        }
+      } catch (e) {
+        console.warn("mockup failed", kind, p.name, (e as Error).message);
+      }
     }
     count++;
   }
@@ -186,7 +279,6 @@ Deno.serve(async (req) => {
     if (owner.error) return owner.error;
     const userId: string = owner.snapshot?.user_id ?? auth.userId!;
 
-
     if (action === "list") {
       const { data } = await admin
         .from("venture_brand_collateral")
@@ -202,7 +294,55 @@ Deno.serve(async (req) => {
           return { ...r, url: s?.signedUrl ?? null };
         }),
       );
-      return json({ items: signed, kinds: COLLATERAL_KINDS, labels: KIND_LABELS });
+      const kit = await loadKit(admin, snapshotId);
+      const details = kit?.contact_details && Object.keys(kit.contact_details).length
+        ? normalizeDetails(kit.contact_details)
+        : {};
+      return json({
+        items: signed,
+        kinds: COLLATERAL_KINDS,
+        labels: KIND_LABELS,
+        details,
+        verifiedAt: kit?.contact_verified_at ?? null,
+        artDirection: kit?.art_direction ?? null,
+      });
+    }
+
+    // Text audit — the field inventory plus what's missing, pre-filled from the
+    // venture so the founder confirms rather than types from scratch.
+    if (action === "details:get") {
+      const kit = await loadKit(admin, snapshotId);
+      if (!kit) return json({ error: "No brand kit yet — run the Brand Wizard first.", code: "NO_BRAND_KIT" }, 400);
+      const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
+      const saved = kit.contact_details && Object.keys(kit.contact_details).length
+        ? normalizeDetails(kit.contact_details)
+        : null;
+      const details = saved ?? seedDetails(kit, vctx);
+      return json({
+        details,
+        verifiedAt: saved ? kit.contact_verified_at : null,
+        audit: auditDetails(details),
+        specs: FIELD_SPECS,
+        kindLabels: KIND_LABEL,
+      });
+    }
+
+    if (action === "details:save") {
+      const incoming = (body?.details ?? {}) as ContactDetails;
+      const details = normalizeDetails(incoming);
+      const audit = auditDetails(details);
+      const { error } = await admin
+        .from("venture_brand_kits")
+        .update({ contact_details: details, contact_verified_at: new Date().toISOString() })
+        .eq("snapshot_id", snapshotId);
+      if (error) return json({ error: error.message }, 400);
+      // Anything already generated is now out of date.
+      await admin
+        .from("venture_brand_collateral")
+        .update({ meta: { stale: true } })
+        .eq("snapshot_id", snapshotId)
+        .neq("kind", "design_tokens");
+      return json({ ok: true, details, audit });
     }
 
     if (action === "delete") {
@@ -221,8 +361,9 @@ Deno.serve(async (req) => {
       if (!requested.length) return json({ error: "No valid collateral kinds requested" }, 400);
 
       let ctx: CollateralCtx;
+      let details: ContactDetails;
       try {
-        ctx = await buildCtx(admin, snapshotId);
+        ({ ctx, details } = await buildCtx(admin, snapshotId, { redirect: !!body?.redirect }));
       } catch (e) {
         const code = (e as Error).message;
         const msg = code === "NO_BRAND_KIT"
@@ -235,6 +376,20 @@ Deno.serve(async (req) => {
         return json({ error: msg, code }, 400);
       }
 
+      // Gate: a piece that prints a required field it doesn't have is not
+      // "generated successfully" — it's broken. Block and say exactly why.
+      const audit = auditDetails(details, requested);
+      const blocked = Object.keys(audit.blockedKinds);
+      if (blocked.length) {
+        const names = blocked.map((k) => KIND_LABEL[k] ?? k).join(", ");
+        const gaps = [...new Set(Object.values(audit.blockedKinds).flat())];
+        return json({
+          error: `Confirm your details first — ${names} need ${gaps.length} missing field${gaps.length === 1 ? "" : "s"}.`,
+          code: "DETAILS_INCOMPLETE",
+          audit,
+        }, 400);
+      }
+
       const done: any[] = [];
       const failed: any[] = [];
       for (const kind of requested) {
@@ -245,7 +400,7 @@ Deno.serve(async (req) => {
           failed.push({ kind, error: (e as Error).message });
         }
       }
-      return json({ ok: true, generated: done, failed });
+      return json({ ok: true, generated: done, failed, artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale } });
     }
 
     return json({ error: `Unknown action: ${action}` }, 400);
