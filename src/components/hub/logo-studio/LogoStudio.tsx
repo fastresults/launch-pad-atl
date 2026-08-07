@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Check, Loader2, PenLine, RotateCcw, Sparkles, Upload, Wand2,
+  ArrowLeft, Check, Loader2, PenLine, RotateCcw, Sparkles, Upload, Wand2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +16,7 @@ import { invokeEdge } from "@/lib/edge-invoke";
  * question. The rough they approve is the artwork that gets vectored.
  */
 
-type Rough = { id: string; title: string; brief: string; url: string | null; provider: string };
+type Rough = { id: string; title: string; brief: string; change_note?: string; url: string | null; provider: string };
 type Step = {
   index: number;
   question: string;
@@ -34,13 +34,23 @@ type Step = {
 type Session = {
   id: string;
   status: "briefing" | "interviewing" | "approved" | "committed";
-  brief: { summary?: string; proposal?: string; direction?: { title: string; render_brief: string } } | null;
+  brief: {
+    summary?: string;
+    proposal?: string;
+    direction?: { title: string; render_brief: string };
+    requirements?: string[];
+  } | null;
   steps: Step[];
   approved_rough: Rough | null;
   vector_svg: string | null;
   traced: boolean | null;
   last_error: string | null;
+  brand?: { companyName: string; headingFont: string | null; primary: string | null } | null;
 };
+
+/** True when the founder has asked for the company name to sit beside the symbol. */
+const LOCKUP_RE = /\b(wordmark|company name|text to the|type to the|lockup|name beside|letters beside|name to the right)\b/i;
+
 
 
 async function studio(payload: Record<string, unknown>): Promise<any> {
@@ -77,6 +87,10 @@ export default function LogoStudio({
   }, [existing.data]);
 
   const steps = session?.steps ?? [];
+  // A typography request is honoured as a typeset lockup beside the symbol,
+  // never as letters drawn inside the artwork.
+  const wantsLockup = (session?.brief?.requirements ?? []).some((r) => LOCKUP_RE.test(r));
+
   const current = steps[steps.length - 1] ?? null;
 
   useEffect(() => {
@@ -102,11 +116,22 @@ export default function LogoStudio({
     onError: (e: any) => toast.error(e.message),
   });
 
+  // Approving carries any note still sitting in the box — a typed correction is
+  // never silently dropped on the way to the first drawing.
   const approveBrief = useMutation({
-    mutationFn: () => studio({ action: "approve_brief", snapshotId, sessionId: session?.id }),
+    mutationFn: (instruction?: string) =>
+      studio({ action: "approve_brief", snapshotId, sessionId: session?.id, instruction: instruction ?? "" }),
     onSuccess: (data) => { land(data); setBriefNote(""); toast.success("Drawing your first mark"); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const dropRequirement = useMutation({
+    mutationFn: (requirement: string) =>
+      studio({ action: "drop_requirement", snapshotId, sessionId: session?.id, requirement }),
+    onSuccess: land,
+    onError: (e: any) => toast.error(e.message),
+  });
+
 
 
   const answer = useMutation({
@@ -241,19 +266,27 @@ export default function LogoStudio({
             </p>
           )}
 
+          <RequirementLedger
+            requirements={session.brief?.requirements ?? []}
+            busy={busy}
+            onDrop={(r) => dropRequirement.mutate(r)}
+          />
+
           <div className="space-y-2 border-t border-white/10 pt-3">
             <Textarea
               value={briefNote}
               onChange={(e) => setBriefNote(e.target.value)}
               rows={2}
               disabled={busy}
-              placeholder="Anything to correct before it draws? e.g. we're not playful, we're steady and precise."
+              placeholder="Anything to correct before it draws? e.g. show both an elderly person and a caregiver, company name to the right."
               className="text-sm"
             />
             <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" disabled={busy} onClick={() => approveBrief.mutate()}>
+              <Button size="sm" disabled={busy} onClick={() => approveBrief.mutate(briefNote.trim() || undefined)}>
                 {approveBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
-                {approveBrief.isPending ? "Drawing the first mark…" : "Approve the brief & draw it"}
+                {approveBrief.isPending
+                  ? "Drawing the first mark…"
+                  : briefNote.trim() ? "Apply my note & draw it" : "Approve the brief & draw it"}
               </Button>
               <Button
                 size="sm"
@@ -262,11 +295,17 @@ export default function LogoStudio({
                 onClick={() => reviseBrief.mutate(briefNote.trim())}
               >
                 {reviseBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                Rewrite the brief
+                Rewrite the brief first
               </Button>
             </div>
+            {briefNote.trim() && (
+              <p className="text-[11px] text-primary/80">
+                Your note will be locked in as a requirement before anything is drawn.
+              </p>
+            )}
           </div>
         </div>
+
       </section>
     );
   }
@@ -288,6 +327,14 @@ export default function LogoStudio({
           <RotateCcw className="mr-1 h-4 w-4" /> Start over
         </Button>
       </div>
+
+      <RequirementLedger
+        requirements={session.brief?.requirements ?? []}
+        busy={busy}
+        onDrop={(r) => dropRequirement.mutate(r)}
+      />
+
+
 
 
       {session.last_error && (
@@ -354,11 +401,22 @@ export default function LogoStudio({
                             Not drawn
                           </div>
                         )}
+                        {wantsLockup && (
+                          <LockupPreview
+                            markUrl={rough.url}
+                            name={session.brand?.companyName ?? ""}
+                            font={session.brand?.headingFont ?? null}
+                          />
+                        )}
                         <div className="space-y-2 p-3">
                           <div>
                             <p className="text-sm font-semibold">{rough.title}</p>
+                            {rough.change_note && (
+                              <p className="mt-0.5 text-[11px] font-medium text-primary">{rough.change_note}</p>
+                            )}
                             <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{rough.brief}</p>
                           </div>
+
                           {!answered && (
                             <div className="flex flex-wrap gap-1.5">
                               <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" disabled={busy}
@@ -538,3 +596,77 @@ export default function LogoStudio({
     </section>
   );
 }
+
+/**
+ * The standing instructions the founder has given. Every one of these is
+ * re-sent to the art director and the image model on every redraw, so they
+ * stay visible and retractable.
+ */
+function RequirementLedger({
+  requirements,
+  busy,
+  onDrop,
+}: {
+  requirements: string[];
+  busy: boolean;
+  onDrop: (requirement: string) => void;
+}) {
+  if (!requirements.length) return null;
+  return (
+    <div className="space-y-1.5 rounded-lg border border-white/10 bg-white/[0.03] p-3">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+        Locked in — carried into every redraw
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {requirements.map((requirement) => (
+          <span
+            key={requirement}
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] text-foreground"
+          >
+            {requirement}
+            <button
+              type="button"
+              disabled={busy}
+              aria-label={`Remove requirement: ${requirement}`}
+              className="text-muted-foreground transition hover:text-foreground disabled:opacity-40"
+              onClick={() => onDrop(requirement)}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A live horizontal lockup so a "company name to the right" request is answered
+ * with real typesetting rather than letters hallucinated inside the symbol.
+ */
+function LockupPreview({
+  markUrl,
+  name,
+  font,
+}: {
+  markUrl: string | null;
+  name: string;
+  font: string | null;
+}) {
+  if (!markUrl || !name) return null;
+  return (
+    <div className="border-t border-white/10 bg-white px-4 py-3">
+      <div className="flex items-center gap-3">
+        <img src={markUrl} alt="" className="h-10 w-10 shrink-0 object-contain" />
+        <span
+          className="truncate text-lg font-semibold leading-none tracking-tight text-neutral-900"
+          style={font ? { fontFamily: `${font}, sans-serif` } : undefined}
+        >
+          {name}
+        </span>
+      </div>
+      <p className="mt-2 text-[10px] uppercase tracking-wider text-neutral-400">Horizontal lockup preview</p>
+    </div>
+  );
+}
+

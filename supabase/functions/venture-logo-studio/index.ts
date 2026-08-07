@@ -19,6 +19,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
 import {
+  mergeRequirements,
   nextTurn,
   openingBrief,
   roughPrompt,
@@ -58,10 +59,12 @@ type Rough = {
   id: string;
   title: string;
   brief: string;
+  change_note?: string;
   path: string;
   url: string | null;
   provider: string;
 };
+
 
 type Step = {
   index: number;
@@ -164,7 +167,12 @@ async function uploadSvg(supabase: any, userId: string, snapshotId: string, svg:
   return { path, url: data?.signedUrl ?? null };
 }
 
-/** Draw the single mark for this turn. One rough, never a set. */
+/**
+ * Draw the single mark for this turn. One rough, never a set.
+ *
+ * When there is already a mark on the table its image leads the reference list
+ * so the model edits that artwork instead of guessing a new one from text.
+ */
 async function drawOne(
   supabase: any,
   userId: string,
@@ -173,16 +181,20 @@ async function drawOne(
   tokens: any,
   companyName: string,
   references: string[],
+  requirements: string[] = [],
+  editRef?: string | null,
 ): Promise<{ roughs: Rough[]; error: string | null }> {
   try {
-    const prompt = roughPrompt(direction, tokens, companyName);
-    const { bytes, provider } = await drawRough(prompt, references);
+    const prompt = roughPrompt(direction, tokens, companyName, requirements, Boolean(editRef));
+    const refs = editRef ? [editRef, ...references.filter((r) => r !== editRef)] : references;
+    const { bytes, provider } = await drawRough(prompt, refs);
     const stored = await uploadPng(supabase, userId, snapshotId, bytes, "rough");
     return {
       roughs: [{
         id: crypto.randomUUID(),
         title: direction.title,
         brief: direction.render_brief,
+        change_note: direction.change_note ?? "",
         path: stored.path,
         url: stored.url,
         provider,
@@ -272,6 +284,15 @@ function historyOf(steps: Step[]): { question: string; answer: string; chosen?: 
     }));
 }
 
+/** The last mark drawn in this session, if any — the artwork the founder is looking at. */
+function currentRough(steps: Step[]): Rough | null {
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const rough = (steps[i].roughs ?? [])[0];
+    if (rough) return rough;
+  }
+  return null;
+}
+
 async function buildStep(
   supabase: any,
   userId: string,
@@ -283,10 +304,20 @@ async function buildStep(
   brief: string,
   instruction?: string,
   overrideDirection?: RoughDirection,
+  requirements: string[] = [],
+  editSource?: Rough | null,
 ): Promise<{ step: Step; turn: InterviewTurn }> {
-  const turn = await nextTurn(LOVABLE_API_KEY, studio, historyOf(steps), brief, instruction);
+  const source = editSource === undefined ? currentRough(steps) : editSource;
+  const currentDirection: RoughDirection | null = source
+    ? { title: source.title, render_brief: source.brief, change_note: "" }
+    : null;
+
+  const turn = await nextTurn(
+    LOVABLE_API_KEY, studio, historyOf(steps), brief, instruction, requirements, currentDirection,
+  );
   const { roughs, error } = await drawOne(
     supabase, userId, snapshotId, overrideDirection ?? turn.direction, tokens, studio.companyName, references,
+    turn.requirements, source?.url ?? null,
   );
 
   return {
@@ -309,7 +340,7 @@ async function buildStep(
 }
 
 /** Signed urls expire; re-sign everything the client is about to render. */
-async function withFreshUrls(supabase: any, session: any) {
+async function withFreshUrls(supabase: any, session: any, brand?: unknown) {
   const steps: Step[] = Array.isArray(session?.steps) ? session.steps : [];
   for (const step of steps) {
     for (const rough of step.roughs ?? []) {
@@ -326,7 +357,7 @@ async function withFreshUrls(supabase: any, session: any) {
       if (data?.signedUrl) session.approved_rough.url = data.signedUrl;
     } catch { /* keep the stored url */ }
   }
-  return { ...session, steps };
+  return { ...session, steps, brand: brand ?? null };
 }
 
 Deno.serve(async (req) => {
@@ -368,6 +399,13 @@ Deno.serve(async (req) => {
       mood: kit?.dna?.mood ?? kit?.dna?.personality ?? snap.brand_tokens?.mood,
     };
 
+    // Everything the client needs to typeset a live lockup preview beside the mark.
+    const brand = {
+      companyName: snap.company_name ?? "",
+      headingFont: tokens.fonts?.heading ?? null,
+      primary: tokens.colors?.primary ?? null,
+    };
+
     const loadSession = async (id?: string) => {
       let query = supabase.from("venture_logo_sessions").select("*").eq("snapshot_id", snapshotId);
       query = id ? query.eq("id", id) : query.order("created_at", { ascending: false }).limit(1);
@@ -379,7 +417,7 @@ Deno.serve(async (req) => {
     /* ---------------- get ---------------- */
     if (action === "get") {
       const session = await loadSession(body?.sessionId);
-      return json({ ok: true, session: session ? await withFreshUrls(supabase, session) : null });
+      return json({ ok: true, session: session ? await withFreshUrls(supabase, session, brand) : null });
     }
 
     /* ---------------- start (write the brief — nothing is drawn yet) ---------------- */
@@ -395,12 +433,13 @@ Deno.serve(async (req) => {
           summary: proposal.design_brief,
           proposal: proposal.design_brief,
           direction: proposal.direction,
+          requirements: proposal.requirements,
         },
         steps: [],
         last_error: null,
       }).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
 
@@ -408,13 +447,28 @@ Deno.serve(async (req) => {
     const session = await loadSession(sessionId);
     if (!session) throw new Error("No logo session found. Start a new one.");
     const steps: Step[] = Array.isArray(session.steps) ? session.steps : [];
+    const carried: string[] = Array.isArray(session.brief?.requirements) ? session.brief.requirements : [];
+
+    /* ---------------- drop_requirement (the founder retracts one) ---------------- */
+    if (action === "drop_requirement") {
+      const target = String(body?.requirement ?? "");
+      const kept = carried.filter((r) => r !== target);
+      const { data, error } = await supabase.from("venture_logo_sessions").update({
+        brief: { ...(session.brief ?? {}), requirements: kept },
+      }).eq("id", session.id).select().single();
+      if (error) throw error;
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
+    }
 
     /* ---------------- revise_brief ---------------- */
     if (action === "revise_brief") {
       const correction = String(body?.instruction ?? "").trim();
       if (!correction) throw new Error("Tell the designer what to change in the brief.");
       const { studio } = await buildStudioContext(supabase, ctx, tokens, kit);
-      const proposal = await openingBrief(LOVABLE_API_KEY, studio, correction, session.brief?.proposal ?? "");
+      const proposal = await openingBrief(
+        LOVABLE_API_KEY, studio, correction, session.brief?.proposal ?? "",
+        mergeRequirements(carried, [correction]),
+      );
 
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         status: "briefing",
@@ -422,32 +476,57 @@ Deno.serve(async (req) => {
           summary: proposal.design_brief,
           proposal: proposal.design_brief,
           direction: proposal.direction,
+          requirements: proposal.requirements,
         },
         last_error: null,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
     /* ---------------- approve_brief (draw the first mark) ---------------- */
     if (action === "approve_brief") {
-      const proposal: string = session.brief?.proposal ?? "";
-      const direction: RoughDirection | undefined = session.brief?.direction ?? undefined;
+      // A note typed into the brief box is never discarded: it rewrites the brief
+      // first, and only then is the mark drawn.
+      const pending = String(body?.instruction ?? "").trim();
       const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
+
+      let proposal: string = session.brief?.proposal ?? "";
+      let direction: RoughDirection | undefined = session.brief?.direction ?? undefined;
+      let requirements = carried;
+
+      if (pending) {
+        const revised = await openingBrief(
+          LOVABLE_API_KEY, studio, pending, proposal, mergeRequirements(carried, [pending]),
+        );
+        proposal = revised.design_brief;
+        direction = revised.direction;
+        requirements = revised.requirements;
+      }
+
       const { step, turn } = await buildStep(
         supabase, userId, snapshotId, studio, references, tokens, [], proposal,
         `The founder approved this brief:\n${proposal}\n\nDraw that mark now and ask your first refining question about it.`,
         direction,
+        requirements,
+        null,
       );
+
 
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         status: "interviewing",
         steps: [step],
-        brief: { ...(session.brief ?? {}), summary: turn.brief_summary || proposal },
+        brief: {
+          ...(session.brief ?? {}),
+          proposal,
+          direction,
+          summary: turn.brief_summary || proposal,
+          requirements: mergeRequirements(requirements, turn.requirements),
+        },
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
     /* ---------------- answer ---------------- */
@@ -464,17 +543,23 @@ Deno.serve(async (req) => {
       const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
       const { step, turn } = await buildStep(
         supabase, userId, snapshotId, studio, references, tokens, steps, session.brief?.summary ?? "",
+        undefined, undefined, carried,
       );
       const nextSteps = [...steps, step];
 
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         steps: nextSteps,
-        brief: { ...(session.brief ?? {}), summary: turn.brief_summary },
+        brief: {
+          ...(session.brief ?? {}),
+          summary: turn.brief_summary,
+          requirements: mergeRequirements(carried, turn.requirements),
+        },
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
+
 
 
     /* ---------------- back ---------------- */
@@ -492,7 +577,7 @@ Deno.serve(async (req) => {
         last_error: null,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
     /* ---------------- refine ---------------- */
@@ -508,17 +593,24 @@ Deno.serve(async (req) => {
         source
           ? `They are looking at the mark titled "${source.title}" (${source.brief}) and said: ${instruction}. Redraw THAT mark — same idea, their change applied.`
           : instruction,
+        undefined,
+        mergeRequirements(carried, [instruction]),
+        source,
       );
       const nextSteps = [...steps, step];
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         steps: nextSteps,
-        brief: { ...(session.brief ?? {}), summary: turn.brief_summary },
-
+        brief: {
+          ...(session.brief ?? {}),
+          summary: turn.brief_summary,
+          requirements: mergeRequirements(carried, turn.requirements),
+        },
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
+
 
     /* ---------------- approve (trace) ---------------- */
     if (action === "approve") {
@@ -547,7 +639,7 @@ Deno.serve(async (req) => {
         traced: traced.traced,
         note: traced.note,
         vectorUrl: stored.url,
-        session: await withFreshUrls(supabase, data),
+        session: await withFreshUrls(supabase, data, brand),
       });
     }
 
@@ -610,7 +702,7 @@ Deno.serve(async (req) => {
         last_error: null,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, asset, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, asset, session: await withFreshUrls(supabase, data, brand) });
     }
 
     /* ---------------- upload own ---------------- */
@@ -639,7 +731,7 @@ Deno.serve(async (req) => {
         last_error: null,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, traced, vectorUrl: stored.url, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, traced, vectorUrl: stored.url, session: await withFreshUrls(supabase, data, brand) });
     }
 
     /* ---------------- reset ---------------- */
