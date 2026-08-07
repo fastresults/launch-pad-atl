@@ -75,20 +75,36 @@ function assignField(post: ParsedPost, rawKey: string, val: string) {
   }
 }
 
+function parseFieldLines(chunk: string, post: ParsedPost) {
+  const lineRe = /[*\-+]\s*\*\*([^:*]+):?\*\*:?\s*([^\n]*)/g;
+  let lm: RegExpExecArray | null;
+  while ((lm = lineRe.exec(chunk))) {
+    assignField(post, lm[1], lm[2].trim());
+  }
+}
+
 function parseBulletPosts(body: string, week: number, out: ParsedPost[]) {
+  // Style A: "**Post 1 ...**" blocks
   const postRe = /\*\*Post\s*\d+[^*]*\*\*([\s\S]*?)(?=\*\*Post\s*\d+[^*]*\*\*|$)/gi;
   let pm: RegExpExecArray | null;
+  let found = 0;
   while ((pm = postRe.exec(body))) {
-    const chunk = pm[1];
     const post: ParsedPost = { week };
-    const lineRe = /[*\-]\s*\*\*([^:*]+):\*\*\s*([^\n]+)/g;
-    let lm: RegExpExecArray | null;
-    while ((lm = lineRe.exec(chunk))) {
-      assignField(post, lm[1], lm[2].trim());
-    }
+    parseFieldLines(pm[1], post);
+    if (post.hook || post.body) { out.push(post); found++; }
+  }
+  if (found) return;
+
+  // Style B: "*   **Day 1 (Mon):**" blocks with nested "**Field:** value" bullets
+  const dayRe = /\*\*(Day[^*]*?)\*\*:?\s*([\s\S]*?)(?=\n\s*[*\-+]\s*\*\*Day[^*]*\*\*|$)/gi;
+  let dm: RegExpExecArray | null;
+  while ((dm = dayRe.exec(body))) {
+    const post: ParsedPost = { week, day: dm[1].replace(/[:*]/g, "").trim() };
+    parseFieldLines(dm[2], post);
     if (post.hook || post.body) out.push(post);
   }
 }
+
 
 function parseCalendar(md: string): ParsedPost[] {
   const posts: ParsedPost[] = [];
