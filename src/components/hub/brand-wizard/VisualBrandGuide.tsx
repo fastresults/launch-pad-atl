@@ -29,6 +29,7 @@ function hexToRgb(hex: string) {
   return `${parseInt(h.slice(0, 2), 16) || 0}, ${parseInt(h.slice(2, 4), 16) || 0}, ${parseInt(h.slice(4, 6), 16) || 0}`;
 }
 
+
 function AssetImage({ asset, alt, className, imgClassName }: any) {
   const [src, setSrc] = useState(asset?.url || "");
 
