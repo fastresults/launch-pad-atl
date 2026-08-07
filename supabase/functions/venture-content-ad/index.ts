@@ -397,25 +397,35 @@ Deno.serve(async (req) => {
       (qa as any).signature_composited = true;
     }
 
-    // ---- Server-side SVG overlay typography ----
-    // Keep typography out of the edge CPU hot path: the function stores a
-    // final SVG that layers the generated image, fitted live text, and logo.
-    // Browser SVG text rendering is fast/reliable and avoids worker CPU limits.
+    // ---- Editorial poster typography (server-side SVG overlay) ----
+    // The model paints only the photographic plate; the kicker / display
+    // headline / CTA lockup is typeset here in real brand fonts.
     const resolvedHeadline = resolveAdHeadline(post.hook, headlineOverride, aspect);
-    let finalHeadlineText = "";
-    if (resolvedHeadline.mode === "custom" && resolvedHeadline.text?.trim()) {
-      finalHeadlineText = resolvedHeadline.text.trim();
-    }
-    const headlineComposited = !!finalHeadlineText;
+    const posterCopy = await buildPosterCopy({
+      apiKey,
+      brandName: ctx?.company_name ?? kit?.company_name ?? null,
+      valueProp: ctx?.value_proposition ?? null,
+      post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
+      headlineOverride: resolvedHeadline.mode === "none"
+        ? { mode: "none" }
+        : resolvedHeadline.mode === "custom"
+        ? { mode: "custom", text: resolvedHeadline.text }
+        : { mode: "auto" },
+    });
+
+    const headlineComposited = !!posterCopy.headline;
     const logoComposited = !!logoDataUrl;
-    bytes = buildContentAdSvgBytes({
+    bytes = await buildContentAdSvgBytes({
       baseImageB64: bytesToB64(bytes),
       baseMime: "image/png",
       width: asset.width,
       height: asset.height,
       plan,
       aspect,
-      headline: finalHeadlineText,
+      layout: posterLayout,
+      kicker: posterCopy.kicker,
+      headline: posterCopy.headline,
+      ctaLine: posterCopy.ctaLine,
       logoDataUrl,
       logoAspect,
       logoSize,
@@ -424,6 +434,9 @@ Deno.serve(async (req) => {
     (qa as any).headline_composited = headlineComposited;
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
+    (qa as any).poster_layout = posterLayout;
+    (qa as any).poster_copy = posterCopy;
+
 
     const fileId = crypto.randomUUID();
     const safeAspect = aspect.replace(":", "x");
