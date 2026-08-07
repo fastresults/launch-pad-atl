@@ -233,7 +233,7 @@ function makeComponents(
     code: CodeBlock,
     table: ({ children }: any) => (
       <div className="my-4 overflow-x-auto rounded-lg border border-white/10">
-        <table className="w-full min-w-[520px] border-collapse text-sm">{children}</table>
+        <table className="w-full border-collapse text-sm sm:min-w-[520px]">{children}</table>
       </div>
     ),
     thead: ({ children }: any) => (

@@ -30,7 +30,7 @@ const components = {
   },
   table: ({ children }: any) => (
     <div className="my-8 max-w-full overflow-x-auto rounded-xl border border-border/60">
-      <table className="w-full min-w-[520px] border-collapse text-sm">{children}</table>
+      <table className="w-full border-collapse text-sm sm:min-w-[520px]">{children}</table>
     </div>
   ),
   th: ({ children }: any) => (
