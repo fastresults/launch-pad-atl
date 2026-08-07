@@ -42,11 +42,9 @@ export function specForAspect(aspect: AdAspect): AssetSpec {
   } as AssetSpec;
 }
 
-// Per-aspect soft caps for the on-image headline. The SVG compositor tiers by
-// length (1–4 lines) and shrinks font size, so we allow generous caps here and
-// only trim at natural clause boundaries when a headline is truly excessive.
-// Display budgets: what actually fits the poster column at a readable size.
-const HEADLINE_CAP: Record<AdAspect, number> = { "1:1": 62, "4:5": 70, "9:16": 76 };
+// Display budgets for a WRITTEN headline (4-9 words), not a truncated sentence.
+// At these lengths the display type stays large and settles at ~2 lines.
+export const HEADLINE_CAP: Record<AdAspect, number> = { "1:1": 52, "4:5": 56, "9:16": 56 };
 
 // Length-safe headline sanitizer. Never appends an ellipsis and never chops
 // mid-word. If the raw string exceeds `cap`, prefer trimming at the last clause
@@ -95,21 +93,20 @@ export function truncateHeadline(raw: string, cap: number): string {
 }
 
 // Resolve the headline the ad should carry. Rules:
-//  - Founder explicit override always wins (custom text or 'none' = no text)
-//  - Otherwise use the post's Hook, word-safely truncated to the aspect cap
-//  - If neither, fall back to the cover-art auto headline
+//  - Founder explicit override always wins (typed text, or 'none' = no text)
+//  - Otherwise the post hook is SOURCE MATERIAL, not the headline: the poster
+//    copywriter writes the line. Truncating a hook produces an article title
+//    with its ending lopped off, which never lands a message.
 export function resolveAdHeadline(
-  postHook: string | null | undefined,
+  _postHook: string | null | undefined,
   founderOverride?: HeadlineOverride,
   aspect: AdAspect = "1:1",
 ): HeadlineOverride {
-  const cap = HEADLINE_CAP[aspect] ?? 60;
+  const cap = HEADLINE_CAP[aspect] ?? 52;
   if (founderOverride?.mode === "none") return { mode: "none" };
   if (founderOverride?.mode === "custom" && founderOverride.text?.trim()) {
     return { mode: "custom", text: truncateHeadline(founderOverride.text, cap) };
   }
-  const hook = truncateHeadline(postHook || "", cap);
-  if (hook) return { mode: "custom", text: hook };
   return { mode: "auto" };
 }
 
