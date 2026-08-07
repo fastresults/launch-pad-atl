@@ -24,7 +24,7 @@ import {
   PERSONALITY_AXES,
 } from "@/lib/brand-wizard";
 import { sanitizePaletteOption, validatePalette } from "@/lib/brand/palette-rules";
-import { generateBrandAsset } from "@/lib/foundersHub.functions";
+import { generateBrandAsset, generateDocument, listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import { brandKitToDocxBlob, validateBrandGuideDocxBlob } from "@/lib/brand-guide-docx";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
 import { LiveBrandPreview } from "./LiveBrandPreview";
