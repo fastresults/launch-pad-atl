@@ -146,12 +146,13 @@ async function generateKind(
     return { kind, files: 2 };
   }
 
-  const pages = await renderCollateral(kind, ctx);
+  const { pages, fontBuffers } = await renderCollateral(kind, ctx);
   let count = 0;
   for (const p of pages) {
     // Vector master, so a printer can scale it without loss.
     await store(admin, snapshotId, userId, kind, p.name, p.svg, "image/svg+xml", p.width, p.height, { vector: true });
-    const bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 2400));
+    const bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 2400), undefined, fontBuffers);
+
     if (bytes) {
       await store(admin, snapshotId, userId, kind, `${p.name}-preview`, bytes, "image/png", p.width, p.height, { preview: true });
     }
