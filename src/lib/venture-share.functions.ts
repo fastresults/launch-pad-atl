@@ -21,6 +21,13 @@ export interface VentureShare {
   updated_at: string;
 }
 
+export interface ShareBrandBoard {
+  paletteName?: string | null;
+  swatches: { label: string; hex: string }[];
+  fonts: { role: string; family: string }[];
+  logos: { url: string; label?: string | null }[];
+}
+
 export interface ShareItem {
   key: string;
   title: string;
@@ -29,6 +36,7 @@ export interface ShareItem {
   body?: string | null;
   heroImageUrl?: string | null;
   images?: { url: string; label?: string | null; width?: number | null; height?: number | null }[];
+  brandBoard?: ShareBrandBoard;
 }
 
 export interface SharePayload {
@@ -39,10 +47,14 @@ export interface SharePayload {
     industry: string | null;
     logoUrl: string | null;
     founderName: string | null;
+    colors?: { primary: string | null; accent: string | null; secondary: string | null };
   };
   share: { title: string | null; updatedAt: string };
+  chatEnabled?: boolean;
+  coverage?: { total: number; illustrated: number; signFailures: number };
   sections: { key: string; label: string; items: ShareItem[] }[];
 }
+
 
 function newToken() {
   const bytes = new Uint8Array(24);
