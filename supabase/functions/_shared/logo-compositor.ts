@@ -195,26 +195,6 @@ function fitInside(
   return { img: resized, offX, offY };
 }
 
-// Detect whether the logo has meaningful transparency (transparent PNG).
-function hasTransparency(logo: Image): boolean {
-  // Sample a modest grid to avoid full-image scans on large logos.
-  const cols = 24;
-  const rows = 24;
-  let transparentPixels = 0;
-  let totalSampled = 0;
-  for (let j = 0; j < rows; j++) {
-    for (let i = 0; i < cols; i++) {
-      const x = Math.min(logo.width - 1, Math.floor((i + 0.5) * (logo.width / cols)));
-      const y = Math.min(logo.height - 1, Math.floor((j + 0.5) * (logo.height / rows)));
-      const px = logo.getPixelAt(x + 1, y + 1); // imagescript is 1-indexed
-      const a = px & 0xff;
-      totalSampled++;
-      if (a < 250) transparentPixels++;
-    }
-  }
-  return transparentPixels / Math.max(1, totalSampled) > 0.05;
-}
-
 // Average luminance of a region on the base canvas.
 function avgLuminance(base: Image, x: number, y: number, w: number, h: number): number {
   const x0 = Math.max(0, Math.floor(x));
@@ -236,66 +216,6 @@ function avgLuminance(base: Image, x: number, y: number, w: number, h: number): 
     }
   }
   return n === 0 ? 0.5 : sum / n;
-}
-
-// Paint a solid rounded rectangle into `dst`, clipping corners with radius `r`.
-function fillRoundedRect(dst: Image, color: number, r: number): void {
-  const w = dst.width;
-  const h = dst.height;
-  const rr = Math.max(0, Math.min(r, Math.floor(Math.min(w, h) / 2)));
-  const r2 = rr * rr;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      let inside = true;
-      if (x < rr && y < rr) {
-        const dx = rr - x - 1;
-        const dy = rr - y - 1;
-        if (dx * dx + dy * dy > r2) inside = false;
-      } else if (x >= w - rr && y < rr) {
-        const dx = x - (w - rr);
-        const dy = rr - y - 1;
-        if (dx * dx + dy * dy > r2) inside = false;
-      } else if (x < rr && y >= h - rr) {
-        const dx = rr - x - 1;
-        const dy = y - (h - rr);
-        if (dx * dx + dy * dy > r2) inside = false;
-      } else if (x >= w - rr && y >= h - rr) {
-        const dx = x - (w - rr);
-        const dy = y - (h - rr);
-        if (dx * dx + dy * dy > r2) inside = false;
-      }
-      if (inside) dst.setPixelAt(x + 1, y + 1, color);
-    }
-  }
-}
-
-// Cheap soft-shadow: draw a slightly larger dark rounded rect, offset down,
-// with low alpha. Not a Gaussian blur but reads as a soft shadow at thumbnail
-// sizes and is O(area) with no extra deps.
-function paintShadow(
-  base: Image,
-  boxX: number,
-  boxY: number,
-  boxW: number,
-  boxH: number,
-  radius: number,
-): void {
-  const spread = Math.max(3, Math.round(Math.min(boxW, boxH) * 0.06));
-  const offsetY = Math.max(2, Math.round(spread * 0.6));
-  const shadowW = boxW + spread * 2;
-  const shadowH = boxH + spread * 2;
-  const layer = new Image(shadowW, shadowH);
-  // Two passes at low alpha to soften the edge slightly.
-  const passes = [
-    { inset: 0, alpha: 40, radius: radius + spread },
-    { inset: Math.floor(spread / 2), alpha: 55, radius: radius + Math.floor(spread / 2) },
-  ];
-  for (const pass of passes) {
-    const layerPass = new Image(shadowW - pass.inset * 2, shadowH - pass.inset * 2);
-    fillRoundedRect(layerPass, rgbToImagescriptColor(0, 0, 0, pass.alpha), pass.radius);
-    layer.composite(layerPass, pass.inset, pass.inset);
-  }
-  base.composite(layer, boxX - spread, boxY - spread + offsetY);
 }
 
 // --- Mark preparation ------------------------------------------------------
@@ -407,20 +327,20 @@ export async function compositeLogo(
      *  color instead of pixel-tinted, keeping vector crispness. */
     svgText?: string | null;
   },
-): Promise<{ bytes: Uint8Array; contrast: number; inkHex: string; scrim: boolean } | Uint8Array> {
+): Promise<{ bytes: Uint8Array; contrast: number; inkHex: string; scrim: boolean }> {
   let base: Image;
   let logo: Image;
   try {
     base = await Image.decode(baseBytes);
   } catch (e) {
     console.warn("logo-compositor: base decode failed, returning original", e);
-    return baseBytes;
+    return { bytes: baseBytes, contrast: 0, inkHex: "", scrim: false };
   }
   try {
     logo = knockoutAndTrim(await Image.decode(logoBytes));
   } catch (e) {
     console.warn("logo-compositor: logo decode failed, returning base", e);
-    return baseBytes;
+    return { bytes: baseBytes, contrast: 0, inkHex: "", scrim: false };
   }
 
   const size = normalizeLogoSize(opts.logoSize);
