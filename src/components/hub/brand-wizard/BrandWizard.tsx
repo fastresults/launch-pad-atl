@@ -620,17 +620,24 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   const processLogoRun = async (initialRun: any) => {
     let run = initialRun;
+    const myToken = abortToken.current;
+    // Thrown to unwind the loop silently when the queue was cleared mid-run.
+    const aborted = () => abortToken.current !== myToken;
     setLogoPhase("brief");
     if (run.status === "developing_brief" || run.status === "queued") {
       await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_brief", runId: run.id } });
       run = { ...run, status: "developing_directions" };
     }
+    if (aborted()) return;
     setLogoPhase("concepting");
     let state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     if (!state.directions?.length) {
+      if (aborted()) return;
       await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_directions", runId: run.id } });
       state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     }
+    if (aborted()) return;
+
     // Render each concept as a real designed mark before tracing it to vector.
     // This stage self-heals: a direction whose render is unavailable advances to
     // drawing anyway, so the loop below never blocks on the image provider.
