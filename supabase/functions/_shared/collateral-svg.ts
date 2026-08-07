@@ -513,13 +513,12 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const rowGap = rowS * 1.72;
   const backColW = g.span(Math.max(4, Math.round(ad.grid.columns * 0.62)));
 
-  const backTop = g.M + nameS;
-  // Set the contact block a measured interval under the name rather than
-  // pinning it to the trim — bottom-anchoring left a dead void mid-card.
-  const backRowsTop = Math.min(
-    backTop + titleS * 1.7 + rowGap * 2.6,
-    H - g.M - (rows.length - 1) * rowGap,
-  );
+  // Optically centre the whole back block. Pinning it to either trim edge left
+  // half the card as dead space.
+  const blockH = titleS * 1.7 + rowGap * 2.6 + (rows.length - 1) * rowGap;
+  const backTop = Math.max(g.M + nameS, (H - blockH) / 2 - nameS * 0.2);
+  const backRowsTop = backTop + titleS * 1.7 + rowGap * 2.6;
+
 
 
   const back = page(W, H, defs, [
