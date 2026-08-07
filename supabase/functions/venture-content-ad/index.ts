@@ -367,24 +367,30 @@ Deno.serve(async (req) => {
     };
 
     let result: { b64: string; modelUsed: string; prompt: string };
+    step("image gateway call start");
     try { result = await generate(); }
     catch (e: any) {
       const status = e?.status;
+      console.error(`[content-ad ${reqId}] gateway failed`, { name: e?.name, status, code: e?.code, message: e?.message });
       const out: any = { error: e?.message ?? "Generation failed", upstreamStatus: status };
       if (status === 402) { out.code = "PAYMENT_REQUIRED"; out.reason = "ai_credits_exhausted"; }
       else if (status === 403 && e?.code === "credit_limit_reached") { out.code = "AI_CREDIT_LIMIT_REACHED"; out.reason = "workspace_credit_limit"; }
       else if (status === 429) { out.code = "RATE_LIMITED"; }
+      else if (status === 504 || e?.code === "UPSTREAM_TIMEOUT") { out.code = "UPSTREAM_TIMEOUT"; }
       else if (e?.code) { out.code = e.code; }
       if (e?.details) out.details = e.details;
       return json(out, 200);
     }
+    step("image gateway call done", { model: result.modelUsed });
 
     let bytes = b64ToBytes(result.b64);
     let qa = runContrastQa(bytes, plan);
+    step("contrast QA done", { ok: qa.ok, plateBytes: bytes.byteLength });
     // Skip the QA retry if we've already burned most of our 150s budget on the
     // first generation — a second slow call would push us past IDLE_TIMEOUT.
-    // Reserve ~35s for compositing, storage upload, and signed URL work.
-    const timeBudgetOkForRetry = (Date.now() - requestStartedAt) < 60_000;
+    // Reserve enough headroom for compositing, storage upload and signed URLs:
+    // the poster pass (plate decode + vector ink + SVG) is CPU-heavy.
+    const timeBudgetOkForRetry = (Date.now() - requestStartedAt) < 45_000;
     if (!qa.ok && timeBudgetOkForRetry) {
       try {
         const sigVisible = qa.observed.signatureVisible !== false;
@@ -404,6 +410,7 @@ Deno.serve(async (req) => {
           retrySig > currentSig ||
           retryQa.observed.ratio > qa.observed.ratio;
         if (retryBetter) { bytes = retryBytes; qa = retryQa; result = retry; }
+        step("QA retry done", { used: retryBetter });
       } catch (e) { console.warn("QA retry failed", e); }
     }
 
@@ -413,7 +420,9 @@ Deno.serve(async (req) => {
       bytes = compositeSignatureSplash(bytes, plan);
       qa = runContrastQa(bytes, plan);
       (qa as any).signature_composited = true;
+      step("signature splash composited");
     }
+
 
     // ---- Editorial poster typography (server-side SVG overlay) ----
     // The model paints only the photographic plate; the kicker / display
