@@ -382,22 +382,27 @@ Deno.serve(async (req) => {
       return json({ ok: true, session: session ? await withFreshUrls(supabase, session) : null });
     }
 
-    /* ---------------- start ---------------- */
+    /* ---------------- start (write the brief — nothing is drawn yet) ---------------- */
     if (action === "start") {
-      const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
-      const { step, turn } = await buildStep(supabase, userId, snapshotId, studio, references, tokens, [], "");
+      const { studio } = await buildStudioContext(supabase, ctx, tokens, kit);
+      const proposal = await openingBrief(LOVABLE_API_KEY, studio);
 
       const { data, error } = await supabase.from("venture_logo_sessions").insert({
         snapshot_id: snapshotId,
         user_id: userId,
-        status: "interviewing",
-        brief: { summary: turn.brief_summary },
-        steps: [step],
-        last_error: step.render_error,
+        status: "briefing",
+        brief: {
+          summary: proposal.design_brief,
+          proposal: proposal.design_brief,
+          direction: proposal.direction,
+        },
+        steps: [],
+        last_error: null,
       }).select().single();
       if (error) throw error;
       return json({ ok: true, session: await withFreshUrls(supabase, data) });
     }
+
 
     const sessionId: string = body?.sessionId ?? "";
     const session = await loadSession(sessionId);
