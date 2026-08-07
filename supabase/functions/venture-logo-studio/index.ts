@@ -284,6 +284,15 @@ function historyOf(steps: Step[]): { question: string; answer: string; chosen?: 
     }));
 }
 
+/** The last mark drawn in this session, if any — the artwork the founder is looking at. */
+function currentRough(steps: Step[]): Rough | null {
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const rough = (steps[i].roughs ?? [])[0];
+    if (rough) return rough;
+  }
+  return null;
+}
+
 async function buildStep(
   supabase: any,
   userId: string,
@@ -295,10 +304,20 @@ async function buildStep(
   brief: string,
   instruction?: string,
   overrideDirection?: RoughDirection,
+  requirements: string[] = [],
+  editSource?: Rough | null,
 ): Promise<{ step: Step; turn: InterviewTurn }> {
-  const turn = await nextTurn(LOVABLE_API_KEY, studio, historyOf(steps), brief, instruction);
+  const source = editSource === undefined ? currentRough(steps) : editSource;
+  const currentDirection: RoughDirection | null = source
+    ? { title: source.title, render_brief: source.brief, change_note: "" }
+    : null;
+
+  const turn = await nextTurn(
+    LOVABLE_API_KEY, studio, historyOf(steps), brief, instruction, requirements, currentDirection,
+  );
   const { roughs, error } = await drawOne(
     supabase, userId, snapshotId, overrideDirection ?? turn.direction, tokens, studio.companyName, references,
+    turn.requirements, source?.url ?? null,
   );
 
   return {
