@@ -773,7 +773,15 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onError: (e: any) => toast.error(e?.message ?? "Upload failed"),
   });
 
-  const selectedLogo = logos.find((l: any) => l?.primary) ?? null;
+  // Older kits saved a mark without a `primary` flag — fall back to the newest
+  // logo so a founder who already has a mark isn't blocked by stale data.
+  const selectedLogo = logos.find((l: any) => l?.primary) ?? logos[0] ?? null;
+  const brandReady = Boolean(kit?.palette && kit?.typography);
+  const prdBlockedReason = !selectedLogo
+    ? "Save a mark from Logo Studio (or upload your own) first."
+    : !brandReady
+      ? "Choose your palette and typography first."
+      : null;
 
   // Website PRD — regenerate with the locked brand + selected mark, then copy
   // or download it without leaving the wizard.
