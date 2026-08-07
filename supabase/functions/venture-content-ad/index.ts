@@ -485,6 +485,7 @@ Deno.serve(async (req) => {
       .from(BUCKET)
       .upload(storagePath, bytes, { contentType: "image/svg+xml", upsert: false });
     if (upErr) throw upErr;
+    step("uploaded", { bytes: bytes.byteLength });
 
     const { data: signed } = await admin.storage.from(BUCKET).createSignedUrl(storagePath, SIGNED_TTL);
     const expiresAt = new Date(Date.now() + SIGNED_TTL * 1000).toISOString();
@@ -519,9 +520,17 @@ Deno.serve(async (req) => {
       .single();
     if (insErr) throw insErr;
 
+    step("done");
     return json({ ad: row });
-  } catch (e) {
-    console.error("venture-content-ad error", e);
-    return json({ error: (e as Error).message ?? "Internal error" }, 500);
+  } catch (e: any) {
+    console.error(`[content-ad ${reqId}] +${Date.now() - startedAt}ms FAILED`, {
+      name: e?.name,
+      status: e?.status,
+      code: e?.code,
+      message: e?.message,
+      stack: typeof e?.stack === "string" ? e.stack.split("\n").slice(0, 4).join(" | ") : undefined,
+    });
+    return json({ error: e?.message ?? "Internal error", code: e?.code ?? "INTERNAL_ERROR" }, 500);
+
   }
 });
