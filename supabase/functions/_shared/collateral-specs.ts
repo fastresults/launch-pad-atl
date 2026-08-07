@@ -87,7 +87,8 @@ export const PIECE_SPECS: PieceSpec[] = [
     logo: [0.18, 0.28], logoLockup: [0.13, 0.22],
     clearSpace: 0.6, minTypePt: 7, measureMax: 55,
     bleedEdges: ["top", "right", "bottom", "left"], cropMarks: true,
-    coverage: [0.01, 0.95],
+    // A notecard is meant to be mostly empty — the writing area is the design.
+    coverage: [0.004, 0.95],
   },
   {
     page: "email-signature",

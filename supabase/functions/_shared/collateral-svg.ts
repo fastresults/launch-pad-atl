@@ -1074,6 +1074,12 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
     const svg = p.svg
       .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
       .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
+      // Backstop: any literal <text> written outside the type kit still obeys
+      // the piece's legal minimum. Fitted lines are already at or above it.
+      .replace(/font-size="([\d.]+)"/g, (m, v) => {
+        const n = Number(v);
+        return n && n < rs.minType ? `font-size="${Math.round(rs.minType * 10) / 10}"` : m;
+      })
       .replace("<svg ", `<svg${printMeta(rs)} `);
     return { ...p, svg, metrics: pageMetrics(ctx, p.name, svg, rs) };
   });
