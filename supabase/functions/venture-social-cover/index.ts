@@ -19,6 +19,8 @@ import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
+import { compositeHeadline, type AdAspect } from "../_shared/headline-compositor.ts";
+import { PNG } from "npm:pngjs@7.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
