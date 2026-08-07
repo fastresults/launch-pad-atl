@@ -138,7 +138,7 @@ export function CollateralPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[92dvh] w-[min(1100px,96vw)] max-w-5xl flex-col overflow-hidden p-0">
+      <DialogContent className="theme-dark-scope flex max-h-[92dvh] w-[min(1100px,96vw)] max-w-5xl flex-col overflow-hidden p-0">
         <DialogHeader className="shrink-0 border-b border-border px-5 pb-3 pt-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="min-w-0">

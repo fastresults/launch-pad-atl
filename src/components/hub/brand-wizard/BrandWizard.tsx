@@ -81,7 +81,7 @@ export function BrandWizard({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[92dvh] max-h-[92dvh] max-w-7xl flex-col gap-0 overflow-hidden p-0">
+      <DialogContent className="theme-dark-scope flex h-[92dvh] max-h-[92dvh] max-w-7xl flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="shrink-0 border-b border-white/10 px-6 py-4">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
