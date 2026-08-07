@@ -1277,6 +1277,9 @@ function Step5Launch({
           lastHeadline: ad.last_headline,
           lastLogoSize: ad.last_logo_size,
           updatedAt: ad.updated_at,
+          post: p ?? null,
+          snapshotId,
+
         };
         return (
           <AssetPreviewDialog
