@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { normalizeParagraphs } from "@/lib/markdown-normalize";
 import remarkGfm from "remark-gfm";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -1233,7 +1234,7 @@ export function DocumentViewer({
 
           <article id="doc-viewer-article" className="mx-auto max-w-[72ch] px-6 py-6">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-              {content}
+              {normalizeParagraphs(content)}
             </ReactMarkdown>
           </article>
 
@@ -1310,7 +1311,7 @@ export function DocumentViewer({
               {assessment && (
                 <div className="mt-5 border-t border-white/10 pt-4">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
-                    {assessment}
+                    {normalizeParagraphs(assessment)}
                   </ReactMarkdown>
                 </div>
               )}
@@ -1325,7 +1326,7 @@ export function DocumentViewer({
           style={{ position: "absolute", left: "-99999px", top: 0, width: "72ch", pointerEvents: "none" }}
         >
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
-            {exportContent}
+            {normalizeParagraphs(exportContent)}
           </ReactMarkdown>
         </div>
       </DialogContent>

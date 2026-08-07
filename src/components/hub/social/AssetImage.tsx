@@ -14,7 +14,7 @@ function isSvgUrl(src?: string | null) {
  * SVG as a Blob URL makes preview rendering deterministic while normal raster
  * assets continue to use the direct signed URL.
  */
-export function AssetImage({ src, alt = "", ...props }: Props) {
+export function AssetImage({ src, alt = "", className, ...props }: Props) {
   const needsBlob = useMemo(() => isSvgUrl(src), [src]);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
@@ -51,5 +51,13 @@ export function AssetImage({ src, alt = "", ...props }: Props) {
 
   if (!src) return null;
 
-  return <img src={needsBlob ? (blobUrl || src) : src} alt={alt} loading="lazy" {...props} />;
+  return (
+    <img
+      src={needsBlob ? (blobUrl || src) : src}
+      alt={alt}
+      loading="lazy"
+      className={["rounded-lg", className].filter(Boolean).join(" ")}
+      {...props}
+    />
+  );
 }
