@@ -183,7 +183,8 @@ Deno.serve(async (req) => {
 
     const owner = await requireSnapshotOwner(admin, snapshotId, auth.userId!, corsHeaders);
     if (owner.error) return owner.error;
-    const userId: string = owner.userId ?? auth.userId!;
+    const userId: string = owner.snapshot?.user_id ?? auth.userId!;
+
 
     if (action === "list") {
       const { data } = await admin
