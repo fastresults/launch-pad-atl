@@ -591,7 +591,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       setLogos([]);
       setLogoPhase("idle");
       await Promise.all([
-        qc.invalidateQueries({ queryKey: ["logoRun", snapshot.id] }),
+        qc.invalidateQueries({ queryKey: ["brandLogoRun", snapshot.id] }),
         qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] }),
         renderStatusQ.refetch(),
       ]);
