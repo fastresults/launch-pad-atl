@@ -64,7 +64,13 @@ function paletteClause(palette?: string[]): string {
   const list = hexes(palette);
   if (!list.length) return "a single deep near-black ink on pure white";
   if (list.length === 1) return `a one-colour palette of ${list[0]} on pure white`;
-  return `a palette led by ${list[0]}, with ${list.slice(1).join(" and ")} used sparingly as a single accent, on pure white`;
+  const [dominant, secondary, accent] = list;
+  return [
+    `a palette with assigned roles on pure white: ${dominant} is DOMINANT and carries the structure of the mark`,
+    secondary ? `${secondary} is SECONDARY and carries the supporting mass` : "",
+    accent ? `${accent} is the ACCENT and is used ONCE, on the single element that carries the meaning (the human figure or the focal subject) — never on decoration or an outline` : "",
+    "no single colour may swallow the mark; the accent must be the first thing the eye lands on",
+  ].filter(Boolean).join(", ");
 }
 
 function clean(value?: string): string | null {
