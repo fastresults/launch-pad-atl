@@ -41,6 +41,14 @@ const CATEGORY_ORDER = [
   "Governance",
 ];
 
+/**
+ * Assets that are internal working notes for the founder and never belong in a
+ * public showcase. Hard-coded so it also applies to shares minted in the past.
+ */
+const HARD_EXCLUDED_DOC_TYPES = new Set(["ai_tool_stack_recommendation"]);
+
+
+
 type Item = {
   key: string;
   title: string;
