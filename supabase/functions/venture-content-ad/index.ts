@@ -14,6 +14,7 @@ import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
 import { buildContentAdSvgBytes } from "../_shared/content-ad-svg.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
+import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
