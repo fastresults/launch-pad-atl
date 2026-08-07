@@ -262,19 +262,27 @@ export default function LogoStudio({
             </p>
           )}
 
+          <RequirementLedger
+            requirements={session.brief?.requirements ?? []}
+            busy={busy}
+            onDrop={(r) => dropRequirement.mutate(r)}
+          />
+
           <div className="space-y-2 border-t border-white/10 pt-3">
             <Textarea
               value={briefNote}
               onChange={(e) => setBriefNote(e.target.value)}
               rows={2}
               disabled={busy}
-              placeholder="Anything to correct before it draws? e.g. we're not playful, we're steady and precise."
+              placeholder="Anything to correct before it draws? e.g. show both an elderly person and a caregiver, company name to the right."
               className="text-sm"
             />
             <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" disabled={busy} onClick={() => approveBrief.mutate()}>
+              <Button size="sm" disabled={busy} onClick={() => approveBrief.mutate(briefNote.trim() || undefined)}>
                 {approveBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
-                {approveBrief.isPending ? "Drawing the first mark…" : "Approve the brief & draw it"}
+                {approveBrief.isPending
+                  ? "Drawing the first mark…"
+                  : briefNote.trim() ? "Apply my note & draw it" : "Approve the brief & draw it"}
               </Button>
               <Button
                 size="sm"
@@ -283,9 +291,16 @@ export default function LogoStudio({
                 onClick={() => reviseBrief.mutate(briefNote.trim())}
               >
                 {reviseBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                Rewrite the brief
+                Rewrite the brief first
               </Button>
             </div>
+            {briefNote.trim() && (
+              <p className="text-[11px] text-primary/80">
+                Your note will be locked in as a requirement before anything is drawn.
+              </p>
+            )}
+          </div>
+
           </div>
         </div>
       </section>
