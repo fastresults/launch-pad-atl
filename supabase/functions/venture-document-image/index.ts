@@ -182,67 +182,114 @@ Deno.serve(async (req) => {
       brandTokens: snap.brand_tokens,
     });
 
-    // Call Lovable AI Gateway — image model via chat-completions image shape.
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: imageModel,
-        messages: [{ role: "user", content: prompt }],
-        modalities: ["image", "text"],
-      }),
-    });
+    /** Reads width/height out of a PNG IHDR chunk (returns null for non-PNG). */
+    const pngSize = (b: Uint8Array): { w: number; h: number } | null => {
+      if (b.length < 24 || b[0] !== 0x89 || b[1] !== 0x50) return null;
+      const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+      return { w: dv.getUint32(16), h: dv.getUint32(20) };
+    };
 
-    if (!aiRes.ok) {
-      const txt = await aiRes.text();
-      await admin.from("venture_documents")
-        .update({ hero_image_status: "failed", hero_image_error: `Gateway ${aiRes.status}: ${txt.slice(0, 200)}` })
-        .eq("id", doc.id);
-      await admin.from("venture_generation_failures").insert({
-        snapshot_id: snapshotId,
-        document_type: documentType,
-        error: `Image gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
-      });
-      return json({ error: `Image gateway ${aiRes.status}`, detail: txt.slice(0, 300) }, {
-        status: aiRes.status === 429 || aiRes.status === 402 ? aiRes.status : 502,
-      });
-    }
-
-    const aiJson = await aiRes.json();
-    // OpenRouter image responses surface images on message.images[].image_url.url as data URLs.
-    const msg = aiJson?.choices?.[0]?.message;
-    let b64: string | null = null;
-    const images = msg?.images;
-    if (Array.isArray(images) && images.length) {
-      const url = images[0]?.image_url?.url ?? images[0]?.url;
-      if (typeof url === "string") {
-        const m = url.match(/^data:[^;]+;base64,(.+)$/);
-        if (m) b64 = m[1];
+    /**
+     * Header art is only useful when it is a real, wide, non-blank picture.
+     * Anything else gets one more attempt rather than being published.
+     */
+    const qc = (b: Uint8Array): string | null => {
+      if (b.length < 15_000) return "image is too small / likely blank";
+      const dim = pngSize(b);
+      if (dim) {
+        if (dim.w < 640) return `image too low-res (${dim.w}px wide)`;
+        const ratio = dim.w / Math.max(1, dim.h);
+        if (ratio < 1.3 || ratio > 2.4) return `wrong aspect ratio (${ratio.toFixed(2)}:1)`;
       }
-    }
-    // Fallback: some providers return content blocks
-    if (!b64 && Array.isArray(msg?.content)) {
-      for (const block of msg.content) {
-        const url = block?.image_url?.url;
-        if (typeof url === "string") {
-          const m = url.match(/^data:[^;]+;base64,(.+)$/);
-          if (m) { b64 = m[1]; break; }
+      return null;
+    };
+
+    const extractB64 = (aiJson: any): string | null => {
+      const msg = aiJson?.choices?.[0]?.message;
+      const fromUrl = (url: unknown) => {
+        if (typeof url !== "string") return null;
+        const m = url.match(/^data:[^;]+;base64,(.+)$/);
+        return m ? m[1] : null;
+      };
+      const images = msg?.images;
+      if (Array.isArray(images)) {
+        for (const im of images) {
+          const b = fromUrl(im?.image_url?.url ?? im?.url);
+          if (b) return b;
         }
       }
+      if (Array.isArray(msg?.content)) {
+        for (const block of msg.content) {
+          const b = fromUrl(block?.image_url?.url);
+          if (b) return b;
+        }
+      }
+      return null;
+    };
+
+    const MAX_ATTEMPTS = 3;
+    let bytes: Uint8Array | null = null;
+    let lastError = "No image returned by model";
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS && !bytes; attempt++) {
+      const attemptPrompt =
+        attempt === 1
+          ? prompt
+          : `${prompt}\n\nRETRY NOTE (previous attempt rejected: ${lastError}). Return a single full-bleed 16:9 landscape photographic/illustrative image at 1536x864 or larger. No blank canvas, no letterboxing, no text, no logos, no watermark.`;
+
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: imageModel,
+          messages: [{ role: "user", content: attemptPrompt }],
+          modalities: ["image", "text"],
+        }),
+      });
+
+      if (!aiRes.ok) {
+        const txt = await aiRes.text();
+        // Rate limit / credits are terminal for this run — surface them immediately.
+        if (aiRes.status === 429 || aiRes.status === 402) {
+          await admin.from("venture_documents")
+            .update({ hero_image_status: "failed", hero_image_error: `Gateway ${aiRes.status}` })
+            .eq("id", doc.id);
+          return json({ error: `Image gateway ${aiRes.status}`, detail: txt.slice(0, 300) }, { status: aiRes.status });
+        }
+        lastError = `gateway ${aiRes.status}: ${txt.slice(0, 120)}`;
+        continue;
+      }
+
+      const aiJson = await aiRes.json();
+      const b64 = extractB64(aiJson);
+      if (!b64) {
+        lastError = "model returned no image payload";
+        continue;
+      }
+
+      const candidate = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const problem = qc(candidate);
+      if (problem) {
+        lastError = problem;
+        console.warn(`[venture-document-image] QC reject (attempt ${attempt}) ${documentType}: ${problem}`);
+        continue;
+      }
+      bytes = candidate;
     }
-    if (!b64) {
+
+    if (!bytes) {
       await admin.from("venture_documents")
-        .update({ hero_image_status: "failed", hero_image_error: "No image returned by model" })
+        .update({ hero_image_status: "failed", hero_image_error: lastError.slice(0, 200) })
         .eq("id", doc.id);
       await admin.from("venture_generation_failures").insert({
         snapshot_id: snapshotId,
         document_type: documentType,
-        error: `Image gateway returned no image payload: ${JSON.stringify(aiJson).slice(0, 300)}`,
+        error: `Header art failed after ${MAX_ATTEMPTS} attempts: ${lastError}`.slice(0, 300),
       });
-      return json({ error: "No image returned by model" }, { status: 502 });
+      return json({ error: "Header art failed quality checks", detail: lastError }, { status: 502 });
     }
 
-    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
     const path = nextPath(ownerId, snapshotId, documentType, previousPath);
 
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, {
