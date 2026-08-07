@@ -48,6 +48,8 @@ import {
   type LegalSetupProgress,
 } from "@/lib/legal-setup.functions";
 import { getMyFiling } from "@/lib/filing.functions";
+import { resolveEntityState } from "@/lib/entity-state";
+import { getMyBriefLocation } from "@/lib/entity-state.functions";
 
 export default function LegalSetupPage() {
   const qc = useQueryClient();
