@@ -10,6 +10,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireUser, requireSnapshotOwner } from "../_shared/auth.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { rasterizeSvgToBytes } from "../_shared/logo-raster.ts";
+import { isolateSymbol } from "../_shared/logo-geometry.ts";
+
 import {
   COLLATERAL_KINDS,
   KIND_LABELS,
