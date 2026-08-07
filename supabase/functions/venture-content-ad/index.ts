@@ -12,7 +12,8 @@ import { runContrastQa } from "../_shared/image-qa.ts";
 import { placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
-import { buildContentAdSvgBytes } from "../_shared/content-ad-svg.ts";
+import { buildContentAdSvgBytes, type PosterLayout } from "../_shared/content-ad-svg.ts";
+import { buildPosterCopy } from "../_shared/poster-copy.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 
@@ -237,6 +238,9 @@ Deno.serve(async (req) => {
     const aspect = (["1:1", "4:5", "9:16"] as const).includes(body?.aspect) ? body.aspect as AdAspect : "1:1";
     const direction = String(body?.direction || "editorial") as ArtDirectionId;
     if (!ART_DIRECTIONS.some((d) => d.id === direction)) return json({ error: `Unknown direction: ${direction}` }, 400);
+    const posterLayout: PosterLayout = (["bottom-scrim", "centered-plate", "edge-rule"] as const).includes(body?.posterLayout)
+      ? body.posterLayout
+      : "bottom-scrim";
 
     const { data: post } = await admin
       .from("venture_content_calendar_posts")
@@ -319,6 +323,7 @@ Deno.serve(async (req) => {
       // Headline is composited server-side by compositeHeadline() below; the
       // model must leave the top band as unmarked negative space.
       serverRenderedHeadline: true,
+      posterLayout,
     });
 
 
