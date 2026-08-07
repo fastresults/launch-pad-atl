@@ -1016,6 +1016,9 @@ function Step4BuildAds({
           lastHeadline: t.ad.last_headline,
           lastLogoSize: t.ad.last_logo_size,
           updatedAt: t.ad.updated_at,
+          post: t.post,
+          snapshotId,
+
         };
         return (
           <AssetPreviewDialog
