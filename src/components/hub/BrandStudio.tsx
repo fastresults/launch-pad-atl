@@ -80,7 +80,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
         }
       />
       {expanded && (
-        <div id="brand-studio-panel-body" className="space-y-6 rounded-2xl border border-white/10 bg-card p-5">>
+        <div id="brand-studio-panel-body" className="space-y-6 rounded-2xl border border-white/10 bg-card p-5">
           {!kit && (
             <div className="rounded-xl border border-dashed border-white/15 bg-background/40 p-5 text-center">
               <p className="text-sm font-medium">Your identity, locked in five steps</p>
