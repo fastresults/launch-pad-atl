@@ -942,6 +942,16 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         )}
 
+        {fellBack.length > 0 && (
+          <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-amber-400">
+            <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+            <span>
+              {fellBack.length} of {runDirections.length} concepts in this set skipped the Higgsfield render and were
+              drawn from the brief alone{fellBack[0]?.render_error ? ` — ${String(fellBack[0].render_error).slice(0, 140)}` : ""}. Re-run the set once renders are available for noticeably stronger marks.
+            </span>
+          </p>
+        )}
+
         {logos.length > 0 && (
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
