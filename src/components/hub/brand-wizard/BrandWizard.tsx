@@ -544,7 +544,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "drawing">("idle");
+  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "rendering" | "drawing">("idle");
   const logoRunQ = useQuery({
     queryKey: ["brandLogoRun", snapshot.id],
     queryFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run" } }),
