@@ -2,11 +2,23 @@
 //
 // Business cards, letterhead, envelopes, invoices and guideline pages need
 // exact type, alignment and real vector logo ink — so none of this is drawn by
-// an image model. Every page is assembled as SVG from the LOCKED brand kit and
-// rasterised, the same approach the editorial poster compositor uses.
+// an image model. Every page is assembled as SVG from the LOCKED brand kit,
+// laid out on the grid the art director chose, typeset with real font metrics,
+// and rasterised.
 
 import { colorSpaces, inkOn } from "./color-spaces.ts";
 import { stripSvgBackground } from "./logo-raster.ts";
+import { fitBox, fitLine, measure } from "./text-metrics.ts";
+import {
+  type ArtDirection,
+  archetypeSpec,
+  gridFor,
+  PAPER_TONE,
+  type PageGrid,
+  snap,
+  step,
+} from "./brand-art-direction.ts";
+import { addressBlock, addressLine, type ContactDetails } from "./collateral-fields.ts";
 
 // Modern UA gets woff2 (for the SVG's @font-face, used in browsers); the legacy
 // UA gets a plain TTF, which is the only format the wasm rasteriser can load.
@@ -52,6 +64,14 @@ async function loadFont(family: string, weight: number) {
   return fontCache.get(key) ?? null;
 }
 
+export type CollateralCopy = {
+  deck?: { section?: string; sectionSub?: string; points?: Array<{ title: string; body: string }>; closing?: string };
+  proposal?: { scope?: string[]; terms?: string };
+  invoice?: { terms?: string };
+  notecard?: string;
+  voiceDo?: string;
+  voiceDont?: string;
+};
 
 export type CollateralCtx = {
   company: string;
@@ -64,11 +84,15 @@ export type CollateralCtx = {
     website?: string | null;
     address?: string | null;
   };
+  /** Verified, normalised text inventory — the source of truth for every line. */
+  details: ContactDetails;
   colors: Record<string, string>;
   fonts: { heading?: string | null; body?: string | null };
   /** Traced vector mark (preferred) — inlined so the ink stays vector. */
   logoSvg?: string | null;
   voice?: string | null;
+  ad: ArtDirection;
+  copy?: CollateralCopy | null;
 };
 
 export const COLLATERAL_KINDS = [
@@ -104,25 +128,118 @@ function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 }
 
+function r(n: number, p = 2): number {
+  const f = Math.pow(10, p);
+  return Math.round(n * f) / f;
+}
+
 function palette(ctx: CollateralCtx) {
   const c = ctx.colors ?? {};
   const primary = c.primary || c.accent || "#111827";
-  const bg = c.bg || c.surface || "#FFFFFF";
-  const fg = c.fg || c.text || "#111827";
+  const fg = c.fg || c.text || "#14161A";
   const accent = c.accent || c.secondary || primary;
   const muted = c.muted || "#6B7280";
-  return { primary, bg, fg, accent, muted };
+  const paper = c.bg || c.surface || PAPER_TONE[ctx.ad.material.paper] || "#FFFFFF";
+  return { primary, paper, fg, accent, muted };
+}
+
+/** Blend two hex colours — used for hairlines that sit on the paper, not over it. */
+function mix(a: string, b: string, t: number): string {
+  const p = (h: string) => {
+    const s = h.replace("#", "");
+    return [0, 2, 4].map((i) => parseInt(s.slice(i, i + 2), 16));
+  };
+  const [r1, g1, b1] = p(a), [r2, g2, b2] = p(b);
+  const to = (n: number) => Math.round(n).toString(16).padStart(2, "0");
+  return `#${to(r1 + (r2 - r1) * t)}${to(g1 + (g2 - g1) * t)}${to(b1 + (b2 - b1) * t)}`;
+}
+
+// ── typesetting ─────────────────────────────────────────────────────────────
+
+type Fonts = { head?: Uint8Array | null; body?: Uint8Array | null };
+
+type LineOpts = {
+  family?: "head" | "body";
+  weight?: number;
+  anchor?: "start" | "middle" | "end";
+  tracking?: number;
+  opacity?: number;
+  maxWidth?: number;
+  minSize?: number;
+};
+
+function makeType(fonts: Fonts) {
+  const bytesFor = (f: "head" | "body") => (f === "head" ? fonts.head : fonts.body);
+
+  /** One line, shrunk if needed so it can never leave its box. */
+  function line(text: string, x: number, y: number, size: number, fill: string, o: LineOpts = {}): string {
+    const t = String(text ?? "").trim();
+    if (!t) return "";
+    const family = o.family ?? "body";
+    const tracking = o.tracking ?? 0;
+    let out = t, s = size;
+    if (o.maxWidth) {
+      const fit = fitLine(t, { size, maxWidth: o.maxWidth, bytes: bytesFor(family), tracking, minSize: o.minSize });
+      out = fit.text; s = fit.size;
+      if (!out) return "";
+    }
+    return `<text x="${r(x)}" y="${r(y)}" font-family="${family === "head" ? "BrandHead" : "BrandBody"}" font-weight="${o.weight ?? 400}" font-size="${r(s)}" fill="${fill}" text-anchor="${o.anchor ?? "start"}" letter-spacing="${r(tracking)}" opacity="${o.opacity ?? 1}">${esc(out)}</text>`;
+  }
+
+  /** A wrapped block that respects a line budget; returns svg + consumed height. */
+  function block(
+    text: string,
+    x: number,
+    y: number,
+    size: number,
+    width: number,
+    fill: string,
+    o: { family?: "head" | "body"; weight?: number; leading?: number; maxLines?: number; tracking?: number; opacity?: number; anchor?: "start" | "middle" | "end"; minSize?: number } = {},
+  ): { svg: string; height: number; size: number; lines: number } {
+    const family = o.family ?? "body";
+    const leading = o.leading ?? 1.55;
+    const fit = fitBox(String(text ?? ""), {
+      size,
+      maxWidth: width,
+      maxLines: o.maxLines ?? 40,
+      bytes: bytesFor(family),
+      tracking: o.tracking ?? 0,
+      minSize: o.minSize,
+    });
+    const svg = fit.lines
+      .map((l, i) => (l ? line(l, x, y + i * fit.size * leading, fit.size, fill, { family, weight: o.weight, tracking: o.tracking, opacity: o.opacity, anchor: o.anchor }) : ""))
+      .join("");
+    return { svg, height: fit.lines.length * fit.size * leading, size: fit.size, lines: fit.lines.length };
+  }
+
+  const width = (t: string, size: number, family: "head" | "body" = "body", tracking = 0) =>
+    measure(t, size, bytesFor(family), tracking);
+
+  return { line, block, width };
+}
+
+type TypeKit = ReturnType<typeof makeType>;
+
+// ── surfaces, marks, motifs ─────────────────────────────────────────────────
+
+/** Paper: the base tone plus a whisper of grain so it reads as stock, not screen. */
+function surface(W: number, H: number, tone: string, grain: number): string {
+  const dots = grain > 0.02
+    ? `<rect width="${W}" height="${H}" fill="url(#grain)" opacity="${r(Math.min(0.5, grain))}"/>`
+    : "";
+  return `<rect width="${W}" height="${H}" fill="${tone}"/>${dots}`;
+}
+
+function grainDef(fg: string): string {
+  return `<pattern id="grain" width="7" height="7" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="0.45" fill="${fg}" opacity="0.16"/>
+    <circle cx="4.5" cy="3.2" r="0.32" fill="${fg}" opacity="0.11"/>
+    <circle cx="2.4" cy="5.6" r="0.38" fill="${fg}" opacity="0.09"/>
+  </pattern>`;
 }
 
 /** Inline the vector mark, scaled to fit a box, tinted to one ink colour. */
-function markAt(
-  ctx: CollateralCtx,
-  x: number,
-  y: number,
-  boxW: number,
-  boxH: number,
-  ink: string | null,
-): string {
+function markAt(ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number, ink: string | null): string {
   const svg = ctx.logoSvg;
   if (!svg) return "";
   const vb = /viewBox\s*=\s*["']([\d.\-\s,]+)["']/i.exec(svg)?.[1];
@@ -147,7 +264,6 @@ function markAt(
   return `<g transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
 
-/** Aspect of the saved vector — a wide file is a lockup that already sets the name. */
 function logoAspect(ctx: CollateralCtx): number {
   const vb = /viewBox\s*=\s*["']([\d.\-\s,]+)["']/i.exec(ctx.logoSvg ?? "")?.[1];
   if (!vb) return 1;
@@ -160,94 +276,136 @@ function isLockup(ctx: CollateralCtx): boolean {
   return logoAspect(ctx) >= 1.6;
 }
 
-function wordmark(ctx: CollateralCtx, x: number, y: number, size: number, fill: string, anchor = "start") {
-  if (isLockup(ctx)) return "";
-  return `<text x="${r(x)}" y="${r(y)}" font-family="BrandHead" font-weight="700" font-size="${r(size)}" fill="${fill}" text-anchor="${anchor}" letter-spacing="${r(size * -0.01)}">${esc(ctx.company)}</text>`;
+/** Clear space the mark demands on every side, from its own height. */
+function clearSpace(height: number): number {
+  return Math.round(height * 0.55);
 }
 
 /**
- * Logo block for a header: a wide lockup gets the full width it needs, a square
- * mark is paired with the typeset company name.
+ * Logo block for a header: a wide lockup gets the width it needs, a square mark
+ * is paired with the typeset company name, measured so it never collides.
  */
 function logoBlock(
-  ctx: CollateralCtx,
-  x: number,
-  baseline: number,
-  height: number,
-  ink: string | null,
-  nameFill: string,
-  nameSize: number,
+  ctx: CollateralCtx, T: TypeKit, x: number, baseline: number, height: number,
+  ink: string | null, nameFill: string, nameSize: number, maxWidth: number,
 ): string {
   if (isLockup(ctx)) {
-    const w = Math.min(height * logoAspect(ctx), 520);
+    const w = Math.min(height * logoAspect(ctx), maxWidth);
     return markAt(ctx, x, baseline - height, w, height, ink);
   }
+  const gap = Math.round(height * 0.42);
   return [
     markAt(ctx, x, baseline - height, height, height, ink),
-    wordmark(ctx, x + height + 22, baseline - height * 0.28, nameSize, nameFill),
+    T.line(ctx.company, x + height + gap, baseline - height * 0.24, nameSize, nameFill, {
+      family: "head", weight: 700, tracking: nameSize * (ctx.ad.type.displayTracking), maxWidth: maxWidth - height - gap,
+    }),
   ].join("");
 }
 
-
-function r(n: number, p = 2): number {
-  const f = Math.pow(10, p);
-  return Math.round(n * f) / f;
-}
-
-function line(text: string, x: number, y: number, size: number, fill: string, opts: { weight?: number; family?: string; anchor?: string; tracking?: number; opacity?: number } = {}) {
-  const { weight = 400, family = "BrandBody", anchor = "start", tracking = 0, opacity = 1 } = opts;
-  return `<text x="${r(x)}" y="${r(y)}" font-family="${family}" font-weight="${weight}" font-size="${r(size)}" fill="${fill}" text-anchor="${anchor}" letter-spacing="${r(tracking)}" opacity="${opacity}">${esc(text)}</text>`;
-}
-
-/** Naive greedy wrap using an average glyph-width estimate. */
-function wrapText(text: string, size: number, maxWidth: number): string[] {
-  const per = size * 0.52;
-  const max = Math.max(8, Math.floor(maxWidth / per));
-  const words = String(text ?? "").split(/\s+/).filter(Boolean);
-  const out: string[] = [];
-  let cur = "";
-  for (const w of words) {
-    const next = cur ? `${cur} ${w}` : w;
-    if (next.length > max && cur) { out.push(cur); cur = w; } else { cur = next; }
+/** The repeating graphic device that makes the set read as one family. */
+function motif(ctx: CollateralCtx, g: PageGrid, color: string, corner: "tl" | "tr" | "bl" | "br" = "br"): string {
+  const ad = ctx.ad;
+  const s = 1;
+  const unit = Math.round(Math.min(g.W, g.H) * 0.055 * ad.motif.scale * s);
+  const x = corner.includes("r") ? g.W - g.M - unit : g.M;
+  const y = corner.startsWith("t") ? g.M : g.H - g.M - unit;
+  switch (ad.motif.kind) {
+    case "rule_cap":
+      return `<rect x="${r(x)}" y="${r(y + unit - ad.ink.ruleWeight)}" width="${unit}" height="${ad.ink.ruleWeight}" fill="${color}"/>`;
+    case "corner_notch":
+      return `<path d="M ${r(x)} ${r(y + unit)} L ${r(x)} ${r(y)} L ${r(x + unit)} ${r(y)}" fill="none" stroke="${color}" stroke-width="${ad.ink.hairline * 2}"/>`;
+    case "dot_grid": {
+      const n = 4, gap = unit / (n - 1);
+      let out = "";
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+        out += `<circle cx="${r(x + i * gap)}" cy="${r(y + j * gap)}" r="${r(ad.ink.hairline * 1.1)}" fill="${color}" opacity="0.6"/>`;
+      }
+      return out;
+    }
+    case "diagonal_cut":
+      return `<path d="M ${r(x)} ${r(y + unit)} L ${r(x + unit)} ${r(y)} L ${r(x + unit)} ${r(y + unit)} Z" fill="${color}" opacity="0.14"/>`;
+    default:
+      return "";
   }
-  if (cur) out.push(cur);
-  return out;
 }
 
-function paragraph(text: string, x: number, y: number, size: number, width: number, fill: string, leading = 1.55, maxLines = 40) {
-  return wrapText(text, size, width)
-    .slice(0, maxLines)
-    .map((l, i) => line(l, x, y + i * size * leading, size, fill))
-    .join("");
+function label(T: TypeKit, ctx: CollateralCtx, text: string, x: number, y: number, size: number, fill: string, anchor: LineOpts["anchor"] = "start", maxWidth?: number) {
+  const upper = ctx.ad.type.caseLabels === "upper";
+  return T.line(upper ? String(text).toUpperCase() : text, x, y, size, fill, {
+    tracking: size * ctx.ad.type.labelTracking, anchor, maxWidth, weight: 500,
+  });
 }
 
-function page(width: number, height: number, css: string, body: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs><style>${css}</style></defs>${body}</svg>`;
+function page(width: number, height: number, defs: string, body: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs>${defs}</defs>${body}</svg>`;
 }
 
 // ── templates ───────────────────────────────────────────────────────────────
 
-function businessCard(ctx: CollateralCtx, css: string): Page[] {
-  const W = 1050, H = 600, M = 72; // 3.5 × 2in at 300dpi
-  const { primary, bg, fg, muted } = palette(ctx);
-  const p = ctx.person ?? {};
-  const frontInk = inkOn(primary);
+type Args = { ctx: CollateralCtx; T: TypeKit; defs: string };
 
-  const front = page(W, H, css, [
-    `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-    markAt(ctx, W / 2 - 340, H / 2 - 190, 680, 240, frontInk),
-    wordmark(ctx, W / 2, H / 2 + 110, 54, frontInk, "middle"),
-    ctx.tagline ? line(ctx.tagline, W / 2, H / 2 + 152, 22, frontInk, { anchor: "middle", opacity: 0.75, tracking: 2 }) : "",
+function inverted(ctx: CollateralCtx, kind: string): boolean {
+  return ctx.ad.ink.invert.includes(kind);
+}
+
+function contactRows(d: ContactDetails): string[] {
+  return [d.email, d.phone, d.website, addressLine(d), d.social].filter(Boolean) as string[];
+}
+
+function businessCard({ ctx, T, defs }: Args): Page[] {
+  const W = 1050, H = 600; // 3.5 × 2in at 300dpi
+  const ad = ctx.ad;
+  const g = gridFor(ad, W, H);
+  const { primary, paper, fg, accent, muted } = palette(ctx);
+  const d = ctx.details;
+  const invert = inverted(ctx, "business_card");
+  const faceBg = invert ? primary : paper;
+  const faceInk = invert ? inkOn(primary) : fg;
+
+  // FRONT — the mark alone, with real clear space around it.
+  const markH = Math.round(H * 0.26);
+  const markW = Math.min(g.content, markH * Math.max(logoAspect(ctx), 1));
+  const cs = clearSpace(markH);
+  const nameSize = step(ad, 1.2);
+  const showName = !isLockup(ctx);
+  const blockH = markH + (showName ? cs * 0.6 + nameSize : 0) + (d.tagline ? step(ad, -0.6) * 1.8 : 0);
+  let y = (H - blockH) / 2;
+
+  const front = page(W, H, defs, [
+    invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
+    markAt(ctx, (W - markW) / 2, y, markW, markH, invert ? faceInk : null),
+    showName
+      ? T.line(ctx.company, W / 2, y + markH + cs * 0.6 + nameSize * 0.78, nameSize, faceInk, {
+        family: "head", weight: 700, anchor: "middle", tracking: nameSize * ad.type.displayTracking, maxWidth: g.content,
+      })
+      : "",
+    d.tagline
+      ? label(T, ctx, d.tagline, W / 2, y + blockH + step(ad, -0.6) * 0.9, step(ad, -0.9), invert ? faceInk : muted, "middle", g.content)
+      : "",
+    motif(ctx, g, invert ? faceInk : accent, "br"),
   ].join(""));
 
-  const rows = [p.email, p.phone, p.website, p.address].filter(Boolean) as string[];
-  const back = page(W, H, css, [
-    `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    `<rect x="0" y="0" width="14" height="${H}" fill="${primary}"/>`,
-    markAt(ctx, W - M - 260, M - 6, 260, 110, null),
-    line(p.name || ctx.company, M, M + 66, 44, fg, { family: "BrandHead", weight: 700 }),
-    p.title ? line(p.title, M, M + 108, 24, muted, { tracking: 1.6 }) : "",
-    ...rows.map((t, i) => line(t, M, H - M - (rows.length - 1 - i) * 40, 24, fg)),
+  // BACK — the contact block, set on the grid and measured line by line.
+  const rows = contactRows(d);
+  const rule = ad.ink.ruleWeight;
+  const nameS = step(ad, 1);
+  const titleS = step(ad, -0.6);
+  const rowS = step(ad, -0.7);
+  const rowGap = rowS * 1.72;
+  const colW = g.span(Math.max(4, Math.round(ad.grid.columns * 0.62)));
+
+  const backTop = g.M + nameS;
+  const backRowsTop = H - g.M - (rows.length - 1) * rowGap;
+
+  const back = page(W, H, defs, [
+    surface(W, H, paper, ad.material.grain),
+    `<rect x="0" y="0" width="${r(rule * 3)}" height="${H}" fill="${primary}"/>`,
+    // mark, top-right, quiet
+    markAt(ctx, W - g.M - 190, g.M - 4, 190, 76, mix(fg, paper, 0.15)),
+    T.line(d.person_name || ctx.company, g.M, backTop, nameS, fg, { family: "head", weight: 700, maxWidth: colW, tracking: nameS * ad.type.displayTracking }),
+    d.person_title ? label(T, ctx, d.person_title, g.M, backTop + titleS * 1.7, titleS, accent, "start", colW) : "",
+    `<rect x="${g.M}" y="${r(backRowsTop - rowGap * 1.25)}" width="${r(g.span(2))}" height="${r(ad.ink.hairline * 2)}" fill="${accent}"/>`,
+    ...rows.map((t, i) => T.line(t, g.M, backRowsTop + i * rowGap, rowS, i === 0 ? fg : muted, { maxWidth: g.content })),
   ].join(""));
 
   return [
@@ -256,245 +414,327 @@ function businessCard(ctx: CollateralCtx, css: string): Page[] {
   ];
 }
 
-function letterhead(ctx: CollateralCtx, css: string): Page[] {
-  const W = 1275, H = 1650, M = 110; // US Letter at 150dpi
-  const { primary, bg, fg, muted } = palette(ctx);
-  const p = ctx.person ?? {};
-  const footer = [p.website, p.email, p.phone].filter(Boolean).join("   ·   ");
+function letterhead({ ctx, T, defs }: Args): Page[] {
+  const W = 1275, H = 1650; // US Letter at 150dpi
+  const ad = ctx.ad;
+  const g = gridFor(ad, W, H);
+  const { primary, paper, fg, accent, muted } = palette(ctx);
+  const d = ctx.details;
+
+  const logoH = Math.round(H * 0.052);
+  const headBase = snap(ad, g.M + logoH);
+  const footerY = H - g.M;
+  const footer = [d.website, d.email, d.phone].filter(Boolean).join("   ·   ");
+  const addr = addressLine(d);
+
+  const bodyTop = snap(ad, headBase + clearSpace(logoH) + step(ad, 3));
+  const openBlock = T.block("Date\n\nRecipient name\nCompany\nStreet address\n\nDear ______,", g.M, bodyTop, step(ad, -0.4), g.span(Math.round(ad.grid.columns * 0.55)), muted, { leading: 1.6, maxLines: 8 });
+  const copyBlock = T.block(
+    "Body copy sits here. Keep paragraphs short and specific. This template is set in your brand typefaces at your locked sizes, so anything typed into it stays on brand.",
+    g.M, snap(ad, bodyTop + openBlock.height + step(ad, 2)), step(ad, -0.3), g.span(Math.round(ad.grid.columns * 0.78)), fg, { leading: ad.type.bodyLeading, maxLines: 12 },
+  );
+
   const body = [
-    `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    `<rect x="0" y="0" width="${W}" height="10" fill="${primary}"/>`,
-    logoBlock(ctx, M, M + 110, 110, null, fg, 40),
-    ctx.tagline ? line(ctx.tagline, M, M + 146, 18, muted, { tracking: 1.4 }) : "",
-    `<line x1="${M}" y1="${M + 160}" x2="${W - M}" y2="${M + 160}" stroke="${primary}" stroke-width="2" opacity="0.35"/>`,
-    paragraph(
-      "Date\n\nRecipient name\nCompany\nStreet address\n\nDear ______,",
-      M, M + 230, 22, W - M * 2, muted, 1.6, 8,
-    ),
-    paragraph(
-      "Body copy sits here. Keep paragraphs short and specific. This template is set in your brand typefaces at your locked sizes, so anything typed into it stays on brand.",
-      M, M + 400, 22, W - M * 2, fg, 1.7, 12,
-    ),
-    `<line x1="${M}" y1="${H - 130}" x2="${W - M}" y2="${H - 130}" stroke="${primary}" stroke-width="1" opacity="0.3"/>`,
-    line(footer, W / 2, H - 92, 18, muted, { anchor: "middle", tracking: 1.2 }),
+    surface(W, H, paper, ad.material.grain),
+    `<rect x="0" y="0" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
+    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.4), g.span(Math.round(ad.grid.columns * 0.6))),
+    d.tagline ? label(T, ctx, d.tagline, g.M, headBase + step(ad, -0.9) * 2, step(ad, -1.2), muted, "start", g.span(6)) : "",
+    `<rect x="${g.M}" y="${r(headBase + clearSpace(logoH))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(primary, paper, 0.55)}"/>`,
+    openBlock.svg,
+    copyBlock.svg,
+    `<rect x="${g.M}" y="${r(footerY - step(ad, 1.6))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.8)}"/>`,
+    footer ? label(T, ctx, footer, W / 2, footerY - step(ad, -0.4), step(ad, -1.1), muted, "middle", g.content) : "",
+    addr ? T.line(addr, W / 2, footerY, step(ad, -1.3), mix(fg, paper, 0.45), { anchor: "middle", maxWidth: g.content }) : "",
+    motif(ctx, g, accent, "tr"),
   ].join("");
-  return [{ name: "letterhead", svg: page(W, H, css, body), width: W, height: H }];
+  return [{ name: "letterhead", svg: page(W, H, defs, body), width: W, height: H }];
 }
 
-function envelope(ctx: CollateralCtx, css: string): Page[] {
+function envelope({ ctx, T, defs }: Args): Page[] {
   const W = 1425, H = 619; // #10 at 150dpi
-  const { primary, bg, fg, muted } = palette(ctx);
-  const p = ctx.person ?? {};
+  const ad = ctx.ad;
+  const g = gridFor(ad, W, H);
+  const { primary, paper, fg, accent, muted } = palette(ctx);
+  const d = ctx.details;
+  const logoH = Math.round(H * 0.13);
+  const base = snap(ad, g.M + logoH);
+  const lines = addressBlock(d);
+
   const body = [
-    `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    `<rect x="0" y="${H - 12}" width="${W}" height="12" fill="${primary}"/>`,
-    logoBlock(ctx, 70, 150, 88, null, fg, 30),
-    p.address ? paragraph(p.address, 70, 196, 18, 520, muted, 1.5, 3) : "",
-    `<rect x="${W - 250}" y="56" width="180" height="120" fill="none" stroke="${muted}" stroke-width="2" stroke-dasharray="8 8" opacity="0.5"/>`,
-    line("STAMP", W - 160, 122, 16, muted, { anchor: "middle", tracking: 3, opacity: 0.6 }),
+    surface(W, H, paper, ad.material.grain),
+    `<rect x="0" y="${r(H - ad.ink.ruleWeight * 2)}" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
+    logoBlock(ctx, T, g.M, base, logoH, null, fg, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.45))),
+    ...lines.map((l, i) => T.line(l, g.M, base + clearSpace(logoH) + i * step(ad, -1) * 1.6, step(ad, -1.1), muted, { maxWidth: g.span(Math.round(ad.grid.columns * 0.4)) })),
+    d.website ? T.line(d.website, g.M, H - g.M, step(ad, -1.2), accent, { maxWidth: g.span(4) }) : "",
+    `<rect x="${r(W - g.M - 180)}" y="${g.M}" width="180" height="120" fill="none" stroke="${mix(fg, paper, 0.6)}" stroke-width="${r(ad.ink.hairline * 1.5)}" stroke-dasharray="8 8"/>`,
+    label(T, ctx, "Stamp", W - g.M - 90, g.M + 68, step(ad, -1.5), mix(fg, paper, 0.5), "middle", 150),
   ].join("");
-  return [{ name: "envelope-no10", svg: page(W, H, css, body), width: W, height: H }];
+  return [{ name: "envelope-no10", svg: page(W, H, defs, body), width: W, height: H }];
 }
 
-function notecard(ctx: CollateralCtx, css: string): Page[] {
+function notecard({ ctx, T, defs }: Args): Page[] {
   const W = 1050, H = 750; // A2 notecard at 150dpi
-  const { primary, bg, fg, muted } = palette(ctx);
+  const ad = ctx.ad;
+  const g = gridFor(ad, W, H);
+  const { primary, paper, fg, accent, muted } = palette(ctx);
+  const d = ctx.details;
+  const invert = inverted(ctx, "notecard");
+  const bg = invert ? primary : paper;
+  const ink = invert ? inkOn(primary) : fg;
+  const soft = invert ? inkOn(primary) : muted;
+
+  const markH = Math.round(H * 0.17);
+  const markW = Math.min(g.content * 0.6, markH * Math.max(logoAspect(ctx), 1));
+  const top = snap(ad, H * 0.17);
+  const nameS = step(ad, 1.1);
+  const note = ctx.copy?.notecard || d.tagline || "";
+
   const body = [
-    `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    markAt(ctx, W / 2 - 300, 90, 600, 150, null),
-    wordmark(ctx, W / 2, 290, 40, fg, "middle"),
-    ctx.tagline ? line(ctx.tagline, W / 2, 286, 18, muted, { anchor: "middle", tracking: 2 }) : "",
-    `<line x1="${W / 2 - 90}" y1="330" x2="${W / 2 + 90}" y2="330" stroke="${primary}" stroke-width="2"/>`,
-    ...[0, 1, 2, 3].map((i) => `<line x1="120" y1="${420 + i * 70}" x2="${W - 120}" y2="${420 + i * 70}" stroke="${muted}" stroke-width="1" opacity="0.25"/>`),
+    invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
+    markAt(ctx, (W - markW) / 2, top, markW, markH, invert ? ink : null),
+    isLockup(ctx) ? "" : T.line(ctx.company, W / 2, top + markH + clearSpace(markH) * 0.8, nameS, ink, { family: "head", weight: 700, anchor: "middle", tracking: nameS * ad.type.displayTracking, maxWidth: g.content }),
+    note ? label(T, ctx, note, W / 2, top + markH + clearSpace(markH) * (isLockup(ctx) ? 0.8 : 1.6), step(ad, -1), soft, "middle", g.span(Math.round(ad.grid.columns * 0.75))) : "",
+    `<rect x="${r(W / 2 - g.span(1))}" y="${r(H * 0.52)}" width="${r(g.span(2))}" height="${r(ad.ink.hairline * 2)}" fill="${invert ? ink : accent}" opacity="${invert ? 0.5 : 1}"/>`,
+    ...[0, 1, 2].map((i) => `<rect x="${g.M}" y="${r(H * 0.63 + i * step(ad, 2.4))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${invert ? ink : fg}" opacity="0.16"/>`),
+    d.website ? T.line(d.website, W / 2, H - g.M, step(ad, -1.4), soft, { anchor: "middle", opacity: invert ? 0.7 : 1, maxWidth: g.content }) : "",
   ].join("");
-  return [{ name: "notecard", svg: page(W, H, css, body), width: W, height: H }];
+  return [{ name: "notecard", svg: page(W, H, defs, body), width: W, height: H }];
 }
 
-function emailSignature(ctx: CollateralCtx, css: string): Page[] {
-  const W = 1200, H = 360;
-  const { primary, bg, fg, muted } = palette(ctx);
-  const p = ctx.person ?? {};
-  const rows = [p.email, p.phone, p.website].filter(Boolean) as string[];
+function emailSignature({ ctx, T, defs }: Args): Page[] {
+  const W = 1200, H = 340;
+  const ad = ctx.ad;
+  const { primary, paper, fg, accent, muted } = palette(ctx);
+  const d = ctx.details;
+  const rows = [d.email, d.phone, d.website, d.social].filter(Boolean) as string[];
+  const markBox = 150;
+  const left = 60;
+  const railX = left + markBox + clearSpace(markBox) * 0.7;
+  const textX = railX + 34;
+  const nameS = step(ad, 0.9);
+  const rowS = step(ad, -0.9);
+  const top = (H - (nameS * 1.5 + rowS * 1.5 + rows.length * rowS * 1.55)) / 2 + nameS;
+
   const body = [
-    `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    markAt(ctx, 60, 96, 160, 168, null),
-    `<rect x="240" y="96" width="4" height="168" fill="${primary}"/>`,
-    line(p.name || ctx.company, 284, 150, 42, fg, { family: "BrandHead", weight: 700 }),
-    line([p.title, ctx.company].filter(Boolean).join(" · "), 284, 190, 22, primary, { tracking: 0.8 }),
-    ...rows.map((t, i) => line(t, 284, 234 + i * 34, 20, muted)),
+    surface(W, H, paper, ad.material.grain * 0.4),
+    markAt(ctx, left, (H - markBox) / 2, markBox, markBox, null),
+    `<rect x="${r(railX)}" y="${r(H * 0.2)}" width="${r(Math.max(3, ad.ink.ruleWeight))}" height="${r(H * 0.6)}" fill="${primary}"/>`,
+    T.line(d.person_name || ctx.company, textX, top, nameS, fg, { family: "head", weight: 700, maxWidth: W - textX - 60 }),
+    T.line([d.person_title, ctx.company].filter(Boolean).join(" · "), textX, top + nameS * 1.35, rowS, accent, { maxWidth: W - textX - 60 }),
+    ...rows.map((t, i) => T.line(t, textX, top + nameS * 1.35 + rowS * 1.9 + i * rowS * 1.55, rowS, muted, { maxWidth: W - textX - 60 })),
   ].join("");
-  return [{ name: "email-signature", svg: page(W, H, css, body), width: W, height: H }];
+  return [{ name: "email-signature", svg: page(W, H, defs, body), width: W, height: H }];
 }
 
-function docTemplate(ctx: CollateralCtx, css: string, mode: "invoice" | "proposal"): Page[] {
-  const W = 1275, H = 1650, M = 110;
-  const { primary, bg, fg, muted } = palette(ctx);
-  const p = ctx.person ?? {};
+function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page[] {
+  const W = 1275, H = 1650;
+  const ad = ctx.ad;
+  const g = gridFor(ad, W, H);
+  const { primary, paper, fg, accent, muted } = palette(ctx);
+  const d = ctx.details;
   const isInvoice = mode === "invoice";
-  const title = isInvoice ? "INVOICE" : "PROPOSAL";
-  const cols = isInvoice
-    ? ["Description", "Qty", "Rate", "Amount"]
-    : ["Scope item", "Detail", "Timeline", "Investment"];
-  const colX = [M, M + 560, M + 760, W - M];
-  const rowsY = 700;
-  const bodyRows = Array.from({ length: 7 }, (_, i) =>
-    `<line x1="${M}" y1="${rowsY + 54 + i * 54}" x2="${W - M}" y2="${rowsY + 54 + i * 54}" stroke="${muted}" stroke-width="1" opacity="0.22"/>`).join("");
+  const title = isInvoice ? "Invoice" : "Proposal";
+  const cols = isInvoice ? ["Description", "Qty", "Rate", "Amount"] : ["Scope item", "Detail", "Timeline", "Investment"];
+  const colX = [g.M, g.col(Math.round(ad.grid.columns * 0.55)), g.col(Math.round(ad.grid.columns * 0.72)), W - g.M];
+
+  const logoH = Math.round(H * 0.045);
+  const headBase = snap(ad, g.M + logoH);
+  const metaTop = snap(ad, headBase + clearSpace(logoH) + step(ad, 2.5));
+  const tableTop = snap(ad, metaTop + step(ad, 9));
+  const rowH = step(ad, 1.8);
+  const rows = 7;
+  const totalsY = snap(ad, tableTop + rowH * (rows + 1.6));
+
+  const fromLines = [d.legal_entity || ctx.company, d.person_name, d.email, d.phone, addressLine(d)].filter(Boolean).join("\n");
+  const scope = ctx.copy?.proposal?.scope ?? [];
+  const terms = isInvoice
+    ? (d.payment_terms || ctx.copy?.invoice?.terms || "Payment terms: net 15. Late balances accrue 1.5% monthly.")
+    : (ctx.copy?.proposal?.terms || "This proposal is valid for 30 days. Work begins on countersignature and receipt of the deposit.");
 
   const body = [
-    `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    `<rect x="0" y="0" width="${W}" height="10" fill="${primary}"/>`,
-    logoBlock(ctx, M, M + 100, 100, null, fg, 36),
-    ctx.tagline ? line(ctx.tagline, M, M + 134, 17, muted, { tracking: 1.2 }) : "",
-    line(title, W - M, M + 62, 52, primary, { family: "BrandHead", weight: 700, anchor: "end", tracking: 4 }),
-    line(isInvoice ? "No. 0001" : "Prepared for", W - M, M + 96, 20, muted, { anchor: "end" }),
-    line("From", M, 340, 15, muted, { tracking: 2.4 }),
-    paragraph([ctx.company, p.name, p.email, p.phone, p.address].filter(Boolean).join("\n"), M, 372, 20, 460, fg, 1.6, 6),
-    line(isInvoice ? "Bill to" : "Client", W / 2 + 40, 340, 15, muted, { tracking: 2.4 }),
-    paragraph("Client name\nCompany\nEmail\nAddress", W / 2 + 40, 372, 20, 460, muted, 1.6, 6),
-    `<line x1="${M}" y1="${rowsY - 46}" x2="${W - M}" y2="${rowsY - 46}" stroke="${primary}" stroke-width="2"/>`,
-    ...cols.map((c, i) => line(c, colX[i], rowsY - 12, 17, primary, { tracking: 2, anchor: i === cols.length - 1 ? "end" : "start" })),
-    `<line x1="${M}" y1="${rowsY + 12}" x2="${W - M}" y2="${rowsY + 12}" stroke="${muted}" stroke-width="1" opacity="0.4"/>`,
-    bodyRows,
-    `<rect x="${W - M - 420}" y="${rowsY + 470}" width="420" height="92" fill="${primary}" opacity="0.08"/>`,
-    line(isInvoice ? "Total due" : "Total investment", W - M - 396, rowsY + 526, 22, fg, { family: "BrandHead", weight: 700 }),
-    line("$0.00", W - M - 24, rowsY + 526, 26, primary, { family: "BrandHead", weight: 700, anchor: "end" }),
-    paragraph(
-      isInvoice
-        ? "Payment terms: net 15. Make payment to the account on file. Late balances accrue 1.5% monthly."
-        : "This proposal is valid for 30 days. Work begins on countersignature and receipt of the deposit.",
-      M, H - 170, 18, W - M * 2, muted, 1.5, 3,
-    ),
-    line([p.website, p.email].filter(Boolean).join("   ·   "), W / 2, H - 80, 17, muted, { anchor: "middle", tracking: 1.2 }),
+    surface(W, H, paper, ad.material.grain),
+    `<rect x="0" y="0" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
+    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.1), g.span(Math.round(ad.grid.columns * 0.5))),
+    label(T, ctx, title, W - g.M, headBase - logoH * 0.35, step(ad, 1.8), primary, "end", g.span(4)),
+    T.line(isInvoice ? "No. 0001" : "Prepared for", W - g.M, headBase + step(ad, -0.4), step(ad, -1), muted, { anchor: "end", maxWidth: g.span(4) }),
+
+    label(T, ctx, "From", g.M, metaTop, step(ad, -1.5), accent),
+    T.block(fromLines, g.M, metaTop + step(ad, 1.1), step(ad, -0.7), g.span(Math.round(ad.grid.columns * 0.42)), fg, { leading: 1.6, maxLines: 6 }).svg,
+    label(T, ctx, isInvoice ? "Bill to" : "Client", g.col(Math.round(ad.grid.columns * 0.55)), metaTop, step(ad, -1.5), accent),
+    T.block("Client name\nCompany\nEmail\nAddress", g.col(Math.round(ad.grid.columns * 0.55)), metaTop + step(ad, 1.1), step(ad, -0.7), g.span(Math.round(ad.grid.columns * 0.42)), mix(fg, paper, 0.4), { leading: 1.6, maxLines: 6 }).svg,
+
+    `<rect x="${g.M}" y="${r(tableTop - step(ad, 1.5))}" width="${g.content}" height="${r(ad.ink.ruleWeight)}" fill="${primary}"/>`,
+    ...cols.map((c, i) => label(T, ctx, c, colX[i], tableTop - step(ad, -0.2), step(ad, -1.4), primary, i === cols.length - 1 ? "end" : "start", g.span(3))),
+    `<rect x="${g.M}" y="${r(tableTop + step(ad, 0.2))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.65)}"/>`,
+    ...Array.from({ length: rows }, (_, i) => {
+      const y = tableTop + step(ad, 0.2) + (i + 1) * rowH;
+      const text = !isInvoice && scope[i]
+        ? T.line(scope[i], g.M, y - rowH * 0.35, step(ad, -0.8), fg, { maxWidth: g.span(Math.round(ad.grid.columns * 0.5)) })
+        : "";
+      return `${text}<rect x="${g.M}" y="${r(y)}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.82)}"/>`;
+    }),
+
+    `<rect x="${r(W - g.M - g.span(Math.round(ad.grid.columns * 0.36)))}" y="${r(totalsY)}" width="${r(g.span(Math.round(ad.grid.columns * 0.36)))}" height="${r(step(ad, 2.6))}" fill="${primary}" opacity="0.07" rx="${ad.material.radius}"/>`,
+    T.line(isInvoice ? "Total due" : "Total investment", W - g.M - g.span(Math.round(ad.grid.columns * 0.34)), totalsY + step(ad, 1.7), step(ad, -0.3), fg, { family: "head", weight: 700, maxWidth: g.span(4) }),
+    T.line("$0.00", W - g.M - step(ad, 0.4), totalsY + step(ad, 1.7), step(ad, 0.4), primary, { family: "head", weight: 700, anchor: "end", maxWidth: g.span(3) }),
+
+    T.block(terms, g.M, H - g.M - step(ad, 3.6), step(ad, -1.1), g.span(Math.round(ad.grid.columns * 0.7)), muted, { leading: 1.5, maxLines: 3 }).svg,
+    d.tax_id ? T.line(`EIN ${d.tax_id}`, g.M, H - g.M - step(ad, 0.4), step(ad, -1.4), mix(fg, paper, 0.5), { maxWidth: g.span(4) }) : "",
+    label(T, ctx, [d.website, d.email].filter(Boolean).join("   ·   "), W - g.M, H - g.M - step(ad, 0.4), step(ad, -1.4), muted, "end", g.span(6)),
+    motif(ctx, g, accent, "tr"),
   ].join("");
-  return [{ name: mode, svg: page(W, H, css, body), width: W, height: H }];
+  return [{ name: mode, svg: page(W, H, defs, body), width: W, height: H }];
 }
 
-function presentation(ctx: CollateralCtx, css: string): Page[] {
-  const W = 1920, H = 1080, M = 140;
-  const { primary, bg, fg, accent, muted } = palette(ctx);
+function presentation({ ctx, T, defs }: Args): Page[] {
+  const W = 1920, H = 1080;
+  const ad = ctx.ad;
+  const g = gridFor(ad, W, H);
+  const { primary, paper, fg, accent, muted } = palette(ctx);
+  const d = ctx.details;
   const ink = inkOn(primary);
+  const invert = inverted(ctx, "presentation");
+  const coverBg = invert ? primary : paper;
+  const coverInk = invert ? ink : fg;
   const pages: Page[] = [];
+  const deck = ctx.copy?.deck ?? {};
+  const points = (deck.points ?? []).slice(0, 3);
+
+  const markH = Math.round(H * 0.11);
+  const markW = Math.min(g.span(4), markH * Math.max(logoAspect(ctx), 1));
 
   pages.push({
-    name: "slide-1-cover",
-    width: W, height: H,
-    svg: page(W, H, css, [
-      `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-      markAt(ctx, M, M, 420, 180, ink),
-      line(ctx.company, M, H / 2 + 40, 132, ink, { family: "BrandHead", weight: 700 }),
-      ctx.tagline ? line(ctx.tagline, M, H / 2 + 110, 36, ink, { opacity: 0.8, tracking: 2 }) : "",
-      line(new Date().getFullYear().toString(), W - M, H - M, 26, ink, { anchor: "end", opacity: 0.7 }),
+    name: "slide-1-cover", width: W, height: H,
+    svg: page(W, H, defs, [
+      invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
+      markAt(ctx, g.M, g.M, markW, markH, invert ? coverInk : null),
+      T.line(ctx.company, g.M, H * 0.62, step(ad, 5.2), coverInk, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.82)), tracking: step(ad, 5.2) * ad.type.displayTracking }),
+      d.tagline ? T.line(d.tagline, g.M, H * 0.62 + step(ad, 2.6), step(ad, 0.8), coverInk, { opacity: invert ? 0.8 : 0.7, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)) }) : "",
+      label(T, ctx, String(new Date().getFullYear()), W - g.M, H - g.M, step(ad, -0.6), coverInk, "end", g.span(2)),
+      motif(ctx, g, invert ? coverInk : accent, "br"),
     ].join("")),
   });
 
   pages.push({
-    name: "slide-2-section",
-    width: W, height: H,
-    svg: page(W, H, css, [
-      `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-      `<rect x="0" y="0" width="24" height="${H}" fill="${accent}"/>`,
-      line("01", M, 300, 40, accent, { family: "BrandHead", weight: 700, tracking: 6 }),
-      line("Section title", M, 400, 96, fg, { family: "BrandHead", weight: 700 }),
-      paragraph("One sentence that frames what this section proves.", M, 470, 34, W - M * 2 - 400, muted, 1.5, 2),
-      markAt(ctx, W - M - 120, H - M - 120, 120, 120, primary),
+    name: "slide-2-section", width: W, height: H,
+    svg: page(W, H, defs, [
+      surface(W, H, paper, ad.material.grain),
+      `<rect x="0" y="0" width="${r(ad.ink.ruleWeight * 6)}" height="${H}" fill="${accent}"/>`,
+      label(T, ctx, "01", g.M, H * 0.32, step(ad, 0.6), accent),
+      T.line(deck.section || "Section title", g.M, H * 0.46, step(ad, 3.8), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.72)), tracking: step(ad, 3.8) * ad.type.displayTracking }),
+      T.block(deck.sectionSub || "One sentence that frames what this section proves.", g.M, H * 0.56, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.55)), muted, { leading: 1.5, maxLines: 2 }).svg,
+      markAt(ctx, W - g.M - 120, H - g.M - 120, 120, 120, mix(primary, paper, 0.25)),
+    ].join("")),
+  });
+
+  const cardW = g.span(Math.floor(ad.grid.columns / 3) - (ad.grid.columns >= 12 ? 0 : 0));
+  const cardGap = g.gutter * 2;
+  const cardWidth = (g.content - cardGap * 2) / 3;
+  pages.push({
+    name: "slide-3-content", width: W, height: H,
+    svg: page(W, H, defs, [
+      surface(W, H, paper, ad.material.grain),
+      T.line(deck.section ? `${deck.section}` : "Content slide", g.M, H * 0.17, step(ad, 2.4), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
+      `<rect x="${g.M}" y="${r(H * 0.2)}" width="${r(g.span(1))}" height="${r(ad.ink.ruleWeight * 2)}" fill="${accent}"/>`,
+      ...[0, 1, 2].map((i) => {
+        const x = g.M + i * (cardWidth + cardGap);
+        const p = points[i];
+        const top = H * 0.3;
+        return [
+          `<rect x="${r(x)}" y="${r(top)}" width="${r(cardWidth)}" height="${r(H * 0.42)}" fill="${primary}" opacity="0.05" rx="${ad.material.radius}"/>`,
+          label(T, ctx, `0${i + 1}`, x + step(ad, 1.4), top + step(ad, 2.2), step(ad, 0.2), accent),
+          T.line(p?.title || "Point headline", x + step(ad, 1.4), top + step(ad, 4.2), step(ad, 1.2), fg, { family: "head", weight: 700, maxWidth: cardWidth - step(ad, 2.8) }),
+          T.block(p?.body || "Supporting detail, kept short so the slide stays readable from the back of the room.", x + step(ad, 1.4), top + step(ad, 5.9), step(ad, -0.2), cardWidth - step(ad, 2.8), muted, { leading: 1.5, maxLines: 5 }).svg,
+        ].join("");
+      }),
+      T.line(ctx.company, g.M, H - g.M, step(ad, -0.6), muted, { maxWidth: g.span(5) }),
+      markAt(ctx, W - g.M - 70, H - g.M - 60, 70, 70, mix(primary, paper, 0.3)),
     ].join("")),
   });
 
   pages.push({
-    name: "slide-3-content",
-    width: W, height: H,
-    svg: page(W, H, css, [
-      `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-      line("Content slide", M, 200, 64, fg, { family: "BrandHead", weight: 700 }),
-      `<line x1="${M}" y1="240" x2="${M + 160}" y2="240" stroke="${accent}" stroke-width="6"/>`,
-      ...[0, 1, 2].map((i) => [
-        `<rect x="${M + i * 540}" y="330" width="480" height="420" fill="${primary}" opacity="0.06" rx="18"/>`,
-        line(`0${i + 1}`, M + 40 + i * 540, 400, 28, accent, { family: "BrandHead", weight: 700, tracking: 3 }),
-        line("Point headline", M + 40 + i * 540, 452, 34, fg, { family: "BrandHead", weight: 700 }),
-        paragraph("Supporting detail, kept to two lines so the slide stays readable from the back of the room.", M + 40 + i * 540, 500, 22, 400, muted, 1.5, 4),
-      ].join("")),
-      line(ctx.company, M, H - 90, 22, muted),
-      markAt(ctx, W - M - 70, H - 130, 70, 70, primary),
-    ].join("")),
-  });
-
-  pages.push({
-    name: "slide-4-closing",
-    width: W, height: H,
-    svg: page(W, H, css, [
+    name: "slide-4-closing", width: W, height: H,
+    svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${fg}"/>`,
-      markAt(ctx, W / 2 - 90, H / 2 - 220, 180, 160, inkOn(fg)),
-      line("Thank you", W / 2, H / 2 + 40, 96, inkOn(fg), { family: "BrandHead", weight: 700, anchor: "middle" }),
-      line([ctx.person?.website, ctx.person?.email].filter(Boolean).join("   ·   "), W / 2, H / 2 + 110, 28, inkOn(fg), { anchor: "middle", opacity: 0.75 }),
+      markAt(ctx, W / 2 - 100, H * 0.3, 200, 150, inkOn(fg)),
+      T.line(deck.closing || "Thank you", W / 2, H * 0.6, step(ad, 3.6), inkOn(fg), { family: "head", weight: 700, anchor: "middle", maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
+      T.line([d.website, d.email].filter(Boolean).join("   ·   "), W / 2, H * 0.68, step(ad, 0.2), inkOn(fg), { anchor: "middle", opacity: 0.75, maxWidth: g.content }),
     ].join("")),
   });
 
   return pages;
 }
 
-function guidelines(ctx: CollateralCtx, css: string): Page[] {
-  const W = 1600, H = 1000, M = 110;
-  const { primary, bg, fg, accent, muted } = palette(ctx);
+function guidelines({ ctx, T, defs }: Args): Page[] {
+  const W = 1600, H = 1000;
+  const ad = ctx.ad;
+  const g = gridFor(ad, W, H);
+  const { primary, paper, fg, accent, muted } = palette(ctx);
   const ink = inkOn(primary);
   const pages: Page[] = [];
+  const d = ctx.details;
+
   const head = (title: string, n: string) => [
-    `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    line(n, M, 110, 20, accent, { family: "BrandHead", weight: 700, tracking: 4 }),
-    line(title, M, 176, 56, fg, { family: "BrandHead", weight: 700 }),
-    `<line x1="${M}" y1="210" x2="${W - M}" y2="210" stroke="${primary}" stroke-width="2" opacity="0.3"/>`,
-    line(`${ctx.company} — Brand guidelines`, W - M, 110, 18, muted, { anchor: "end" }),
+    surface(W, H, paper, ad.material.grain),
+    label(T, ctx, n, g.M, g.M + step(ad, 0.4), step(ad, -1), accent),
+    T.line(title, g.M, g.M + step(ad, 3.4), step(ad, 2.4), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)), tracking: step(ad, 2.4) * ad.type.displayTracking }),
+    `<rect x="${g.M}" y="${r(g.M + step(ad, 4.4))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(primary, paper, 0.55)}"/>`,
+    label(T, ctx, `${ctx.company} — Brand guidelines`, W - g.M, g.M + step(ad, 0.4), step(ad, -1.3), muted, "end", g.span(5)),
   ].join("");
+
+  const top = g.M + step(ad, 6.4);
 
   pages.push({
     name: "guidelines-1-cover", width: W, height: H,
-    svg: page(W, H, css, [
+    svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-      markAt(ctx, M, M, 420, 170, ink),
-      line("Brand guidelines", M, H / 2, 40, ink, { opacity: 0.8, tracking: 4 }),
-      line(ctx.company, M, H / 2 + 110, 110, ink, { family: "BrandHead", weight: 700 }),
-      ctx.tagline ? line(ctx.tagline, M, H / 2 + 160, 28, ink, { opacity: 0.75 }) : "",
-      line(new Date().toLocaleDateString(), M, H - M, 20, ink, { opacity: 0.7 }),
-    ].join(""),
-    ),
+      markAt(ctx, g.M, g.M, g.span(3), Math.round(H * 0.16), ink),
+      label(T, ctx, "Brand guidelines", g.M, H * 0.52, step(ad, 0.6), ink, "start", g.span(6)),
+      T.line(ctx.company, g.M, H * 0.66, step(ad, 4), ink, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.8)), tracking: step(ad, 4) * ad.type.displayTracking }),
+      d.tagline ? T.line(d.tagline, g.M, H * 0.73, step(ad, 0.4), ink, { opacity: 0.75, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)) }) : "",
+      T.line(new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }), g.M, H - g.M, step(ad, -1), ink, { opacity: 0.7, maxWidth: g.span(4) }),
+      motif(ctx, g, ink, "br"),
+    ].join("")),
   });
 
+  const boxW = g.span(Math.round(ad.grid.columns * 0.46));
+  const boxH = H * 0.4;
   pages.push({
     name: "guidelines-2-logo", width: W, height: H,
-    svg: page(W, H, css, [
+    svg: page(W, H, defs, [
       head("Logo", "01"),
-      `<rect x="${M}" y="280" width="620" height="440" fill="${bg}" stroke="${muted}" stroke-width="1" opacity="0.9"/>`,
-      markAt(ctx, M + 60, 340, 500, 320, null),
-      line("Primary — full colour", M, 760, 20, muted, { tracking: 1.4 }),
-      `<rect x="${M + 700}" y="280" width="300" height="210" fill="${fg}"/>`,
-      markAt(ctx, M + 760, 310, 180, 150, inkOn(fg)),
-      line("Knockout", M + 700, 520, 18, muted),
-      `<rect x="${M + 700}" y="560" width="300" height="160" fill="${bg}" stroke="${muted}" stroke-width="1"/>`,
-      markAt(ctx, M + 760, 580, 180, 120, "#111111"),
-      line("Mono", M + 700, 750, 18, muted),
-      paragraph(
+      `<rect x="${g.M}" y="${r(top)}" width="${r(boxW)}" height="${r(boxH)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
+      markAt(ctx, g.M + boxW * 0.14, top + boxH * 0.18, boxW * 0.72, boxH * 0.64, null),
+      label(T, ctx, "Primary — full colour", g.M, top + boxH + step(ad, 1.4), step(ad, -1.2), muted),
+      `<rect x="${r(g.M + boxW + g.gutter * 2)}" y="${r(top)}" width="${r(boxW * 0.55)}" height="${r(boxH * 0.52)}" fill="${fg}"/>`,
+      markAt(ctx, g.M + boxW + g.gutter * 2 + boxW * 0.09, top + boxH * 0.1, boxW * 0.37, boxH * 0.32, inkOn(fg)),
+      label(T, ctx, "Knockout", g.M + boxW + g.gutter * 2, top + boxH * 0.62, step(ad, -1.3), muted),
+      `<rect x="${r(g.M + boxW + g.gutter * 2)}" y="${r(top + boxH * 0.72)}" width="${r(boxW * 0.55)}" height="${r(boxH * 0.46)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
+      markAt(ctx, g.M + boxW + g.gutter * 2 + boxW * 0.09, top + boxH * 0.8, boxW * 0.37, boxH * 0.3, "#121212"),
+      label(T, ctx, "Mono", g.M + boxW + g.gutter * 2, top + boxH * 1.28, step(ad, -1.3), muted),
+      T.block(
         "Keep clear space of at least the mark's cap height on every side. Never stretch, recolour outside these variants, add effects, or place the mark on a busy photograph without a scrim.",
-        M, 820, 22, W - M * 2, fg, 1.6, 4,
-      ),
-    ].join(""),
-    ),
+        g.M, H - g.M - step(ad, 2.4), step(ad, -0.4), g.span(Math.round(ad.grid.columns * 0.7)), fg, { leading: ad.type.bodyLeading, maxLines: 3 },
+      ).svg,
+    ].join("")),
   });
 
   const entries = Object.entries(ctx.colors ?? {}).slice(0, 8);
+  const swW = (g.content - g.gutter * 3 * 2) / 4;
   pages.push({
     name: "guidelines-3-colour", width: W, height: H,
-    svg: page(W, H, css, [
+    svg: page(W, H, defs, [
       head("Colour", "02"),
       ...entries.map(([k, v], i) => {
         const cs = colorSpaces(v);
-        const x = M + (i % 4) * 340;
-        const y = 280 + Math.floor(i / 4) * 320;
+        const x = g.M + (i % 4) * (swW + g.gutter * 3);
+        const y = top + Math.floor(i / 4) * (H * 0.33);
+        const rows = [cs.hex, `RGB ${cs.rgb.join(" ")}`, `CMYK ${cs.cmyk.join(" ")}`];
         return [
-          `<rect x="${x}" y="${y}" width="300" height="150" fill="${v}" rx="8"/>`,
-          line(k.toUpperCase(), x, y + 190, 20, fg, { family: "BrandHead", weight: 700, tracking: 1.6 }),
-          line(cs.hex, x, y + 218, 17, muted),
-          line(`RGB ${cs.rgb.join(" ")}`, x, y + 242, 17, muted),
-          line(`CMYK ${cs.cmyk.join(" ")}`, x, y + 266, 17, muted),
-          line(cs.pantone, x, y + 290, 17, accent),
+          `<rect x="${r(x)}" y="${r(y)}" width="${r(swW)}" height="${r(H * 0.15)}" fill="${v}" rx="${ad.material.radius}"/>`,
+          label(T, ctx, k, x, y + H * 0.15 + step(ad, 1.6), step(ad, -1.1), fg, "start", swW),
+          ...rows.map((t, j) => T.line(t, x, y + H * 0.15 + step(ad, 3 + j * 1.4), step(ad, -1.3), muted, { maxWidth: swW })),
+          T.line(cs.pantone, x, y + H * 0.15 + step(ad, 7.2), step(ad, -1.3), accent, { maxWidth: swW }),
         ].join("");
       }),
     ].join("")),
@@ -502,32 +742,33 @@ function guidelines(ctx: CollateralCtx, css: string): Page[] {
 
   pages.push({
     name: "guidelines-4-type", width: W, height: H,
-    svg: page(W, H, css, [
+    svg: page(W, H, defs, [
       head("Typography", "03"),
-      line(ctx.fonts?.heading || "Heading", M, 330, 34, accent, { family: "BrandHead", weight: 700, tracking: 2 }),
-      line("Aa Bb Cc 0123", M, 430, 96, fg, { family: "BrandHead", weight: 700 }),
-      line("Headlines · weight 700 · tight tracking", M, 480, 22, muted),
-      line(ctx.fonts?.body || "Body", M, 600, 30, accent, { tracking: 2 }),
-      line("Aa Bb Cc 0123", M, 690, 72, fg),
-      paragraph(
-        "Body copy is set at 16–20px with 1.6 line height. Use sentence case everywhere except small labels, which may be uppercase with generous tracking.",
-        M, 740, 22, W - M * 2, fg, 1.6, 4,
-      ),
+      label(T, ctx, ctx.fonts?.heading || "Heading", g.M, top + step(ad, 0.6), step(ad, 0.2), accent, "start", g.span(6)),
+      T.line("Aa Bb Cc 0123", g.M, top + step(ad, 4), step(ad, 3.6), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
+      T.line("Headlines · weight 700 · tight tracking", g.M, top + step(ad, 5.4), step(ad, -0.6), muted, { maxWidth: g.span(8) }),
+      label(T, ctx, ctx.fonts?.body || "Body", g.M, top + step(ad, 8.4), step(ad, 0.2), accent, "start", g.span(6)),
+      T.line("Aa Bb Cc 0123", g.M, top + step(ad, 11.4), step(ad, 2.8), fg, { maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
+      T.block(
+        "Body copy is set at 16–20px with a 1.6 line height. Sentence case everywhere except small labels, which are set uppercase with generous tracking.",
+        g.M, H - g.M - step(ad, 2.4), step(ad, -0.4), g.span(Math.round(ad.grid.columns * 0.7)), fg, { leading: ad.type.bodyLeading, maxLines: 3 },
+      ).svg,
     ].join("")),
   });
 
-  const voice = ctx.voice || "Plain, specific, and confident. Short sentences. Name the outcome, not the process. No jargon, no hype, no exclamation marks.";
+  const voice = d.voice || ctx.voice || "Plain, specific, and confident. Short sentences. Name the outcome, not the process. No jargon, no hype, no exclamation marks.";
+  const halfW = (g.content - g.gutter * 3) / 2;
   pages.push({
     name: "guidelines-5-voice", width: W, height: H,
-    svg: page(W, H, css, [
+    svg: page(W, H, defs, [
       head("Voice", "04"),
-      paragraph(voice, M, 320, 26, W - M * 2, fg, 1.7, 12),
-      `<rect x="${M}" y="700" width="${(W - M * 2) / 2 - 20}" height="180" fill="${primary}" opacity="0.07" rx="12"/>`,
-      line("Do", M + 40, 750, 22, accent, { family: "BrandHead", weight: 700, tracking: 2 }),
-      paragraph("Lead with the result. Use the customer's words. Keep it to one idea per sentence.", M + 40, 786, 20, (W - M * 2) / 2 - 100, fg, 1.5, 3),
-      `<rect x="${W / 2 + 20}" y="700" width="${(W - M * 2) / 2 - 20}" height="180" fill="${muted}" opacity="0.09" rx="12"/>`,
-      line("Don't", W / 2 + 60, 750, 22, muted, { family: "BrandHead", weight: 700, tracking: 2 }),
-      paragraph("Don't stack adjectives, borrow buzzwords, or promise what the product can't do yet.", W / 2 + 60, 786, 20, (W - M * 2) / 2 - 100, fg, 1.5, 3),
+      T.block(voice, g.M, top + step(ad, 1), step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.72)), fg, { leading: 1.7, maxLines: 6 }).svg,
+      `<rect x="${g.M}" y="${r(H * 0.66)}" width="${r(halfW)}" height="${r(H * 0.2)}" fill="${primary}" opacity="0.06" rx="${ad.material.radius}"/>`,
+      label(T, ctx, "Do", g.M + step(ad, 1.6), H * 0.66 + step(ad, 2.2), step(ad, -0.4), accent),
+      T.block(ctx.copy?.voiceDo || "Lead with the result. Use the customer's words. One idea per sentence.", g.M + step(ad, 1.6), H * 0.66 + step(ad, 4.2), step(ad, -0.7), halfW - step(ad, 3.2), fg, { leading: 1.5, maxLines: 3 }).svg,
+      `<rect x="${r(g.M + halfW + g.gutter * 3)}" y="${r(H * 0.66)}" width="${r(halfW)}" height="${r(H * 0.2)}" fill="${fg}" opacity="0.05" rx="${ad.material.radius}"/>`,
+      label(T, ctx, "Don't", g.M + halfW + g.gutter * 3 + step(ad, 1.6), H * 0.66 + step(ad, 2.2), step(ad, -0.4), muted),
+      T.block(ctx.copy?.voiceDont || "Don't stack adjectives, borrow buzzwords, or promise what the product can't do yet.", g.M + halfW + g.gutter * 3 + step(ad, 1.6), H * 0.66 + step(ad, 4.2), step(ad, -0.7), halfW - step(ad, 3.2), fg, { leading: 1.5, maxLines: 3 }).svg,
     ].join("")),
   });
 
@@ -537,14 +778,17 @@ function guidelines(ctx: CollateralCtx, css: string): Page[] {
 /** CSS design tokens — the web design-system half of the kit. */
 export function designTokens(ctx: CollateralCtx): { css: string; json: string } {
   const c = ctx.colors ?? {};
+  const ad = ctx.ad ?? archetypeSpec("swiss_editorial");
   const vars = Object.entries(c).map(([k, v]) => `  --brand-${k}: ${v};`).join("\n");
-  const css = `:root {\n${vars}\n  --brand-font-heading: '${ctx.fonts?.heading ?? "Inter"}';\n  --brand-font-body: '${ctx.fonts?.body ?? "Inter"}';\n  --brand-radius: 12px;\n  --brand-space: 8px;\n}\n`;
+  const css = `:root {\n${vars}\n  --brand-font-heading: '${ctx.fonts?.heading ?? "Inter"}';\n  --brand-font-body: '${ctx.fonts?.body ?? "Inter"}';\n  --brand-radius: ${ad.material.radius}px;\n  --brand-space: ${ad.grid.baseline}px;\n  --brand-scale-ratio: ${ad.scale.ratio};\n  --brand-paper: ${PAPER_TONE[ad.material.paper]};\n}\n`;
   const json = JSON.stringify(
     {
+      artDirection: { archetype: ad.archetype, rationale: ad.rationale },
       color: Object.fromEntries(Object.entries(c).map(([k, v]) => [k, colorSpaces(v)])),
       font: { heading: ctx.fonts?.heading ?? null, body: ctx.fonts?.body ?? null },
-      radius: { sm: 6, md: 12, lg: 20, pill: 999 },
-      space: [4, 8, 12, 16, 24, 32, 48, 64, 96],
+      scale: Array.from({ length: 7 }, (_, i) => Math.round(step(ad, i - 1) * 100) / 100),
+      radius: { sm: Math.max(2, ad.material.radius / 2), md: ad.material.radius, lg: ad.material.radius * 2, pill: 999 },
+      space: [1, 2, 3, 4, 6, 8, 12].map((n) => n * ad.grid.baseline),
     },
     null,
     2,
@@ -576,17 +820,22 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
     "text{ -webkit-font-smoothing:antialiased; }",
   ].join("");
 
+  const { fg } = palette(ctx);
+  const defs = `<style>${faces}</style>${grainDef(fg)}`;
+  const T = makeType({ head: head?.bytes, body: bodyFont?.bytes });
+  const args: Args = { ctx, T, defs };
+
   let pages: Page[];
   switch (kind) {
-    case "business_card": pages = businessCard(ctx, faces); break;
-    case "letterhead": pages = letterhead(ctx, faces); break;
-    case "envelope": pages = envelope(ctx, faces); break;
-    case "notecard": pages = notecard(ctx, faces); break;
-    case "email_signature": pages = emailSignature(ctx, faces); break;
-    case "invoice": pages = docTemplate(ctx, faces, "invoice"); break;
-    case "proposal": pages = docTemplate(ctx, faces, "proposal"); break;
-    case "presentation": pages = presentation(ctx, faces); break;
-    case "guidelines": pages = guidelines(ctx, faces); break;
+    case "business_card": pages = businessCard(args); break;
+    case "letterhead": pages = letterhead(args); break;
+    case "envelope": pages = envelope(args); break;
+    case "notecard": pages = notecard(args); break;
+    case "email_signature": pages = emailSignature(args); break;
+    case "invoice": pages = docTemplate(args, "invoice"); break;
+    case "proposal": pages = docTemplate(args, "proposal"); break;
+    case "presentation": pages = presentation(args); break;
+    case "guidelines": pages = guidelines(args); break;
     default: pages = [];
   }
 
@@ -603,18 +852,17 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
   return { pages, fontBuffers };
 }
 
-
 /** Ready-to-paste HTML email signature (matches the PNG variant). */
 export function signatureHtml(ctx: CollateralCtx, logoUrl?: string | null): string {
   const { primary, fg, muted } = palette(ctx);
-  const p = ctx.person ?? {};
-  const rows = [p.email, p.phone, p.website].filter(Boolean) as string[];
+  const d = ctx.details ?? {};
+  const rows = [d.email, d.phone, d.website, d.social].filter(Boolean) as string[];
   return `<table cellpadding="0" cellspacing="0" style="font-family:${ctx.fonts?.body ?? "Helvetica"},Helvetica,Arial,sans-serif;color:${fg}">
   <tr>
     ${logoUrl ? `<td style="padding-right:16px;vertical-align:top"><img src="${logoUrl}" alt="${esc(ctx.company)}" width="64" height="64" style="display:block;border:0"></td>` : ""}
     <td style="border-left:3px solid ${primary};padding-left:16px">
-      <div style="font-size:16px;font-weight:700">${esc(p.name || ctx.company)}</div>
-      <div style="font-size:13px;color:${primary};padding-top:2px">${esc([p.title, ctx.company].filter(Boolean).join(" · "))}</div>
+      <div style="font-size:16px;font-weight:700">${esc(d.person_name || ctx.company)}</div>
+      <div style="font-size:13px;color:${primary};padding-top:2px">${esc([d.person_title, ctx.company].filter(Boolean).join(" · "))}</div>
       ${rows.map((t) => `<div style="font-size:12px;color:${muted};padding-top:2px">${esc(t)}</div>`).join("")}
     </td>
   </tr>
