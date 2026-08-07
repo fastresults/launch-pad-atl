@@ -340,7 +340,7 @@ async function buildStep(
 }
 
 /** Signed urls expire; re-sign everything the client is about to render. */
-async function withFreshUrls(supabase: any, session: any) {
+async function withFreshUrls(supabase: any, session: any, brand?: unknown) {
   const steps: Step[] = Array.isArray(session?.steps) ? session.steps : [];
   for (const step of steps) {
     for (const rough of step.roughs ?? []) {
@@ -357,7 +357,7 @@ async function withFreshUrls(supabase: any, session: any) {
       if (data?.signedUrl) session.approved_rough.url = data.signedUrl;
     } catch { /* keep the stored url */ }
   }
-  return { ...session, steps };
+  return { ...session, steps, brand: brand ?? null };
 }
 
 Deno.serve(async (req) => {
