@@ -495,67 +495,70 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const invert = inverted(ctx, "business_card");
   const faceInk = invert ? inkOn(primary) : fg;
 
-  // FRONT — an asymmetric card: a full-bleed colour field carries the mark,
-  // the paper side carries the name and a short descriptor. A centred logo on a
-  // blank field is not a design; this is the one page people actually look at.
-  const fieldW = Math.round(W * 0.34);
-  const fieldX = W - fieldW;
+  const rsF = resolveSpec("business-card-front", W, H);
+  const rsB = resolveSpec("business-card-back", W, H);
+  // Never let the art-direction margin fall inside the printer's safe area.
+  const M = Math.max(g.M, rsF.safe);
+
+  // FRONT — an asymmetric card: a full-bleed colour field carries the mark at
+  // the size a 3.5×2in card actually calls for, the paper side carries the name
+  // and a short descriptor.
   const fieldBg = invert ? paper : primary;
   const fieldInk = inkOn(fieldBg);
-  const pad = Math.round(fieldW * 0.2);
-  const colW = fieldX - g.M * 2;
+  const markBox = markBoxFor(ctx, rsF, W * 0.42, 0.7);
+  const clear = markBox.clear;
+  const fieldW = Math.round(Math.min(W * 0.44, Math.max(W * 0.3, markBox.w + clear * 2)));
+  const fieldX = W - fieldW;
+  const colW = fieldX - M - Math.round(clear * 0.5);
 
-  const nameSize = step(ad, 1.2);
-  const descSize = step(ad, -0.5);
+  const nameSize = Math.max(rsF.minType * 2.2, step(ad, 1.2));
+  const descSize = Math.max(rsF.minType, step(ad, -0.5));
   const desc = cardDescriptor(d);
-  const showName = !isLockup(ctx) || true; // the field mark reads as a device; the name is set in type
   const stackH = nameSize * 1.05 + (desc ? descSize * 2.4 : 0);
   const nameBase = Math.round((H - stackH) / 2 + nameSize * 0.82);
 
   const front = page(W, H, defs, [
     invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
+    // Bleeds off three edges by design — the field is trim-to-trim.
     `<rect x="${fieldX}" y="0" width="${fieldW}" height="${H}" fill="${fieldBg}"/>`,
-    markAt(ctx, fieldX + pad, pad, fieldW - pad * 2, H - pad * 2, fieldInk, fieldBg),
-    showName
-      ? T.line(ctx.company, g.M, nameBase, nameSize, faceInk, {
-        family: "head", weight: 700, tracking: nameSize * ad.type.displayTracking, maxWidth: colW, minSize: 15,
-      })
-      : "",
+    markAt(ctx, fieldX + (fieldW - markBox.w) / 2, (H - markBox.h) / 2, markBox.w, markBox.h, fieldInk, fieldBg),
+    T.line(ctx.company, M, nameBase, nameSize, faceInk, {
+      family: "head", weight: 700, tracking: nameSize * ad.type.displayTracking, maxWidth: colW, minSize: rsF.minType,
+    }),
     desc
-      ? T.line(desc, g.M, nameBase + descSize * 2.1, descSize, invert ? faceInk : muted, {
-        tracking: descSize * ad.type.labelTracking * 0.5, maxWidth: colW, minSize: 11,
+      ? T.line(desc, M, nameBase + descSize * 2.1, descSize, invert ? faceInk : muted, {
+        tracking: descSize * ad.type.labelTracking * 0.5, maxWidth: colW, minSize: rsF.minType,
       })
       : "",
-    `<rect x="${g.M}" y="${r(nameBase + descSize * (desc ? 3.6 : 1.6))}" width="${r(g.span(1))}" height="${r(Math.max(2, ad.ink.ruleWeight))}" fill="${invert ? faceInk : accent}"/>`,
+    `<rect x="${M}" y="${r(nameBase + descSize * (desc ? 3.6 : 1.6))}" width="${r(Math.min(g.span(1), colW * 0.5))}" height="${r(Math.max(2, ad.ink.ruleWeight))}" fill="${invert ? faceInk : accent}"/>`,
   ].join(""));
 
 
   // BACK — the contact block, set on the grid and measured line by line.
   const rows = contactRows(d);
   const rule = ad.ink.ruleWeight;
-  const nameS = step(ad, 1);
-  const titleS = step(ad, -0.6);
-  const rowS = step(ad, -0.7);
-  const rowGap = rowS * 1.72;
-  const backColW = g.span(Math.max(4, Math.round(ad.grid.columns * 0.62)));
+  const nameS = Math.max(rsB.minType * 1.9, step(ad, 1));
+  const titleS = Math.max(rsB.minType, step(ad, -0.6));
+  const rowS = Math.max(rsB.minType, step(ad, -0.7));
+  const rowGap = rowS * 1.62;
+  const backMark = markBoxFor(ctx, rsB, W * 0.28, 0.6);
+  const backColW = Math.min(g.span(Math.max(4, Math.round(ad.grid.columns * 0.62))), W - M * 2 - backMark.w - backMark.clear);
 
   // Optically centre the whole back block. Pinning it to either trim edge left
   // half the card as dead space.
   const blockH = titleS * 1.7 + rowGap * 2.6 + (rows.length - 1) * rowGap;
-  const backTop = Math.max(g.M + nameS, (H - blockH) / 2 - nameS * 0.2);
+  const backTop = Math.max(M + nameS, (H - blockH) / 2 - nameS * 0.2);
   const backRowsTop = backTop + titleS * 1.7 + rowGap * 2.6;
-
-
 
   const back = page(W, H, defs, [
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="0" width="${r(rule * 3)}" height="${H}" fill="${primary}"/>`,
-    // mark, top-right, quiet
-    markAt(ctx, W - g.M - 190, g.M - 4, 190, 76, mix(fg, paper, 0.3), paper),
-    T.line(d.person_name || ctx.company, g.M, backTop, nameS, fg, { family: "head", weight: 700, maxWidth: backColW, tracking: nameS * ad.type.displayTracking, minSize: 13 }),
-    d.person_title ? label(T, ctx, d.person_title, g.M, backTop + titleS * 1.7, titleS, accent, "start", backColW) : "",
-    `<rect x="${g.M}" y="${r(backRowsTop - rowGap * 1.25)}" width="${r(g.span(2))}" height="${r(ad.ink.hairline * 2)}" fill="${accent}"/>`,
-    ...rows.map((t, i) => T.line(t, g.M, backRowsTop + i * rowGap, rowS, i === 0 ? fg : muted, { maxWidth: g.content, minSize: 10 })),
+    // Mark, top-right, at the back-of-card size band, inside its clear space.
+    markAt(ctx, W - M - backMark.w, M, backMark.w, backMark.h, mix(fg, paper, 0.25), paper),
+    T.line(d.person_name || ctx.company, M, backTop, nameS, fg, { family: "head", weight: 700, maxWidth: backColW, tracking: nameS * ad.type.displayTracking, minSize: rsB.minType }),
+    d.person_title ? label(T, ctx, d.person_title, M, backTop + titleS * 1.7, titleS, accent, "start", backColW) : "",
+    `<rect x="${M}" y="${r(backRowsTop - rowGap * 1.25)}" width="${r(Math.min(g.span(2), backColW))}" height="${r(ad.ink.hairline * 2)}" fill="${accent}"/>`,
+    ...rows.map((t, i) => T.line(t, M, backRowsTop + i * rowGap, rowS, i === 0 ? fg : muted, { maxWidth: W - M * 2, minSize: rsB.minType })),
   ].join(""));
 
   return [
