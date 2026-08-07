@@ -528,6 +528,7 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
 
 /* ---------- STEP 4: Moodboard & Logo ---------- */
 function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
+  const qc = useQueryClient();
   const [logos, setLogos] = useState<any[]>(kit?.logos ?? []);
   const [moodboard, setMoodboard] = useState<any[]>(kit?.moodboard ?? []);
   const [refs, setRefs] = useState<string[]>(kit?.dna?._logoReferences ?? []);
