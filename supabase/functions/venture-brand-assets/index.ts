@@ -515,17 +515,26 @@ ${BANNED_FORMS}`;
 
 
 /**
- * The dossier is the single source of context every pass reads: the human
- * truth, the brief, the venture, the live tokens and the founder's own assets.
+ * The dossier is the single source of context the vectorizer reads: the two
+ * reads (business + craft), the venture, the live tokens and the founder's own
+ * assets.
  */
-function buildDossier(ctx: any, tokens: any, strategy: BrandStrategy | null, docsBlock: string): string {
+function buildDossier(
+  ctx: any,
+  tokens: any,
+  profile: BusinessProfile | null,
+  spec: CraftSpec | null,
+  docsBlock: string,
+): string {
   return [
     "VENTURE", ventureBlockOf(ctx),
     "", "BRAND TOKENS", tokensBlockOf(tokens),
-    strategy ? `\n${strategyBlockOf(strategy)}` : "",
+    profile ? `\n${businessProfileBlock(profile)}` : "",
+    spec ? `\n${craftSpecBlock(spec)}` : "",
     docsBlock ? `\nFOUNDER'S OWN BRAND ASSETS (authoritative)\n${docsBlock.slice(0, 6000)}` : "",
   ].filter(Boolean).join("\n");
 }
+
 
 
 const DRAW_SYSTEM = `You are a mark-maker in the tradition of Chermayeff & Geismar, Paul Rand and Michael Bierut, and you draw in raw SVG path data the way other designers draw with a pen. You do not assemble logos out of primitive blocks — you draw one considered contour with clean curve continuity, one stroke weight, intentional terminals and a counterform worth looking at. Every mark is a single idea that holds as a solid black silhouette at 16 pixels, and is good enough to be published in a design annual. Return valid JSON only. Never use gradients, filters, masks, images, scripts or external URLs.`;
