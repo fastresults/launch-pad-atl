@@ -683,10 +683,25 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       }
     }
 
+    // Final sweep — a concept that has an approved render but never settled
+    // must not be orphaned by the run finishing. Drive each one once.
+    if (!aborted()) {
+      const orphaned = (state.directions ?? []).filter(
+        (d: any) => d.render_path && !["ready", "needs_review", "canceled"].includes(d.status),
+      );
+      if (orphaned.length) {
+        await Promise.allSettled(orphaned.map((d: any) =>
+          generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_retry_direction", runId: run.id, directionId: d.id, reviewNote: d.review_note } })
+        ));
+        state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+      }
+    }
+
     const finished = (state.directions ?? []).filter((d: any) => ["ready", "needs_review"].includes(d.status)).length;
     await logoRunQ.refetch();
     if (finished < Number(run.requested_count ?? 4)) throw new Error(`${Number(run.requested_count ?? 4) - finished} direction${Number(run.requested_count ?? 4) - finished === 1 ? "" : "s"} paused after three safe attempts`);
   };
+
 
   const genLogos = useMutation({
     mutationFn: async () => {
