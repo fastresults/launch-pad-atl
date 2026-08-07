@@ -657,6 +657,7 @@ async function juryReview(
   d: LogoDirection,
   spec: CraftSpec | null,
   profile: BusinessProfile | null,
+  brand?: { palette?: string[]; mood?: string } | null,
 ): Promise<{ pass: boolean; note: string; scores: Record<string, number> }> {
   const instruction = juryInstruction(
     String((d as any).one_line_idea ?? d.symbol_concept ?? ""),
@@ -664,6 +665,7 @@ async function juryReview(
     String(d.logo_type ?? ""),
     spec,
     profile,
+    brand,
   );
   try {
     const parsed = parseJsonLoose(await callChatAI([
@@ -1213,7 +1215,13 @@ Deno.serve(async (req) => {
 
       const profile = (run.business_profile ?? null) as BusinessProfile | null;
       const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
-      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile);
+      const juryBrand = {
+        palette: ["primary", "secondary", "accent"]
+          .map((k) => (kit?.palette?.colors ?? tokens?.colors ?? {})?.[k])
+          .filter((v: any) => typeof v === "string" && v.trim().length),
+        mood: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
+      };
+      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand);
 
       const reviewAttempts = Number(row.review_attempts ?? 0);
       // One corrective re-render: the jury's note becomes the render brief's fix line.
