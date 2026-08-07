@@ -44,7 +44,7 @@ export function CollateralPieceCard({
         className={`group relative block aspect-[16/10] w-full overflow-hidden border-b border-white/10 disabled:cursor-not-allowed ${preview ? "bg-white" : "bg-background/60"}`}
       >
         {preview ? (
-          <img src={preview} alt={label} className="h-full w-full object-contain p-2 transition group-hover:scale-[1.02]" loading="lazy" />
+          <img src={preview} alt={label} className="h-full w-full rounded-lg object-contain p-2 transition group-hover:scale-[1.02]" loading="lazy" />
         ) : (
           <span className="flex h-full w-full items-center justify-center bg-muted/10">
             <span className="flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/40 px-3 py-1.5 text-[11px] text-muted-foreground">

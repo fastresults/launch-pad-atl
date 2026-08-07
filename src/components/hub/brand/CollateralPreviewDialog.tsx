@@ -202,7 +202,7 @@ export function CollateralPreviewDialog({
                   title={page?.label ?? "Preview"}
                   sandbox=""
                   srcDoc={htmlSource}
-                  className="h-[60vh] w-full max-w-3xl rounded bg-white shadow-lg"
+                  className="h-[60vh] w-full max-w-3xl rounded-xl bg-white shadow-lg"
                 />
               : <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading preview…</div>
           )}
@@ -211,7 +211,7 @@ export function CollateralPreviewDialog({
             <img
               src={rendered.url}
               alt={page?.label ?? kind.label}
-              className={`max-h-[70vh] max-w-full rounded object-contain shadow-lg transition ${busy ? "opacity-40 blur-[1px]" : ""}`}
+              className={`max-h-[70vh] max-w-full rounded-xl object-contain shadow-lg transition ${busy ? "opacity-40 blur-[1px]" : ""}`}
             />
           )}
 
@@ -254,7 +254,7 @@ export function CollateralPreviewDialog({
                   className={`h-12 w-16 shrink-0 overflow-hidden rounded border bg-white transition ${i === idx ? "border-primary ring-1 ring-primary" : "border-border opacity-70 hover:opacity-100"}`}
                 >
                   {p.render?.url && p.render.mime_type !== "text/html"
-                    ? <img src={p.render.url} alt="" className="h-full w-full object-contain" loading="lazy" />
+                    ? <img src={p.render.url} alt="" className="h-full w-full rounded object-contain" loading="lazy" />
                     : <span className="flex h-full w-full items-center justify-center text-[9px] text-muted-foreground">{p.label}</span>}
                 </button>
               ))}

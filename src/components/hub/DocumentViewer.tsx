@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { normalizeParagraphs } from "@/lib/markdown-normalize";
 import remarkGfm from "remark-gfm";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -200,7 +201,7 @@ function makeComponents(
     h3: heading(3),
     h4: heading(4),
     p: ({ children }: any) => (
-      <p className="my-3 text-[14.5px] leading-7 text-foreground/85">{children}</p>
+      <p className="my-5 text-[14.5px] leading-[1.85] text-foreground/85">{children}</p>
     ),
     a: ({ href, children }: any) => (
       <a
@@ -271,7 +272,7 @@ function makeComponents(
       );
     },
     img: ({ src, alt }: any) => (
-      <img src={src} alt={alt} className="my-4 max-w-full rounded-lg border border-white/10" />
+      <img src={src} alt={alt} className="my-6 max-w-full rounded-xl border border-white/10" />
     ),
   };
 }
@@ -992,7 +993,7 @@ export function DocumentViewer({
                     decoding="async"
                     // @ts-expect-error — fetchpriority is a valid HTML attribute not yet in React's DOM types
                     fetchpriority="high"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full rounded-lg object-cover"
                     onError={() => {
                       // Signed URLs expire after 1h and can also 404 briefly
                       // during a regenerate swap. Retry once with a fresh URL
@@ -1233,7 +1234,7 @@ export function DocumentViewer({
 
           <article id="doc-viewer-article" className="mx-auto max-w-[72ch] px-6 py-6">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-              {content}
+              {normalizeParagraphs(content)}
             </ReactMarkdown>
           </article>
 
@@ -1310,7 +1311,7 @@ export function DocumentViewer({
               {assessment && (
                 <div className="mt-5 border-t border-white/10 pt-4">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
-                    {assessment}
+                    {normalizeParagraphs(assessment)}
                   </ReactMarkdown>
                 </div>
               )}
@@ -1325,7 +1326,7 @@ export function DocumentViewer({
           style={{ position: "absolute", left: "-99999px", top: 0, width: "72ch", pointerEvents: "none" }}
         >
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
-            {exportContent}
+            {normalizeParagraphs(exportContent)}
           </ReactMarkdown>
         </div>
       </DialogContent>
