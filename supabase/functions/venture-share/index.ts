@@ -57,7 +57,14 @@ type Item = {
   body?: string | null;
   heroImageUrl?: string | null;
   images?: { url: string; label?: string | null; width?: number | null; height?: number | null }[];
+  brandBoard?: {
+    paletteName?: string | null;
+    swatches: { label: string; hex: string }[];
+    fonts: { role: string; family: string }[];
+    logos: { url: string; label?: string | null }[];
+  };
 };
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
