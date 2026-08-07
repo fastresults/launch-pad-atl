@@ -13,7 +13,7 @@ import { placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone,
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { buildContentAdPrompt, specForAspect, resolveAdHeadline, type AdAspect } from "../_shared/content-ad-director.ts";
 import { buildContentAdSvgBytes, type PosterLayout } from "../_shared/content-ad-svg.ts";
-import { buildPosterCopy } from "../_shared/poster-copy.ts";
+import { buildPosterCopy, shortenHeadline } from "../_shared/poster-copy.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 
