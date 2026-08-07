@@ -993,18 +993,17 @@ function Step5BuildKit({
               <RefreshCw className="mr-1 h-3 w-3" /> Regenerate all
             </Button>
           )}
-          {anyGenerated && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-[11px] text-destructive hover:text-destructive"
-              disabled={running}
-              onClick={() => clearAssets({})}
-              title="Delete every generated image and start the artwork over"
-            >
-              <Trash2 className="mr-1 h-3 w-3" /> Clear all
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px] text-destructive hover:text-destructive"
+            disabled={running}
+            onClick={() => clearAssets({})}
+            title="Delete every generated image and start the artwork over"
+          >
+            <Trash2 className="mr-1 h-3 w-3" /> Reset all
+          </Button>
+
 
         </div>
       </header>
@@ -1048,20 +1047,19 @@ function Step5BuildKit({
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="border-t border-white/5 pb-0 pt-0">
-                    {items.some((t) => !!t.asset_id) && (
-                      <div className="flex justify-end px-2 pt-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 text-[10px] text-destructive hover:text-destructive"
-                          disabled={running}
-                          onClick={() => clearAssets({ platform })}
-                          title={`Delete every generated ${platformLabel(platform)} image`}
-                        >
-                          <Trash2 className="mr-1 h-3 w-3" /> Clear {platformLabel(platform)}
-                        </Button>
-                      </div>
-                    )}
+                    <div className="flex justify-end px-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-6 text-[10px] text-destructive hover:text-destructive"
+                        disabled={running}
+                        onClick={() => clearAssets({ platform })}
+                        title={`Delete every generated ${platformLabel(platform)} image`}
+                      >
+                        <Trash2 className="mr-1 h-3 w-3" /> Reset {platformLabel(platform)}
+                      </Button>
+                    </div>
+
                     <ul className="grid gap-2 p-2 sm:grid-cols-2">
 
                       {items.map((t) => {
@@ -1421,18 +1419,17 @@ function Step6Launch({
           <p className="text-xs text-muted-foreground">One card per channel. Sign in, paste, post — done.</p>
         </div>
         <div className="flex items-center gap-2">
-          {anyImages && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-[11px] text-destructive hover:text-destructive"
-              disabled={clearing}
-              onClick={() => clearImages()}
-              title="Delete every generated image and start the artwork over"
-            >
-              <Trash2 className="mr-1 h-3 w-3" /> Clear all images
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px] text-destructive hover:text-destructive"
+            disabled={clearing}
+            onClick={() => clearImages()}
+            title="Delete every generated image and start the artwork over"
+          >
+            <Trash2 className="mr-1 h-3 w-3" /> Reset all images
+          </Button>
+
           <Badge variant="outline" className="text-[10px]">{liveCount} / {platforms.length} live</Badge>
         </div>
       </header>
@@ -1482,17 +1479,16 @@ function Step6Launch({
                     Download cover
                   </a>
                 )}
-                {(avatar || cover) && (
-                  <button
-                    type="button"
-                    disabled={clearing}
-                    onClick={() => clearImages(p)}
-                    className="inline-flex h-6 items-center rounded border border-destructive/30 px-1.5 text-[10px] text-destructive hover:bg-destructive/10 disabled:opacity-50"
-                    title={`Delete the generated images for ${p}`}
-                  >
-                    <Trash2 className="mr-1 h-3 w-3" /> Clear
-                  </button>
-                )}
+                <button
+                  type="button"
+                  disabled={clearing}
+                  onClick={() => clearImages(p)}
+                  className="inline-flex h-6 items-center rounded border border-destructive/30 px-1.5 text-[10px] text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                  title={`Delete the generated images for ${p}`}
+                >
+                  <Trash2 className="mr-1 h-3 w-3" /> Reset {p}
+                </button>
+
               </div>
 
 
