@@ -127,14 +127,22 @@ Deno.serve(async (req) => {
     const snap = snapRes.data;
     if (!snap) return json({ error: "This venture is no longer available.", code: "GONE" }, 404);
 
+    let signFailures = 0;
     const sign = async (bucket: string, path?: string | null) => {
       if (!path) return null;
-      const { data } = await admin.storage.from(bucket).createSignedUrl(path, SIGNED_TTL);
-      return data?.signedUrl ?? null;
+      const { data, error } = await admin.storage.from(bucket).createSignedUrl(path, SIGNED_TTL);
+      if (error || !data?.signedUrl) {
+        signFailures += 1;
+        console.error("[venture-share] sign failed", bucket, path, error?.message);
+        return null;
+      }
+      return data.signedUrl;
     };
 
     const types = new Map((typesRes.data ?? []).map((t: any) => [t.type, t]));
-    const docs = (docsRes.data ?? []).filter((d: any) => (d.content ?? "").trim().length > 0);
+    const docs = (docsRes.data ?? [])
+      .filter((d: any) => (d.content ?? "").trim().length > 0)
+      .filter((d: any) => !HARD_EXCLUDED_DOC_TYPES.has(d.document_type));
 
     // ---- Documents grouped by their catalog category -------------------------
     const buckets = new Map<string, Item[]>();
@@ -164,6 +172,7 @@ Deno.serve(async (req) => {
         heroImageUrl: await sign(DOC_IMAGE_BUCKET, d.hero_image_path),
       });
     }
+
 
     // ---- Brand identity ------------------------------------------------------
     const kit: any = kitRes.data;
