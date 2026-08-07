@@ -3,19 +3,18 @@
 // grounded in the FULL venture context (snapshot + brief + sources + brain)
 // and the wizard's locked palette/typography/personality.
 //
-// LOGOS use a durable, art-directed pipeline of atomic stages:
-//   Stage 1 (brief):     a chat model produces the brand strategy.
-//   Stage 2 (concepts):  four distinct directions are written as briefs.
-//   Stage 3 (render):    Higgsfield renders each direction as a real designed
-//                        mark. This is what stops output looking auto-generated
-//                        — the vector step then has a target to reproduce
-//                        instead of inventing geometry from a text brief.
-//   Stage 4 (vector):    the approved render is traced into clean SVG paths.
-//   Stage 5 (jury):      a vision model judges the finished mark and can fail
-//                        it back into the retry engine.
-// Stage 3 degrades gracefully: if Higgsfield is unreachable or out of API
-// credits, the direction falls through to drawing from the brief alone and
-// records why on the row.
+// LOGO STUDIO pipeline (rebuilt — references first, vector last):
+//   0 inspiration gate  three reference logos are REQUIRED to start a run.
+//   1 reference read    vision pass over the references -> craft spec
+//                       (structure only, never subject matter).
+//   2 business read     the founder's finished copy -> business profile
+//                       (category, customer, symbol vocabulary, cliché ban).
+//   3 concepting        eight ideas, cut to four, each obeying 1 + 2.
+//   4 render            reference-conditioned image render of each concept.
+//   5 jury              vision critique vs. the craft spec; one corrective
+//                       re-render, then the mark is published as-is.
+//   6 vectorize         runs ONLY on the mark the founder approves, tracing
+//                       that exact image — nothing is auto-redrawn.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
@@ -28,7 +27,6 @@ import {
   type VectorSpec,
 } from "../_shared/logo-geometry.ts";
 import { fontStackFor, outlineWordmark } from "../_shared/logo-type.ts";
-import { rasterizeSvg } from "../_shared/logo-raster.ts";
 import {
   HiggsfieldError,
   checkHiggsfieldAuth,
@@ -43,6 +41,26 @@ import {
   logoNegativePrompt,
   seedForConcept,
 } from "../_shared/logo-render-prompt.ts";
+import {
+  REFERENCE_READ_INSTRUCTION,
+  REFERENCE_READ_SYSTEM,
+  craftSpecBlock,
+  parseCraftSpec,
+  type CraftSpec,
+} from "../_shared/logo-reference-read.ts";
+import {
+  BUSINESS_READ_SYSTEM,
+  businessProfileBlock,
+  businessReadPrompt,
+  parseBusinessProfile,
+  type BusinessProfile,
+} from "../_shared/logo-business-read.ts";
+import {
+  JURY_SYSTEM,
+  juryInstruction,
+  parseJuryVerdict,
+} from "../_shared/logo-jury.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -69,18 +87,13 @@ const MOODBOARD_ANGLES = [
   "Tile 4 — Color & motion: an abstract painterly composition built from the brand's primary, secondary and accent colors. Smooth gradients, organic shapes.",
 ];
 
-/* ----------------------- LOGO CREATIVE DIRECTOR ----------------------- */
-
-// An agency process, not a single prompt:
-//   1. Strategy    — read the venture's real assets, write a one-page brief.
-//   2. Concepts    — generate 10 candidates, self-score, return the best 4.
-//   3. Execution   — render each as a flat vector MARK (not a picture).
-//   4. Critique    — look at what actually came back; retry the failures once.
+/* ----------------------- LOGO STUDIO ----------------------- */
 
 type LogoDirection = {
   direction_name: string;
   logo_type: string; // wordmark | lettermark | monogram | pictorial mark | abstract mark | emblem | combination mark
-  human_link?: string;      // how this mark traces back to the human moment
+  business_link?: string;   // how this mark traces back to what the business does
+  human_link?: string;      // legacy field from earlier runs
   one_line_idea?: string;   // the single shape idea, one sentence
   geometric_operation?: string; // the one construction move that creates the mark
   craft_move?: string;      // counterform | continuous stroke | tangent | ligature | negative space
@@ -97,18 +110,6 @@ type LogoDirection = {
   scores?: Record<string, number>;
 };
 
-type BrandStrategy = {
-  // The human truth comes first: identity work that starts at geometry
-  // produces geometry. Identity work that starts at a person produces a mark.
-  human_truth?: string;      // who this is for, in their own terms
-  human_moment?: string;     // the moment the business exists to fix
-  first_feeling?: string;    // what a customer should feel in two seconds
-  physical_anchor?: string;  // the one object, gesture or space that moment lives in
-  core_idea: string;
-  attributes: string[];
-  metaphor_territory: string;
-  not_list: string[];
-};
 
 
 // Chat models used for the thinking passes, in fallback order. Judgment work
@@ -385,55 +386,32 @@ function tokensBlockOf(tokens: any): string {
   ].filter(Boolean).join("\n");
 }
 
-/** Stage 1 — the human truth first, then the one-page brief every concept serves. */
-export async function buildBrandStrategy(ctx: any, tokens: any, docsBlock: string): Promise<BrandStrategy | null> {
-  const system = `You are the strategy director at a brand identity studio. Before you write a single design word you write down the human being at the centre of the business: who they are, the moment in their life this business exists for, and how they should feel. Only then do you write the brief. You are ruthless about specificity: a brief that could describe any company in this category is a failed brief, and an abstract "empowerment / innovation / trust" brief is a failed brief.`;
-  const user = `Read the venture below. First find the humanity in it, then write its identity brief.
-
-VENTURE
-${ventureBlockOf(ctx)}
-
-BRAND TOKENS
-${tokensBlockOf(tokens)}
-
-${docsBlock ? `FINISHED BRAND ASSETS (the founder's own words — treat as authoritative)\n${docsBlock}` : ""}
-
-Return STRICT JSON:
-{"human_truth":"one sentence naming the actual person this serves, in concrete human terms — not a demographic","human_moment":"the specific moment in that person's day or life this business exists to fix","first_feeling":"what that person should feel in the first two seconds of seeing this brand — one plain phrase","physical_anchor":"the ONE real object, gesture, tool or space that moment physically lives in — something you could photograph","core_idea":"one sentence — the single idea the mark must carry","attributes":["three adjectives, no synonyms of each other"],"metaphor_territory":"the ONE visual territory worth mining, drawn from the physical anchor, and why","not_list":["4-6 things this brand must never look like — name the category clichés specifically"]}`;
-
+/**
+ * STAGE 1 — read the founder's three inspiration marks.
+ *
+ * Structure only. This is what the old pipeline was missing: it invented a
+ * house style from a mood brief and ignored the one piece of art direction the
+ * founder actually gave it.
+ */
+export async function readReferenceCraftSpec(referenceImages: string[]): Promise<CraftSpec | null> {
+  const urls = (referenceImages ?? []).filter((u) => typeof u === "string" && u.startsWith("http")).slice(0, 3);
+  if (!urls.length) return null;
+  const content: any[] = [{ type: "text", text: REFERENCE_READ_INSTRUCTION }];
+  for (const url of urls) content.push({ type: "image_url", image_url: { url } });
   const parsed = await callChatJsonOnce([
-    { role: "system", content: system },
-    { role: "user", content: user },
+    { role: "system", content: REFERENCE_READ_SYSTEM },
+    { role: "user", content },
   ]);
-  if (!parsed?.core_idea) return null;
-  return {
-    human_truth: parsed.human_truth ? String(parsed.human_truth) : undefined,
-    human_moment: parsed.human_moment ? String(parsed.human_moment) : undefined,
-    first_feeling: parsed.first_feeling ? String(parsed.first_feeling) : undefined,
-    physical_anchor: parsed.physical_anchor ? String(parsed.physical_anchor) : undefined,
-    core_idea: String(parsed.core_idea),
-    attributes: Array.isArray(parsed.attributes) ? parsed.attributes.map(String) : [],
-    metaphor_territory: String(parsed.metaphor_territory ?? ""),
-    not_list: Array.isArray(parsed.not_list) ? parsed.not_list.map(String) : [],
-  };
+  return parseCraftSpec(parsed);
 }
 
-
-function strategyBlockOf(strategy: BrandStrategy | null): string {
-  if (!strategy) return "";
-  return [
-    "HUMAN TRUTH (start here — the mark exists to make this person feel something)",
-    strategy.human_truth ? `Who: ${strategy.human_truth}` : "",
-    strategy.human_moment ? `The moment: ${strategy.human_moment}` : "",
-    strategy.first_feeling ? `First feeling: ${strategy.first_feeling}` : "",
-    strategy.physical_anchor ? `Physical anchor: ${strategy.physical_anchor}` : "",
-    "",
-    "STRATEGY BRIEF (every concept must serve this)",
-    `Core idea: ${strategy.core_idea}`,
-    `Attributes: ${strategy.attributes.join(", ")}`,
-    `Metaphor territory: ${strategy.metaphor_territory}`,
-    `Must never look like: ${strategy.not_list.join("; ")}`,
-  ].filter(Boolean).join("\n");
+/** STAGE 2 — read the business out of the founder's own finished copy. */
+export async function readBusinessProfile(ctx: any, tokens: any, docsBlock: string): Promise<BusinessProfile | null> {
+  const parsed = await callChatJsonOnce([
+    { role: "system", content: BUSINESS_READ_SYSTEM },
+    { role: "user", content: businessReadPrompt(ventureBlockOf(ctx), docsBlock, tokensBlockOf(tokens)) },
+  ]);
+  return parseBusinessProfile(parsed);
 }
 
 /** The universal amateur tells. Named explicitly because models default to them. */
@@ -445,58 +423,67 @@ const BANNED_FORMS = `- A cluster of rounded squares, a plus/cross of blocks, or
 - Circuit boards, hexagons or "AI orbs" unless the venture is literally hardware.
 - Anything that would still work, unchanged, for a different company in this category.`;
 
-/** Stage 2 — generate wide, then cut. Only the strongest concepts survive. */
+/**
+ * STAGE 3 — concepting. Generate wide, then cut. Every survivor has to satisfy
+ * both reads: the business profile (what it is about) and the craft spec (how
+ * it is built).
+ */
 async function generateLogoConcepts(
   ctx: any,
   tokens: any,
   count: number,
-  strategy: BrandStrategy | null,
+  profile: BusinessProfile | null,
+  spec: CraftSpec | null,
   docsBlock: string,
   referenceImages?: string[],
   moodboardImages?: string[],
 ): Promise<LogoDirection[]> {
-  const system = `You are a brand identity designer whose work gets posted to Dribbble's award feed and wins there. Pentagram, COLLINS, Chermayeff & Geismar lineage. You design MARKS with a point of view: one idea, drawn with real craft — a continuous contour, a true counterform, a ligature, a shared tangent — never a pile of primitive shapes. You start from the human being in the brief, not from geometry. You generate widely, then kill almost all of your own work.`;
-
-  const strategyBlock = strategyBlockOf(strategy);
-
-  const refsLine = referenceImages?.length
-    ? `\nThe founder attached ${referenceImages.length} reference logo(s) they admire. Study them ONLY for structural principles — proportion, stroke weight, level of abstraction, counterform, wordmark tracking. Never restyle or echo their subject matter. State the borrowed principle in reference_learning.`
-    : `\nNo logo references provided. Drive every concept from the human truth and the brief.`;
+  const system = `You are a brand identity designer whose work gets published in design annuals. Pentagram, COLLINS, Chermayeff & Geismar lineage. You design MARKS with a point of view: one idea, drawn with real craft — a continuous contour, a true counterform, a ligature, a shared tangent — never a pile of primitive shapes. You start from what the business literally does and from the client's own reference marks, never from decoration. You generate widely, then kill almost all of your own work.`;
 
   const moodLine = moodboardImages?.length
-    ? `\nThe brand's LIVE MOODBOARD is attached as ${moodboardImages.length} image(s). This is the visual world the brand already lives in. Read its form language — is it soft or hard, organic or engineered, warm or cool, dense or airy — and build marks that belong in it. Name the tile each direction inherits from in moodboard_link.`
+    ? `\nThe brand's LIVE MOODBOARD is attached. Read its form language — soft or hard, organic or engineered, warm or cool — and build marks that belong in it. Name the tile each direction inherits from in moodboard_link.`
     : `\nNo moodboard available; infer the visual world from the palette and personality tokens.`;
 
+  const refsLine = referenceImages?.length
+    ? `\nThe founder's ${referenceImages.length} reference mark(s) are attached AFTER the moodboard. The craft spec above was read from them and is binding. Study them for construction only — never echo their subject matter. State the borrowed principle in reference_learning.`
+    : "";
+
   const instruction = `PROCESS — follow it exactly:
-1. Silently write the human moment in your own words, and picture the physical anchor.
-2. Silently generate 12 candidate marks across different logo types, each one a different way of drawing that moment.
-3. Score each 1-5 on: distinctiveness, craft (is there a real drawing move, or is it assembled from primitives?), relevance to the human truth, scalability at 16px, memorability.
-4. Kill every candidate that is merely tidy. The bar is: would a working identity designer publish this and be proud of it?
-5. Return ONLY the ${count} strongest survivors, each a DIFFERENT logo_type and a genuinely different form family.
+1. Silently restate what this business does and who buys it, in one sentence.
+2. Silently generate 8 candidate marks, each drawn from the honest symbol vocabulary and each obeying the craft spec.
+3. Score each 1-5 on: structure match to the craft spec, craft (is there a real drawing move, or is it assembled from primitives?), relevance to the business, scalability at 24px, memorability.
+4. Kill every candidate that is merely tidy, and every one that uses a banned category cliché.
+5. Return ONLY the ${count} strongest survivors, each a DIFFERENT form family.
 
 Return STRICT JSON:
-{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","human_link":"one sentence tracing this mark back to the human moment","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark, e.g. 'one continuous stroke folded back on itself' or 'a circle cut by two mirrored arcs'","craft_move":"the deliberate craft decision: counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the human truth","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"distinctiveness":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
+{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","business_link":"one sentence tracing this mark back to what the business actually does","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark","craft_move":"counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the real work","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed from the references" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"structure_match":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
 
 Hard rules:
-- Exactly ${count} directions, each a different logo_type and a different form family. Four variations of one shape is a failed submission.
-- Every mark must be drawable as flat vector art in 1-2 flat colours. No scenes, no illustrations, no rendered detail, no depth.
+- Exactly ${count} directions, each a different form family. Four variations of one shape is a failed submission.
+- Obey the craft spec's element ceiling, abstraction level and ink count exactly.
+- Every mark must be drawable as flat vector art in 1-2 flat colours. No scenes, no depth, no rendered detail.
 - Every mark must have ONE named craft move. "Three shapes arranged neatly" is not a craft move.
-- Curves, arcs and continuous contours are the default vocabulary. Rectilinear construction is allowed only when the human truth genuinely demands it, and never for more than one of the ${count} directions.
-- Reject anything on the venture's own "must never look like" list; it outranks your instincts.
+- Anything on the business profile's banned list is an instant fail; it outranks your instincts.
 - Never propose any of these:
 ${BANNED_FORMS}`;
 
   const userContent: any[] = [{
     type: "text",
-    text: `VENTURE\n${ventureBlockOf(ctx)}\n\nBRAND TOKENS (the live palette and type this mark will live in)\n${tokensBlockOf(tokens)}\n\n${strategyBlock}\n\n${docsBlock ? `FOUNDER'S OWN BRAND ASSETS\n${docsBlock.slice(0, 6000)}\n\n` : ""}${moodLine}\n${refsLine}\n\n${instruction}`,
+    text: [
+      `VENTURE\n${ventureBlockOf(ctx)}`,
+      `BRAND TOKENS (the live palette and type this mark will live in)\n${tokensBlockOf(tokens)}`,
+      businessProfileBlock(profile),
+      craftSpecBlock(spec),
+      docsBlock ? `FOUNDER'S OWN BRAND ASSETS\n${docsBlock.slice(0, 6000)}` : "",
+      `${moodLine}${refsLine}`,
+      instruction,
+    ].filter(Boolean).join("\n\n"),
   }];
   for (const url of (moodboardImages ?? []).slice(0, 4)) {
     userContent.push({ type: "image_url", image_url: { url } });
   }
-  if (referenceImages?.length) {
-    for (const url of referenceImages.slice(0, 3)) {
-      userContent.push({ type: "image_url", image_url: { url } });
-    }
+  for (const url of (referenceImages ?? []).slice(0, 3)) {
+    userContent.push({ type: "image_url", image_url: { url } });
   }
 
   const parsed = await callChatJsonOnce([
@@ -509,18 +496,28 @@ ${BANNED_FORMS}`;
   return directions.slice(0, count) as LogoDirection[];
 }
 
+
 /**
- * The dossier is the single source of context every pass reads: the human
- * truth, the brief, the venture, the live tokens and the founder's own assets.
+ * The dossier is the single source of context the vectorizer reads: the two
+ * reads (business + craft), the venture, the live tokens and the founder's own
+ * assets.
  */
-function buildDossier(ctx: any, tokens: any, strategy: BrandStrategy | null, docsBlock: string): string {
+function buildDossier(
+  ctx: any,
+  tokens: any,
+  profile: BusinessProfile | null,
+  spec: CraftSpec | null,
+  docsBlock: string,
+): string {
   return [
     "VENTURE", ventureBlockOf(ctx),
     "", "BRAND TOKENS", tokensBlockOf(tokens),
-    strategy ? `\n${strategyBlockOf(strategy)}` : "",
+    profile ? `\n${businessProfileBlock(profile)}` : "",
+    spec ? `\n${craftSpecBlock(spec)}` : "",
     docsBlock ? `\nFOUNDER'S OWN BRAND ASSETS (authoritative)\n${docsBlock.slice(0, 6000)}` : "",
   ].filter(Boolean).join("\n");
 }
+
 
 
 const DRAW_SYSTEM = `You are a mark-maker in the tradition of Chermayeff & Geismar, Paul Rand and Michael Bierut, and you draw in raw SVG path data the way other designers draw with a pen. You do not assemble logos out of primitive blocks — you draw one considered contour with clean curve continuity, one stroke weight, intentional terminals and a counterform worth looking at. Every mark is a single idea that holds as a solid black silhouette at 16 pixels, and is good enough to be published in a design annual. Return valid JSON only. Never use gradients, filters, masks, images, scripts or external URLs.`;
@@ -589,12 +586,11 @@ Scores are 1-5 and must be honest.`;
 }
 
 /**
- * Stage 3 — draw the mark, then discipline it. The model gets one corrective
- * pass driven by the deterministic lint, so geometry errors never ship.
+ * STAGE 6 — vectorize. This now runs only on a mark the founder has approved,
+ * and it traces that exact render; it never invents geometry from a brief.
  */
 async function developVectorSpec(
   d: LogoDirection,
-  strategy: BrandStrategy | null,
   ctx: any,
   tokens: any,
   dossier: string,
@@ -643,53 +639,44 @@ async function developVectorSpec(
   return best!;
 }
 
-/** Stage 4 — the jury. Look at the mark that actually rendered and judge it honestly. */
-async function critiqueMark(
-  b64: string,
+/**
+ * STAGE 5 — the jury. Judges the RENDER (not a vector reconstruction) against
+ * the craft spec read from the founder's references and the business profile
+ * read from their copy.
+ */
+async function juryReview(
+  imageUrl: string,
   d: LogoDirection,
-  strategy: BrandStrategy | null,
-): Promise<{ pass: boolean; note: string }> {
-  const system = `You are judging a logo submission for an award feed of professional identity work. You have seen ten thousand generated marks and you can spot one instantly. You are not being kind. Most submissions fail. You only pass work a practising identity designer would put their name on in public.`;
-  const text = `Judge this rendered mark.
-
-Idea it claims: ${d.one_line_idea ?? d.symbol_concept}
-Craft move it claims: ${d.craft_move ?? d.geometric_operation ?? "unstated"}
-Logo type: ${d.logo_type}
-${strategy?.human_truth ? `Human truth it serves: ${strategy.human_truth}` : ""}
-${strategy?.core_idea ? `Must communicate: ${strategy.core_idea}` : ""}
-
-Fail it if ANY of these are true:
-- It reads as auto-generated: primitive shapes arranged neatly, with no drawing in it.
-- It is a cluster of rounded squares, a block plus/cross, dots-and-lines, or a letter parked in a box.
-- The claimed craft move is not actually visible in the artwork.
-- The shape is illegible, broken, accidental, unbalanced, or floats apart.
-- Curves are lumpy, tangents don't meet, or terminals look arbitrary.
-- It carries more than one competing idea, or turns to mush at 16px.
-- It has nothing to do with the human truth or the idea it claims.
-- It would work unchanged for any other company.
-
-Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact drawing change to make"}`;
-
-
-  let parsed: any = null;
+  spec: CraftSpec | null,
+  profile: BusinessProfile | null,
+): Promise<{ pass: boolean; note: string; scores: Record<string, number> }> {
+  const instruction = juryInstruction(
+    String((d as any).one_line_idea ?? d.symbol_concept ?? ""),
+    String(d.craft_move ?? d.geometric_operation ?? ""),
+    String(d.logo_type ?? ""),
+    spec,
+    profile,
+  );
   try {
-    parsed = parseJsonLoose(await callChatAI([
-      { role: "system", content: system },
+    const parsed = parseJsonLoose(await callChatAI([
+      { role: "system", content: JURY_SYSTEM },
       {
         role: "user",
         content: [
-          { type: "text", text },
-          { type: "image_url", image_url: { url: `data:image/png;base64,${b64}` } },
+          { type: "text", text: instruction },
+          { type: "image_url", image_url: { url: imageUrl } },
         ],
       },
-    ], { json: true, model: REVIEW_MODEL }));
+    ], { json: true, model: REVIEW_MODEL, timeoutMs: 90_000 }));
+    const verdict = parseJuryVerdict(parsed);
+    if (verdict) return verdict;
   } catch (error) {
-    console.warn("vision review unavailable", errorMessage(error));
+    console.warn("jury unavailable", errorMessage(error));
   }
-  // A failed/unavailable critique must never block delivery.
-  if (!parsed || typeof parsed.pass !== "boolean") return { pass: true, note: "" };
-  return { pass: parsed.pass, note: String(parsed.note ?? "") };
+  // A failed/unavailable jury must never block delivery.
+  return { pass: true, note: "", scores: {} };
 }
+
 
 /** Build the full lockup family from one approved construction. */
 async function buildLogoVariants(spec: VectorSpec, tokens: any, companyName: string) {
@@ -808,7 +795,7 @@ Deno.serve(async (req) => {
     const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // Durable logo stages share the logo preset.
-    const logoKinds = ["logo_create_run", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_render_status", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_force_reset", "logo_remove_direction"];
+    const logoKinds = ["logo_create_run", "logo_read_context", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_jury", "logo_vectorize", "logo_render_status", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_force_reset", "logo_remove_direction"];
     const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
@@ -996,32 +983,71 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, logos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // STAGE 0 — the inspiration gate. Three reference marks are the art
+    // direction; without them the studio was guessing, which is exactly what
+    // produced the previous generation of slop.
     if (kind === "logo_create_run") {
+      const refs = Array.isArray(referenceImages) ? referenceImages.filter((u: any) => typeof u === "string" && u.startsWith("http")) : [];
+      if (refs.length < 3) {
+        return new Response(JSON.stringify({
+          error: "Upload three logos you admire before generating. They set the craft standard for this run.",
+          code: "references_required",
+          have: refs.length,
+        }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       await supabase.from("brand_logo_runs").update({ status: "canceled", canceled_at: new Date().toISOString() }).eq("snapshot_id", snapshotId).not("status", "in", '("completed","completed_with_review","failed","canceled")');
       const { data: previous } = await supabase.from("brand_logo_runs").select("version").eq("snapshot_id", snapshotId).order("version", { ascending: false }).limit(1);
       const version = Number(previous?.[0]?.version ?? 0) + 1;
-      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "developing_brief", requested_count: n, reference_images: referenceImages ?? [], heartbeat_at: new Date().toISOString() }).select().single();
+      const { data: run, error } = await supabase.from("brand_logo_runs").insert({ snapshot_id: snapshotId, user_id: userId, version, status: "reading_context", requested_count: n, reference_images: refs, heartbeat_at: new Date().toISOString() }).select().single();
       if (error) throw error;
       return new Response(JSON.stringify({ ok: true, run }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    if (kind === "logo_develop_brief") {
+    // STAGES 1 + 2 — read the references, then read the business. Both are
+    // persisted on the run so every later stage judges against the same spec.
+    if (kind === "logo_read_context" || kind === "logo_develop_brief") {
       if (!runId) throw new Error("runId required");
+      const current = await getRun(runId);
+      if (!current.run) throw new Error("Logo run not found");
+      const refs: string[] = Array.isArray(current.run.reference_images) ? current.run.reference_images : [];
+      if (refs.length < 3) throw new Error("This run has no reference marks. Clear the queue and start again with three reference logos.");
+
       const docsBlock = await loadBrandDocs(supabase, snapshotId);
-      const strategy = await buildBrandStrategy(ctx, tokens, docsBlock);
-      if (!strategy) throw new Error("Creative Director returned no strategy");
-      const { error } = await supabase.from("brand_logo_runs").update({ strategy, status: "developing_directions", heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId).eq("snapshot_id", snapshotId);
+      const [craftSpec, businessProfile] = await Promise.all([
+        readReferenceCraftSpec(refs),
+        readBusinessProfile(ctx, tokens, docsBlock),
+      ]);
+      if (!craftSpec) throw new Error("Could not read the reference marks. Re-upload clearer logo images (PNG or JPG, mark clearly visible).");
+      if (!businessProfile) throw new Error("Could not read the business from its own copy. Generate the positioning and messaging assets first.");
+
+      const { error } = await supabase.from("brand_logo_runs").update({
+        craft_spec: craftSpec,
+        business_profile: businessProfile,
+        status: "developing_directions",
+        heartbeat_at: new Date().toISOString(),
+        last_error: null,
+      }).eq("id", runId).eq("snapshot_id", snapshotId);
       if (error) throw error;
-      return new Response(JSON.stringify({ ok: true, strategy }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true, craftSpec, businessProfile }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // STAGE 3 — concepting against both reads.
     if (kind === "logo_develop_directions") {
       if (!runId) throw new Error("runId required");
       const current = await getRun(runId);
       if (!current.run) throw new Error("Logo run not found");
       const docsBlock = await loadBrandDocs(supabase, snapshotId);
       const moodboardImages = await moodboardImageUrls(supabase, kit);
-      const directions = await generateLogoConcepts(ctx, tokens, current.run.requested_count, current.run.strategy as BrandStrategy, docsBlock, current.run.reference_images, moodboardImages);
+      const directions = await generateLogoConcepts(
+        ctx,
+        tokens,
+        current.run.requested_count,
+        (current.run.business_profile ?? null) as BusinessProfile | null,
+        (current.run.craft_spec ?? null) as CraftSpec | null,
+        docsBlock,
+        current.run.reference_images,
+        moodboardImages,
+      );
 
       const rows = directions.map((d, slot) => ({ run_id: runId, snapshot_id: snapshotId, slot, idempotency_key: `${runId}:${slot}`, direction_name: d.direction_name, logo_type: d.logo_type, concept: d, status: "queued", current_stage: "render_concept", render_status: "pending", render_path: null, render_error: null }));
       const { error } = await supabase.from("brand_logo_directions").upsert(rows, { onConflict: "run_id,slot" });
@@ -1030,10 +1056,11 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, directions }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Stage 3 — render the concept as a real designed mark before any vector
-    // math happens. This stage never fails a direction: an unavailable provider
-    // records why and hands the direction to the vector stage regardless, so a
-    // Higgsfield outage degrades quality rather than breaking the run.
+
+    // STAGE 4 — render the concept as a real designed mark, conditioned on the
+    // founder's own reference logos and moodboard. The reference-conditioned
+    // gateway render leads because it can actually SEE the references;
+    // Higgsfield is the fallback when the gateway render fails.
     if (kind === "logo_render_concept") {
       if (!runId || !directionId) throw new Error("runId and directionId required");
       const current = await getRun(runId);
@@ -1043,7 +1070,7 @@ Deno.serve(async (req) => {
 
       const advance = async (patch: Record<string, unknown>) => {
         await supabase.from("brand_logo_directions").update({
-          current_stage: "develop_vector",
+          current_stage: "jury",
           status: "queued",
           lease_token: null,
           lease_expires_at: null,
@@ -1052,14 +1079,9 @@ Deno.serve(async (req) => {
         await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString() }).eq("id", runId);
       };
 
-      // Already rendered, or already past this stage — nothing to do.
-      if (row.render_path || (row.current_stage !== "render_concept" && kind === "logo_render_concept" && row.render_status !== "pending")) {
+      // Already rendered — nothing to do.
+      if (row.render_path && row.render_status === "ready") {
         return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Concept already rendered" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
-      if (!higgsfieldConfigured()) {
-        await advance({ render_status: "unavailable", render_error: "Higgsfield credentials are not configured." });
-        return new Response(JSON.stringify({ ok: true, rendered: false, reason: "not_configured" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
       const leaseToken = crypto.randomUUID();
@@ -1074,76 +1096,174 @@ Deno.serve(async (req) => {
       }
       await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
 
-      const strategy = (run.strategy ?? null) as BrandStrategy | null;
+      const profile = (run.business_profile ?? null) as BusinessProfile | null;
+      const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
       const concept = (row.concept ?? {}) as any;
       const prompt = buildLogoRenderPrompt(
         {
           name: row.direction_name,
-          humanTruth: concept.human_link || strategy?.human_truth,
+          idea: concept.one_line_idea || concept.symbol_concept,
           craftMove: concept.craft_move || concept.geometric_operation,
-          imagery: concept.symbol_concept || concept.one_line_idea,
-          mood: concept.why_memorable,
+          imagery: concept.symbol_concept,
+          logoType: row.logo_type,
         },
         {
           brandName: snap.company_name ?? undefined,
-          positioning: strategy?.core_idea ?? ctx?.snap?.one_liner ?? undefined,
           palette: Array.isArray(tokens?.colors)
             ? tokens.colors
             : Object.values(tokens?.colors ?? {}).filter((v): v is string => typeof v === "string"),
           moodboard: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
           personality: Array.isArray(kit?.dna?.personality) ? kit.dna.personality : undefined,
         },
+        profile,
+        craftSpec,
+        typeof body?.correction === "string" ? body.correction : row.review_note ?? null,
       );
 
-      try {
-        const render = await renderLogoConcept({
-          prompt,
-          negativePrompt: logoNegativePrompt(),
-          seed: seedForConcept(directionId),
-        });
-        const bytes = await fetchRenderBytes(render.imageUrl);
-        const path = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
+      const refImages: string[] = [
+        ...(Array.isArray(run.reference_images) ? run.reference_images.slice(0, 3) : []),
+      ];
+      const path = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
+      const store = async (bytes: Uint8Array) => {
         const { error: upErr } = await supabase.storage.from("user-media")
           .upload(path, bytes, { contentType: "image/png", upsert: true });
         if (upErr) throw upErr;
+      };
 
-        await advance({
-          render_status: "ready",
-          render_path: path,
-          render_provider: "higgsfield",
-          render_job_id: render.jobId,
-          render_error: null,
-        });
-        return new Response(JSON.stringify({ ok: true, rendered: true, path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      } catch (error) {
-        // Terminal provider problems (no credits, bad key) must not burn the
-        // direction's three attempts — fall through to the brief-only path.
-        const terminal = error instanceof HiggsfieldError && error.terminal;
-        const message = errorMessage(error);
-        await advance({
-          render_status: terminal ? "unavailable" : "failed",
-          render_error: message.slice(0, 500),
-          render_provider: "higgsfield",
-        });
-        console.warn("logo render skipped", message);
-        return new Response(JSON.stringify({ ok: true, rendered: false, reason: message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Primary: reference-conditioned gateway render — it sees the founder's
+      // three marks, so the output inherits their construction, not a guess.
+      try {
+        const b64 = await renderMark(prompt, "1024x1024", refImages);
+        await store(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
+        await advance({ render_status: "ready", render_path: path, render_provider: "gateway_reference", render_error: null });
+        return new Response(JSON.stringify({ ok: true, rendered: true, provider: "gateway_reference", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      } catch (primaryError) {
+        console.warn("reference-conditioned render failed", errorMessage(primaryError));
+        if (!higgsfieldConfigured()) {
+          await advance({ render_status: "failed", render_error: errorMessage(primaryError).slice(0, 500), render_provider: "gateway_reference" });
+          return new Response(JSON.stringify({ ok: true, rendered: false, reason: errorMessage(primaryError) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        // Fallback: Higgsfield, text-only but art-directed by the same brief.
+        try {
+          const render = await renderLogoConcept({
+            prompt,
+            negativePrompt: logoNegativePrompt(),
+            seed: seedForConcept(directionId, Number(row.attempt_count ?? 0)),
+          });
+          await store(await fetchRenderBytes(render.imageUrl));
+          await advance({ render_status: "ready", render_path: path, render_provider: "higgsfield", render_job_id: render.jobId, render_error: null });
+          return new Response(JSON.stringify({ ok: true, rendered: true, provider: "higgsfield", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        } catch (error) {
+          const terminal = error instanceof HiggsfieldError && error.terminal;
+          const message = errorMessage(error);
+          await advance({
+            render_status: terminal ? "unavailable" : "failed",
+            render_error: message.slice(0, 500),
+            render_provider: "higgsfield",
+          });
+          console.warn("logo render failed on both providers", message);
+          return new Response(JSON.stringify({ ok: true, rendered: false, reason: message }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
       }
     }
 
-
-
-    if (kind === "logo_draw_vector" || kind === "logo_retry_direction") {
+    // STAGE 5 — the jury. Judges the render itself, allows exactly one
+    // corrective re-render, then publishes the raster mark for the founder to
+    // choose from. Nothing is vectorized until a mark is approved.
+    if (kind === "logo_jury") {
       if (!runId || !directionId) throw new Error("runId and directionId required");
       const current = await getRun(runId);
       const run = current.run;
       const row = current.directions.find((item: any) => item.id === directionId);
       if (!run || !row) throw new Error("Logo direction not found");
-      if (["ready", "needs_review"].includes(row.status) && kind !== "logo_retry_direction") {
+      if (["ready", "needs_review"].includes(row.status)) {
+        return new Response(JSON.stringify({ ok: true, skipped: true, asset: row.asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!row.render_path) throw new Error("This concept has no render to judge.");
+
+      await supabase.from("brand_logo_directions").update({ status: "judging", current_stage: "jury" }).eq("id", directionId);
+
+      const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(row.render_path, 60 * 60 * 24 * 7);
+      const renderUrl = signed?.signedUrl ?? null;
+      if (!renderUrl) throw new Error("Could not read the rendered mark from storage.");
+
+      const profile = (run.business_profile ?? null) as BusinessProfile | null;
+      const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
+      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile);
+
+      const reviewAttempts = Number(row.review_attempts ?? 0);
+      // One corrective re-render: the jury's note becomes the render brief's fix line.
+      if (!verdict.pass && reviewAttempts < 1) {
+        await supabase.from("brand_logo_directions").update({
+          status: "queued",
+          current_stage: "render_concept",
+          render_status: "pending",
+          review_attempts: reviewAttempts + 1,
+          review_note: verdict.note,
+          review_score: verdict.scores,
+          lease_token: null,
+          lease_expires_at: null,
+        }).eq("id", directionId);
+        return new Response(JSON.stringify({ ok: true, pass: false, retry: true, note: verdict.note }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const concept = (row.concept ?? {}) as any;
+      const asset = {
+        ok: true,
+        kind: "raster",
+        url: renderUrl,
+        path: row.render_path,
+        preview_url: renderUrl,
+        render: { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "gateway_reference" },
+        direction_name: row.direction_name,
+        logo_type: row.logo_type,
+        business_link: concept.business_link ?? concept.human_link ?? "",
+        craft_move: concept.craft_move ?? concept.geometric_operation ?? "",
+        one_line_idea: concept.one_line_idea ?? concept.symbol_concept,
+        why_memorable: concept.why_memorable ?? "",
+        symbol_concept: concept.symbol_concept,
+        direction: concept,
+        vectorized: false,
+        review_passed: verdict.pass,
+        review_note: verdict.note,
+        review_score: verdict.scores,
+        created_at: new Date().toISOString(),
+      };
+
+      const { error: publishError } = await supabase.rpc("publish_brand_logo_direction", {
+        p_direction_id: directionId,
+        p_run_id: runId,
+        p_run_version: run.version,
+        p_asset: asset,
+        p_svg_path: null,
+        p_preview_path: row.render_path,
+        p_review_passed: verdict.pass,
+        p_review_score: verdict.scores,
+        p_review_note: verdict.note,
+      });
+      if (publishError) throw publishError;
+      return new Response(JSON.stringify({ ok: true, pass: verdict.pass, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+
+
+
+    // STAGE 6 — vectorize an APPROVED mark. Explicit, never automatic: this
+    // traces the raster the founder picked instead of redrawing the brief,
+    // which is what used to turn a decent concept into geometry slop.
+    if (kind === "logo_vectorize" || kind === "logo_draw_vector" || kind === "logo_retry_direction") {
+      if (!runId || !directionId) throw new Error("runId and directionId required");
+      const current = await getRun(runId);
+      const run = current.run;
+      const row = current.directions.find((item: any) => item.id === directionId);
+      if (!run || !row) throw new Error("Logo direction not found");
+      if (!row.render_path) throw new Error("Nothing to vectorize — this concept has no approved render yet.");
+      if (row.asset?.vectorized && kind !== "logo_retry_direction") {
         return new Response(JSON.stringify({ ok: true, asset: row.asset, direction: row }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const leaseToken = crypto.randomUUID();
       const leaseExpiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString();
-      const { data: claimed, error: claimError } = await supabase.from("brand_logo_directions").update({ status: "developing_vector", current_stage: row.review_note ? "revise_vector" : "develop_vector", attempt_count: Number(row.attempt_count ?? 0) + 1, last_error: null, error_class: null, lease_token: leaseToken, lease_expires_at: leaseExpiresAt }).eq("id", directionId).in("status", kind === "logo_retry_direction" ? ["ready", "needs_review", "failed", "retry_wait"] : ["queued", "retry_wait", "failed"]).select("id").maybeSingle();
+      const { data: claimed, error: claimError } = await supabase.from("brand_logo_directions").update({ status: "vectorizing", current_stage: "vectorize", attempt_count: Number(row.attempt_count ?? 0) + 1, last_error: null, error_class: null, lease_token: leaseToken, lease_expires_at: leaseExpiresAt }).eq("id", directionId).in("status", ["ready", "needs_review", "failed", "retry_wait", "queued"]).select("id").maybeSingle();
       if (claimError) throw claimError;
       if (!claimed) return new Response(JSON.stringify({ ok: true, skipped: true, reason: "Direction is already being processed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await supabase.from("brand_logo_runs").update({ heartbeat_at: new Date().toISOString(), last_error: null }).eq("id", runId);
@@ -1151,20 +1271,18 @@ Deno.serve(async (req) => {
         const started = Date.now();
         const companyName = snap.company_name ?? "Venture";
         const docsBlock = await loadBrandDocs(supabase, snapshotId);
-        const strategy = (run.strategy ?? null) as BrandStrategy | null;
-        const dossier = buildDossier(ctx, tokens, strategy, docsBlock);
+        const profile = (run.business_profile ?? null) as BusinessProfile | null;
+        const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
+        const dossier = buildDossier(ctx, tokens, profile, craftSpec, docsBlock);
 
-        // When stage 3 produced a render, the vector model traces it instead of
-        // inventing geometry from the written brief.
-        let renderUrl: string | null = null;
-        if (row.render_path) {
-          const { data: signedRender } = await supabase.storage.from("user-media")
-            .createSignedUrl(row.render_path, 60 * 30);
-          renderUrl = signedRender?.signedUrl ?? null;
-        }
+        // The approved raster is the design decision; the vector pass traces it.
+        const { data: signedRender } = await supabase.storage.from("user-media")
+          .createSignedUrl(row.render_path, 60 * 60);
+        const renderUrl = signedRender?.signedUrl ?? null;
 
-        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, strategy, ctx, tokens, dossier, reviewNote ?? row.review_note ?? undefined, renderUrl);
+        const { spec, lint } = await developVectorSpec(row.concept as LogoDirection, ctx, tokens, dossier, reviewNote ?? undefined, renderUrl);
         const variants = await buildLogoVariants(spec, tokens, companyName);
+
 
         const uploaded = await uploadVectorAsset(supabase, snapshotId, userId, directionId, variants.mark, "mark");
         const uploadVariant = async (svg: string | null, name: string) => {
@@ -1178,13 +1296,14 @@ Deno.serve(async (req) => {
           uploadVariant(variants.knockout, "knockout"),
         ]);
 
-        // Vision gate — only when there is time left in the request window.
+        // The trace is judged against the render it came from, not re-judged
+        // as a concept — the design decision was already made upstream.
         let visionPass = true;
         let visionNote = "";
-        if (Date.now() - started < 60_000) {
+        if (Date.now() - started < 60_000 && renderUrl) {
           const png = await rasterizeSvg(variants.mark, 512);
           if (png) {
-            const verdict = await critiqueMark(png, row.concept as LogoDirection, strategy);
+            const verdict = await juryReview(`data:image/png;base64,${png}`, row.concept as LogoDirection, craftSpec, profile);
             visionPass = verdict.pass;
             visionNote = verdict.note;
           }
@@ -1202,6 +1321,8 @@ Deno.serve(async (req) => {
 
         const asset = {
           ok: true,
+          kind: "vector",
+          vectorized: true,
           url: uploaded.url, path: uploaded.path, svg_url: uploaded.url, svg_path: uploaded.path,
           variants: {
             mark: { url: uploaded.url, path: uploaded.path },
@@ -1217,9 +1338,9 @@ Deno.serve(async (req) => {
           },
           direction_name: row.direction_name, logo_type: row.logo_type,
           render: row.render_path
-            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "higgsfield" }
+            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "gateway_reference" }
             : null,
-          human_link: row.concept?.human_link ?? "",
+          business_link: row.concept?.business_link ?? row.concept?.human_link ?? "",
           craft_move: row.concept?.craft_move ?? row.concept?.geometric_operation ?? "",
           one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
           why_memorable: row.concept?.why_memorable ?? "",
@@ -1229,6 +1350,7 @@ Deno.serve(async (req) => {
           review_passed: passed, review_note: note, review_score: scores,
           created_at: new Date().toISOString(),
         };
+
         const { error: publishError } = await supabase.rpc("publish_brand_logo_direction", { p_direction_id: directionId, p_run_id: runId, p_run_version: run.version, p_asset: asset, p_svg_path: uploaded.path, p_preview_path: uploaded.path, p_review_passed: passed, p_review_score: scores, p_review_note: note });
         if (publishError) throw publishError;
         return new Response(JSON.stringify({ ok: true, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

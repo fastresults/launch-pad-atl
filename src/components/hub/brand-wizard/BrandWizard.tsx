@@ -544,7 +544,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "rendering" | "drawing">("idle");
+  const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "rendering" | "reviewing" | "drawing">("idle");
   const logoRunQ = useQuery({
     queryKey: ["brandLogoRun", snapshot.id],
     queryFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run" } }),
@@ -623,12 +623,16 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     const myToken = abortToken.current;
     // Thrown to unwind the loop silently when the queue was cleared mid-run.
     const aborted = () => abortToken.current !== myToken;
+
+    // Stages 1+2 — read the founder's reference marks, then read the business.
     setLogoPhase("brief");
-    if (run.status === "developing_brief" || run.status === "queued") {
-      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_brief", runId: run.id } });
+    if (["reading_context", "developing_brief", "queued"].includes(run.status)) {
+      await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_read_context", runId: run.id } });
       run = { ...run, status: "developing_directions" };
     }
     if (aborted()) return;
+
+    // Stage 3 — concepting.
     setLogoPhase("concepting");
     let state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     if (!state.directions?.length) {
@@ -638,39 +642,46 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     }
     if (aborted()) return;
 
-    // Render each concept as a real designed mark before tracing it to vector.
-    // This stage self-heals: a direction whose render is unavailable advances to
-    // drawing anyway, so the loop below never blocks on the image provider.
-    const pending = (state.directions ?? []).filter(
-      (d: any) => d.current_stage === "render_concept" && !["ready", "needs_review", "canceled"].includes(d.status),
-    );
-    if (pending.length) {
-      setLogoPhase("rendering");
-      for (let i = 0; i < pending.length; i += 2) {
-        if (aborted()) return;
-        await Promise.allSettled(pending.slice(i, i + 2).map((d: any) =>
-          generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_concept", runId: run.id, directionId: d.id } })
-        ));
-        await logoRunQ.refetch();
-      }
-      if (aborted()) return;
-      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
-    }
-
-    setLogoPhase("drawing");
+    // Stages 4+5 — render each concept against the references, then let the
+    // jury judge the render. A failed verdict sends that concept back for one
+    // corrective re-render, so the loop alternates until every slot settles.
     for (let round = 0; round < 3; round++) {
       if (aborted()) return;
-      const work = (state.directions ?? []).filter((d: any) => !["ready", "needs_review", "canceled"].includes(d.status) && Number(d.attempt_count ?? 0) < 3);
-      if (!work.length) break;
-      for (let i = 0; i < work.length; i += 2) {
-        if (aborted()) return;
-        await Promise.allSettled(work.slice(i, i + 2).map((d: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_draw_vector", runId: run.id, directionId: d.id } })));
-        await logoRunQ.refetch();
-      }
-      if (aborted()) return;
-      state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
 
+      const toRender = (state.directions ?? []).filter(
+        (d: any) => d.current_stage === "render_concept" && !["ready", "needs_review", "canceled"].includes(d.status),
+      );
+      if (toRender.length) {
+        setLogoPhase("rendering");
+        for (let i = 0; i < toRender.length; i += 2) {
+          if (aborted()) return;
+          await Promise.allSettled(toRender.slice(i, i + 2).map((d: any) =>
+            generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_concept", runId: run.id, directionId: d.id } })
+          ));
+          await logoRunQ.refetch();
+        }
+        if (aborted()) return;
+        state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+      }
+
+      const toJudge = (state.directions ?? []).filter(
+        (d: any) => d.render_path && !["ready", "needs_review", "canceled"].includes(d.status),
+      );
+      if (!toJudge.length && !toRender.length) break;
+      if (toJudge.length) {
+        setLogoPhase("reviewing");
+        for (let i = 0; i < toJudge.length; i += 2) {
+          if (aborted()) return;
+          await Promise.allSettled(toJudge.slice(i, i + 2).map((d: any) =>
+            generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_jury", runId: run.id, directionId: d.id } })
+          ));
+          await logoRunQ.refetch();
+        }
+        if (aborted()) return;
+        state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+      }
     }
+
     const finished = (state.directions ?? []).filter((d: any) => ["ready", "needs_review"].includes(d.status)).length;
     await logoRunQ.refetch();
     if (finished < Number(run.requested_count ?? 4)) throw new Error(`${Number(run.requested_count ?? 4) - finished} direction${Number(run.requested_count ?? 4) - finished === 1 ? "" : "s"} paused after three safe attempts`);
@@ -678,15 +689,23 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   const genLogos = useMutation({
     mutationFn: async () => {
+      if (refs.length < 3) throw new Error("Upload three logos you admire first — they set the craft standard for this run.");
       const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 4, referenceImages: refs } });
       setLogos([]);
       await processLogoRun(created.run);
       return created;
     },
-    onSuccess: () => toast.success("Your four vector directions are ready"),
+    onSuccess: () => toast.success("Your four concept marks are ready — approve one to vectorize it"),
     onError: (e: any) => toast.error(e?.message ?? "Logo run paused. You can resume it here."),
     onSettled: () => { setLogoPhase("idle"); logoRunQ.refetch(); },
   });
+
+  const vectorizeDirection = useMutation({
+    mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_vectorize", runId: item.run_id, directionId: item.id } }),
+    onSuccess: () => { toast.success("Mark vectorized — SVG lockups are ready"); logoRunQ.refetch(); },
+    onError: (e: any) => toast.error(e?.message ?? "Could not vectorize this mark"),
+  });
+
 
   const resumeLogos = useMutation({
     mutationFn: () => processLogoRun(activeRun),
@@ -760,17 +779,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     }
   };
 
-  const skipped = !!kit?.dna?._logoRefSkipped;
-  const gatePassed = refs.length > 0 || skipped;
+  // Hard gate: three reference marks ARE the art direction. Without them the
+  // studio invents a house style, which is what produced the earlier slop.
+  const gatePassed = refs.length >= 3;
 
-  const skipRefs = () => {
-    onSave({ dna: { ...(kit?.dna ?? {}), _logoRefSkipped: true } });
-  };
-  const undoSkip = () => {
-    const dna = { ...(kit?.dna ?? {}) };
-    delete dna._logoRefSkipped;
-    onSave({ dna });
-  };
 
   return (
     <div className="space-y-8">
@@ -849,15 +861,14 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </div>
         )}
 
-        <div className="flex items-center justify-between text-xs">
-          {skipped ? (
-            <button onClick={undoSkip} className="text-primary underline-offset-2 hover:underline">Reconsider — I'll upload inspirations</button>
+        <div className="text-xs">
+          {gatePassed ? (
+            <span className="text-emerald-700 dark:text-emerald-400">Craft standard set — these three marks now drive every concept.</span>
           ) : (
-            <button onClick={skipRefs} className="text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
-              Skip — generate without references
-            </button>
+            <span className="text-amber-700 dark:text-amber-400">
+              {3 - refs.length} more to go. Generation stays locked until all three are here — they are the art direction, not a nice-to-have.
+            </span>
           )}
-          {skipped && <span className="text-amber-700 dark:text-amber-400">Skipped — concepts will be context-only</span>}
         </div>
       </section>
 
@@ -867,7 +878,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div>
             <h3 className="text-sm font-semibold">Logo concepts</h3>
             <p className="text-xs text-muted-foreground">
-              Strategy first: we read your finished brand assets, write an identity brief, sketch ten ideas, keep only the strongest four — then render and review each mark before you see it. {refs.length ? "Inspired (never copied) by your references." : ""}
+              References first: we read the construction of your three inspirations, read what your business actually does from your own copy, then concept, render and judge four marks against both. Vectoring happens only on the mark you approve.
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -878,9 +889,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
               </Button>
               <Button onClick={() => runBusy ? resumeLogos.mutate() : genLogos.mutate()} disabled={genLogos.isPending || resumeLogos.isPending || !gatePassed} size="sm">
                 {(genLogos.isPending || resumeLogos.isPending) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                {logoPhase === "brief" ? "Writing the brief…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "rendering" ? "Art-directing the marks…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : "Generate 4 logo directions"}
+                {logoPhase === "brief" ? "Reading references & business…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "rendering" ? "Art-directing the marks…" : logoPhase === "reviewing" ? "Jury reviewing…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : !gatePassed ? "Add 3 inspirations to unlock" : "Generate 4 logo directions"}
               </Button>
             </div>
+
 
             {(genLogos.isPending || resumeLogos.isPending || runBusy) && (
               <span className="text-[10px] text-muted-foreground">Progress is saved. You can close this window and resume later.</span>
@@ -1077,18 +1089,30 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                     )}
 
                     <div className="flex gap-1.5">
+                      {directionRow && !directionRow.svg_path && (
+                        <Button
+                          size="sm"
+                          className="h-7 flex-1 text-[11px]"
+                          disabled={busy || vectorizeDirection.isPending}
+                          onClick={() => vectorizeDirection.mutate(directionRow)}
+                        >
+                          {vectorizeDirection.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <CircleCheck className="mr-1 h-3 w-3" />}
+                          Approve & vectorize
+                        </Button>
+                      )}
                       {a.direction && (
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-7 flex-1 text-[11px]"
-                          disabled={busy || retryDirection.isPending || !directionRow}
+                          disabled={busy || retryDirection.isPending}
                           onClick={() => directionRow && retryDirection.mutate(directionRow)}
                         >
                           {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
                           More like this
                         </Button>
                       )}
+
                       <Button
                         variant="ghost"
                         size="sm"
