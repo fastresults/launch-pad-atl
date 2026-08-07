@@ -311,7 +311,11 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
     scrim_alpha: null,
     safe_inset_pct: Number(((inset / minDim) * 100).toFixed(1)),
     sampled: sampler.available,
+    headline_lines: 0,
+    headline_fits: true,
+    longest_line_pct: null,
   };
+
 
   const headlineText = (args.headline || "").trim();
   const kickerText = (args.kicker || "").trim();
