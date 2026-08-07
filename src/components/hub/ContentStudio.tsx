@@ -87,6 +87,8 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
     queryKey: ["content-ads", snapshotId],
     queryFn: () => listContentAds(snapshotId),
     enabled: locked,
+    // A hub tab left open for hours must not show a stale "not started" week.
+    refetchOnWindowFocus: true,
   });
   const ads = adsQ.data ?? [];
 
@@ -94,8 +96,10 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
     queryKey: ["content-progress", snapshotId],
     queryFn: () => getContentProgress(snapshotId),
     enabled: locked,
+    refetchOnWindowFocus: true,
   });
   const progress = progQ.data;
+
 
   const [step, setStep] = useState(1);
   const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]);
