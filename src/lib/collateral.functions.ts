@@ -97,3 +97,21 @@ export async function downloadCollateralZip(items: CollateralItem[], company: st
   a.click();
   URL.revokeObjectURL(a.href);
 }
+
+// ── text inventory ──────────────────────────────────────────────────────────
+
+export type CollateralDetailsPayload = {
+  details: Record<string, string>;
+  verifiedAt: string | null;
+  audit: any;
+};
+
+/** Pre-filled text inventory plus the audit grading each field. */
+export async function getCollateralDetails(snapshotId: string): Promise<CollateralDetailsPayload> {
+  const data = await call({ action: "details:get", snapshotId });
+  return { details: data?.details ?? {}, verifiedAt: data?.verifiedAt ?? null, audit: data?.audit ?? null };
+}
+
+export async function saveCollateralDetails(snapshotId: string, details: Record<string, string>) {
+  return call({ action: "details:save", snapshotId, details });
+}
