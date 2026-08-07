@@ -1026,7 +1026,7 @@ Deno.serve(async (req) => {
       const current = await getRun(runId);
       if (!current.run) throw new Error("Logo run not found");
       const refs: string[] = Array.isArray(current.run.reference_images) ? current.run.reference_images : [];
-      if (refs.length < 3) throw new Error("This run has no reference marks. Clear the queue and start again with three reference logos.");
+      if (refs.length < 1) throw new Error("This run has no reference marks. Clear the queue and start again with at least one reference logo.");
 
       const docsBlock = await loadBrandDocs(supabase, snapshotId);
       const [craftSpec, businessProfile] = await Promise.all([
