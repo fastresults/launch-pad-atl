@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Palette, Sparkles, Lock, RotateCcw } from "lucide-react";
 import { getBrandKit, resetBrandKit, upsertBrandKit } from "@/lib/brandKit.functions";
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
-import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
+import { BrandIdentityHeader } from "@/components/hub/brand/BrandIdentityHeader";
 import { BrandCollateral } from "@/components/hub/brand/BrandCollateral";
 import { SectionHeader } from "@/components/hub/SectionHeader";
 import { toast } from "sonner";
@@ -49,7 +49,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
         total={5}
         isOpen={expanded}
         onToggle={() => setExpanded((v) => !v)}
-        contentId="brand-studio-body"
+        contentId="brand-studio-panel-body"
         status={locked ? "complete" : kit ? "in_progress" : "not_started"}
         icon={Palette}
         label="Brand Studio"
@@ -80,59 +80,41 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
         }
       />
       {expanded && (
-        <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
+        <div id="brand-studio-panel-body" className="space-y-6 rounded-2xl border border-white/10 bg-card p-5">
           {!kit && (
-            <p className="text-xs text-muted-foreground">
-              A 5-step guided wizard: brand DNA → palette → typography → moodboard & logo → voice & style guide.
-              You pick the direction at every step. The final style guide saves to your <b>My Files</b>.
-            </p>
+            <div className="rounded-xl border border-dashed border-white/15 bg-background/40 p-5 text-center">
+              <p className="text-sm font-medium">Your identity, locked in five steps</p>
+              <p className="mx-auto mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
+                Brand DNA → palette → typography → moodboard &amp; logo → voice &amp; style guide. You pick the direction at
+                every step. When it's locked we typeset your full print kit — cards, letterhead, envelope, invoice,
+                guidelines — and feed the same tokens into your Website PRD.
+              </p>
+              <Button size="sm" className="mt-3" onClick={() => setOpen(true)}>
+                <Sparkles className="mr-1 h-3 w-3" />Start brand wizard
+              </Button>
+            </div>
           )}
 
           {kit && (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Palette — click to edit</div>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {kit.palette?.colors ? Object.entries(kit.palette.colors).map(([k, v]: any) => (
-                    <div key={k} className="flex items-center gap-1 rounded-full border border-white/10 bg-background/40 px-1.5 py-0.5 text-[10px]">
-                      <EditablePaletteSwatch
-                        tokenKey={k}
-                        value={v as string}
-                        size="sm"
-                        onChange={async (hex) => {
-                          const nextColors = { ...(kit.palette?.colors ?? {}), [k]: hex };
-                          await upsertBrandKit(snapshot.id, {
-                            palette: { ...(kit.palette ?? {}), colors: nextColors, source: "user-edited" },
-                          });
-                          qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
-                        }}
-                      />
-                      <span className="text-muted-foreground">{k}</span>
-                    </div>
-                  )) : <span className="text-xs text-muted-foreground">Not chosen yet</span>}
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Typography</div>
-                <div className="mt-1 text-xs">
-                  <div className="font-semibold">{kit.typography?.heading?.family ?? "—"}</div>
-                  <div className="text-muted-foreground">{kit.typography?.body?.family ?? "—"}</div>
-                </div>
-              </div>
-            </div>
+            <BrandIdentityHeader
+              kit={kit}
+              companyName={snapshot?.company_name}
+              onChangeColor={async (key, hex) => {
+                const nextColors = { ...(kit.palette?.colors ?? {}), [key]: hex };
+                await upsertBrandKit(snapshot.id, {
+                  palette: { ...(kit.palette ?? {}), colors: nextColors, source: "user-edited" },
+                });
+                qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+              }}
+            />
           )}
 
-          {Array.isArray(kit?.logos) && kit.logos.length > 0 && (
-            <div className="grid grid-cols-4 gap-2 pt-2">
-              {kit.logos.slice(0, 4).map((a: any, i: number) => (
-                a.url ? <img key={i} src={a.url} className="aspect-square w-full rounded border border-white/10 object-cover" /> : null
-              ))}
-            </div>
-          )}
+          {kit && <div className="border-t border-white/10" />}
 
           <BrandCollateral snapshot={snapshot} locked={locked} />
         </div>
       )}
+
 
       <BrandWizard snapshot={snapshot} open={open} onOpenChange={setOpen} />
     </div>
