@@ -506,13 +506,14 @@ Deno.serve(async (req) => {
       const { step, turn } = await buildStep(
         supabase, userId, snapshotId, studio, references, tokens, steps, session.brief?.summary ?? "",
         source
-          ? `They are looking at the rough titled "${source.title}" (${source.brief}) and said: ${instruction}. Draw three refinements of THAT mark — same idea, their change applied.`
+          ? `They are looking at the mark titled "${source.title}" (${source.brief}) and said: ${instruction}. Redraw THAT mark — same idea, their change applied.`
           : instruction,
       );
       const nextSteps = [...steps, step];
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         steps: nextSteps,
-        brief: { summary: turn.brief_summary },
+        brief: { ...(session.brief ?? {}), summary: turn.brief_summary },
+
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
