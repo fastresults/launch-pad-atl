@@ -1126,7 +1126,49 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                       <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">Why it sticks: {a.why_memorable}</p>
                     )}
 
-                    <div className="flex gap-1.5">
+                    {Array.isArray(directionRow?.render_history) && directionRow.render_history.length > 0 && (
+                      <div className="space-y-1 border-t border-white/10 pt-2">
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Archive</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {directionRow.render_history.map((h: any) => (
+                            <button
+                              key={h.path}
+                              title="Restore this version"
+                              disabled={restoreRender.isPending}
+                              onClick={() => restoreRender.mutate({ item: directionRow, historyPath: h.path })}
+                              className="h-10 w-10 overflow-hidden rounded border border-white/15 bg-white transition hover:border-primary disabled:opacity-40"
+                            >
+                              {h.url ? <img src={h.url} alt="Earlier version" className="h-full w-full object-contain" /> : null}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {directionRow && (
+                        <Button
+                          variant={isSelected ? "default" : "outline"}
+                          size="sm"
+                          className="h-7 flex-1 text-[11px]"
+                          disabled={busy || selectDirection.isPending}
+                          onClick={() => selectDirection.mutate(directionRow)}
+                        >
+                          {isSelected ? <Check className="mr-1 h-3 w-3" /> : null}
+                          {isSelected ? "Selected" : "Select"}
+                        </Button>
+                      )}
+                      {directionRow && isSelected && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 flex-1 text-[11px]"
+                          disabled={busy || refineDirection.isPending}
+                          onClick={() => { setRefineTarget(directionRow); setRefineNote(""); }}
+                        >
+                          <Sparkles className="mr-1 h-3 w-3" /> Refine this mark
+                        </Button>
+                      )}
                       {directionRow && !directionRow.svg_path && (
                         <Button
                           size="sm"
@@ -1138,23 +1180,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                           Approve & vectorize
                         </Button>
                       )}
-                      {a.direction && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 flex-1 text-[11px]"
-                          disabled={busy || retryDirection.isPending}
-                          onClick={() => directionRow && retryDirection.mutate(directionRow)}
-                        >
-                          {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-                          More like this
-                        </Button>
-                      )}
 
                       <Button
                         variant="ghost"
                         size="sm"
-
                         className="h-7 px-2 text-[11px] text-destructive hover:text-destructive"
                         disabled={busy || retryDirection.isPending}
                         onClick={removeLogo}
@@ -1162,6 +1191,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                         Remove
                       </Button>
                     </div>
+
                   </div>
                 </div>
               );
