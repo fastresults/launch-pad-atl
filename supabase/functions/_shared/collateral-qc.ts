@@ -88,14 +88,21 @@ export function qcPage(
         const i = (W * y + x) << 2;
         return [png.data[i], png.data[i + 1], png.data[i + 2], png.data[i + 3]];
       };
-      // Paper = the colour just inside the corners, where nothing should print.
-      const corners = [
-        at(Math.round(W * 0.01), Math.round(H * 0.01)),
-        at(Math.round(W * 0.99) - 1, Math.round(H * 0.01)),
-        at(Math.round(W * 0.01), Math.round(H * 0.99) - 1),
-        at(Math.round(W * 0.99) - 1, Math.round(H * 0.99) - 1),
-      ];
-      const paper = [0, 1, 2].map((c) => Math.round(corners.reduce((s, p) => s + p[c], 0) / corners.length));
+      // Surface = the most common colour on the page. Averaging the corners
+      // breaks on a two-tone card, where half the corners are the colour field:
+      // the average is a colour that appears nowhere, and every pixel then
+      // reads as ink.
+      const counts = new Map<number, number>();
+      for (let y = 0; y < H; y += 5) {
+        for (let x = 0; x < W; x += 5) {
+          const p = at(x, y);
+          if (p[3] < 128) continue;
+          const key = ((p[0] >> 4) << 8) | ((p[1] >> 4) << 4) | (p[2] >> 4);
+          counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+      }
+      const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 0xfff;
+      const paper = [((top >> 8) & 15) * 16 + 8, ((top >> 4) & 15) * 16 + 8, (top & 15) * 16 + 8];
 
       const stride = 3;
       let ink = 0, total = 0;

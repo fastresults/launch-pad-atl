@@ -387,8 +387,8 @@ function clearSpace(height: number): number {
  * The mark box this piece's standard calls for — height inside the spec band,
  * width from the artwork's own aspect. Templates never hand-pick a logo size.
  */
-function markBoxFor(ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.62) {
-  return logoBox(rs, logoAspect(ctx), isLockup(ctx), maxWidth, bias);
+function markBoxFor(ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.62, fillWidth = false) {
+  return logoBox(rs, logoAspect(ctx), isLockup(ctx), maxWidth, bias, fillWidth);
 }
 
 /** Draw the mark at its spec size, top-left anchored at (x, y). */
@@ -505,7 +505,7 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   // and a short descriptor.
   const fieldBg = invert ? paper : primary;
   const fieldInk = inkOn(fieldBg);
-  const markBox = markBoxFor(ctx, rsF, W * 0.42, 0.7);
+  const markBox = markBoxFor(ctx, rsF, W * 0.32, 1, true);
   const clear = markBox.clear;
   const fieldW = Math.round(Math.min(W * 0.44, Math.max(W * 0.3, markBox.w + clear * 2)));
   const fieldX = W - fieldW;
@@ -541,7 +541,7 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const titleS = Math.max(rsB.minType, step(ad, -0.6));
   const rowS = Math.max(rsB.minType, step(ad, -0.7));
   const rowGap = rowS * 1.62;
-  const backMark = markBoxFor(ctx, rsB, W * 0.28, 0.6);
+  const backMark = markBoxFor(ctx, rsB, W * 0.26, 0.8, true);
   const backColW = Math.min(g.span(Math.max(4, Math.round(ad.grid.columns * 0.62))), W - M * 2 - backMark.w - backMark.clear);
 
   // Optically centre the whole back block. Pinning it to either trim edge left

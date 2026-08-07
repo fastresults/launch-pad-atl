@@ -224,9 +224,14 @@ export function logoBox(
   isLockup: boolean,
   maxWidth: number,
   bias = 0.62,
+  fillWidth = false,
 ): { w: number; h: number; clear: number } {
   const [lo, hi] = isLockup ? rs.lockupBand : rs.logoBand;
-  let h = lo + (hi - lo) * Math.min(1, Math.max(0, bias));
+  // `fillWidth` lets a wide lockup use the slot it was given, still clamped to
+  // the legal height band — a lockup set at a square mark's height reads tiny.
+  let h = fillWidth
+    ? Math.min(hi, Math.max(lo, maxWidth / Math.max(aspect, 0.2)))
+    : lo + (hi - lo) * Math.min(1, Math.max(0, bias));
   let w = h * Math.max(aspect, 0.2);
   if (w > maxWidth) {
     // Never break the band to fit a column: narrow the box, keep the height
