@@ -23,6 +23,7 @@ export function juryInstruction(
   logoType: string,
   spec: CraftSpec | null,
   profile: BusinessProfile | null,
+  brand?: { palette?: string[]; mood?: string } | null,
 ): string {
   return `Judge the attached rendered mark.
 
@@ -31,6 +32,8 @@ Craft move claimed: ${craftMove || "unstated"}
 Logo type: ${logoType || "unstated"}
 ${profile ? `Business: ${profile.category}. It must communicate: ${profile.must_communicate}` : ""}
 ${profile?.cliche_blacklist?.length ? `Banned category clichés: ${profile.cliche_blacklist.join(", ")}` : ""}
+${brand?.palette?.length ? `Locked brand palette it must use: ${brand.palette.join(", ")}` : ""}
+${brand?.mood ? `Brand visual world: ${brand.mood}` : ""}
 ${spec ? `Reference craft spec it must match: ${spec.construction} construction, abstraction ${spec.abstraction}/5, at most ${spec.element_count} elements, ${spec.colour_count} ink(s), ${spec.shared_quality}` : ""}
 
 Fail it if ANY of these are true:
@@ -42,11 +45,13 @@ Fail it if ANY of these are true:
 - Shapes are broken, lumpy, accidental, unbalanced, or float apart.
 - More than one competing idea, or it turns to mush at 24px.
 - It would work unchanged for a different company in the same category.
+- It ignores the locked brand palette, or introduces colours that are not in it.
+- It does not belong in the brand's visual world (wrong temperature, softness or register).
 
-Score honestly 1-5 on: structure_match, craft, relevance, distinctiveness, scalability.
+Score honestly 1-5 on: structure_match, craft, relevance, distinctiveness, scalability, palette_fidelity, moodboard_fit.
 Pass only if every score is 4 or higher.
 
-Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact change to make on the next render","scores":{"structure_match":1,"craft":1,"relevance":1,"distinctiveness":1,"scalability":1}}`;
+Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact change to make on the next render","scores":{"structure_match":1,"craft":1,"relevance":1,"distinctiveness":1,"scalability":1,"palette_fidelity":1,"moodboard_fit":1}}`;
 }
 
 export function parseJuryVerdict(parsed: any): JuryVerdict | null {

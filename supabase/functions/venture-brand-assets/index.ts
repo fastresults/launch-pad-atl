@@ -657,6 +657,7 @@ async function juryReview(
   d: LogoDirection,
   spec: CraftSpec | null,
   profile: BusinessProfile | null,
+  brand?: { palette?: string[]; mood?: string } | null,
 ): Promise<{ pass: boolean; note: string; scores: Record<string, number> }> {
   const instruction = juryInstruction(
     String((d as any).one_line_idea ?? d.symbol_concept ?? ""),
@@ -664,6 +665,7 @@ async function juryReview(
     String(d.logo_type ?? ""),
     spec,
     profile,
+    brand,
   );
   try {
     const parsed = parseJsonLoose(await callChatAI([
@@ -714,7 +716,7 @@ async function buildLogoVariants(spec: VectorSpec, tokens: any, companyName: str
 async function generateOne(prompt: string, size: string, referenceImages?: string[], model = "google/gemini-3.1-flash-image"): Promise<string> {
   const content: any[] = [{ type: "text", text: prompt }];
   if (referenceImages?.length) {
-    for (const url of referenceImages.slice(0, 3)) {
+    for (const url of referenceImages.slice(0, 7)) {
       content.push({ type: "image_url", image_url: { url } });
     }
   }
@@ -1107,6 +1109,19 @@ Deno.serve(async (req) => {
       const profile = (run.business_profile ?? null) as BusinessProfile | null;
       const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
       const concept = (row.concept ?? {}) as any;
+
+      // Palette in intent order (primary leads, one accent max), not object order.
+      const colorMap = (kit?.palette?.colors ?? tokens?.colors ?? {}) as any;
+      const orderedPalette: string[] = Array.isArray(colorMap)
+        ? colorMap.filter((v: any) => typeof v === "string")
+        : ["primary", "secondary", "accent"]
+            .map((k) => colorMap?.[k])
+            .filter((v: any) => typeof v === "string" && v.trim().length);
+
+      const refImages: string[] = (Array.isArray(run.reference_images) ? run.reference_images : [])
+        .filter(isUsableImageRef).slice(0, 3);
+      const moodTiles = await moodboardImageUrls(supabase, kit);
+
       const prompt = buildLogoRenderPrompt(
         {
           name: row.direction_name,
@@ -1117,20 +1132,23 @@ Deno.serve(async (req) => {
         },
         {
           brandName: snap.company_name ?? undefined,
-          palette: Array.isArray(tokens?.colors)
-            ? tokens.colors
-            : Object.values(tokens?.colors ?? {}).filter((v): v is string => typeof v === "string"),
+          palette: orderedPalette,
           moodboard: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
           personality: Array.isArray(kit?.dna?.personality) ? kit.dna.personality : undefined,
+          headingFont: kit?.typography?.heading?.family ?? tokens?.fonts?.heading ?? undefined,
+          bodyFont: kit?.typography?.body?.family ?? tokens?.fonts?.body ?? undefined,
+          referenceCount: refImages.length,
+          moodboardTileCount: moodTiles.length,
         },
         profile,
         craftSpec,
         typeof body?.correction === "string" ? body.correction : row.review_note ?? null,
       );
 
-      const refImages: string[] = [
-        ...(Array.isArray(run.reference_images) ? run.reference_images.slice(0, 3) : []),
-      ];
+      // Attachment order matters and is described in the prompt: marks first,
+      // then the moodboard tiles.
+      const visionRefs: string[] = [...refImages, ...moodTiles.slice(0, 4)];
+
       const path = `brand/${userId}/${snapshotId}/logo-renders/${directionId}.png`;
       const store = async (bytes: Uint8Array) => {
         const { error: upErr } = await supabase.storage.from("user-media")
@@ -1141,7 +1159,7 @@ Deno.serve(async (req) => {
       // Primary: reference-conditioned gateway render — it sees the founder's
       // three marks, so the output inherits their construction, not a guess.
       try {
-        const b64 = await renderMark(prompt, "1024x1024", refImages);
+        const b64 = await renderMark(prompt, "1024x1024", visionRefs);
         await store(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
         await advance({ render_status: "ready", render_path: path, render_provider: "gateway_reference", render_error: null });
         return new Response(JSON.stringify({ ok: true, rendered: true, provider: "gateway_reference", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -1197,7 +1215,13 @@ Deno.serve(async (req) => {
 
       const profile = (run.business_profile ?? null) as BusinessProfile | null;
       const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
-      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile);
+      const juryBrand = {
+        palette: ["primary", "secondary", "accent"]
+          .map((k) => (kit?.palette?.colors ?? tokens?.colors ?? {})?.[k])
+          .filter((v: any) => typeof v === "string" && v.trim().length),
+        mood: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
+      };
+      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand);
 
       const reviewAttempts = Number(row.review_attempts ?? 0);
       // One corrective re-render: the jury's note becomes the render brief's fix line.
