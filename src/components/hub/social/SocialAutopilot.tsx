@@ -1548,21 +1548,38 @@ function Step6Launch({
 
               <div className="mt-2 grid grid-cols-[56px_1fr] gap-2">
                 <div>
-                  <div className="h-14 w-14 overflow-hidden rounded-full border border-white/10 bg-muted/40">
+                  <button
+                    type="button"
+                    onClick={() => avatar?.signed_url && setPreviewId(avatar.id)}
+                    disabled={!avatar?.signed_url}
+                    title={avatar?.signed_url ? `Preview ${p} avatar` : undefined}
+                    className="group relative h-14 w-14 overflow-hidden rounded-full border border-white/10 bg-muted/40 transition hover:border-primary disabled:cursor-default"
+                  >
                     {avatar?.signed_url
-                      ? <img src={avatar.signed_url} alt={`${p} avatar`} className="h-full w-full object-cover" />
+                      ? <img src={avatar.signed_url} alt={`${p} avatar`} className="h-full w-full object-cover transition group-hover:scale-105" />
                       : <div className="flex h-full w-full items-center justify-center text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>}
-                  </div>
+                  </button>
                   <Button size="sm" variant="ghost" className="mt-1 h-6 w-full px-1 text-[9px]" disabled={!!regenerating[`${p}:avatar`]} onClick={() => regenerate(p, "avatar")}>
                     {regenerating[`${p}:avatar`] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
                   </Button>
                 </div>
                 <div>
-                  <div className="aspect-[4/1] overflow-hidden rounded-md border border-white/10 bg-muted/40">
+                  <button
+                    type="button"
+                    onClick={() => cover?.signed_url && setPreviewId(cover.id)}
+                    disabled={!cover?.signed_url}
+                    title={cover?.signed_url ? `Preview ${p} channel art` : undefined}
+                    className="group relative block aspect-[4/1] w-full overflow-hidden rounded-md border border-white/10 bg-muted/40 transition hover:border-primary disabled:cursor-default"
+                  >
                     {cover?.signed_url
-                      ? <img src={cover.signed_url} alt={`${p} cover`} className="h-full w-full object-cover" />
+                      ? <img src={cover.signed_url} alt={`${p} cover`} className="h-full w-full object-cover transition group-hover:scale-[1.03]" />
                       : <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">no cover</div>}
-                  </div>
+                    {cover?.signed_url && (
+                      <span className="pointer-events-none absolute inset-0 hidden items-center justify-center bg-background/50 text-[10px] font-medium group-hover:flex">
+                        Click to enlarge
+                      </span>
+                    )}
+                  </button>
                   <Button size="sm" variant="ghost" className="mt-1 h-6 px-1.5 text-[9px]" disabled={!!regenerating[`${p}:${kitTasks.find((task) => task.platform === p && task.asset !== "avatar")?.asset}`]} onClick={() => regenerate(p, kitTasks.find((task) => task.platform === p && task.asset !== "avatar")?.asset)}>
                     <RefreshCw className="mr-1 h-3 w-3" /> Regenerate cover
                   </Button>
