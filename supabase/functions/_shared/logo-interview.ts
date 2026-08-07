@@ -110,8 +110,8 @@ Art direction rules for the rough you request:
 - No gradients, no 3D, no drop shadows, no photorealism, no mockups, no badges reading like stock icons.`;
 
 
-/** Stream a strict-JSON turn out of the Responses API and accumulate it server-side. */
-async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewTurn> {
+/** Stream a strict-JSON payload out of the Responses API and accumulate it server-side. */
+async function callDesigner(apiKey: string, input: any[], name: string, schema: unknown): Promise<any> {
   const res = await fetch(RESPONSES_URL, {
     method: "POST",
     headers: {
@@ -125,14 +125,7 @@ async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewT
       stream: true,
       store: false,
       reasoning: { effort: "low", summary: "auto" },
-      text: {
-        format: {
-          type: "json_schema",
-          name: "logo_interview_turn",
-          strict: true,
-          schema: SCHEMA,
-        },
-      },
+      text: { format: { type: "json_schema", name, strict: true, schema } },
     }),
   });
 
@@ -169,8 +162,19 @@ async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewT
     }
   }
 
-  if (!text.trim()) throw new Error("The designer returned an empty turn. Try again.");
-  const parsed = JSON.parse(text) as InterviewTurn;
+  if (!text.trim()) throw new Error("The designer returned an empty response. Try again.");
+  return JSON.parse(text);
+}
+
+function normalizeDirection(d: any): RoughDirection {
+  return {
+    title: typeof d?.title === "string" && d.title ? d.title : "The mark",
+    render_brief: typeof d?.render_brief === "string" ? d.render_brief : "",
+  };
+}
+
+async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewTurn> {
+  const parsed = await callDesigner(apiKey, input, "logo_interview_turn", SCHEMA);
   return {
     read_back: parsed.read_back ?? null,
     question: parsed.question ?? "",
@@ -178,11 +182,12 @@ async function callInterviewer(apiKey: string, input: any[]): Promise<InterviewT
     choices: Array.isArray(parsed.choices) ? parsed.choices.slice(0, 4) : [],
     allow_free_text: parsed.allow_free_text !== false,
     multi_select: parsed.multi_select === true,
-    art_direction: Array.isArray(parsed.art_direction) ? parsed.art_direction.slice(0, 3) : [],
+    direction: normalizeDirection(parsed.direction),
     brief_summary: parsed.brief_summary ?? "",
     done: parsed.done === true,
   };
 }
+
 
 export type StudioContext = {
   companyName: string;
