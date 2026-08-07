@@ -7,10 +7,19 @@ import { Progress } from "@/components/ui/progress";
 import { getMyLegalSetup } from "@/lib/legal-setup.functions";
 import { buildLegalSteps } from "@/lib/legal-setup";
 import { getStateByCode } from "@/lib/legal-setup-states";
+import { resolveEntityState } from "@/lib/entity-state";
+import { getMyBriefLocation } from "@/lib/entity-state.functions";
 
 export function LegalSetupCard() {
   const { data } = useQuery({ queryKey: ["my", "legal-setup"], queryFn: getMyLegalSetup });
-  const state = getStateByCode(data?.entity_state || "GA");
+  const { data: brief } = useQuery({ queryKey: ["my", "brief-location"], queryFn: getMyBriefLocation });
+  const resolved = resolveEntityState({
+    savedState: data?.entity_state,
+    savedSource: data?.entity_state_source,
+    briefRegion: brief?.region,
+    briefCity: brief?.city,
+  });
+  const state = getStateByCode(resolved.code);
   const steps = buildLegalSteps(state);
   const completedMap = data?.steps_completed ?? {};
   const done = steps.filter((s) => completedMap[s.key]).length;
