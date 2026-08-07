@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { normalizeParagraphs } from "@/lib/markdown-normalize";
+import { normalizeMarkdown } from "@/lib/markdown-normalize";
 import remarkGfm from "remark-gfm";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -113,7 +113,7 @@ function CodeBlock({ inline, className, children }: any) {
           <Copy className="h-3 w-3" /> Copy
         </button>
       </div>
-      <pre className="overflow-x-auto p-3 font-mono text-[12.5px] leading-6 text-foreground/90">
+      <pre className="max-w-full overflow-x-auto whitespace-pre-wrap break-words p-3 font-mono text-[12.5px] leading-6 text-foreground/90">
         <code>{txt}</code>
       </pre>
     </div>
@@ -233,7 +233,7 @@ function makeComponents(
     code: CodeBlock,
     table: ({ children }: any) => (
       <div className="my-4 overflow-x-auto rounded-lg border border-white/10">
-        <table className="w-full border-collapse text-sm">{children}</table>
+        <table className="w-full border-collapse text-sm sm:min-w-[520px]">{children}</table>
       </div>
     ),
     thead: ({ children }: any) => (
@@ -1232,9 +1232,9 @@ export function DocumentViewer({
             </div>
           )}
 
-          <article id="doc-viewer-article" className="mx-auto max-w-[72ch] px-6 py-6">
+          <article id="doc-viewer-article" className="mx-auto min-w-0 max-w-[72ch] px-6 py-6 [overflow-wrap:anywhere]">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-              {normalizeParagraphs(content)}
+              {normalizeMarkdown(content)}
             </ReactMarkdown>
           </article>
 
@@ -1311,7 +1311,7 @@ export function DocumentViewer({
               {assessment && (
                 <div className="mt-5 border-t border-white/10 pt-4">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
-                    {normalizeParagraphs(assessment)}
+                    {normalizeMarkdown(assessment)}
                   </ReactMarkdown>
                 </div>
               )}
@@ -1326,7 +1326,7 @@ export function DocumentViewer({
           style={{ position: "absolute", left: "-99999px", top: 0, width: "72ch", pointerEvents: "none" }}
         >
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
-            {normalizeParagraphs(exportContent)}
+            {normalizeMarkdown(exportContent)}
           </ReactMarkdown>
         </div>
       </DialogContent>
