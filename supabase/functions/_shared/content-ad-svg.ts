@@ -342,8 +342,9 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
     const textLeft = inset + ruleGutter;
     const textW = W - textLeft - inset;
 
-    const kickerSize = Math.round(minDim * 0.026);
-    const ctaSize = Math.round(minDim * 0.030);
+    // Single-line elements shrink to the column rather than run past it.
+    const kickerSize = fitSingleLine(kickerText.toUpperCase(), Math.round(minDim * 0.026), textW, 0.22);
+    const ctaSize = fitSingleLine(ctaText, Math.round(minDim * 0.030), textW, 0.02);
     const maxBlockH = Math.round(H * 0.52);
 
     // Budget the headline against the fixed-height elements around it.
@@ -353,6 +354,13 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
     const head = headlineText
       ? fitDisplay(headlineText, textW, minDim, maxHeadlineLines(args.aspect), Math.max(minDim * 0.12, maxBlockH - fixedH))
       : null;
+
+    if (head) {
+      metrics.headline_lines = head.lines.length;
+      metrics.headline_fits = head.fits;
+      metrics.longest_line_pct = head.longestPct;
+    }
+
 
     const headH = head ? head.lines.length * head.lineHeight : 0;
     const gapKicker = kickerText ? Math.round(kickerSize * RHYTHM.kickerToHead) : 0;
