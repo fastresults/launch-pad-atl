@@ -1313,13 +1313,14 @@ Deno.serve(async (req) => {
           uploadVariant(variants.knockout, "knockout"),
         ]);
 
-        // Vision gate — only when there is time left in the request window.
+        // The trace is judged against the render it came from, not re-judged
+        // as a concept — the design decision was already made upstream.
         let visionPass = true;
         let visionNote = "";
-        if (Date.now() - started < 60_000) {
+        if (Date.now() - started < 60_000 && renderUrl) {
           const png = await rasterizeSvg(variants.mark, 512);
           if (png) {
-            const verdict = await critiqueMark(png, row.concept as LogoDirection, strategy);
+            const verdict = await juryReview(`data:image/png;base64,${png}`, row.concept as LogoDirection, craftSpec, profile);
             visionPass = verdict.pass;
             visionNote = verdict.note;
           }
@@ -1337,6 +1338,8 @@ Deno.serve(async (req) => {
 
         const asset = {
           ok: true,
+          kind: "vector",
+          vectorized: true,
           url: uploaded.url, path: uploaded.path, svg_url: uploaded.url, svg_path: uploaded.path,
           variants: {
             mark: { url: uploaded.url, path: uploaded.path },
@@ -1352,9 +1355,9 @@ Deno.serve(async (req) => {
           },
           direction_name: row.direction_name, logo_type: row.logo_type,
           render: row.render_path
-            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "higgsfield" }
+            ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "gateway_reference" }
             : null,
-          human_link: row.concept?.human_link ?? "",
+          business_link: row.concept?.business_link ?? row.concept?.human_link ?? "",
           craft_move: row.concept?.craft_move ?? row.concept?.geometric_operation ?? "",
           one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
           why_memorable: row.concept?.why_memorable ?? "",
@@ -1364,6 +1367,7 @@ Deno.serve(async (req) => {
           review_passed: passed, review_note: note, review_score: scores,
           created_at: new Date().toISOString(),
         };
+
         const { error: publishError } = await supabase.rpc("publish_brand_logo_direction", { p_direction_id: directionId, p_run_id: runId, p_run_version: run.version, p_asset: asset, p_svg_path: uploaded.path, p_preview_path: uploaded.path, p_review_passed: passed, p_review_score: scores, p_review_note: note });
         if (publishError) throw publishError;
         return new Response(JSON.stringify({ ok: true, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
