@@ -993,18 +993,17 @@ function Step5BuildKit({
               <RefreshCw className="mr-1 h-3 w-3" /> Regenerate all
             </Button>
           )}
-          {anyGenerated && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 text-[11px] text-destructive hover:text-destructive"
-              disabled={running}
-              onClick={() => clearAssets({})}
-              title="Delete every generated image and start the artwork over"
-            >
-              <Trash2 className="mr-1 h-3 w-3" /> Clear all
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px] text-destructive hover:text-destructive"
+            disabled={running}
+            onClick={() => clearAssets({})}
+            title="Delete every generated image and start the artwork over"
+          >
+            <Trash2 className="mr-1 h-3 w-3" /> Reset all
+          </Button>
+
 
         </div>
       </header>
