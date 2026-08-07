@@ -1265,13 +1265,19 @@ Deno.serve(async (req) => {
       }
 
       const concept = (row.concept ?? {}) as any;
+      const { data: signedSvg } = row.svg_path
+        ? await supabase.storage.from("user-media").createSignedUrl(row.svg_path, 60 * 60 * 24 * 7)
+        : { data: null } as any;
+      const svgUrl = signedSvg?.signedUrl ?? null;
       const asset = {
         ok: true,
-        kind: "raster",
-        url: renderUrl,
-        path: row.render_path,
-        preview_url: renderUrl,
-        render: { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "gateway_reference" },
+        kind: row.svg_path ? "vector_concept" : "raster",
+        url: renderUrl ?? svgUrl,
+        path: row.render_path ?? row.svg_path,
+        preview_url: renderUrl ?? svgUrl,
+        svg_url: svgUrl,
+        svg_path: row.svg_path ?? null,
+        render: row.render_path ? { path: row.render_path, url: renderUrl, provider: row.render_provider ?? "vector" } : null,
         direction_name: row.direction_name,
         logo_type: row.logo_type,
         business_link: concept.business_link ?? concept.human_link ?? "",
@@ -1295,12 +1301,13 @@ Deno.serve(async (req) => {
         p_run_id: runId,
         p_run_version: run.version,
         p_asset: asset,
-        p_svg_path: null,
-        p_preview_path: row.render_path,
+        p_svg_path: row.svg_path ?? null,
+        p_preview_path: row.render_path ?? row.svg_path,
         p_review_passed: verdict.pass,
         p_review_score: verdict.scores,
         p_review_note: verdict.note,
       });
+
       if (publishError) throw publishError;
       return new Response(JSON.stringify({ ok: true, pass: verdict.pass, asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
