@@ -403,55 +403,32 @@ function tokensBlockOf(tokens: any): string {
   ].filter(Boolean).join("\n");
 }
 
-/** Stage 1 — the human truth first, then the one-page brief every concept serves. */
-export async function buildBrandStrategy(ctx: any, tokens: any, docsBlock: string): Promise<BrandStrategy | null> {
-  const system = `You are the strategy director at a brand identity studio. Before you write a single design word you write down the human being at the centre of the business: who they are, the moment in their life this business exists for, and how they should feel. Only then do you write the brief. You are ruthless about specificity: a brief that could describe any company in this category is a failed brief, and an abstract "empowerment / innovation / trust" brief is a failed brief.`;
-  const user = `Read the venture below. First find the humanity in it, then write its identity brief.
-
-VENTURE
-${ventureBlockOf(ctx)}
-
-BRAND TOKENS
-${tokensBlockOf(tokens)}
-
-${docsBlock ? `FINISHED BRAND ASSETS (the founder's own words — treat as authoritative)\n${docsBlock}` : ""}
-
-Return STRICT JSON:
-{"human_truth":"one sentence naming the actual person this serves, in concrete human terms — not a demographic","human_moment":"the specific moment in that person's day or life this business exists to fix","first_feeling":"what that person should feel in the first two seconds of seeing this brand — one plain phrase","physical_anchor":"the ONE real object, gesture, tool or space that moment physically lives in — something you could photograph","core_idea":"one sentence — the single idea the mark must carry","attributes":["three adjectives, no synonyms of each other"],"metaphor_territory":"the ONE visual territory worth mining, drawn from the physical anchor, and why","not_list":["4-6 things this brand must never look like — name the category clichés specifically"]}`;
-
+/**
+ * STAGE 1 — read the founder's three inspiration marks.
+ *
+ * Structure only. This is what the old pipeline was missing: it invented a
+ * house style from a mood brief and ignored the one piece of art direction the
+ * founder actually gave it.
+ */
+export async function readReferenceCraftSpec(referenceImages: string[]): Promise<CraftSpec | null> {
+  const urls = (referenceImages ?? []).filter((u) => typeof u === "string" && u.startsWith("http")).slice(0, 3);
+  if (!urls.length) return null;
+  const content: any[] = [{ type: "text", text: REFERENCE_READ_INSTRUCTION }];
+  for (const url of urls) content.push({ type: "image_url", image_url: { url } });
   const parsed = await callChatJsonOnce([
-    { role: "system", content: system },
-    { role: "user", content: user },
+    { role: "system", content: REFERENCE_READ_SYSTEM },
+    { role: "user", content },
   ]);
-  if (!parsed?.core_idea) return null;
-  return {
-    human_truth: parsed.human_truth ? String(parsed.human_truth) : undefined,
-    human_moment: parsed.human_moment ? String(parsed.human_moment) : undefined,
-    first_feeling: parsed.first_feeling ? String(parsed.first_feeling) : undefined,
-    physical_anchor: parsed.physical_anchor ? String(parsed.physical_anchor) : undefined,
-    core_idea: String(parsed.core_idea),
-    attributes: Array.isArray(parsed.attributes) ? parsed.attributes.map(String) : [],
-    metaphor_territory: String(parsed.metaphor_territory ?? ""),
-    not_list: Array.isArray(parsed.not_list) ? parsed.not_list.map(String) : [],
-  };
+  return parseCraftSpec(parsed);
 }
 
-
-function strategyBlockOf(strategy: BrandStrategy | null): string {
-  if (!strategy) return "";
-  return [
-    "HUMAN TRUTH (start here — the mark exists to make this person feel something)",
-    strategy.human_truth ? `Who: ${strategy.human_truth}` : "",
-    strategy.human_moment ? `The moment: ${strategy.human_moment}` : "",
-    strategy.first_feeling ? `First feeling: ${strategy.first_feeling}` : "",
-    strategy.physical_anchor ? `Physical anchor: ${strategy.physical_anchor}` : "",
-    "",
-    "STRATEGY BRIEF (every concept must serve this)",
-    `Core idea: ${strategy.core_idea}`,
-    `Attributes: ${strategy.attributes.join(", ")}`,
-    `Metaphor territory: ${strategy.metaphor_territory}`,
-    `Must never look like: ${strategy.not_list.join("; ")}`,
-  ].filter(Boolean).join("\n");
+/** STAGE 2 — read the business out of the founder's own finished copy. */
+export async function readBusinessProfile(ctx: any, tokens: any, docsBlock: string): Promise<BusinessProfile | null> {
+  const parsed = await callChatJsonOnce([
+    { role: "system", content: BUSINESS_READ_SYSTEM },
+    { role: "user", content: businessReadPrompt(ventureBlockOf(ctx), docsBlock, tokensBlockOf(tokens)) },
+  ]);
+  return parseBusinessProfile(parsed);
 }
 
 /** The universal amateur tells. Named explicitly because models default to them. */
@@ -463,58 +440,67 @@ const BANNED_FORMS = `- A cluster of rounded squares, a plus/cross of blocks, or
 - Circuit boards, hexagons or "AI orbs" unless the venture is literally hardware.
 - Anything that would still work, unchanged, for a different company in this category.`;
 
-/** Stage 2 — generate wide, then cut. Only the strongest concepts survive. */
+/**
+ * STAGE 3 — concepting. Generate wide, then cut. Every survivor has to satisfy
+ * both reads: the business profile (what it is about) and the craft spec (how
+ * it is built).
+ */
 async function generateLogoConcepts(
   ctx: any,
   tokens: any,
   count: number,
-  strategy: BrandStrategy | null,
+  profile: BusinessProfile | null,
+  spec: CraftSpec | null,
   docsBlock: string,
   referenceImages?: string[],
   moodboardImages?: string[],
 ): Promise<LogoDirection[]> {
-  const system = `You are a brand identity designer whose work gets posted to Dribbble's award feed and wins there. Pentagram, COLLINS, Chermayeff & Geismar lineage. You design MARKS with a point of view: one idea, drawn with real craft — a continuous contour, a true counterform, a ligature, a shared tangent — never a pile of primitive shapes. You start from the human being in the brief, not from geometry. You generate widely, then kill almost all of your own work.`;
-
-  const strategyBlock = strategyBlockOf(strategy);
-
-  const refsLine = referenceImages?.length
-    ? `\nThe founder attached ${referenceImages.length} reference logo(s) they admire. Study them ONLY for structural principles — proportion, stroke weight, level of abstraction, counterform, wordmark tracking. Never restyle or echo their subject matter. State the borrowed principle in reference_learning.`
-    : `\nNo logo references provided. Drive every concept from the human truth and the brief.`;
+  const system = `You are a brand identity designer whose work gets published in design annuals. Pentagram, COLLINS, Chermayeff & Geismar lineage. You design MARKS with a point of view: one idea, drawn with real craft — a continuous contour, a true counterform, a ligature, a shared tangent — never a pile of primitive shapes. You start from what the business literally does and from the client's own reference marks, never from decoration. You generate widely, then kill almost all of your own work.`;
 
   const moodLine = moodboardImages?.length
-    ? `\nThe brand's LIVE MOODBOARD is attached as ${moodboardImages.length} image(s). This is the visual world the brand already lives in. Read its form language — is it soft or hard, organic or engineered, warm or cool, dense or airy — and build marks that belong in it. Name the tile each direction inherits from in moodboard_link.`
+    ? `\nThe brand's LIVE MOODBOARD is attached. Read its form language — soft or hard, organic or engineered, warm or cool — and build marks that belong in it. Name the tile each direction inherits from in moodboard_link.`
     : `\nNo moodboard available; infer the visual world from the palette and personality tokens.`;
 
+  const refsLine = referenceImages?.length
+    ? `\nThe founder's ${referenceImages.length} reference mark(s) are attached AFTER the moodboard. The craft spec above was read from them and is binding. Study them for construction only — never echo their subject matter. State the borrowed principle in reference_learning.`
+    : "";
+
   const instruction = `PROCESS — follow it exactly:
-1. Silently write the human moment in your own words, and picture the physical anchor.
-2. Silently generate 12 candidate marks across different logo types, each one a different way of drawing that moment.
-3. Score each 1-5 on: distinctiveness, craft (is there a real drawing move, or is it assembled from primitives?), relevance to the human truth, scalability at 16px, memorability.
-4. Kill every candidate that is merely tidy. The bar is: would a working identity designer publish this and be proud of it?
-5. Return ONLY the ${count} strongest survivors, each a DIFFERENT logo_type and a genuinely different form family.
+1. Silently restate what this business does and who buys it, in one sentence.
+2. Silently generate 8 candidate marks, each drawn from the honest symbol vocabulary and each obeying the craft spec.
+3. Score each 1-5 on: structure match to the craft spec, craft (is there a real drawing move, or is it assembled from primitives?), relevance to the business, scalability at 24px, memorability.
+4. Kill every candidate that is merely tidy, and every one that uses a banned category cliché.
+5. Return ONLY the ${count} strongest survivors, each a DIFFERENT form family.
 
 Return STRICT JSON:
-{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","human_link":"one sentence tracing this mark back to the human moment","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark, e.g. 'one continuous stroke folded back on itself' or 'a circle cut by two mirrored arcs'","craft_move":"the deliberate craft decision: counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the human truth","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"distinctiveness":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
+{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","business_link":"one sentence tracing this mark back to what the business actually does","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark","craft_move":"counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the real work","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed from the references" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"structure_match":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
 
 Hard rules:
-- Exactly ${count} directions, each a different logo_type and a different form family. Four variations of one shape is a failed submission.
-- Every mark must be drawable as flat vector art in 1-2 flat colours. No scenes, no illustrations, no rendered detail, no depth.
+- Exactly ${count} directions, each a different form family. Four variations of one shape is a failed submission.
+- Obey the craft spec's element ceiling, abstraction level and ink count exactly.
+- Every mark must be drawable as flat vector art in 1-2 flat colours. No scenes, no depth, no rendered detail.
 - Every mark must have ONE named craft move. "Three shapes arranged neatly" is not a craft move.
-- Curves, arcs and continuous contours are the default vocabulary. Rectilinear construction is allowed only when the human truth genuinely demands it, and never for more than one of the ${count} directions.
-- Reject anything on the venture's own "must never look like" list; it outranks your instincts.
+- Anything on the business profile's banned list is an instant fail; it outranks your instincts.
 - Never propose any of these:
 ${BANNED_FORMS}`;
 
   const userContent: any[] = [{
     type: "text",
-    text: `VENTURE\n${ventureBlockOf(ctx)}\n\nBRAND TOKENS (the live palette and type this mark will live in)\n${tokensBlockOf(tokens)}\n\n${strategyBlock}\n\n${docsBlock ? `FOUNDER'S OWN BRAND ASSETS\n${docsBlock.slice(0, 6000)}\n\n` : ""}${moodLine}\n${refsLine}\n\n${instruction}`,
+    text: [
+      `VENTURE\n${ventureBlockOf(ctx)}`,
+      `BRAND TOKENS (the live palette and type this mark will live in)\n${tokensBlockOf(tokens)}`,
+      businessProfileBlock(profile),
+      craftSpecBlock(spec),
+      docsBlock ? `FOUNDER'S OWN BRAND ASSETS\n${docsBlock.slice(0, 6000)}` : "",
+      `${moodLine}${refsLine}`,
+      instruction,
+    ].filter(Boolean).join("\n\n"),
   }];
   for (const url of (moodboardImages ?? []).slice(0, 4)) {
     userContent.push({ type: "image_url", image_url: { url } });
   }
-  if (referenceImages?.length) {
-    for (const url of referenceImages.slice(0, 3)) {
-      userContent.push({ type: "image_url", image_url: { url } });
-    }
+  for (const url of (referenceImages ?? []).slice(0, 3)) {
+    userContent.push({ type: "image_url", image_url: { url } });
   }
 
   const parsed = await callChatJsonOnce([
@@ -526,6 +512,7 @@ ${BANNED_FORMS}`;
   if (!directions.length) throw new Error("Creative Director returned no directions");
   return directions.slice(0, count) as LogoDirection[];
 }
+
 
 /**
  * The dossier is the single source of context every pass reads: the human
