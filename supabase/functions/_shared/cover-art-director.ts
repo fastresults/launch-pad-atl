@@ -713,6 +713,8 @@ The Scene Directive governs WHAT is depicted. The Canvas plan governs COLORS. Th
 ## Composition system
 ${system}
 
+## ${platformCompositionBlock(platform, asset)}
+
 ## Art direction
 ${brief}
 ${QUALITY}
