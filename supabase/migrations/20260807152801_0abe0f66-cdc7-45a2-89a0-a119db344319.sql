@@ -1,0 +1,1 @@
+ALTER TABLE public.venture_content_progress ADD COLUMN IF NOT EXISTS poster_layout text NOT NULL DEFAULT 'bottom-scrim';
