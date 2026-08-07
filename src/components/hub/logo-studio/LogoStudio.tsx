@@ -321,17 +321,31 @@ export default function LogoStudio({
                 )}
               </div>
 
-              {/* Roughs drawn for this turn */}
+              {/* The mark drawn for this turn — one, always */}
               {step.roughs.length > 0 && (
-                <div className="grid gap-3 pl-8 sm:grid-cols-3">
+                <div className="pl-8">
                   {step.roughs.map((rough) => {
                     const chosen = step.chosen_rough_id === rough.id;
+                    if (!isCurrent) {
+                      return (
+                        <div key={rough.id} className="flex items-center gap-3">
+                          {rough.url && (
+                            <img
+                              src={rough.url}
+                              alt={rough.title}
+                              className={`h-16 w-16 shrink-0 rounded border bg-white object-contain p-1 ${
+                                chosen ? "border-primary" : "border-white/10"
+                              }`}
+                            />
+                          )}
+                          <p className="text-[11px] text-muted-foreground">{rough.title}</p>
+                        </div>
+                      );
+                    }
                     return (
                       <div
                         key={rough.id}
-                        className={`overflow-hidden rounded-lg border transition ${
-                          chosen ? "border-primary ring-1 ring-primary/40" : "border-white/10 hover:border-white/25"
-                        }`}
+                        className="max-w-sm overflow-hidden rounded-xl border border-primary/40 ring-1 ring-primary/20"
                       >
                         {rough.url ? (
                           <img src={rough.url} alt={rough.title} className="aspect-square w-full bg-white object-contain" />
@@ -340,26 +354,20 @@ export default function LogoStudio({
                             Not drawn
                           </div>
                         )}
-                        <div className="space-y-2 p-2.5">
+                        <div className="space-y-2 p-3">
                           <div>
-                            <p className="text-xs font-semibold">{rough.title}</p>
-                            <p className="mt-0.5 line-clamp-3 text-[11px] leading-relaxed text-muted-foreground">
-                              {rough.brief}
-                            </p>
+                            <p className="text-sm font-semibold">{rough.title}</p>
+                            <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{rough.brief}</p>
                           </div>
-                          {isCurrent && !answered && (
+                          {!answered && (
                             <div className="flex flex-wrap gap-1.5">
-                              <Button size="sm" variant="secondary" className="h-7 px-2 text-[11px]" disabled={busy}
-                                onClick={() => submitAnswer(rough.id)}>
-                                This direction
-                              </Button>
                               <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" disabled={busy}
                                 onClick={() => { setRefineFor(rough); setRefineNote(""); }}>
-                                <PenLine className="mr-1 h-3 w-3" /> Tweak
+                                <PenLine className="mr-1 h-3 w-3" /> Tweak this mark
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" disabled={busy}
+                              <Button size="sm" variant="secondary" className="h-7 px-2 text-[11px]" disabled={busy}
                                 onClick={() => approve.mutate(rough.id)}>
-                                <Check className="mr-1 h-3 w-3" /> Approve
+                                <Check className="mr-1 h-3 w-3" /> Approve this mark
                               </Button>
                             </div>
                           )}
@@ -370,6 +378,7 @@ export default function LogoStudio({
                   })}
                 </div>
               )}
+
 
               {step.render_error && isCurrent && (
                 <p className="pl-8 text-[11px] text-amber-300">{step.render_error}</p>
