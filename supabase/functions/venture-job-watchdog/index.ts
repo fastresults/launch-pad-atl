@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     const { data: staleLogoDirections } = await supabase
       .from("brand_logo_directions")
       .select("id, run_id, snapshot_id")
-      .in("status", ["developing_vector", "drawing", "reviewing"])
+      .in("status", ["developing_vector", "drawing", "reviewing", "rendering_concept"])
       .lt("lease_expires_at", now);
     if (staleLogoDirections?.length) {
       await supabase.from("brand_logo_directions").update({
