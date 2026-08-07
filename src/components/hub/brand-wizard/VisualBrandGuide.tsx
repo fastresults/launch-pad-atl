@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { loadGoogleFont } from "@/lib/brand-wizard";
 import { sanitizeGuideMarkdown } from "@/lib/brand/sanitize-guide-markdown";
 import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
+import { colorSpaces } from "@/lib/brand/color-spaces";
+import { fontFallbacks } from "@/lib/brand/font-fallbacks";
 
 const COLOR_ORDER = ["primary", "secondary", "accent", "bg", "fg", "muted", "surface", "text", "success", "warning", "danger"];
 
@@ -164,6 +166,7 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
                 The quick brown fox jumps
               </div>
               <div className="mt-3 font-mono text-xs text-muted-foreground">Weight {headingWeight}</div>
+              <div className="mt-1 font-mono text-[11px] text-muted-foreground">Fallback: {fontFallbacks(heading)}</div>
             </div>
             <div className="rounded-lg border bg-white p-5" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Body Typeface</div>
@@ -174,6 +177,7 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
                 Body copy should feel clear, confident, and immediately usable across the startup’s website, emails, decks, and social channels.
               </p>
               <div className="mt-3 font-mono text-xs text-muted-foreground">Weight {bodyWeight}</div>
+              <div className="mt-1 font-mono text-[11px] text-muted-foreground">Fallback: {fontFallbacks(body)}</div>
             </div>
           </div>
         </section>
