@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { loadGoogleFont } from "@/lib/brand-wizard";
 import { sanitizeGuideMarkdown } from "@/lib/brand/sanitize-guide-markdown";
 import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
+import { colorSpaces } from "@/lib/brand/color-spaces";
+import { fontFallbacks } from "@/lib/brand/font-fallbacks";
 
 const COLOR_ORDER = ["primary", "secondary", "accent", "bg", "fg", "muted", "surface", "text", "success", "warning", "danger"];
 
@@ -28,6 +30,7 @@ function hexToRgb(hex: string) {
   const h = String(hex || "").replace(/^#/, "").slice(0, 6).padEnd(6, "0");
   return `${parseInt(h.slice(0, 2), 16) || 0}, ${parseInt(h.slice(2, 4), 16) || 0}, ${parseInt(h.slice(4, 6), 16) || 0}`;
 }
+
 
 function AssetImage({ asset, alt, className, imgClassName }: any) {
   const [src, setSrc] = useState(asset?.url || "");
@@ -139,7 +142,12 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
                     <span className="text-xs font-semibold uppercase tracking-wide">{key}</span>
                     <span className="font-mono text-xs">{value}</span>
                   </div>
-                  <div className="mt-1 font-mono text-[11px] text-muted-foreground">RGB {hexToRgb(value)}</div>
+                  <div className="mt-1 space-y-0.5 font-mono text-[11px] text-muted-foreground">
+                    <div>RGB {hexToRgb(value)}</div>
+                    <div>CMYK {colorSpaces(value).cmyk.join(", ")}</div>
+                    <div style={{ color: primary }}>{colorSpaces(value).pantone}</div>
+                  </div>
+
                 </div>
               </div>
             ))}
@@ -158,6 +166,7 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
                 The quick brown fox jumps
               </div>
               <div className="mt-3 font-mono text-xs text-muted-foreground">Weight {headingWeight}</div>
+              <div className="mt-1 font-mono text-[11px] text-muted-foreground">Fallback: {fontFallbacks(heading)}</div>
             </div>
             <div className="rounded-lg border bg-white p-5" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Body Typeface</div>
@@ -168,6 +177,7 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
                 Body copy should feel clear, confident, and immediately usable across the startup’s website, emails, decks, and social channels.
               </p>
               <div className="mt-3 font-mono text-xs text-muted-foreground">Weight {bodyWeight}</div>
+              <div className="mt-1 font-mono text-[11px] text-muted-foreground">Fallback: {fontFallbacks(body)}</div>
             </div>
           </div>
         </section>

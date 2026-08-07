@@ -2724,6 +2724,51 @@ export type Database = {
         }
         Relationships: []
       }
+      venture_brand_collateral: {
+        Row: {
+          created_at: string
+          height: number | null
+          id: string
+          kind: string
+          meta: Json
+          mime_type: string
+          name: string
+          snapshot_id: string
+          storage_path: string | null
+          updated_at: string
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          height?: number | null
+          id?: string
+          kind: string
+          meta?: Json
+          mime_type?: string
+          name: string
+          snapshot_id: string
+          storage_path?: string | null
+          updated_at?: string
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          height?: number | null
+          id?: string
+          kind?: string
+          meta?: Json
+          mime_type?: string
+          name?: string
+          snapshot_id?: string
+          storage_path?: string | null
+          updated_at?: string
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: []
+      }
       venture_brand_kits: {
         Row: {
           created_at: string
