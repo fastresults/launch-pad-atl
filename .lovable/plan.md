@@ -21,12 +21,21 @@ Work:
   reporting it).
 - Add a brand board section: primary logo, logo variants, full colour palette swatches with hex
   values, and typography specimens rendered from the brand kit.
-- Where an asset has header art, show it at the top of the section, full-bleed, rounded.
-- Where an asset has no header art, render a branded cover plate (venture colours + serif title)
-  instead of a bare heading, so no section looks empty.
-- Add a one-click "Generate missing header art" action in the hub's share dialog that backfills
-  header images for the assets missing them, so shares can be fully illustrated before sending.
-- Inline images embedded inside generated markdown keep working and stay rounded.
+- Every section gets a real header graphic — no exceptions. A backfill pass generates on-brand
+  header art (venture palette, industry context, no text/glyphs) for the 43 assets currently
+  missing one, plus the brand, social, campaign and overview sections, and stores it the same way
+  existing header art is stored so it is reused everywhere (hub viewer, share link, report).
+- Automated quality check on each generated header: image actually written and re-readable,
+  correct aspect/min resolution, not blank/near-solid, no stray text detected, palette in family.
+  Anything that fails is regenerated (up to a few attempts) rather than shipped.
+- A coverage gate on the share: the hub reports "N of N sections illustrated" and offers one-click
+  "Generate missing header art" for any gap, with progress; a share can be published while art is
+  still generating, and sections fill in as they finish.
+- Only if a header still fails after retries does the section fall back to a branded cover plate
+  (venture colours + serif title), so a section is never bare.
+- Header art renders full-width and rounded at the top of each section in both the share link and
+  the exported report; inline images inside markdown keep working and stay rounded.
+
 
 ## 3. Markdown that renders as markdown
 
