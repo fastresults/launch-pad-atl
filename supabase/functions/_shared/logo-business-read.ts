@@ -76,6 +76,7 @@ export function parseBusinessProfile(parsed: any): BusinessProfile | null {
     human_truth: String(parsed.human_truth ?? ""),
     emotional_promise: String(parsed.emotional_promise ?? ""),
     meaning_symbols: arr(parsed.meaning_symbols),
+    human_figures: String(parsed.human_figures ?? ""),
     symbol_vocabulary: arr(parsed.symbol_vocabulary),
     cliche_blacklist: arr(parsed.cliche_blacklist),
     must_communicate: String(parsed.must_communicate ?? ""),
