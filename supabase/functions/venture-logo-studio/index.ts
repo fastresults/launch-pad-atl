@@ -639,7 +639,7 @@ Deno.serve(async (req) => {
         traced: traced.traced,
         note: traced.note,
         vectorUrl: stored.url,
-        session: await withFreshUrls(supabase, data),
+        session: await withFreshUrls(supabase, data, brand),
       });
     }
 
@@ -702,7 +702,7 @@ Deno.serve(async (req) => {
         last_error: null,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, asset, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, asset, session: await withFreshUrls(supabase, data, brand) });
     }
 
     /* ---------------- upload own ---------------- */
@@ -731,7 +731,7 @@ Deno.serve(async (req) => {
         last_error: null,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, traced, vectorUrl: stored.url, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, traced, vectorUrl: stored.url, session: await withFreshUrls(supabase, data, brand) });
     }
 
     /* ---------------- reset ---------------- */
