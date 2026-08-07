@@ -20,6 +20,10 @@ export interface ConceptBrief {
   readsAs?: string;
   /** What the mark means, in human terms. */
   meaning?: string;
+  /** The additional true idea the form carries beyond its literal subject. */
+  secondRead?: string;
+  /** The shared law all three marks in this set obey. */
+  setLaw?: string;
 }
 
 
