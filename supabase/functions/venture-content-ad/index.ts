@@ -131,10 +131,17 @@ async function callTextOnly(prompt: string, size: string, apiKey: string) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const startedAt = Date.now();
+  const reqId = crypto.randomUUID().slice(0, 8);
+  const step = (label: string, extra?: unknown) =>
+    console.log(`[content-ad ${reqId}] +${Date.now() - startedAt}ms ${label}${extra === undefined ? "" : " " + JSON.stringify(extra)}`);
+
   try {
-    const requestStartedAt = Date.now();
+    const requestStartedAt = startedAt;
+    step("request received");
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ error: "LOVABLE_API_KEY not configured" }, 500);
+
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
