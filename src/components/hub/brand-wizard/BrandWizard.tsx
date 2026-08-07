@@ -1202,6 +1202,9 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
                     {a.meaning && (
                       <p className="line-clamp-3 text-[11px] italic leading-relaxed text-foreground/80">{a.meaning}</p>
                     )}
+                    {a.second_read && (
+                      <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">Second read: {a.second_read}</p>
+                    )}
                     {(a.one_line_idea || a.symbol_concept) && (
                       <p className="line-clamp-3 text-[11px] leading-relaxed text-foreground/80">{a.one_line_idea || a.symbol_concept}</p>
                     )}

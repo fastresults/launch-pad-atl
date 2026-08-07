@@ -97,6 +97,8 @@ type LogoDirection = {
   one_line_idea?: string;   // the single shape idea, one sentence
   reads_as?: string;        // the literal subject a stranger names on sight
   meaning?: string;         // what the mark means, in human terms
+  second_read?: string;     // the extra true idea the form carries beyond its subject
+  set_law?: string;         // the shared construction law across the set
   geometric_operation?: string; // the one construction move that creates the mark
   craft_move?: string;      // counterform | continuous stroke | tangent | ligature | negative space
   moodboard_link?: string;  // which moodboard tile's form language it inherits
@@ -466,11 +468,14 @@ async function generateLogoConcepts(
 5. Return ONLY the ${count} strongest survivors, each a DIFFERENT form family.
 
 Return STRICT JSON:
-{"directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","reads_as":"the literal subject a stranger names on sight, e.g. 'people sheltered under a tree' — never a shape description","meaning":"one sentence: what this mark MEANS, in human terms, to someone who sees it","business_link":"one sentence tracing this mark back to what the business actually does","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark","craft_move":"counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the real work","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed from the references" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"meaning_depth":5,"structure_match":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
+{"set_law":"ONE sentence binding all ${count} marks: the container rule (contained roundel | open form | anchored baseline — choose one), the single stroke weight, the detail budget, and the colour role assignment (which token is dominant, which is secondary, which is the single accent and what it lands on)","directions":[{"direction_name":"short evocative name","logo_type":"wordmark|lettermark|monogram|pictorial mark|abstract mark|emblem|combination mark","reads_as":"the literal subject a stranger names on sight, e.g. 'people sheltered under a tree' — never a shape description","meaning":"one sentence: what this mark MEANS, in human terms, to someone who sees it","second_read":"the ADDITIONAL true idea the form carries beyond its literal subject, built into the drawing (e.g. 'the roots also read as a long life') — never a restatement of the subject","business_link":"one sentence tracing this mark back to what the business actually does","one_line_idea":"the shape, in ONE sentence a designer could draw from","geometric_operation":"the SINGLE drawing move that creates the mark","craft_move":"counterform | continuous stroke | shared tangent | ligature | negative-space read","moodboard_link":"which moodboard tile's form language this inherits, or 'n/a'","why_memorable":"one sentence on why it sticks","symbol_concept":"max 2 sentences — the metaphor grounded in the real work","construction_notes":"proportion system, stroke-to-height ratio, curve quality, terminals, counterforms, optical balance","typography_treatment":"for wordmark/lettermark/combination: case, tracking, weight, ligature; else 'n/a'","negative_space_play":"the hidden shape, or 'none'","color_application":"which palette token leads; flat 1-2 colour strategy","reference_learning":"${referenceImages?.length ? "the structural principle borrowed from the references" : "n/a"}","avoid_list":"direction-specific anti-patterns","scores":{"meaning_depth":5,"second_read":5,"structure_match":5,"craft":5,"relevance":5,"scalability":5,"memorability":5}}]}
 
 Hard rules:
 - Exactly ${count} directions, each a different form family. Variations of one shape is a failed submission.
 - MEANING IS THE BRIEF. At least ${Math.max(1, count - 1)} of the ${count} directions must be representational or semi-representational: a recognisable subject, stylised. Pure abstraction is allowed for AT MOST one direction, and only when it carries an explicit second read stated in reads_as.
+- HUMAN PRESENCE: if the business profile names required human figures, at least ${Math.max(1, count - 1)} of the ${count} directions must contain a human figure or an unmistakable human gesture fused into the form. A direction whose subject is only an object or a prop (a gate, a lamp, a table, a building) is dead — replace it.
+- SECOND READ: every direction must state a second_read — an additional true idea the form carries beyond its literal subject, the way a tree's roots also read as a long life. A direction with only one read is an icon, not an identity; kill it.
+- SET LAW: all ${count} marks obey the single set_law you write. Same container rule, same stroke weight, same detail budget, same colour roles. They vary only in subject. Three marks at three different detail densities is a failed submission.
 - If reads_as is a shape description ("a flowing ribbon", "an infinity loop", "a spiral of leaves") rather than a subject, that candidate is dead — replace it.
 - Draw from MEANING-CARRYING SYMBOLS first; the honest symbol vocabulary is secondary raw material, not the starting point.
 - Obey the craft spec's element ceiling, abstraction level and ink count exactly.
@@ -507,7 +512,10 @@ ${BANNED_FORMS}`;
   const list: any[] = Array.isArray(parsed) ? parsed : (parsed?.directions ?? []);
   const directions = (Array.isArray(list) ? list : []).filter((d: any) => d && d.direction_name);
   if (!directions.length) throw new Error("Creative Director returned no directions");
-  return directions.slice(0, count) as LogoDirection[];
+  // The set law is written once and stamped onto every direction so all the
+  // render briefs in this run carry the same construction contract.
+  const setLaw = typeof (parsed as any)?.set_law === "string" ? (parsed as any).set_law.trim() : "";
+  return directions.slice(0, count).map((d: any) => ({ ...d, set_law: d.set_law || setLaw })) as LogoDirection[];
 }
 
 
@@ -664,6 +672,7 @@ async function juryReview(
   spec: CraftSpec | null,
   profile: BusinessProfile | null,
   brand?: { palette?: string[]; mood?: string } | null,
+  setLaw?: string | null,
 ): Promise<{ pass: boolean; note: string; scores: Record<string, number> }> {
   const instruction = juryInstruction(
     String((d as any).one_line_idea ?? d.symbol_concept ?? ""),
@@ -672,6 +681,7 @@ async function juryReview(
     spec,
     profile,
     brand,
+    setLaw ?? null,
   );
   try {
     const parsed = parseJsonLoose(await callChatAI([
@@ -1137,6 +1147,8 @@ Deno.serve(async (req) => {
           logoType: row.logo_type,
           readsAs: concept.reads_as,
           meaning: concept.meaning,
+          secondRead: concept.second_read,
+          setLaw: concept.set_law,
         },
         {
           brandName: snap.company_name ?? undefined,
@@ -1229,7 +1241,7 @@ Deno.serve(async (req) => {
           .filter((v: any) => typeof v === "string" && v.trim().length),
         mood: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
       };
-      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand);
+      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand, (row.concept as any)?.set_law ?? null);
 
       const reviewAttempts = Number(row.review_attempts ?? 0);
       // One corrective re-render: the jury's note becomes the render brief's fix line.
@@ -1260,6 +1272,7 @@ Deno.serve(async (req) => {
         business_link: concept.business_link ?? concept.human_link ?? "",
         reads_as: concept.reads_as ?? "",
         meaning: concept.meaning ?? "",
+        second_read: concept.second_read ?? "",
         craft_move: concept.craft_move ?? concept.geometric_operation ?? "",
         one_line_idea: concept.one_line_idea ?? concept.symbol_concept,
         why_memorable: concept.why_memorable ?? "",
@@ -1504,7 +1517,7 @@ Deno.serve(async (req) => {
         if (Date.now() - started < 60_000 && renderUrl) {
           const png = await rasterizeSvg(variants.mark, 512);
           if (png) {
-            const verdict = await juryReview(`data:image/png;base64,${png}`, row.concept as LogoDirection, craftSpec, profile);
+            const verdict = await juryReview(`data:image/png;base64,${png}`, row.concept as LogoDirection, craftSpec, profile, null, (row.concept as any)?.set_law ?? null);
             visionPass = verdict.pass;
             visionNote = verdict.note;
           }
@@ -1544,6 +1557,7 @@ Deno.serve(async (req) => {
           business_link: row.concept?.business_link ?? row.concept?.human_link ?? "",
           reads_as: row.concept?.reads_as ?? "",
           meaning: row.concept?.meaning ?? "",
+          second_read: row.concept?.second_read ?? "",
           craft_move: row.concept?.craft_move ?? row.concept?.geometric_operation ?? "",
           one_line_idea: row.concept?.one_line_idea ?? row.concept?.symbol_concept,
           why_memorable: row.concept?.why_memorable ?? "",

@@ -20,6 +20,10 @@ export interface ConceptBrief {
   readsAs?: string;
   /** What the mark means, in human terms. */
   meaning?: string;
+  /** The additional true idea the form carries beyond its literal subject. */
+  secondRead?: string;
+  /** The shared law all three marks in this set obey. */
+  setLaw?: string;
 }
 
 
@@ -60,7 +64,13 @@ function paletteClause(palette?: string[]): string {
   const list = hexes(palette);
   if (!list.length) return "a single deep near-black ink on pure white";
   if (list.length === 1) return `a one-colour palette of ${list[0]} on pure white`;
-  return `a palette led by ${list[0]}, with ${list.slice(1).join(" and ")} used sparingly as a single accent, on pure white`;
+  const [dominant, secondary, accent] = list;
+  return [
+    `a palette with assigned roles on pure white: ${dominant} is DOMINANT and carries the structure of the mark`,
+    secondary ? `${secondary} is SECONDARY and carries the supporting mass` : "",
+    accent ? `${accent} is the ACCENT and is used ONCE, on the single element that carries the meaning (the human figure or the focal subject) — never on decoration or an outline` : "",
+    "no single colour may swallow the mark; the accent must be the first thing the eye lands on",
+  ].filter(Boolean).join(", ");
 }
 
 function clean(value?: string): string | null {
@@ -131,14 +141,31 @@ export function buildLogoRenderPrompt(
 
   // 2b. Meaning — this mark must be ABOUT something, not decoration.
   const meaning = clean(brief.meaning) ?? clean(profile?.emotional_promise ?? undefined);
+  const secondRead = clean(brief.secondRead);
   lines.push(
     [
       `MEANING: this mark must carry a human idea, not decoration.${meaning ? ` It must communicate: ${meaning}.` : ""}`,
       profile?.human_truth ? `The moment it speaks to: ${profile.human_truth}.` : "",
+      secondRead ? `SECOND READ: beyond its literal subject the form must also carry this idea, built into the drawing itself: ${secondRead}.` : "",
       `RECOGNISABILITY: a stranger who knows nothing about this company must be able to name what they are looking at in three words — and the words must contain a subject ("${subject}"), not a shape description. An abstract ribbon, swirl, spiral, wave or infinity loop is a FAILED mark here.`,
     ].filter(Boolean).join(" "),
   );
 
+  // 2c. Human presence — props describe a facility, figures describe a life.
+  const figures = clean(profile?.human_figures ?? undefined);
+  if (figures && figures.toLowerCase() !== "none") {
+    lines.push(
+      `HUMAN PRESENCE: the mark must contain human figures or an unmistakable human gesture — ${figures}. Draw them as simple, dignified, stylised silhouettes fused into the main form, never as detached icons standing beside it, never with facial features. A mark made only of objects (a gate, a lamp, a table, a building) describes a facility; this mark must describe a life.`,
+    );
+  }
+
+  // 2d. The set law — all marks in this run obey the same construction rules.
+  const setLaw = clean(brief.setLaw);
+  if (setLaw) {
+    lines.push(
+      `SET LAW (identical across every mark in this set — obey it exactly, vary only the subject): ${setLaw}`,
+    );
+  }
 
   // 3. Fusion — the failure mode that separates an agency mark from an AI collage.
   lines.push(
@@ -155,9 +182,9 @@ export function buildLogoRenderPrompt(
     "NO DECORATION: every stroke must carry meaning. No stray swooshes, sparkles, highlight arcs, orbiting dots, filler leaves, or accent flourishes added for balance. If a shape can be removed without losing the idea, it must not be drawn.",
   );
 
-  // 6. The silhouette test, stated as a test.
+  // 6. A countable detail cap, then the silhouette test as the closing check.
   lines.push(
-    "SILHOUETTE TEST: knocked out as one flat colour and reduced to 24 pixels, the mark must still read as the same distinct shape. Counterforms must stay open, gaps must stay visible, no detail may close up or turn to mush.",
+    "DETAIL CAP: no interior stroke may be thinner than one twelfth of the mark's overall width. No repeated micro-texture of any kind — no ruled lines, hatching, stippling, scrollwork, filigree, fringe, feathering or engraved shading. Every interior gap must be at least as wide as the strokes around it. SILHOUETTE TEST: filled solid black and reduced to 24 pixels, the mark must still read as the same distinct subject — counterforms stay open, gaps stay visible, nothing closes up or turns to mush.",
   );
 
   const craft = clean(brief.craftMove);

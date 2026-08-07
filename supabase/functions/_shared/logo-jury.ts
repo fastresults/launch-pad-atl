@@ -24,6 +24,7 @@ export function juryInstruction(
   spec: CraftSpec | null,
   profile: BusinessProfile | null,
   brand?: { palette?: string[]; mood?: string } | null,
+  setLaw?: string | null,
 ): string {
   return `Judge the attached rendered mark.
 
@@ -33,6 +34,8 @@ Logo type: ${logoType || "unstated"}
 ${profile ? `Business: ${profile.category}. It must communicate: ${profile.must_communicate}` : ""}
 ${profile?.human_truth ? `Human truth behind this business: ${profile.human_truth}` : ""}
 ${profile?.emotional_promise ? `Emotional promise it must carry: ${profile.emotional_promise}` : ""}
+${profile?.human_figures && profile.human_figures.toLowerCase() !== "none" ? `Required human presence: ${profile.human_figures}` : ""}
+${setLaw ? `SET LAW every mark in this set must obey: ${setLaw}` : ""}
 ${profile?.cliche_blacklist?.length ? `Banned category clichés: ${profile.cliche_blacklist.join(", ")}` : ""}
 
 ${brand?.palette?.length ? `Locked brand palette it must use: ${brand.palette.join(", ")}` : ""}
@@ -55,12 +58,15 @@ Fail it if ANY of these are true:
 - It does not belong in the brand's visual world (wrong temperature, softness or register).
 - NAMING TEST: name what you see in three words, without being told what it is meant to be. If the honest answer is "an abstract shape", "a ribbon", "a swirl" or anything with no subject in it, this fails.
 - MEANING TEST: it is decoration. It carries no human idea about this business — nothing about the customer's situation, the promise, or the life being served.
+- HUMAN PRESENCE TEST: this business is one that people live in, are cared by, or are served by, and the mark contains no human figure and no unmistakable human gesture — only objects or props. Automatic fail.
+- SECOND READ TEST: the form carries only its one literal subject and no additional true idea about this business. A single object is an icon, not an identity.
+- SET COHERENCE TEST: the mark breaks the stated set law — a different container rule, a visibly different stroke weight, or a detail density that does not match. Automatic fail.
 - CROSS-SECTOR TEST: it would work unchanged for a business in an unrelated sector (a yoga studio, a consultancy, a crypto fund). Automatic fail regardless of how well it is drawn.
 
-Score honestly 1-5 on: fusion, curve_quality, silhouette_read, structure_match, craft, relevance, distinctiveness, scalability, palette_fidelity, moodboard_fit, meaning_read, subject_legibility.
+Score honestly 1-5 on: fusion, curve_quality, silhouette_read, structure_match, craft, relevance, distinctiveness, scalability, palette_fidelity, moodboard_fit, meaning_read, subject_legibility, human_presence, second_read, set_coherence.
 Pass only if every score is 4 or higher. If there is any lettering, set every score to 1 and fail.
 
-Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact change to make on the next render","scores":{"fusion":1,"curve_quality":1,"silhouette_read":1,"structure_match":1,"craft":1,"relevance":1,"distinctiveness":1,"scalability":1,"palette_fidelity":1,"moodboard_fit":1,"meaning_read":1,"subject_legibility":1}}`;
+Return STRICT JSON: {"pass":true|false,"note":"if failing, ONE imperative sentence naming the exact change to make on the next render","scores":{"fusion":1,"curve_quality":1,"silhouette_read":1,"structure_match":1,"craft":1,"relevance":1,"distinctiveness":1,"scalability":1,"palette_fidelity":1,"moodboard_fit":1,"meaning_read":1,"subject_legibility":1,"human_presence":1,"second_read":1,"set_coherence":1}}`;
 
 }
 
