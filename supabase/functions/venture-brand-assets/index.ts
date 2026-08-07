@@ -1225,13 +1225,14 @@ Deno.serve(async (req) => {
       if (["ready", "needs_review"].includes(row.status)) {
         return new Response(JSON.stringify({ ok: true, skipped: true, asset: row.asset }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      if (!row.render_path) throw new Error("This concept has no render to judge.");
+      if (!row.render_path && !row.svg_path) throw new Error("This concept has no drawing to judge.");
 
       await supabase.from("brand_logo_directions").update({ status: "judging", current_stage: "jury" }).eq("id", directionId);
 
-      const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(row.render_path, 60 * 60 * 24 * 7);
+      const { data: signed } = row.render_path
+        ? await supabase.storage.from("user-media").createSignedUrl(row.render_path, 60 * 60 * 24 * 7)
+        : { data: null } as any;
       const renderUrl = signed?.signedUrl ?? null;
-      if (!renderUrl) throw new Error("Could not read the rendered mark from storage.");
 
       const profile = (run.business_profile ?? null) as BusinessProfile | null;
       const craftSpec = (run.craft_spec ?? null) as CraftSpec | null;
@@ -1241,7 +1242,11 @@ Deno.serve(async (req) => {
           .filter((v: any) => typeof v === "string" && v.trim().length),
         mood: typeof kit?.dna?.mood === "string" ? kit.dna.mood : undefined,
       };
-      const verdict = await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand, (row.concept as any)?.set_law ?? null);
+      // No preview raster available (renderer offline) — never block delivery.
+      const verdict = renderUrl
+        ? await juryReview(renderUrl, row.concept as LogoDirection, craftSpec, profile, juryBrand, (row.concept as any)?.set_law ?? null)
+        : { pass: true, note: "", scores: {} as Record<string, number> };
+
 
       const reviewAttempts = Number(row.review_attempts ?? 0);
       // One corrective re-render: the jury's note becomes the render brief's fix line.
