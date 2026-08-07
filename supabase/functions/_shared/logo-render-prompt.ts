@@ -97,12 +97,15 @@ export function buildLogoRenderPrompt(
 ): string {
   const lines: string[] = [];
 
-  const symbol =
-    clean(brief.idea) ??
+  const subject =
+    clean(brief.readsAs) ??
     clean(brief.imagery) ??
-    (profile?.symbol_vocabulary?.length
-      ? `an integrated symbol built from ${profile.symbol_vocabulary.slice(0, 2).join(" and ")}`
-      : "a single integrated abstract symbol");
+    (profile?.meaning_symbols?.length
+      ? `a stylized ${String(profile.meaning_symbols[0]).split("=")[0].trim()}`
+      : profile?.symbol_vocabulary?.length
+        ? `a stylized ${profile.symbol_vocabulary.slice(0, 2).join(" fused with a ")}`
+        : "a stylized, instantly nameable subject drawn from this business");
+  const shapeIdea = clean(brief.idea);
 
   const differentiator = clean(profile?.must_communicate ?? undefined);
   const vibe = [clean(profile?.register ?? undefined), ...(brand.personality ?? [])]
@@ -112,10 +115,11 @@ export function buildLogoRenderPrompt(
   // 1. The absolute rule, first.
   lines.push("ABSOLUTE RULE: this image contains NO letters, NO words, NO lettering, NO monogram, NO initials of any kind. A symbol only.");
 
-  // 2. The one composed emblem sentence.
+  // 2. The one composed emblem sentence — the subject is always a nameable thing.
   lines.push(
     [
-      `A centered, balanced graphic vector emblem featuring ${symbol}.`,
+      `A centered, balanced graphic vector emblem depicting ${subject}.`,
+      shapeIdea ? `Drawn as: ${shapeIdea}.` : "",
       `The design must have ${constructionClause(spec)}${
         differentiator ? `, and include a stylized element representing ${differentiator}` : ""
       }.`,
@@ -124,6 +128,17 @@ export function buildLogoRenderPrompt(
       brand.headingFont ? `It must sit comfortably beside ${brand.headingFont} type.` : "",
     ].filter(Boolean).join(" "),
   );
+
+  // 2b. Meaning — this mark must be ABOUT something, not decoration.
+  const meaning = clean(brief.meaning) ?? clean(profile?.emotional_promise ?? undefined);
+  lines.push(
+    [
+      `MEANING: this mark must carry a human idea, not decoration.${meaning ? ` It must communicate: ${meaning}.` : ""}`,
+      profile?.human_truth ? `The moment it speaks to: ${profile.human_truth}.` : "",
+      `RECOGNISABILITY: a stranger who knows nothing about this company must be able to name what they are looking at in three words — and the words must contain a subject ("${subject}"), not a shape description. An abstract ribbon, swirl, spiral, wave or infinity loop is a FAILED mark here.`,
+    ].filter(Boolean).join(" "),
+  );
+
 
   // 3. Fusion — the failure mode that separates an agency mark from an AI collage.
   lines.push(
