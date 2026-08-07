@@ -52,9 +52,12 @@ Rules:
 - category and what_is_sold must be specific enough that a stranger could identify the competitor set.
 - symbol_vocabulary must come from the actual work: the tools, materials, gestures, spaces, produce, documents or motions involved. No abstractions, no metaphors about growth or journeys.
 - cliche_blacklist must be the specific defaults for THIS category (e.g. for a bakery: wheat sheaf, rolling pin, chef hat; for a law firm: scales, columns, gavel).
+- human_truth: what is actually happening in the customer's life at the moment they need this. Write it as a human situation, not a market statement.
+- emotional_promise: what this business promises that person — the thing they are really buying.
+- meaning_symbols: 4-6 entries, each written as "symbol = the meanings it carries", where the meanings come from human_truth and emotional_promise. Example for an elder-care residence: "tree = roots, generations, shelter, a long life". These must be things that can be DRAWN and instantly named on sight, and they must carry more than one true idea at once. Not abstract gestures, not swooshes, not "connection" or "journey".
 
 Return STRICT JSON:
-{"category":"","archetype":"","what_is_sold":"","customer":"","moment_of_need":"","register":"","symbol_vocabulary":["",""],"cliche_blacklist":["",""],"must_communicate":""}`;
+{"category":"","archetype":"","what_is_sold":"","customer":"","moment_of_need":"","register":"","human_truth":"","emotional_promise":"","meaning_symbols":["",""],"symbol_vocabulary":["",""],"cliche_blacklist":["",""],"must_communicate":""}`;
 }
 
 export function parseBusinessProfile(parsed: any): BusinessProfile | null {
@@ -67,6 +70,9 @@ export function parseBusinessProfile(parsed: any): BusinessProfile | null {
     customer: String(parsed.customer ?? ""),
     moment_of_need: String(parsed.moment_of_need ?? ""),
     register: String(parsed.register ?? ""),
+    human_truth: String(parsed.human_truth ?? ""),
+    emotional_promise: String(parsed.emotional_promise ?? ""),
+    meaning_symbols: arr(parsed.meaning_symbols),
     symbol_vocabulary: arr(parsed.symbol_vocabulary),
     cliche_blacklist: arr(parsed.cliche_blacklist),
     must_communicate: String(parsed.must_communicate ?? ""),
@@ -82,8 +88,12 @@ export function businessProfileBlock(profile: BusinessProfile | null): string {
     profile.customer ? `Customer: ${profile.customer}` : "",
     profile.moment_of_need ? `Moment of need: ${profile.moment_of_need}` : "",
     profile.register ? `Register: ${profile.register}` : "",
+    profile.human_truth ? `Human truth: ${profile.human_truth}` : "",
+    profile.emotional_promise ? `Emotional promise: ${profile.emotional_promise}` : "",
+    profile.meaning_symbols?.length ? `MEANING-CARRYING SYMBOLS (draw from these first): ${profile.meaning_symbols.join("; ")}` : "",
     profile.symbol_vocabulary.length ? `Honest symbol vocabulary: ${profile.symbol_vocabulary.join(", ")}` : "",
     profile.cliche_blacklist.length ? `BANNED for this category: ${profile.cliche_blacklist.join(", ")}` : "",
     profile.must_communicate ? `Must communicate: ${profile.must_communicate}` : "",
   ].filter(Boolean).join("\n");
+
 }
