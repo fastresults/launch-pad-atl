@@ -28,9 +28,21 @@ import {
  * Owner control panel for the public venture showcase link: mint, protect,
  * expire and revoke. The link itself is read-only and works signed out.
  */
-export function ShareVentureDialog({ snapshotId }: { snapshotId: string }) {
+export function ShareVentureDialog({
+  snapshotId,
+  open: openProp,
+  onOpenChange,
+  hideTrigger,
+}: {
+  snapshotId: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}) {
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (v: boolean) => (onOpenChange ? onOpenChange(v) : setOpenState(v));
   const [copied, setCopied] = useState(false);
   const [password, setPassword] = useState("");
   const [usePassword, setUsePassword] = useState(false);
@@ -98,12 +110,14 @@ export function ShareVentureDialog({ snapshotId }: { snapshotId: string }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Share2 className="mr-1.5 h-4 w-4" />
-          Share venture
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <Share2 className="mr-1.5 h-4 w-4" />
+            Share venture
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="flex max-h-[85vh] max-w-lg flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Share this venture</DialogTitle>
