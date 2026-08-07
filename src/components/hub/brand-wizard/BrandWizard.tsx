@@ -1014,7 +1014,8 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
 
         {runDirections.some((d) => !["ready", "needs_review"].includes(d.status)) && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
             {runDirections.filter((d) => !["ready", "needs_review"].includes(d.status)).map((p: any) => (
               <div key={p.id} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-background/40">
                 <div className="flex aspect-square w-full items-center justify-center bg-white/5">
