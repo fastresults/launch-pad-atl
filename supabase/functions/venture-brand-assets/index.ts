@@ -3,18 +3,19 @@
 // grounded in the FULL venture context (snapshot + brief + sources + brain)
 // and the wizard's locked palette/typography/personality.
 //
-// LOGO STUDIO pipeline (rebuilt — references first, vector last):
+// LOGO STUDIO pipeline (vector-first — what you approve is the artwork):
 //   0 inspiration gate  at least one reference logo is REQUIRED to start a run.
 //   1 reference read    vision pass over the references -> craft spec
 //                       (structure only, never subject matter).
 //   2 business read     the founder's finished copy -> business profile
 //                       (category, customer, symbol vocabulary, cliché ban).
-//   3 concepting        eight ideas, cut to four, each obeying 1 + 2.
-//   4 render            reference-conditioned image render of each concept.
-//   5 jury              vision critique vs. the craft spec; one corrective
-//                       re-render, then the mark is published as-is.
-//   6 vectorize         runs ONLY on the mark the founder approves, tracing
-//                       that exact image — nothing is auto-redrawn.
+//   3 concepting        eight ideas, cut to three, each obeying 1 + 2.
+//   4 draw              each concept is DRAWN AS SVG and rasterised from that
+//                       same SVG for the card preview.
+//   5 jury              vision critique of the preview; one corrective redraw.
+//   6 finalise          the approved mark's lockup family is assembled from
+//                       the stored vector — no model call, nothing changes.
+
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { loadVentureContext } from "../_shared/venture-context.ts";
