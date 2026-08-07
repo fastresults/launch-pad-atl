@@ -59,7 +59,14 @@ export type PosterMetrics = {
   scrim_alpha: number | null;
   safe_inset_pct: number;
   sampled: boolean;
+  /** number of rendered headline lines */
+  headline_lines: number;
+  /** false when copy had to be dropped to stay inside the safe area */
+  headline_fits: boolean;
+  /** widest rendered line as a % of the available text column */
+  longest_line_pct: number | null;
 };
+
 
 const enc = new TextEncoder();
 
