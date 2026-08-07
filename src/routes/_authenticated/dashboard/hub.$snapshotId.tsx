@@ -13,7 +13,7 @@ import type { LaunchDay } from "@/lib/launch-14day-plan";
 
 
 import { Button } from "@/components/ui/button";
-import { ShareVentureDialog } from "@/components/hub/ShareVentureDialog";
+import { ShareLinkBar } from "@/components/hub/ShareLinkBar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -1195,11 +1195,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <DashboardWelcomeStrip snapshotId={snapshot.id} hasProgress={completeCount > 0} />
-        <div className="flex items-center gap-2">
-          <ShareVentureDialog snapshotId={snapshot.id} />
-          <ViewModeToggle value={viewMode} onChange={setViewMode} />
-        </div>
+        <ViewModeToggle value={viewMode} onChange={setViewMode} />
       </div>
+
+      <ShareLinkBar snapshotId={snapshot.id} />
 
       {/* Hero — either the generate/next-action card, OR the Founder Roadmap once the kit is done */}
       {heroDone ? (
