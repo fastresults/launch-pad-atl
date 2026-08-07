@@ -4,7 +4,7 @@
 // and the wizard's locked palette/typography/personality.
 //
 // LOGO STUDIO pipeline (rebuilt — references first, vector last):
-//   0 inspiration gate  three reference logos are REQUIRED to start a run.
+//   0 inspiration gate  at least one reference logo is REQUIRED to start a run.
 //   1 reference read    vision pass over the references -> craft spec
 //                       (structure only, never subject matter).
 //   2 business read     the founder's finished copy -> business profile
@@ -999,14 +999,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, logos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // STAGE 0 — the inspiration gate. Three reference marks are the art
-    // direction; without them the studio was guessing, which is exactly what
+    // STAGE 0 — the inspiration gate. At least one reference mark is the art
+    // direction; without any the studio was guessing, which is exactly what
     // produced the previous generation of slop.
     if (kind === "logo_create_run") {
       const refs = Array.isArray(referenceImages) ? referenceImages.filter(isUsableImageRef) : [];
-      if (refs.length < 3) {
+      if (refs.length < 1) {
         return new Response(JSON.stringify({
-          error: "Upload three logos you admire before generating. They set the craft standard for this run.",
+          error: "Upload at least one logo you admire before generating. It sets the craft standard for this run.",
           code: "references_required",
           have: refs.length,
         }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });

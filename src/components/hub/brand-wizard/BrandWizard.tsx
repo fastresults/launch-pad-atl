@@ -690,7 +690,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   const genLogos = useMutation({
     mutationFn: async () => {
-      if (refs.length < 3) throw new Error("Upload three logos you admire first — they set the craft standard for this run.");
+      if (refs.length < 1) throw new Error("Upload at least one logo you admire first — it sets the craft standard for this run.");
       const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 3, referenceImages: refs } });
       setLogos([]);
       await processLogoRun(created.run);
@@ -891,7 +891,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   // Hard gate: three reference marks ARE the art direction. Without them the
   // studio invents a house style, which is what produced the earlier slop.
-  const gatePassed = refs.length >= 3;
+  const gatePassed = refs.length >= 1;
 
 
   return (
@@ -926,7 +926,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold">Drop your 3 logo inspirations</h3>
+              <h3 className="text-sm font-semibold">Drop a logo inspiration (up to 3)</h3>
               <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">Required</span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -956,8 +956,8 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
             onChange={(e) => { onDropRefs(e.target.files); e.currentTarget.value = ""; }}
             disabled={refs.length >= 3}
           />
-          <div className="text-sm font-medium">{refs.length >= 3 ? "3 inspirations added — you're set" : "Drag & drop or click to upload"}</div>
-          <div className="mt-1 text-xs text-muted-foreground">PNG, JPG, SVG, WEBP · up to 3 images · {refs.length}/3 added</div>
+          <div className="text-sm font-medium">{refs.length >= 3 ? "3 inspirations added — you're set" : refs.length >= 1 ? "Inspiration added — add more or generate" : "Drag & drop or click to upload"}</div>
+          <div className="mt-1 text-xs text-muted-foreground">PNG, JPG, SVG, WEBP · 1 required, up to 3 · {refs.length}/3 added</div>
         </label>
 
         {refs.length > 0 && (
@@ -973,10 +973,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
         <div className="text-xs">
           {gatePassed ? (
-            <span className="text-emerald-700 dark:text-emerald-400">Craft standard set — these three marks now drive every concept.</span>
+            <span className="text-emerald-700 dark:text-emerald-400">Craft standard set — {refs.length === 1 ? "this mark drives" : `these ${refs.length} marks drive`} every concept. Add more for a richer read.</span>
           ) : (
             <span className="text-amber-700 dark:text-amber-400">
-              {3 - refs.length} more to go. Generation stays locked until all three are here — they are the art direction, not a nice-to-have.
+              Add one inspiration to unlock generation — it's the art direction, not a nice-to-have.
             </span>
           )}
         </div>
@@ -988,7 +988,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div>
             <h3 className="text-sm font-semibold">Logo concepts</h3>
             <p className="text-xs text-muted-foreground">
-              References first: we read the construction of your three inspirations, read what your business actually does from your own copy, then concept, render and judge four marks against both. Vectoring happens only on the mark you approve.
+              References first: we read the construction of your inspiration mark(s), read what your business actually does from your own copy, then concept, render and judge marks against both. Vectoring happens only on the mark you approve.
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -999,7 +999,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
               </Button>
               <Button onClick={() => runBusy ? resumeLogos.mutate() : genLogos.mutate()} disabled={genLogos.isPending || resumeLogos.isPending || !gatePassed} size="sm">
                 {(genLogos.isPending || resumeLogos.isPending) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                {logoPhase === "brief" ? "Reading references & business…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "rendering" ? "Art-directing the marks…" : logoPhase === "reviewing" ? "Jury reviewing…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : !gatePassed ? "Add 3 inspirations to unlock" : "Generate 4 logo directions"}
+                {logoPhase === "brief" ? "Reading references & business…" : logoPhase === "concepting" ? "Choosing directions…" : logoPhase === "rendering" ? "Art-directing the marks…" : logoPhase === "reviewing" ? "Jury reviewing…" : logoPhase === "drawing" ? "Drawing vectors…" : runBusy ? "Resume logo studio" : logos.length ? "New direction set" : !gatePassed ? "Add 1 inspiration to unlock" : "Generate 3 logo directions"}
               </Button>
             </div>
 
