@@ -516,11 +516,17 @@ Deno.serve(async (req) => {
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         status: "interviewing",
         steps: [step],
-        brief: { ...(session.brief ?? {}), summary: turn.brief_summary || proposal },
+        brief: {
+          ...(session.brief ?? {}),
+          proposal,
+          direction,
+          summary: turn.brief_summary || proposal,
+          requirements: mergeRequirements(requirements, turn.requirements),
+        },
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
     /* ---------------- answer ---------------- */
@@ -537,17 +543,23 @@ Deno.serve(async (req) => {
       const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
       const { step, turn } = await buildStep(
         supabase, userId, snapshotId, studio, references, tokens, steps, session.brief?.summary ?? "",
+        undefined, undefined, carried,
       );
       const nextSteps = [...steps, step];
 
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         steps: nextSteps,
-        brief: { ...(session.brief ?? {}), summary: turn.brief_summary },
+        brief: {
+          ...(session.brief ?? {}),
+          summary: turn.brief_summary,
+          requirements: mergeRequirements(carried, turn.requirements),
+        },
         last_error: step.render_error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data) });
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
+
 
 
     /* ---------------- back ---------------- */
