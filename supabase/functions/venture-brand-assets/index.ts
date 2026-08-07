@@ -1157,7 +1157,7 @@ Deno.serve(async (req) => {
       // Primary: reference-conditioned gateway render — it sees the founder's
       // three marks, so the output inherits their construction, not a guess.
       try {
-        const b64 = await renderMark(prompt, "1024x1024", refImages);
+        const b64 = await renderMark(prompt, "1024x1024", visionRefs);
         await store(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
         await advance({ render_status: "ready", render_path: path, render_provider: "gateway_reference", render_error: null });
         return new Response(JSON.stringify({ ok: true, rendered: true, provider: "gateway_reference", path }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
