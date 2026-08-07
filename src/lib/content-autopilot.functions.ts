@@ -46,9 +46,15 @@ export type ContentAd = {
 async function invoke<T = any>(name: string, body: any): Promise<T> {
   const { data, error } = await invokeEdge(name, { body });
   if (error) throw error;
-  if ((data as any)?.error) throw new Error((data as any).error);
+  if ((data as any)?.error) {
+    const err: any = new Error((data as any).error);
+    if ((data as any).code) err.code = (data as any).code;
+    if ((data as any).upstreamStatus) err.status = (data as any).upstreamStatus;
+    throw err;
+  }
   return data as T;
 }
+
 
 // -------- Calendar parsing --------
 export async function parseCalendarPosts(snapshotId: string) {
