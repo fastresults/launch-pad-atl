@@ -87,6 +87,8 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
     queryKey: ["content-ads", snapshotId],
     queryFn: () => listContentAds(snapshotId),
     enabled: locked,
+    // A hub tab left open for hours must not show a stale "not started" week.
+    refetchOnWindowFocus: true,
   });
   const ads = adsQ.data ?? [];
 
@@ -94,8 +96,10 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
     queryKey: ["content-progress", snapshotId],
     queryFn: () => getContentProgress(snapshotId),
     enabled: locked,
+    refetchOnWindowFocus: true,
   });
   const progress = progQ.data;
+
 
   const [step, setStep] = useState(1);
   const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]);
@@ -151,6 +155,34 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
     if (weeks.length === 0) return;
     setSelectedWeeks([weeks[0]]);
   }, [posts, selectedWeeks.length]);
+
+  // Generated work is the source of truth: any week that already has an ad is
+  // active, whatever the saved selection says. Stops finished weeks from
+  // collapsing back to "not started" when the saved list drifts.
+  const weeksWithAds = useMemo(() => {
+    const weekOf = new Map(posts.map((p) => [p.id, p.week] as const));
+    return Array.from(
+      new Set(ads.map((a) => weekOf.get(a.post_id)).filter((w): w is number => typeof w === "number")),
+    ).sort((a, b) => a - b);
+  }, [ads, posts]);
+
+  const effectiveWeeks = useMemo(
+    () => Array.from(new Set([...selectedWeeks, ...weeksWithAds])).sort((a, b) => a - b),
+    [selectedWeeks, weeksWithAds],
+  );
+
+  // Self-heal the saved list so the drift doesn't come back next session.
+  useEffect(() => {
+    if (!progress) return;
+    const saved = progress.selected_weeks ?? [];
+    const missing = weeksWithAds.filter((w) => !saved.includes(w));
+    if (!missing.length) return;
+    const merged = Array.from(new Set([...saved, ...missing])).sort((a, b) => a - b);
+    setSelectedWeeks((prev) => Array.from(new Set([...prev, ...missing])).sort((a, b) => a - b));
+    void persist({ selected_weeks: merged });
+  }, [progress?.snapshot_id, weeksWithAds.join(",")]);
+
+
 
   // ---- Gate ----
   if (kitQ.isLoading || docsQ.isLoading) {
@@ -307,7 +339,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           direction={direction}
           posterLayout={posterLayout}
           aspects={aspects}
-          selectedWeeks={selectedWeeks}
+          selectedWeeks={effectiveWeeks}
           posts={posts}
           ads={ads}
           autoRunWeek={autoRunWeek}
@@ -329,7 +361,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           snapshotId={snapshotId}
           ads={ads}
           posts={posts}
-          selectedWeeks={selectedWeeks}
+          selectedWeeks={effectiveWeeks}
           onBack={() => setStep(4)}
 
           onAddWeek={async (week) => {
