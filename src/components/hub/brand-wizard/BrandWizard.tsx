@@ -583,9 +583,13 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   // Escape hatch: a stuck queue (dead leases, spinners that never resolve)
   // is cleared outright and the provider status re-read from scratch.
+  // The abort token stops any in-flight generate loop from writing new
+  // directions (or raising "run not found") right after the wipe.
   const [clearing, setClearing] = useState(false);
+  const abortToken = useRef(0);
   const forceClear = async () => {
     setClearing(true);
+    abortToken.current += 1;
     try {
       const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_force_reset" } });
       setLogos([]);
@@ -603,6 +607,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     }
   };
 
+
   // Concepts that were vectored without a Higgsfield render behind them.
   const fellBack = runDirections.filter(
     (d) => d.render_status && d.render_status !== "ready" && d.render_status !== "pending",
@@ -615,17 +620,24 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
   const processLogoRun = async (initialRun: any) => {
     let run = initialRun;
+    const myToken = abortToken.current;
+    // Thrown to unwind the loop silently when the queue was cleared mid-run.
+    const aborted = () => abortToken.current !== myToken;
     setLogoPhase("brief");
     if (run.status === "developing_brief" || run.status === "queued") {
       await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_brief", runId: run.id } });
       run = { ...run, status: "developing_directions" };
     }
+    if (aborted()) return;
     setLogoPhase("concepting");
     let state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     if (!state.directions?.length) {
+      if (aborted()) return;
       await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_develop_directions", runId: run.id } });
       state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     }
+    if (aborted()) return;
+
     // Render each concept as a real designed mark before tracing it to vector.
     // This stage self-heals: a direction whose render is unavailable advances to
     // drawing anyway, so the loop below never blocks on the image provider.
@@ -635,23 +647,29 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     if (pending.length) {
       setLogoPhase("rendering");
       for (let i = 0; i < pending.length; i += 2) {
+        if (aborted()) return;
         await Promise.allSettled(pending.slice(i, i + 2).map((d: any) =>
           generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_render_concept", runId: run.id, directionId: d.id } })
         ));
         await logoRunQ.refetch();
       }
+      if (aborted()) return;
       state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
     }
 
     setLogoPhase("drawing");
     for (let round = 0; round < 3; round++) {
+      if (aborted()) return;
       const work = (state.directions ?? []).filter((d: any) => !["ready", "needs_review", "canceled"].includes(d.status) && Number(d.attempt_count ?? 0) < 3);
       if (!work.length) break;
       for (let i = 0; i < work.length; i += 2) {
+        if (aborted()) return;
         await Promise.allSettled(work.slice(i, i + 2).map((d: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_draw_vector", runId: run.id, directionId: d.id } })));
         await logoRunQ.refetch();
       }
+      if (aborted()) return;
       state = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_get_run", runId: run.id } });
+
     }
     const finished = (state.directions ?? []).filter((d: any) => ["ready", "needs_review"].includes(d.status)).length;
     await logoRunQ.refetch();

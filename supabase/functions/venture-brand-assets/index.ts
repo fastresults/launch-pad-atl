@@ -943,20 +943,33 @@ Deno.serve(async (req) => {
     // logo list, so the studio returns to a clean slate with no ghost spinners.
     if (kind === "logo_force_reset") {
       const now = new Date().toISOString();
-      const { data: runs } = await supabase.from("brand_logo_runs").select("id").eq("snapshot_id", snapshotId);
+      const { data: runs, error: runsError } = await supabase.from("brand_logo_runs").select("id, status").eq("snapshot_id", snapshotId);
+      if (runsError) throw new Error(`Could not read logo runs: ${runsError.message}`);
       const runIds = (runs ?? []).map((r: any) => r.id);
       let clearedDirections = 0;
+      let canceledRuns = 0;
       if (runIds.length) {
-        const { count } = await supabase.from("brand_logo_directions").delete({ count: "exact" }).in("run_id", runIds);
+        const { count, error: delError } = await supabase.from("brand_logo_directions").delete({ count: "exact" }).in("run_id", runIds);
+        if (delError) throw new Error(`Could not delete logo concepts: ${delError.message}`);
         clearedDirections = count ?? 0;
-        await supabase.from("brand_logo_runs")
-          .update({ status: "canceled", canceled_at: now, heartbeat_at: now, last_error: null })
-          .in("id", runIds)
-          .not("status", "in", '("completed","completed_with_review","failed","canceled")');
+        // Explicit id list instead of a negated status filter — no PostgREST
+        // operator quirks, and terminal runs are simply left alone.
+        const terminal = ["completed", "completed_with_review", "failed", "canceled"];
+        const liveIds = (runs ?? []).filter((r: any) => !terminal.includes(r.status)).map((r: any) => r.id);
+        if (liveIds.length) {
+          const { error: cancelError } = await supabase.from("brand_logo_runs")
+            .update({ status: "canceled", canceled_at: now, heartbeat_at: now, last_error: null })
+            .in("id", liveIds);
+          if (cancelError) throw new Error(`Could not cancel logo runs: ${cancelError.message}`);
+          canceledRuns = liveIds.length;
+        }
       }
-      await supabase.from("venture_brand_kits").update({ logos: [] }).eq("snapshot_id", snapshotId);
-      return new Response(JSON.stringify({ ok: true, clearedRuns: runIds.length, clearedDirections }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const { error: kitError } = await supabase.from("venture_brand_kits").update({ logos: [] }).eq("snapshot_id", snapshotId);
+      if (kitError) throw new Error(`Could not clear saved logos: ${kitError.message}`);
+      console.log(`logo_force_reset snapshot=${snapshotId} runs=${runIds.length} canceled=${canceledRuns} directions=${clearedDirections}`);
+      return new Response(JSON.stringify({ ok: true, clearedRuns: canceledRuns, clearedDirections }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
 
 
     if (kind === "logo_remove_direction") {
