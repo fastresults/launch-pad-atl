@@ -225,15 +225,23 @@ type LineOpts = {
 function makeType(fonts: Fonts) {
   const bytesFor = (f: "head" | "body") => (f === "head" ? fonts.head : fonts.body);
 
+  // The legal minimum type size for the page currently being drawn. Set once
+  // per page from its print spec, so no call site can set 6pt caption type on
+  // a piece whose standard is 8pt — and nothing shrinks below it to fit.
+  let floorPx = 0;
+  const setFloor = (px: number) => { floorPx = Math.max(0, px || 0); };
+  const min = (o: { minSize?: number }) => Math.max(o.minSize ?? 0, floorPx);
+
   /** One line, shrunk if needed so it can never leave its box. */
   function line(text: string, x: number, y: number, size: number, fill: string, o: LineOpts = {}): string {
     const t = String(text ?? "").trim();
     if (!t) return "";
     const family = o.family ?? "body";
     const tracking = o.tracking ?? 0;
-    let out = t, s = size;
+    const floor = min(o);
+    let out = t, s = Math.max(size, floor);
     if (o.maxWidth) {
-      const fit = fitLine(t, { size, maxWidth: o.maxWidth, bytes: bytesFor(family), tracking, minSize: o.minSize });
+      const fit = fitLine(t, { size: s, maxWidth: o.maxWidth, bytes: bytesFor(family), tracking, minSize: floor || undefined });
       out = fit.text; s = fit.size;
       if (!out) return "";
     }
