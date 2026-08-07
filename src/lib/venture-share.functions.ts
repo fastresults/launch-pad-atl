@@ -55,8 +55,26 @@ export async function sha256Hex(input: string) {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/** Canonical public origin — share links must never point at a preview host. */
+export const PUBLIC_ORIGIN = "https://startuplabs.online";
+
+/**
+ * Origin used for anything a founder copies and sends to someone else.
+ * Preview/editor and localhost hosts require a login, so they are never used.
+ */
+export function publicOrigin() {
+  const host = typeof window !== "undefined" ? window.location.hostname : "";
+  const isPrivateHost =
+    !host ||
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.endsWith(".lovable.app") ||
+    host.endsWith(".lovableproject.com");
+  return isPrivateHost ? PUBLIC_ORIGIN : window.location.origin;
+}
+
 export function shareUrl(token: string) {
-  return `${window.location.origin}/v/${token}`;
+  return `${publicOrigin()}/v/${token}`;
 }
 
 export async function getVentureShare(snapshotId: string): Promise<VentureShare | null> {
