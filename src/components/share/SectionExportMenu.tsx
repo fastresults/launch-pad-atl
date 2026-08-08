@@ -32,7 +32,7 @@ export function SectionExportMenu({
   build: () => Promise<ExportDoc>;
   label?: string;
   className?: string;
-  variant?: "icon" | "button";
+  variant?: "icon" | "button" | "pill" | "primary";
 }) {
   const [busy, setBusy] = useState(false);
 
