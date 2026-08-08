@@ -63,15 +63,19 @@ export function ShareSection({
 
 
   return (
-    <section id={item.key} className="min-w-0 max-w-full scroll-mt-24 overflow-x-clip border-t border-border/60 py-14 first:border-t-0">
-      <header className="mb-7">
-        <h2 className="font-serif text-[28px] leading-tight tracking-tight text-foreground md:text-[34px]">
-          {item.title}
-        </h2>
-        {item.subtitle && (
-          <p className="mt-2 text-sm text-muted-foreground">{item.subtitle}</p>
-        )}
-      </header>
+    <section id={item.key} className={`min-w-0 max-w-full scroll-mt-24 overflow-x-clip border-t border-border/60 first:border-t-0 ${item.kind === "timeline" ? "py-6" : "py-14"}`}>
+      {/* The timeline carries its own headline — a second one only repeats it. */}
+      {item.kind !== "timeline" && (
+        <header className="mb-7">
+          <h2 className="font-serif text-[28px] leading-tight tracking-tight text-foreground md:text-[34px]">
+            {item.title}
+          </h2>
+          {item.subtitle && (
+            <p className="mt-2 text-sm text-muted-foreground">{item.subtitle}</p>
+          )}
+        </header>
+      )}
+
 
       {item.kind === "timeline" ? (
         // The cadence is its own hero — art on top of it would only compete.
