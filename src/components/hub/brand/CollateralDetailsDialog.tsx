@@ -120,7 +120,7 @@ export function CollateralDetailsDialog({
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
           {q.isLoading ? (
             <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />Auditing what we already know…
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />Reading your brief and assets to pre-fill this…
             </div>
           ) : (
             <div className="space-y-6">
@@ -163,6 +163,9 @@ export function CollateralDetailsDialog({
                       {fields.map((f) => {
                         const flag = audit.flags[f.key] ?? { level: "ok" };
                         const bad = flag.level !== "ok";
+                        const sug = !edited[f.key] && suggested[f.key]?.value === (draft[f.key] ?? "")
+                          ? suggested[f.key]
+                          : null;
                         return (
                           <div
                             key={f.key}
@@ -173,6 +176,11 @@ export function CollateralDetailsDialog({
                               {f.required && <span className="text-destructive">*</span>}
                               {flag.level === "missing" && <Badge variant="destructive" className="h-4 px-1 text-[9px]">Missing</Badge>}
                               {flag.level === "suspect" && <Badge variant="outline" className="h-4 border-amber-500/50 px-1 text-[9px] text-amber-500">Check</Badge>}
+                              {sug && (
+                                <Badge variant="outline" className="h-4 gap-0.5 border-primary/40 px-1 text-[9px] text-primary">
+                                  <Sparkles className="h-2.5 w-2.5" />Suggested
+                                </Badge>
+                              )}
                             </Label>
                             {f.multiline ? (
                               <Textarea
@@ -194,8 +202,8 @@ export function CollateralDetailsDialog({
                                 className={`mt-1 text-sm ${bad ? "border-amber-500/60" : ""}`}
                               />
                             )}
-                            <p className={`mt-1 text-[10px] ${bad ? "text-amber-500" : "text-muted-foreground"}`}>
-                              {flag.message ?? f.help}
+                            <p className={`mt-1 text-[10px] ${bad ? "text-amber-500" : sug ? "text-primary/80" : "text-muted-foreground"}`}>
+                              {flag.message ?? (sug ? sug.basis : f.help)}
                             </p>
                           </div>
                         );
@@ -215,6 +223,18 @@ export function CollateralDetailsDialog({
               : "Not confirmed yet"}
           </span>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => rescan.mutate()}
+              disabled={rescan.isPending || q.isLoading}
+              title="Re-read your brief and finished assets to fill anything still blank"
+            >
+              {rescan.isPending
+                ? <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                : <Sparkles className="mr-1 h-3 w-3" />}
+              Re-scan my content
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending || q.isLoading}>
               {save.isPending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
