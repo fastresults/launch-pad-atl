@@ -69,9 +69,9 @@ export function ShareSection({
     <section id={item.key} className={`min-w-0 max-w-full scroll-mt-24 overflow-x-clip border-t border-border/60 first:border-t-0 ${item.kind === "timeline" ? "py-6" : "py-14"}`}>
       {/* The timeline carries its own headline — a second one only repeats it. */}
       {item.kind === "timeline" ? (
-        exportSlot && <div className="mb-3 flex justify-end">{exportSlot}</div>
+        exportSlot && <div className="mb-3 flex justify-start">{exportSlot}</div>
       ) : (
-        <header className="mb-7 flex items-start justify-between gap-4">
+        <header className="mb-7">
           <div className="min-w-0">
             <h2 className="font-serif text-[28px] leading-tight tracking-tight text-foreground md:text-[34px]">
               {item.title}
@@ -80,7 +80,7 @@ export function ShareSection({
               <p className="mt-2 text-sm text-muted-foreground">{item.subtitle}</p>
             )}
           </div>
-          {exportSlot}
+          {exportSlot && <div className="mt-4 flex">{exportSlot}</div>}
         </header>
       )}
 
