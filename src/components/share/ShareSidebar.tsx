@@ -55,9 +55,10 @@ export function ShareSidebar({
   ];
 
   return (
-    <div className="pb-16">
+    <div className="flex h-full min-h-0 flex-col">
       {pinned.length > 0 && (
-        <div className="mb-4 space-y-1.5">
+        <div className="mb-4 shrink-0 space-y-1.5">
+
           {pinned.map((p) => {
             const active = activeKey === p.key;
             return (
