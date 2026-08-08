@@ -355,23 +355,25 @@ export function RadialMindMap({
             const isActive = activeId === node.id;
             const inActiveBranch = Boolean(activeBranch) && node.branch === activeBranch;
             const searchHit = Boolean(query) && node.match;
-            // Item labels stay hidden until you point at that exact orb, zoom in far enough
-            // that the fan has room, or a search matches — so a hovered branch reads as one
-            // clear chip instead of forty overlapping strings.
+            // Item labels are always readable when their branch is in focus (hovered node,
+            // hovered branch, search hit) and when zoomed in. Nothing else, so a resting
+            // map stays clean but hovering never leaves the user guessing.
             const showLabel =
               node.kind !== "item" ||
               isActive ||
               searchHit ||
-              camera.k > (inActiveBranch ? 1.5 : 2.1);
+              inActiveBranch ||
+              camera.k > 1.35;
             const canOpen = node.kind === "item" && Boolean(node.itemKey) && Boolean(onOpenItem);
-            const opacity = !branchHighlighted ? 0.2 : query && !node.match && node.kind === "item" ? 0.25 : 1;
+            const opacity = !branchHighlighted ? 0.32 : query && !node.match && node.kind === "item" ? 0.4 : 1;
             const side = Math.cos(node.angle) >= 0 ? 1 : -1;
             const isRadial = node.kind === "item";
-            const labelMax = node.kind === "item" ? (isActive ? 34 : 18) : 32;
+            const labelMax = node.kind === "item" ? (isActive ? 40 : 24) : 32;
             const text = shortLabel(node.label, labelMax);
-            const fontSize = node.kind === "root" ? 18 : node.kind === "cluster" ? 14 : isActive ? 13 : 11;
-            const labelX = isRadial ? side * (node.radius + 8 + node.labelLane * 3) : 0;
-            const labelY = isRadial ? Math.sin(node.angle) * 3 : node.radius + 14;
+            const fontSize = node.kind === "root" ? 18 : node.kind === "cluster" ? 14 : isActive ? 13.5 : 11.5;
+            const chipped = isActive || (isRadial && inActiveBranch);
+            const labelX = isRadial ? side * (node.radius + 9 + node.labelLane * 4) : 0;
+            const labelY = isRadial ? Math.sin(node.angle) * 3 + node.labelLane * 1.5 : node.radius + 14;
             const chipW = text.length * fontSize * 0.56 + 14;
             return (
               <g
