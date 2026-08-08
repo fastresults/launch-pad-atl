@@ -488,10 +488,21 @@ export default function VentureSharePage() {
                 />
               ) : (
                 <>
-                  {activeSection && (
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-primary">
-                      {activeSection.label}
-                    </p>
+                  {isMobile && opensChapter && activeSection ? (
+                    <ChapterCard
+                      section={activeSection}
+                      activeKey={activeKey}
+                      onJump={(k) => goTo(k)}
+                    />
+                  ) : (
+                    activeSection && (
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-primary">
+                        {activeSection.label}
+                        {isMobile && posInSection
+                          ? ` · ${posInSection} of ${activeSection.items.length}`
+                          : ""}
+                      </p>
+                    )
                   )}
                   {activeItem && (
                     <ShareSection
@@ -510,43 +521,73 @@ export default function VentureSharePage() {
 
 
               {/* Prev / next keeps the whole set walkable without the sidebar. */}
-              <div
-                hidden={brainActive || timelineActive}
-                className={`mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 ${
-                  isMobile ? "pt-4" : "pt-6"
-                }`}
-              >
-                {activeIndex > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => goTo(items[activeIndex - 1].key)}
-                    className={`group max-w-[46%] text-left ${isMobile ? "min-h-[56px] py-2" : ""}`}
-                  >
-                    <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                      <ArrowLeft className="h-3.5 w-3.5" /> Previous
-                    </span>
-                    <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
-                      {items[activeIndex - 1].title}
-                    </span>
-                  </button>
-                ) : (
-                  <span />
-                )}
-                {activeIndex >= 0 && activeIndex < items.length - 1 && (
-                  <button
-                    type="button"
-                    onClick={() => goTo(items[activeIndex + 1].key)}
-                    className={`group max-w-[46%] text-right ${isMobile ? "min-h-[56px] py-2" : ""}`}
-                  >
-                    <span className="flex items-center justify-end gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                      Next <ArrowRight className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
-                      {items[activeIndex + 1].title}
-                    </span>
-                  </button>
-                )}
-              </div>
+              {isMobile ? (
+                !brainActive && (
+                  <>
+                    {swipeHint && (
+                      <button
+                        type="button"
+                        onClick={dismissHint}
+                        className="mt-6 w-full rounded-xl border border-border/60 bg-card/40 px-3 py-2 text-[12px] text-muted-foreground"
+                      >
+                        Swipe left or tap Next to keep moving through the venture · Dismiss
+                      </button>
+                    )}
+                    <MobilePrevNext
+                      prev={prevItem ? { item: prevItem, sectionLabel: prevSection?.label } : null}
+                      next={nextItem ? { item: nextItem, sectionLabel: nextSection?.label } : null}
+                      nextSection={crossesChapter ? nextSection?.label ?? null : null}
+                      chapterDone={
+                        crossesChapter && activeSection
+                          ? {
+                              label: activeSection.label,
+                              position: `${activeSection.items.length} of ${activeSection.items.length}`,
+                            }
+                          : null
+                      }
+                      onGo={(k) => goTo(k)}
+                      onContents={() => setNavOpen(true)}
+                    />
+                  </>
+                )
+              ) : (
+                <div
+                  hidden={brainActive || timelineActive}
+                  className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6"
+                >
+                  {activeIndex > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => goTo(items[activeIndex - 1].key)}
+                      className="group max-w-[46%] text-left"
+                    >
+                      <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                        <ArrowLeft className="h-3.5 w-3.5" /> Previous
+                      </span>
+                      <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
+                        {items[activeIndex - 1].title}
+                      </span>
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+                  {activeIndex >= 0 && activeIndex < items.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => goTo(items[activeIndex + 1].key)}
+                      className="group max-w-[46%] text-right"
+                    >
+                      <span className="flex items-center justify-end gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                        Next <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
+                        {items[activeIndex + 1].title}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+
 
               {!brainActive && (
                 <footer className="mt-12 border-t border-border/60 pt-8 text-xs text-muted-foreground">
