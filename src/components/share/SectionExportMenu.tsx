@@ -76,6 +76,7 @@ export function SectionExportMenu({
     }
   };
 
+  const showLabel = variant !== "icon";
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -83,8 +84,15 @@ export function SectionExportMenu({
           type="button"
           aria-label={label}
           className={cn(
-            "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border/60 text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground focus-visible:opacity-100 md:opacity-60 md:hover:opacity-100",
-            variant === "icon" ? "h-9 w-9 justify-center" : "h-9 px-3 text-[12px]",
+            "inline-flex shrink-0 items-center justify-center gap-2 rounded-full transition-colors",
+            variant === "icon" &&
+              "h-9 w-9 border border-primary/50 bg-primary/10 text-primary hover:bg-primary/20",
+            variant === "button" &&
+              "h-9 border border-border/60 px-3 text-[12px] text-muted-foreground hover:border-primary/50 hover:text-foreground",
+            variant === "pill" &&
+              "h-9 border border-primary/50 bg-primary/10 px-4 text-[12px] font-medium uppercase tracking-[0.12em] text-primary hover:bg-primary/20",
+            variant === "primary" &&
+              "h-10 bg-primary px-4 text-[13px] font-medium text-primary-foreground hover:bg-primary/90",
             className,
           )}
         >
@@ -93,7 +101,7 @@ export function SectionExportMenu({
           ) : (
             <Download className="h-4 w-4" />
           )}
-          {variant === "button" && <span>{label}</span>}
+          {showLabel && <span>{label}</span>}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="theme-dark-scope w-52">
