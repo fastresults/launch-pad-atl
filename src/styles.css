@@ -548,3 +548,9 @@
 .theme-dark-scope * {
   border-color: var(--border);
 }
+
+/* Progress rail under the auto-alternating Second Brain tabs on the share page. */
+@keyframes share-tab-cycle {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
