@@ -39,7 +39,8 @@ Most shared links get opened on a phone. The showcase gets a purpose-built mobil
 - **Performance**: header images lazy-load with width-appropriate sizes, the mind map bundle loads only when its tab is opened, and the first asset renders without waiting for imagery.
 - **Polish**: safe-area padding for notch/home-indicator, 44px minimum tap targets, no horizontal page scroll at 320px, and copy-link uses the native share sheet when available.
 
-## What changes
+## Technical notes
+
 
 
 - Migration: add `slug text` to `venture_shares` with a unique index (case-insensitive, `where revoked_at is null`), and backfill existing rows from the venture name with collision suffixes. Keep `token` as-is for backward compatibility.
