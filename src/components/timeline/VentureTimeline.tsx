@@ -29,6 +29,14 @@ export interface VentureTimelineProps {
   onOpenAsset?: (assetKey: string) => void;
   onAsk?: (question: string) => void;
   readOnly?: boolean;
+  /** Controlled selection, so a share link can deep-link straight to one step. */
+  selectedStepId?: string | null;
+  onSelectStep?: (id: string | null) => void;
+  /** A reader's what-if, decoded from the URL, applied on top of the saved plan. */
+  scenarioOverride?: TimelineScenario | null;
+  onScenarioChange?: (s: TimelineScenario, dirty: boolean) => void;
+  /** Copy for the reset control — the showcase returns to the founder's plan. */
+  resetLabel?: string;
   className?: string;
   headerRight?: React.ReactNode;
 }
@@ -45,6 +53,11 @@ export function VentureTimeline({
   onOpenAsset,
   onAsk,
   readOnly,
+  selectedStepId,
+  onSelectStep,
+  scenarioOverride,
+  onScenarioChange,
+  resetLabel,
   className,
   headerRight,
 }: VentureTimelineProps) {
@@ -56,9 +69,24 @@ export function VentureTimeline({
   const generated = !!normalizeTimeline(rawTimeline);
 
   const saved = useMemo(() => normalizeScenario(rawScenario), [rawScenario]);
-  const [scenario, setScenario] = useState<TimelineScenario>(saved);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [scenario, setScenarioState] = useState<TimelineScenario>(scenarioOverride ?? saved);
+  const [localSelected, setLocalSelected] = useState<string | null>(null);
   const [compare, setCompare] = useState(true);
+
+  const controlledSelection = selectedStepId !== undefined;
+  const selected = controlledSelection ? selectedStepId ?? null : localSelected;
+  const setSelected = (next: string | null) => {
+    if (!controlledSelection) setLocalSelected(next);
+    onSelectStep?.(next);
+  };
+
+  const setScenario = (next: TimelineScenario | ((s: TimelineScenario) => TimelineScenario)) => {
+    setScenarioState((prev) => {
+      const value = typeof next === "function" ? (next as (s: TimelineScenario) => TimelineScenario)(prev) : next;
+      onScenarioChange?.(value, JSON.stringify(value) !== JSON.stringify(saved));
+      return value;
+    });
+  };
 
   // A new venture (or a freshly saved scenario) resets the sliders.
   const savedKey = JSON.stringify(saved);
@@ -66,8 +94,9 @@ export function VentureTimeline({
   useEffect(() => {
     if (lastSaved.current === savedKey) return;
     lastSaved.current = savedKey;
-    setScenario(saved);
+    setScenarioState(saved);
   }, [savedKey, saved]);
+
 
   const baselineScenario = useMemo(
     () => ({ ...defaultScenario(), startDate: scenario.startDate }),
