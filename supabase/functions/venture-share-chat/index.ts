@@ -51,7 +51,13 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    const { data: share } = await admin.from("venture_shares").select("*").eq("token", token).maybeSingle();
+    // Links carry either the readable slug (new) or the long token (legacy).
+    let { data: share } = await admin
+      .from("venture_shares").select("*").ilike("slug", token).is("revoked_at", null).maybeSingle();
+    if (!share) {
+      ({ data: share } = await admin
+        .from("venture_shares").select("*").eq("token", token).maybeSingle());
+    }
     if (!share || share.revoked_at) return json({ error: "This link is no longer available." }, 404);
     if (share.expires_at && new Date(share.expires_at).getTime() < Date.now()) {
       return json({ error: "This link has expired." }, 410);

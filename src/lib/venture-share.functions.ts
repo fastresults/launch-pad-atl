@@ -10,6 +10,8 @@ export interface VentureShare {
   snapshot_id: string;
   user_id: string;
   token: string;
+  /** Readable address derived from the venture name; preferred over token in URLs. */
+  slug: string | null;
   title: string | null;
   excluded_keys: string[];
   password_hash: string | null;
@@ -64,6 +66,77 @@ function newToken() {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/** Short, unambiguous fallback address when a venture has no usable name. */
+export function newShortToken() {
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789"; // no 0/o/1/l/i
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => alphabet[b % alphabet.length])
+    .join("");
+}
+
+export const SLUG_MIN = 3;
+export const SLUG_MAX = 40;
+const RESERVED_SLUGS = new Set([
+  "v", "admin", "api", "app", "auth", "login", "signup", "dashboard", "hub",
+  "share", "new", "settings", "about", "contact", "privacy", "terms", "help",
+  "support", "static", "assets", "public", "null", "undefined",
+]);
+
+/**
+ * Venture name → readable address. Never invents words: if the full name is too
+ * long, trailing words are dropped so the most identifying part survives
+ * ("Anderson Residential Elderly Care" → "anderson-residential-elderly-care").
+ */
+export function slugifyVentureName(name: string | null | undefined): string {
+  const words = String(name ?? "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!words.length) return newShortToken();
+
+  let slug = words.join("-");
+  while (slug.length > SLUG_MAX && words.length > 1) {
+    words.pop();
+    slug = words.join("-");
+  }
+  slug = slug.slice(0, SLUG_MAX).replace(/-+$/g, "");
+  if (slug.length < SLUG_MIN || RESERVED_SLUGS.has(slug)) return newShortToken();
+  return slug;
+}
+
+/** Same rules the database check uses, so the UI can validate before saving. */
+export function slugError(slug: string): string | null {
+  if (slug.length < SLUG_MIN) return `At least ${SLUG_MIN} characters.`;
+  if (slug.length > SLUG_MAX) return `At most ${SLUG_MAX} characters.`;
+  if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug))
+    return "Lowercase letters, numbers and hyphens only.";
+  if (slug.includes("--")) return "No double hyphens.";
+  if (RESERVED_SLUGS.has(slug)) return "That address is reserved.";
+  return null;
+}
+
+export async function isSlugAvailable(slug: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("venture_share_slug_available", { _slug: slug });
+  if (error) throw error;
+  return data === true;
+}
+
+/** Appends -2, -3… until the address is free. */
+export async function uniqueSlug(base: string): Promise<string> {
+  let candidate = base;
+  for (let n = 2; n < 60; n++) {
+    if (await isSlugAvailable(candidate)) return candidate;
+    const suffix = `-${n}`;
+    candidate = `${base.slice(0, SLUG_MAX - suffix.length).replace(/-+$/g, "")}${suffix}`;
+  }
+  return newShortToken();
+}
+
 export async function sha256Hex(input: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -87,8 +160,10 @@ export function publicOrigin() {
   return isPrivateHost ? PUBLIC_ORIGIN : window.location.origin;
 }
 
-export function shareUrl(token: string) {
-  return `${publicOrigin()}/v/${token}`;
+/** Accepts a share row or a raw identifier; always prefers the readable slug. */
+export function shareUrl(share: string | { slug?: string | null; token: string }) {
+  const id = typeof share === "string" ? share : share.slug || share.token;
+  return `${publicOrigin()}/v/${id}`;
 }
 
 export async function getVentureShare(snapshotId: string): Promise<VentureShare | null> {
@@ -104,14 +179,29 @@ export async function getVentureShare(snapshotId: string): Promise<VentureShare 
   return (data as VentureShare) ?? null;
 }
 
-export async function createVentureShare(snapshotId: string, patch: Partial<VentureShare> = {}) {
+export async function createVentureShare(
+  snapshotId: string,
+  patch: Partial<VentureShare> = {},
+  ventureName?: string | null,
+) {
   const userId = await getEffectiveUserId();
+  let name = ventureName ?? null;
+  if (!name && !patch.slug) {
+    const { data: snap } = await supabase
+      .from("venture_snapshots")
+      .select("company_name,business_concept")
+      .eq("id", snapshotId)
+      .maybeSingle();
+    name = (snap as any)?.company_name || null;
+  }
+  const slug = patch.slug ?? (await uniqueSlug(slugifyVentureName(name)));
   const { data, error } = await supabase
     .from("venture_shares")
     .insert({
       snapshot_id: snapshotId,
       user_id: userId,
       token: newToken(),
+      slug,
       excluded_keys: [],
       ...patch,
     })

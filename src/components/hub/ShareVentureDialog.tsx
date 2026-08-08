@@ -19,9 +19,11 @@ import { invokeEdge } from "@/lib/edge-invoke";
 import {
   createVentureShare,
   getVentureShare,
+  isSlugAvailable,
   revokeVentureShare,
   sha256Hex,
   shareUrl,
+  slugError,
   updateVentureShare,
 } from "@/lib/venture-share.functions";
 
@@ -155,7 +157,31 @@ export function ShareVentureDialog({
     },
   });
 
-  const url = share ? shareUrl(share.token) : "";
+  const url = share ? shareUrl(share) : "";
+
+  const [slugDraft, setSlugDraft] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
+  useEffect(() => {
+    if (share && !slugTouched) setSlugDraft(share.slug ?? share.token);
+  }, [share?.id, share?.slug, slugTouched]);
+
+  const cleanedSlug = slugDraft.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  const slugIssue = cleanedSlug ? slugError(cleanedSlug) : "Choose an address.";
+  const slugChanged = !!share && cleanedSlug !== (share.slug ?? "");
+
+  const saveSlug = useMutation({
+    mutationFn: async () => {
+      if (slugIssue) throw new Error(slugIssue);
+      if (!(await isSlugAvailable(cleanedSlug))) throw new Error("That address is already taken.");
+      return updateVentureShare(share!.id, { slug: cleanedSlug });
+    },
+    onSuccess: () => {
+      setSlugTouched(false);
+      invalidate();
+      toast.success("Link address updated");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not update the address"),
+  });
 
   const copy = async () => {
     await navigator.clipboard.writeText(url);
@@ -220,6 +246,40 @@ export function ShareVentureDialog({
                     : ""}
                 </p>
               </div>
+
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Link address
+                </Label>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">/v/</span>
+                  <Input
+                    value={slugDraft}
+                    onChange={(e) => {
+                      setSlugTouched(true);
+                      setSlugDraft(e.target.value);
+                    }}
+                    className="font-mono text-xs"
+                    placeholder="your-startup-name"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!slugChanged || !!slugIssue || saveSlug.isPending}
+                    onClick={() => saveSlug.mutate()}
+                  >
+                    {saveSlug.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                    Save
+                  </Button>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {slugChanged && slugIssue
+                    ? slugIssue
+                    : "Use your startup's name so the link reads clearly. Old links keep working."}
+                </p>
+              </div>
+
+
 
               <Separator />
 

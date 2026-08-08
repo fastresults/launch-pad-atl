@@ -20,12 +20,12 @@ export function ShareLinkBar({ snapshotId }: { snapshotId: string }) {
     queryFn: () => getVentureShare(snapshotId),
   });
   const share = shareQ.data;
-  const url = share ? shareUrl(share.token) : "";
+  const url = share ? shareUrl(share) : "";
 
   const create = useMutation({
     mutationFn: async () => {
       const s = await createVentureShare(snapshotId);
-      await navigator.clipboard.writeText(shareUrl(s.token)).catch(() => {});
+      await navigator.clipboard.writeText(shareUrl(s)).catch(() => {});
       return s;
     },
     onSuccess: () => {
