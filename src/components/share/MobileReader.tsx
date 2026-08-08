@@ -15,7 +15,7 @@ export function CategoryStepper({
   onJump: (key: string) => void;
 }) {
   return (
-    <div className="-mx-5 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex w-max items-center gap-2 py-2">
         {sections.map((s) => {
           const active = s.key === activeSectionKey;
