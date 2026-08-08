@@ -309,7 +309,7 @@ export function RadialMindMap({
       onPointerCancel={endPointer}
       aria-label={`Interactive mind map for ${model.center.label}`}
     >
-      <svg className="h-full w-full" viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="tree" aria-label="Mind map">
+      <svg className="h-full w-full text-foreground" viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="tree" aria-label="Mind map">
         <defs>
           {graph.nodes.filter((node) => node.kind !== "item").map((node) => (
             <filter key={node.id} id={`${instanceId}-glow-${node.id}`} x="-100%" y="-100%" width="300%" height="300%">
@@ -355,23 +355,25 @@ export function RadialMindMap({
             const isActive = activeId === node.id;
             const inActiveBranch = Boolean(activeBranch) && node.branch === activeBranch;
             const searchHit = Boolean(query) && node.match;
-            // Item labels stay hidden until you point at that exact orb, zoom in far enough
-            // that the fan has room, or a search matches — so a hovered branch reads as one
-            // clear chip instead of forty overlapping strings.
+            // Item labels are always readable when their branch is in focus (hovered node,
+            // hovered branch, search hit) and when zoomed in. Nothing else, so a resting
+            // map stays clean but hovering never leaves the user guessing.
             const showLabel =
               node.kind !== "item" ||
               isActive ||
               searchHit ||
-              camera.k > (inActiveBranch ? 1.5 : 2.1);
+              inActiveBranch ||
+              camera.k > 1.35;
             const canOpen = node.kind === "item" && Boolean(node.itemKey) && Boolean(onOpenItem);
-            const opacity = !branchHighlighted ? 0.2 : query && !node.match && node.kind === "item" ? 0.25 : 1;
+            const opacity = !branchHighlighted ? 0.32 : query && !node.match && node.kind === "item" ? 0.4 : 1;
             const side = Math.cos(node.angle) >= 0 ? 1 : -1;
             const isRadial = node.kind === "item";
-            const labelMax = node.kind === "item" ? (isActive ? 34 : 18) : 32;
+            const labelMax = node.kind === "item" ? (isActive ? 40 : 24) : 32;
             const text = shortLabel(node.label, labelMax);
-            const fontSize = node.kind === "root" ? 18 : node.kind === "cluster" ? 14 : isActive ? 13 : 11;
-            const labelX = isRadial ? side * (node.radius + 8 + node.labelLane * 3) : 0;
-            const labelY = isRadial ? Math.sin(node.angle) * 3 : node.radius + 14;
+            const fontSize = node.kind === "root" ? 18 : node.kind === "cluster" ? 14 : isActive ? 13.5 : 11.5;
+            const chipped = isActive || (isRadial && inActiveBranch);
+            const labelX = isRadial ? side * (node.radius + 9 + node.labelLane * 4) : 0;
+            const labelY = isRadial ? Math.sin(node.angle) * 3 + node.labelLane * 1.5 : node.radius + 14;
             const chipW = text.length * fontSize * 0.56 + 14;
             return (
               <g
@@ -427,17 +429,17 @@ export function RadialMindMap({
                   </circle>
                   {showLabel && (
                     <g pointerEvents="none">
-                      {isActive && (
+                      {chipped && (
                         <rect
                           x={isRadial ? (side === 1 ? labelX - 7 : labelX - chipW + 7) : -chipW / 2}
-                          y={labelY - (isRadial ? fontSize * 0.8 : fontSize * 0.9)}
+                          y={labelY - (isRadial ? fontSize * 0.85 : fontSize * 0.9)}
                           width={chipW}
-                          height={fontSize * 1.7}
+                          height={fontSize * 1.8}
                           rx={fontSize}
                           fill="hsl(var(--background))"
-                          fillOpacity="0.92"
+                          fillOpacity={isActive ? 0.96 : 0.85}
                           stroke={node.color}
-                          strokeOpacity="0.5"
+                          strokeOpacity={isActive ? 0.7 : 0.35}
                         />
                       )}
                       <text
@@ -445,12 +447,13 @@ export function RadialMindMap({
                         y={labelY}
                         textAnchor={isRadial ? (side === 1 ? "start" : "end") : "middle"}
                         dominantBaseline={isRadial ? "middle" : undefined}
-                        fill="currentColor"
+                        fill="hsl(var(--foreground))"
                         fontSize={fontSize}
-                        fontWeight={node.kind === "item" ? 500 : 650}
+                        fontWeight={node.kind === "item" ? (isActive ? 650 : 550) : 700}
                         paintOrder="stroke"
-                        stroke={isActive ? "none" : "hsl(var(--background))"}
-                        strokeWidth={isActive ? 0 : 5}
+                        stroke={chipped ? "none" : "hsl(var(--background))"}
+                        strokeWidth={chipped ? 0 : 5}
+                        strokeOpacity={chipped ? 0 : 0.85}
                         strokeLinejoin="round"
                       >
                         {text}
