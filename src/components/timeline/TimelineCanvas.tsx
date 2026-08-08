@@ -476,11 +476,66 @@ export function TimelineCanvas({
         )}
       </svg>
 
+      {/* Floating detail — the bars are packed tight, so hovering lifts one out. */}
+      {!panning && hover && hoverPt && (() => {
+        const laid = layout.byId.get(hover);
+        if (!laid) return null;
+        const lane = lanes.find((l) => l.id === laid.lane);
+        const phase = timeline.phases.find((p) => p.id === laid.step.phase);
+        const days = Math.max(1, Math.round(laid.endDay - laid.startDay));
+        const CARD_W = 292;
+        const flip = hoverPt.x + CARD_W + 26 > width;
+        const left = Math.min(Math.max(8, flip ? hoverPt.x - CARD_W - 16 : hoverPt.x + 16), Math.max(8, width - CARD_W - 8));
+        const top = Math.min(Math.max(8, hoverPt.y - 14), Math.max(8, height - 176));
+        return (
+          <div
+            className={cn(
+              "pointer-events-none absolute z-20 rounded-xl border border-white/15 bg-[#0b0c10]/95 p-3 shadow-2xl shadow-black/60 backdrop-blur",
+              !reducedMotion && "animate-in fade-in-0 zoom-in-95 duration-150",
+            )}
+            style={{ left, top, width: CARD_W }}
+          >
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">
+              {phase?.label ?? "Step"} · {lane?.name ?? laid.lane}
+            </p>
+            <p className="mt-1 text-[14px] font-medium leading-snug text-white">{laid.step.title}</p>
+            <p className="mt-1.5 text-[11.5px] tabular-nums text-white/55">
+              {formatDay(scenario.startDate, laid.startDay)} → {formatDay(scenario.startDate, laid.endDay)} ·{" "}
+              {days} days · {Math.round(laid.step.effortHours)} hrs
+            </p>
+            {laid.step.doneWhen && (
+              <p className="mt-2 border-t border-white/10 pt-2 text-[12.5px] leading-relaxed text-white/70">
+                <span className="text-white/40">Done when · </span>
+                {laid.step.doneWhen}
+              </p>
+            )}
+            {!!laid.blockedDays && (
+              <p className="mt-2 text-[11.5px] text-amber-200/85">
+                {Math.round(laid.blockedDays)} days fall inside time you're away.
+              </p>
+            )}
+            {laid.endDay > laid.workEndDay && (
+              <p className="mt-1 text-[11.5px] text-white/45">
+                Includes a {Math.round(laid.endDay - laid.workEndDay)}-day wait.
+              </p>
+            )}
+            {layout.milestones
+              .filter((m) => m.milestone.afterStep === laid.step.id)
+              .map((m) => (
+                <p key={m.milestone.id} className="mt-2 text-[11.5px] font-medium text-emerald-300">
+                  Unlocks · {m.milestone.label}
+                </p>
+              ))}
+          </div>
+        );
+      })()}
+
       <div className="pointer-events-none absolute right-3 top-3 flex gap-1">
         <ZoomBtn label="Zoom out" onClick={() => setPxPerDay((z) => clampZoom(z / 1.4))}>−</ZoomBtn>
         <ZoomBtn label="Zoom in" onClick={() => setPxPerDay((z) => clampZoom(z * 1.4))}>+</ZoomBtn>
         <ZoomBtn label="Fit the whole plan" onClick={fit}>Fit</ZoomBtn>
       </div>
+
     </div>
   );
 }
