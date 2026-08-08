@@ -492,6 +492,8 @@ Deno.serve(async (req) => {
       chatEnabled: share.chat_enabled !== false,
       mapEnabled: share.map_enabled !== false,
       executiveSummary: snap.executive_summary ?? null,
+      executiveMetrics: Array.isArray(snap.executive_metrics) ? snap.executive_metrics : null,
+
       coverage: { total: allItems.length, illustrated, signFailures },
       sections,
 
