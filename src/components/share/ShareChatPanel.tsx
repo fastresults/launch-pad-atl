@@ -1,11 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, Mic, Send, Square, X, Loader2 } from "lucide-react";
+import { Brain, MessageCircle, Mic, Send, Square, X, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { MarkdownProse } from "@/components/markdown/MarkdownProse";
 import { askShareChat, type ShareChatMessage } from "@/lib/venture-share.functions";
 
 const SUPABASE_URL =
   (import.meta.env.VITE_SUPABASE_URL as string | undefined) || "https://hflfxytqrlkobhuugsca.supabase.co";
+
+/** Visitor-facing openers, mirroring the internal brain's starter chips. */
+const STARTERS = [
+  "What is this business?",
+  "What's the offer and pricing?",
+  "What's already built?",
+  "What happens in the first 30 days?",
+];
 
 /**
  * "Ask anything" dock on the public showcase. Answers come from the venture's
@@ -19,6 +28,7 @@ export function ShareChatPanel({
   embedded = false,
   hideHeader = false,
   seedQuestion,
+  onInteract,
 }: {
   token: string;
   password?: string;
@@ -28,7 +38,10 @@ export function ShareChatPanel({
   hideHeader?: boolean;
   /** Pre-fills the input — used when a timeline step hands over a question. */
   seedQuestion?: string | null;
+  /** Fired on the first sign of visitor intent (focus, typing, send, voice). */
+  onInteract?: () => void;
 }) {
+
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ShareChatMessage[]>([]);
