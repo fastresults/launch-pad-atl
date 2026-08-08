@@ -71,7 +71,9 @@ export function VentureTimeline({
   const saved = useMemo(() => normalizeScenario(rawScenario), [rawScenario]);
   const [scenario, setScenarioState] = useState<TimelineScenario>(scenarioOverride ?? saved);
   const [localSelected, setLocalSelected] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
   const [compare, setCompare] = useState(true);
+
 
   const controlledSelection = selectedStepId !== undefined;
   const selected = controlledSelection ? selectedStepId ?? null : localSelected;
