@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import ForceGraph2D from "react-force-graph-2d";
-import { forceCollide } from "d3-force";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { buildBrainGraph, BRAIN_CLUSTER_META, type BrainGraph, type BrainGraphNode } from "@/lib/brain-graph";
+import { brainGraphToMindMap } from "@/lib/mind-map-model";
+import { RadialMindMap } from "@/components/brain/RadialMindMap";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -17,20 +17,7 @@ type Props = {
   onAskAbout: (label: string) => void;
 };
 
-/** Resolve a CSS var reference like "var(--brain-asset)" against the live DOM,
- *  so canvas fill styles get a real color. */
-function resolveCssVar(ref: string): string {
-  const m = /var\((--[a-z0-9-]+)\)/i.exec(ref);
-  if (!m) return ref;
-  const val = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
-  return val || "#8888aa";
-}
-
 export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }: Props) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const fgRef = useRef<any>(null);
-  const [size, setSize] = useState({ w: 800, h: 600 });
-  const [hoverId, setHoverId] = useState<string | null>(null);
   const [selected, setSelected] = useState<BrainGraphNode | null>(null);
   const [search, setSearch] = useState("");
   const [hiddenClusters, setHiddenClusters] = useState<Set<string>>(new Set());
@@ -156,7 +143,6 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
 
   const { data: docTypes = [] } = useQuery({
     queryKey: ["brain-graph", "doc-types"],
-
     queryFn: async () => {
       const { data, error } = await supabase
         .from("venture_document_types")
@@ -178,108 +164,17 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
     [company, memory, notes, docs, messages, docTypeNames, sources],
   );
 
+  const nodesById = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
 
+  // Hidden clusters filter the graph before it becomes a radial model.
+  const visibleGraph = useMemo(() => {
+    const nodes = graph.nodes.filter((n) => n.kind === "root" || !hiddenClusters.has(n.cluster));
+    const ids = new Set(nodes.map((n) => n.id));
+    const links = graph.links.filter((l) => ids.has(l.source as string) && ids.has(l.target as string));
+    return { nodes, links: links.map((l) => ({ source: l.source as string, target: l.target as string })) };
+  }, [graph, hiddenClusters]);
 
-  // Adjacency for hover-highlight.
-  const adjacency = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    for (const l of graph.links) {
-      const s = l.source as string;
-      const t = l.target as string;
-      if (!map.has(s)) map.set(s, new Set());
-      if (!map.has(t)) map.set(t, new Set());
-      map.get(s)!.add(t);
-      map.get(t)!.add(s);
-    }
-    return map;
-  }, [graph.links]);
-
-  // Filter by visible clusters / search.
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const visible = graph.nodes.filter((n) => {
-      if (n.kind === "root" || n.kind === "cluster") return !hiddenClusters.has(n.cluster) || n.kind === "root";
-      return !hiddenClusters.has(n.cluster);
-    });
-    const visibleIds = new Set(visible.map((n) => n.id));
-    const links = graph.links.filter((l) => visibleIds.has(l.source as string) && visibleIds.has(l.target as string));
-    // add match flag
-    const nodes = visible.map((n) => ({
-      ...n,
-      _match: q ? n.label.toLowerCase().includes(q) : true,
-    }));
-    return { nodes, links };
-  }, [graph, hiddenClusters, search]);
-
-  // Resize observer.
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const e of entries) {
-        setSize({ w: Math.floor(e.contentRect.width), h: Math.floor(e.contentRect.height) });
-      }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // Tune forces once graph is ready.
-  useEffect(() => {
-    const fg = fgRef.current;
-    if (!fg) return;
-    fg.d3Force("charge")?.strength(-90);
-    fg.d3Force("link")?.distance((l: any) => (l.strength ? 30 : 55)).strength(0.6);
-    fg.d3Force("collide", forceCollide((n: any) => (n.radius ?? 4) + 3));
-  }, [filtered.nodes.length]);
-
-  const reheat = () => {
-    fgRef.current?.d3ReheatSimulation?.();
-  };
-
-  const nodeCanvasObject = (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-    const isHover = hoverId === node.id;
-    const neighbors = hoverId ? adjacency.get(hoverId) : null;
-    const isNeighbor = neighbors ? neighbors.has(node.id) : false;
-    const dim = hoverId && !isHover && !isNeighbor;
-    const alpha = dim ? 0.15 : node._match === false ? 0.2 : 1;
-
-    const r = (node.radius ?? 4) * (isHover ? 1.35 : 1);
-    const color = resolveCssVar(node.color);
-
-    ctx.globalAlpha = alpha;
-    // Glow
-    if (isHover || node.kind === "root" || node.kind === "cluster") {
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, r + (isHover ? 6 : 3), 0, Math.PI * 2);
-      ctx.fillStyle = color + "22";
-      ctx.fill();
-    }
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-
-    // Labels: cluster + root always; others on hover or zoom-in.
-    const shouldLabel =
-      node.kind === "root" ||
-      node.kind === "cluster" ||
-      isHover ||
-      isNeighbor ||
-      globalScale > 2.2 ||
-      (node._match && !!search.trim());
-    if (shouldLabel) {
-      const fontSize = Math.max(9, 11 / Math.max(0.6, globalScale)) * (node.kind === "root" ? 1.4 : node.kind === "cluster" ? 1.15 : 1);
-      ctx.font = `${node.kind === "root" || node.kind === "cluster" ? 600 : 500} ${fontSize}px ui-sans-serif, system-ui, sans-serif`;
-      ctx.fillStyle = "rgba(255,255,255,0.9)";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      ctx.fillText(node.label, node.x, node.y + r + 3);
-    }
-    ctx.globalAlpha = 1;
-  };
-
-  const linkColor = () => resolveCssVar("var(--brain-edge)");
+  const model = useMemo(() => brainGraphToMindMap(visibleGraph as any), [visibleGraph]);
 
   const toggleCluster = (key: string) => {
     setHiddenClusters((prev) => {
@@ -292,39 +187,18 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
 
   return (
     <Card className="relative overflow-hidden border-border/60 bg-[color:var(--brain-canvas)]">
-      <div ref={wrapRef} className="relative h-[calc(100vh-14rem)] min-h-[520px] w-full">
-        {size.w > 0 && (
-          <ForceGraph2D
-            ref={fgRef}
-            graphData={filtered as any}
-            width={size.w}
-            height={size.h}
-            backgroundColor="rgba(0,0,0,0)"
-            nodeRelSize={4}
-            nodeVal={(n: any) => (n.radius ?? 4) ** 2 / 4}
-            nodeCanvasObject={nodeCanvasObject}
-            nodePointerAreaPaint={(node: any, color, ctx) => {
-              ctx.beginPath();
-              ctx.arc(node.x, node.y, (node.radius ?? 4) + 4, 0, Math.PI * 2);
-              ctx.fillStyle = color;
-              ctx.fill();
-            }}
-            linkColor={linkColor}
-            linkWidth={(l: any) => (hoverId && (l.source.id === hoverId || l.target.id === hoverId) ? 1.4 : 0.6)}
-            linkDirectionalParticles={0}
-            cooldownTicks={120}
-            enableNodeDrag={true}
-            onNodeHover={(n: any) => setHoverId(n?.id ?? null)}
-            onNodeClick={(n: any) => {
-              if (n.kind === "root" || n.kind === "cluster") {
-                fgRef.current?.centerAt?.(n.x, n.y, 500);
-                fgRef.current?.zoom?.(3, 500);
-                return;
-              }
-              setSelected(n);
-            }}
-          />
-        )}
+      <div className="relative h-[calc(100vh-14rem)] min-h-[520px] w-full">
+        <RadialMindMap
+          model={model}
+          search={search}
+          className="h-full rounded-none border-0 bg-transparent"
+          emptyMessage="Nothing to map yet. Generate startup assets, then Rebuild memory to enrich the graph."
+          hint="Drag to explore · select an orb to ask about it"
+          onOpenItem={(id) => {
+            const node = nodesById.get(id);
+            if (node) setSelected(node);
+          }}
+        />
 
         {/* Search */}
         <div className="pointer-events-auto absolute left-3 top-3 flex items-center gap-1.5 rounded-lg border border-border/60 bg-background/70 px-2 py-1 text-xs backdrop-blur">
@@ -341,16 +215,6 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
             </button>
           )}
         </div>
-
-        {/* Reheat */}
-        <Button
-          size="sm"
-          variant="outline"
-          className="absolute right-3 top-3 h-8 gap-1.5 border-border/60 bg-background/70 backdrop-blur"
-          onClick={reheat}
-        >
-          <RefreshCw className="h-3 w-3" /> Reheat
-        </Button>
 
         {/* Legend */}
         <div className="pointer-events-auto absolute bottom-3 left-3 flex flex-wrap gap-1 rounded-lg border border-border/60 bg-background/70 p-2 backdrop-blur">
@@ -371,14 +235,6 @@ export default function BrainMindMap({ userId, snapshotId, company, onAskAbout }
             );
           })}
         </div>
-
-        {filtered.nodes.length <= 1 && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <p className="max-w-xs text-center text-sm text-muted-foreground">
-              Nothing to map yet. Generate startup assets, then <b>Rebuild memory</b> to enrich the graph.
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Node drawer */}
