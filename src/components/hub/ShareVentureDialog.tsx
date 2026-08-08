@@ -63,7 +63,9 @@ export function ShareVentureDialog({
     setUsePassword(!!share.password_hash);
     setUseExpiry(!!share.expires_at);
     setExpiry(share.expires_at ? share.expires_at.slice(0, 10) : "");
+    setChatEnabled((share as any).chat_enabled !== false);
   }, [share?.id]);
+
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["venture-share-owner", snapshotId] });
 
