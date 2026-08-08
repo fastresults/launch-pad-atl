@@ -26,9 +26,14 @@ export interface VentureShare {
 export interface ShareBrandBoard {
   paletteName?: string | null;
   swatches: { label: string; hex: string }[];
-  fonts: { role: string; family: string }[];
+  fonts: { role: string; family: string; weight?: number | null }[];
   logos: { url: string; label?: string | null }[];
+  moodboard?: { url: string; caption?: string | null }[];
+  dna?: { positioning?: string | null; traits?: string[]; toneWords?: string[] } | null;
+  voice?: { summary?: string | null; principles?: string[]; dos?: string[]; donts?: string[] } | null;
+  ctas?: string[];
 }
+
 
 export interface ShareItem {
   key: string;
