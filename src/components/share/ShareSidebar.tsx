@@ -20,15 +20,20 @@ export function ShareSidebar({
   activeKey,
   onNavigate,
   variant = "rail",
+  viewedKeys,
 }: {
   payload: SharePayload;
   activeKey: string | null;
   onNavigate?: (key: string) => void;
   /** "sheet" renders thumb-sized rows for the mobile contents sheet. */
   variant?: "rail" | "sheet";
+  /** Assets already read, marked with a dot so progress is visible. */
+  viewedKeys?: string[];
 }) {
   const sheet = variant === "sheet";
+  const seen = useMemo(() => new Set(viewedKeys ?? []), [viewedKeys]);
   const [open, setOpen] = useState<Record<string, boolean>>({});
+
   const [query, setQuery] = useState("");
 
   const hasTimeline = payload.sections.some((s) => s.items.some((i) => i.key === TIMELINE_KEY));
