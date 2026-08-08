@@ -371,22 +371,42 @@ Deno.serve(async (req) => {
 
     // Text audit — the field inventory plus what's missing, pre-filled from the
     // venture so the founder confirms rather than types from scratch.
-    if (action === "details:get") {
+    if (action === "details:get" || action === "details:rescan") {
       const kit = await loadKit(admin, snapshotId);
       if (!kit) return json({ error: "No brand kit yet — run the Brand Wizard first.", code: "NO_BRAND_KIT" }, 400);
       const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
       const saved = kit.contact_details && Object.keys(kit.contact_details).length
         ? normalizeDetails(kit.contact_details)
         : null;
-      const details = saved ?? seedDetails(kit, vctx);
+
+      const filled = await seedWithSuggestions(
+        admin,
+        snapshotId,
+        // Confirmed values beat the structured seed, so hand them in as the base.
+        saved ? { ...kit, contact_details: saved } : kit,
+        saved
+          ? { ...(vctx ?? {}), profile: { ...(vctx?.profile ?? {}), ...saved } }
+          : vctx,
+        { force: action === "details:rescan" },
+      );
+
+      const details = saved ? normalizeDetails({ ...filled.details, ...saved }) : filled.details;
+      // A suggestion the founder already overrode is no longer a suggestion.
+      const suggested: Record<string, { value: string; basis: string }> = {};
+      for (const [k, v] of Object.entries(filled.suggested)) {
+        if (details[k as keyof ContactDetails] === v.value) suggested[k] = v;
+      }
+
       return json({
         details,
+        suggested,
         verifiedAt: saved ? kit.contact_verified_at : null,
         audit: auditDetails(details),
         specs: FIELD_SPECS,
         kindLabels: KIND_LABEL,
       });
     }
+
 
     if (action === "details:save") {
       const incoming = (body?.details ?? {}) as ContactDetails;
