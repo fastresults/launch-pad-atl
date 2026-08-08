@@ -257,9 +257,11 @@ export default function VentureSharePage() {
                 )}
               </div>
 
-              <footer className="mt-12 border-t border-border/60 pt-8 text-xs text-muted-foreground">
-                Built with Startup Labs · The 14-Day Pivot Method
-              </footer>
+              {!brainActive && (
+                <footer className="mt-12 border-t border-border/60 pt-8 text-xs text-muted-foreground">
+                  Built with Startup Labs · The 14-Day Pivot Method
+                </footer>
+              )}
             </main>
           </div>
 
@@ -274,9 +276,9 @@ export default function VentureSharePage() {
               Ask this venture
             </button>
           )}
-        </>
-
+        </div>
       )}
+
     </div>
   );
 }
