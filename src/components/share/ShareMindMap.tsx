@@ -195,18 +195,13 @@ export function ShareMindMap({
           const lit = touchesHover(l);
           const dim = hoverRef.current && !lit;
           if (lit) return withAlpha(l.color, 0.55);
-          const base =
-            0.14 +
-            (reducedMotion
-              ? 0
-              : Math.sin(clockRef.current * 0.8 + seeded(linkId(l)) * 6.28) * 0.05);
-          return `rgba(255,255,255,${dim ? base * 0.35 : base})`;
+          return `rgba(255,255,255,${dim ? 0.05 : 0.14})`;
         }}
         linkWidth={(l: any) => (touchesHover(l) ? 1.8 : 1)}
         /* Directional flow dots: root -> cluster -> asset */
         linkDirectionalParticles={(l: any) => {
           if (reducedMotion) return 0;
-          if (l.depth === 1) return compact ? 2 : 3;
+          if (l.depth === 1) return compact ? 1 : 2;
           return compact ? 0 : 1;
         }}
         linkDirectionalParticleSpeed={(l: any) =>
@@ -218,16 +213,7 @@ export function ShareMindMap({
           if (reducedMotion) return;
           clockRef.current += 1 / 60;
         }}
-        onEngineTick={() => {
-          if (reducedMotion) return;
-          // Keep the web gently drifting instead of freezing solid.
-          const t = clockRef.current;
-          for (const n of graph.nodes as any[]) {
-            if (n.vx === undefined) continue;
-            n.vx += Math.cos(t * n.speed + n.phase) * 0.012;
-            n.vy += Math.sin(t * n.speed * 0.85 + n.phase) * 0.012;
-          }
-        }}
+
         nodeCanvasObject={(node: any, ctx, scale) => {
           const isHover = hover === node.id;
           const neighbours = hover ? adjacency.get(hover) : null;
