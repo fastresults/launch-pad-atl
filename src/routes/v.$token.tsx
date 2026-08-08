@@ -246,8 +246,16 @@ export default function VentureSharePage() {
             </main>
           </div>
 
-          {payload.chatEnabled !== false && !brainActive && (
-            <ShareChatPanel token={token} password={submitted} ventureName={payload.venture.name} />
+          {/* One launcher only — it routes into the Second Brain section. */}
+          {brainOn && !brainActive && (
+            <button
+              type="button"
+              onClick={() => goTo(BRAIN_KEY)}
+              className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full border border-border/60 bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-lg transition-transform hover:scale-[1.03]"
+            >
+              <Sparkle className="h-4 w-4" />
+              Ask this venture
+            </button>
           )}
         </>
 
