@@ -64,3 +64,7 @@ New behavior for the Brand identity section:
 - `src/components/share/ShareBrain.tsx`: make the section a `flex h-full flex-col` with a compact header row, and hand the remaining height to the chat/map.
 - `src/components/share/ShareChatPanel.tsx`: when embedded, use `h-full` instead of `h-[min(68vh,640px)]`, autofocus the textarea, and collapse the starter suggestions into a horizontal chip row.
 - Use `100svh` so mobile browser chrome does not clip the input.
+- `supabase/functions/venture-share/index.ts`: extend `brandBoard` with `moodboard` (signed image URLs + captions), `dna` (positioning, traits), `voice` (summary, do/don't), and `ctas` (phrases pulled from the kit's voice/DNA, with a sane default derived from the venture offer). Sign mood board paths the same way logos are signed.
+- `src/components/share/ShareSection.tsx`: replace the compact brand strip with a `BrandBoard` block — logo lockups on light/dark, copyable swatch cards, live font specimens, mood board grid, DNA/voice prose, CTA buttons styled from the palette.
+- Load brand fonts on demand via a Google Fonts `<link>` injected only when the share payload names a family; fall back to the site's serif/sans if the family is unavailable.
+- CTA buttons in the shared view are visual specimens (non-navigating) unless the venture has a live site URL, in which case the primary CTA links to it.
