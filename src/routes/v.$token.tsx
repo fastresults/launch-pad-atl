@@ -327,8 +327,8 @@ export default function VentureSharePage() {
                   </p>
                 </div>
                 <SectionExportMenu
-                  label="Export everything"
-                  className="h-11 w-11"
+                  label="Download all"
+                  className="h-11 w-11 border-0 bg-primary text-primary-foreground hover:bg-primary/90"
                   build={() => buildFullDoc(payload)}
                 />
                 {payload.venture.website && (
