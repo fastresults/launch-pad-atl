@@ -10,6 +10,8 @@ export interface VentureShare {
   snapshot_id: string;
   user_id: string;
   token: string;
+  /** Readable address derived from the venture name; preferred over token in URLs. */
+  slug: string | null;
   title: string | null;
   excluded_keys: string[];
   password_hash: string | null;
