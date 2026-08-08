@@ -174,7 +174,10 @@ export default function VentureSharePage() {
                   {activeSection.label}
                 </p>
               )}
-              {activeItem && <ShareSection item={activeItem} />}
+              {activeItem && (
+                <ShareSection item={activeItem} accent={payload.venture.colors?.accent ?? null} />
+              )}
+
 
               {/* Prev / next keeps the whole set walkable without the sidebar. */}
               <div className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6">
