@@ -229,6 +229,7 @@ export function RadialMindMap({
           match: matches(String(item.title || "")),
           angle: localAngle,
           labelLane: itemIndex % 3,
+          order: itemIndex,
         };
         nodes.push(itemNode);
         links.push({
