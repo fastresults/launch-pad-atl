@@ -611,46 +611,27 @@ export default function VentureSharePage() {
 
           {isMobile && (
             <>
-              {/* Thumb-reachable bar: contents, second brain, share. */}
-              <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-                <div className="grid grid-cols-3">
-                  <button
-                    type="button"
-                    onClick={() => setNavOpen(true)}
-                    className="flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"
-                  >
-                    <List className="h-5 w-5" />
-                    Contents
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => (brainOn ? setBrainOpen(true) : undefined)}
-                    disabled={!brainOn}
-                    className="flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] text-primary disabled:opacity-40"
-                  >
-                    <Sparkle className="h-5 w-5" />
-                    Ask
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void shareLink()}
-                    className="flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"
-                  >
-                    <Share2 className="h-5 w-5" />
-                    Share
-                  </button>
-                </div>
-              </nav>
+              {/* Thumb-reachable bar: contents, second brain, share, and forward motion. */}
+              <MobileBottomBar
+                brainOn={brainOn}
+                nextTitle={nextItem?.title ?? null}
+                onContents={() => setNavOpen(true)}
+                onAsk={() => setBrainOpen(true)}
+                onShare={() => void shareLink()}
+                onNext={() => nextItem && goTo(nextItem.key)}
+              />
 
               <Sheet open={navOpen} onOpenChange={setNavOpen}>
                 <SheetContent
                   side="bottom"
                   className="theme-dark-scope flex h-[85dvh] flex-col rounded-t-3xl bg-background px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-6"
                 >
+                  <SheetTitle className="sr-only">Contents</SheetTitle>
                   <ShareSidebar
                     payload={payload}
                     activeKey={activeKey}
                     variant="sheet"
+                    viewedKeys={viewed}
                     onNavigate={(k) => {
                       goTo(k);
                       setNavOpen(false);
@@ -664,6 +645,7 @@ export default function VentureSharePage() {
                   side="bottom"
                   className="theme-dark-scope flex h-[100dvh] flex-col rounded-none bg-background px-4 pb-[env(safe-area-inset-bottom)] pt-[calc(env(safe-area-inset-top)+16px)]"
                 >
+                  <SheetTitle className="sr-only">Second brain</SheetTitle>
                   <ShareBrain
                     token={token}
                     password={submitted}
@@ -675,8 +657,18 @@ export default function VentureSharePage() {
                     }}
                     seedQuestion={seedQuestion}
                   />
+                  {activeItem && (
+                    <button
+                      type="button"
+                      onClick={() => setBrainOpen(false)}
+                      className="mt-2 min-h-[48px] w-full shrink-0 rounded-xl border border-border/60 text-[13px] text-muted-foreground"
+                    >
+                      Back to {activeItem.title}
+                    </button>
+                  )}
                 </SheetContent>
               </Sheet>
+
             </>
           )}
 
