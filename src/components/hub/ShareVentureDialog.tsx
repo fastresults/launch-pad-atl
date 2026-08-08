@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, ExternalLink, Link2, Loader2, Share2 } from "lucide-react";
+import { Check, Copy, ExternalLink, Image as ImageIcon, Link2, Loader2, Share2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { invokeEdge } from "@/lib/edge-invoke";
 import {
   createVentureShare,
   getVentureShare,
@@ -23,6 +25,7 @@ import {
   shareUrl,
   updateVentureShare,
 } from "@/lib/venture-share.functions";
+
 
 /**
  * Owner control panel for the public venture showcase link: mint, protect,
