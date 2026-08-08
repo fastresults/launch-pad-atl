@@ -247,6 +247,40 @@ export function ShareVentureDialog({
                 </p>
               </div>
 
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Link address
+                </Label>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">/v/</span>
+                  <Input
+                    value={slugDraft}
+                    onChange={(e) => {
+                      setSlugTouched(true);
+                      setSlugDraft(e.target.value);
+                    }}
+                    className="font-mono text-xs"
+                    placeholder="your-startup-name"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!slugChanged || !!slugIssue || saveSlug.isPending}
+                    onClick={() => saveSlug.mutate()}
+                  >
+                    {saveSlug.isPending && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+                    Save
+                  </Button>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {slugChanged && slugIssue
+                    ? slugIssue
+                    : "Use your startup's name so the link reads clearly. Old links keep working."}
+                </p>
+              </div>
+
+
+
               <Separator />
 
               <div className="space-y-4">
