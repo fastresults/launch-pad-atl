@@ -18,7 +18,10 @@ export default function VentureSharePage() {
   const [submitted, setSubmitted] = useState<string | undefined>(undefined);
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [navOpen, setNavOpen] = useState(false);
+  const [condensed, setCondensed] = useState(false);
+  const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
+
 
   const q = useQuery({
     queryKey: ["venture-share", token, submitted],
