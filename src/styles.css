@@ -111,6 +111,10 @@
 
   --brain-edge: oklch(0.75 0.15 180 / 0.35);
   --brain-canvas: oklch(0.09 0.02 280);
+  /* Mind-map label ink/halo: the canvas is always dark, in light or dark theme,
+     so labels must NOT follow --foreground/--background. */
+  --brain-ink: oklch(0.97 0.005 280);
+  --brain-halo: oklch(0.12 0.02 280);
 }
 
 :root.light {
