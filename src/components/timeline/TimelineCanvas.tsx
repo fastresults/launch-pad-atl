@@ -563,9 +563,11 @@ function StepBar({
   pxPerDay,
   active,
   hovered,
+  dimmed,
   reducedMotion,
   onSelect,
   onHover,
+  onHoverPoint,
   onNudge,
   dayAtX,
 }: {
@@ -576,9 +578,11 @@ function StepBar({
   pxPerDay: number;
   active: boolean;
   hovered: boolean;
+  dimmed?: boolean;
   reducedMotion?: boolean;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
+  onHoverPoint?: (pt: { x: number; y: number } | null) => void;
   onNudge?: (id: string, days: number) => void;
   dayAtX: (px: number) => number;
 }) {
@@ -588,7 +592,11 @@ function StepBar({
   const bx = x(s.startDay);
   const w = Math.max(3, (s.workEndDay - s.startDay) * pxPerDay);
   const waitW = Math.max(0, (s.endDay - s.workEndDay) * pxPerDay);
-  const top = y + (LANE_H - BAR_H) / 2;
+  // Hovering lifts a bar out of a crowded track: taller, brighter, ringed.
+  const lift = hovered || active;
+  const barH = lift ? BAR_H + 10 : BAR_H;
+  const top = y + (LANE_H - barH) / 2;
+
 
   return (
     <g
