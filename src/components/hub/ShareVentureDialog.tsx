@@ -101,37 +101,35 @@ export function ShareVentureDialog({
   });
 
   /**
-   * Backfill header art for every completed asset that has none, so the public
-   * showcase never shows a section without its illustration.
+   * Backfill header art for every completed asset that has none. The sweeper
+   * owns the loop server-side (bounded batches, self-requeue), so this and the
+   * automatic background pass can never diverge.
    */
   const backfill = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase
-        .from("venture_documents")
-        .select("document_type,hero_image_path")
-        .eq("snapshot_id", snapshotId)
-        .eq("status", "complete");
-      if (error) throw error;
-      const missing = (data ?? []).filter((d: any) => !d.hero_image_path);
-      let ok = 0;
-      let failed = 0;
-      // Sequential: the image model is heavy and the edge worker is CPU-bound.
-      for (const d of missing) {
-        const res = await invokeEdge("venture-document-image", {
-          body: { snapshotId, documentType: (d as any).document_type, force: false },
-        });
-        if (res.error) failed += 1;
-        else ok += 1;
-      }
-      return { ok, failed, total: missing.length };
+      const { data, error } = await invokeEdge("venture-hero-sweep", { body: { snapshotId } });
+      if (error) throw new Error(error.message);
+      return data as { generated?: number; remaining?: number; failed?: number; done?: boolean };
     },
     onSuccess: (r) => {
-      if (!r.total) toast.success("Every asset already has header art");
-      else if (r.failed) toast.warning(`Generated ${r.ok} of ${r.total} — ${r.failed} need another pass`);
-      else toast.success(`Generated header art for ${r.ok} assets`);
+      const generated = r?.generated ?? 0;
+      const remaining = r?.remaining ?? 0;
+      if (!generated && !remaining) toast.success("Every asset already has header art");
+      else if (remaining) toast.success(`Generating header art — ${generated} done, ${remaining} still running in the background`);
+      else toast.success(`Generated header art for ${generated} assets`);
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not generate header art"),
   });
+
+  // Opening share settings guarantees coverage: kick the sweeper once per
+  // session so the public showcase is fully illustrated without a click.
+  const autoSweptRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open || autoSweptRef.current === snapshotId) return;
+    autoSweptRef.current = snapshotId;
+    invokeEdge("venture-hero-sweep", { body: { snapshotId } }).catch(() => {});
+  }, [open, snapshotId]);
+
 
 
   const revoke = useMutation({
