@@ -67,10 +67,11 @@ export function WorkshopStack({ workshop }: { workshop: CatalogWorkshop }) {
   );
 }
 
-/** Keeps the selected workshop and its price on screen through a long page. */
+/** Desktop-only cue: shows at the hero seam, hides once you scroll below it. */
 function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
   const sentinel = useRef<HTMLDivElement>(null);
-  const [stuck, setStuck] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const isMobile = useIsMobile();
   const isOpen = workshop.status === "open";
   const Icon = workshop.icon;
 
@@ -78,20 +79,23 @@ function WorkshopStickyBar({ workshop }: { workshop: CatalogWorkshop }) {
     const el = sentinel.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver(
-      ([entry]) => setStuck(!entry.isIntersecting),
+      ([entry]) => setVisible(entry.isIntersecting),
       { rootMargin: "-72px 0px 0px 0px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
+  if (isMobile) return <div ref={sentinel} aria-hidden="true" />;
+
   return (
     <>
       <div ref={sentinel} aria-hidden="true" />
       <div
-        data-visible={stuck || undefined}
-        className="pointer-events-none fixed inset-x-0 top-[4.25rem] z-40 -translate-y-3 opacity-0 transition-[opacity,transform] duration-300 data-[visible]:pointer-events-auto data-[visible]:translate-y-0 data-[visible]:opacity-100"
+        data-visible={visible || undefined}
+        className="pointer-events-none fixed inset-x-0 top-[4.25rem] z-40 hidden -translate-y-3 opacity-0 transition-[opacity,transform] duration-300 data-[visible]:pointer-events-auto data-[visible]:translate-y-0 data-[visible]:opacity-100 md:block"
       >
+
         <div className="public-container px-6">
           <div className="sl-glass-bar flex items-center justify-between gap-4 rounded-full border border-border/50 px-3.5 py-1.5 shadow-lg">
             <span className="flex min-w-0 items-center gap-2 text-xs font-medium text-foreground">
