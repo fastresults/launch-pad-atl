@@ -9,7 +9,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiFetch } from "../_shared/ai-fetch.ts";
-import { FALLBACK_TIMELINE, normalizeTimeline, type Timeline } from "./schema.ts";
+import { normalizeTimeline, type Timeline } from "./schema.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
