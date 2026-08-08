@@ -16,6 +16,10 @@ type MapNode = {
   branch: string;
   phase: number;
   match: boolean;
+  /** Outward direction of the node from its parent, used for label placement. */
+  angle: number;
+  /** Extra radial nudge so neighbouring labels in a fan do not collide. */
+  labelLane: number;
 };
 
 type MapLink = {
@@ -166,6 +170,8 @@ export function RadialMindMap({
       branch: "mindmap-root",
       phase: 0,
       match: true,
+      angle: -Math.PI / 2,
+      labelLane: 0,
     };
     nodes.push(root);
 
@@ -186,6 +192,8 @@ export function RadialMindMap({
         branch,
         phase: seeded(branch) * 4,
         match: matches(String(section.label || "")),
+        angle,
+        labelLane: 0,
       };
       nodes.push(cluster);
       links.push({
@@ -215,6 +223,8 @@ export function RadialMindMap({
           branch,
           phase: seeded(itemId) * 4,
           match: matches(String(item.title || "")),
+          angle: localAngle,
+          labelLane: itemIndex % 3,
         };
         nodes.push(itemNode);
         links.push({
@@ -338,12 +348,31 @@ export function RadialMindMap({
             })}
           </g>
 
-          {graph.nodes.map((node) => {
+          {[...graph.nodes]
+            .sort((a, b) => Number(a.id === activeId) - Number(b.id === activeId))
+            .map((node) => {
             const branchHighlighted = !activeBranch || node.branch === activeBranch || node.kind === "root";
             const isActive = activeId === node.id;
-            const showLabel = node.kind !== "item" || isActive || camera.k > 1.5 || (!!query && node.match);
+            const inActiveBranch = Boolean(activeBranch) && node.branch === activeBranch;
+            const searchHit = Boolean(query) && node.match;
+            // Item labels stay hidden until you point at that exact orb, zoom in far enough
+            // that the fan has room, or a search matches — so a hovered branch reads as one
+            // clear chip instead of forty overlapping strings.
+            const showLabel =
+              node.kind !== "item" ||
+              isActive ||
+              searchHit ||
+              camera.k > (inActiveBranch ? 1.5 : 2.1);
             const canOpen = node.kind === "item" && Boolean(node.itemKey) && Boolean(onOpenItem);
             const opacity = !branchHighlighted ? 0.2 : query && !node.match && node.kind === "item" ? 0.25 : 1;
+            const side = Math.cos(node.angle) >= 0 ? 1 : -1;
+            const isRadial = node.kind === "item";
+            const labelMax = node.kind === "item" ? (isActive ? 34 : 18) : 32;
+            const text = shortLabel(node.label, labelMax);
+            const fontSize = node.kind === "root" ? 18 : node.kind === "cluster" ? 14 : isActive ? 13 : 11;
+            const labelX = isRadial ? side * (node.radius + 8 + node.labelLane * 3) : 0;
+            const labelY = isRadial ? Math.sin(node.angle) * 3 : node.radius + 14;
+            const chipW = text.length * fontSize * 0.56 + 14;
             return (
               <g
                 key={node.id}
@@ -397,19 +426,36 @@ export function RadialMindMap({
                     )}
                   </circle>
                   {showLabel && (
-                    <text
-                      y={node.radius + 14}
-                      textAnchor="middle"
-                      fill="currentColor"
-                      fontSize={node.kind === "root" ? 18 : node.kind === "cluster" ? 14 : 11}
-                      fontWeight={node.kind === "item" ? 500 : 650}
-                      paintOrder="stroke"
-                      stroke="hsl(var(--background))"
-                      strokeWidth="5"
-                      strokeLinejoin="round"
-                    >
-                      {shortLabel(node.label, node.kind === "item" ? 26 : 32)}
-                    </text>
+                    <g pointerEvents="none">
+                      {isActive && (
+                        <rect
+                          x={isRadial ? (side === 1 ? labelX - 7 : labelX - chipW + 7) : -chipW / 2}
+                          y={labelY - (isRadial ? fontSize * 0.8 : fontSize * 0.9)}
+                          width={chipW}
+                          height={fontSize * 1.7}
+                          rx={fontSize}
+                          fill="hsl(var(--background))"
+                          fillOpacity="0.92"
+                          stroke={node.color}
+                          strokeOpacity="0.5"
+                        />
+                      )}
+                      <text
+                        x={labelX}
+                        y={labelY}
+                        textAnchor={isRadial ? (side === 1 ? "start" : "end") : "middle"}
+                        dominantBaseline={isRadial ? "middle" : undefined}
+                        fill="currentColor"
+                        fontSize={fontSize}
+                        fontWeight={node.kind === "item" ? 500 : 650}
+                        paintOrder="stroke"
+                        stroke={isActive ? "none" : "hsl(var(--background))"}
+                        strokeWidth={isActive ? 0 : 5}
+                        strokeLinejoin="round"
+                      >
+                        {text}
+                      </text>
+                    </g>
                   )}
                 </g>
               </g>
