@@ -188,6 +188,8 @@ export function TimelineCanvas({
   }, [layout.milestones, x]);
 
   const bandH = milestonePlacement.rows * 13 + 6;
+  const height = baseHeight + bandH;
+
   const laneY = (i: number) => RULER_H + bandH + i * LANE_H;
   const ribbonY = RULER_H + bandH + lanes.length * LANE_H + 12;
 
