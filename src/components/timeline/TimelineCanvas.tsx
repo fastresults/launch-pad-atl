@@ -182,9 +182,10 @@ export function TimelineCanvas({
           rowEnds.push(0);
         }
         rowEnds[row] = left + w;
-        return { m, row: Math.min(row, 2) };
+        return { m, row };
       });
     return { placed, rows: Math.min(Math.max(rowEnds.length, 1), 3) };
+
   }, [layout.milestones, x]);
 
   const bandH = milestonePlacement.rows * 13 + 6;
