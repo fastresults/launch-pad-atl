@@ -122,13 +122,38 @@ export function TimelineCanvas({
   );
 
   // --- wheel zoom (native, non-passive) --------------------------------------
+  // The surface stays "asleep" until the pointer has rested on it for 2s, so a
+  // page scroll passing over the timeline never gets hijacked into a zoom.
   const zoomRef = useRef({ pxPerDay, originDay, plotW, totalDays });
   zoomRef.current = { pxPerDay, originDay, plotW, totalDays };
+  const armedRef = useRef(false);
+  const [armed, setArmed] = useState(false);
 
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const arm = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        armedRef.current = true;
+        setArmed(true);
+      }, 2000);
+    };
+    const disarm = () => {
+      if (timer) clearTimeout(timer);
+      timer = null;
+      armedRef.current = false;
+      setArmed(false);
+    };
+
     const onWheel = (e: WheelEvent) => {
+      if (!armedRef.current) {
+        // Let the page scroll past; restart the dwell timer.
+        arm();
+        return;
+      }
       e.preventDefault();
       const rect = el.getBoundingClientRect();
       const px = e.clientX - rect.left;
@@ -145,9 +170,25 @@ export function TimelineCanvas({
       setPxPerDay(next);
       setOriginDay(clampOrigin(anchorDay - (px - PAD_L) / next));
     };
+
+    const onMove = () => {
+      if (!armedRef.current) arm();
+    };
+
     el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
+    el.addEventListener("pointerenter", arm);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", disarm);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("pointerenter", arm);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerleave", disarm);
+      disarm();
+    };
   }, [clampOrigin]);
+
+
 
   // --- drag to pan ------------------------------------------------------------
   const drag = useRef<{ x: number; origin: number } | null>(null);
@@ -260,6 +301,12 @@ export function TimelineCanvas({
       )}
       style={{ height }}
     >
+      {!armed && (
+        <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-white/10 bg-black/50 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-white/50 backdrop-blur">
+          Hover to activate zoom
+        </div>
+      )}
+
       <svg width={width} height={height} className="block">
         <defs>
           <linearGradient id="tl-ribbon" x1="0" y1="0" x2="0" y2="1">
