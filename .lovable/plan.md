@@ -42,7 +42,22 @@ New behavior:
 - Starter questions stay, but as a compact row that collapses once the first message is sent.
 - The mind map keeps the same fixed height so switching tabs does not shift the layout.
 
+## 3. Full visual brand board in the shared link
+
+Today the shared "Brand identity" section shows only logo thumbnails, a small swatch row and font names as plain text. The rest of the brand — mood board, brand DNA, voice, and the calls to action — never reaches the reader.
+
+New behavior for the Brand identity section:
+
+- **Logo lockups**: primary mark shown large on a light surface and again on the brand's dark surface, with the variants beneath, each labeled.
+- **Color palette**: full-bleed swatch cards with role (Primary, Secondary, Accent, Text, Muted, Surface, Border), the hex value, and a click-to-copy action. Palette name shown as the heading.
+- **Typography**: each font rendered in its real typeface (loaded from Google Fonts when available, graceful fallback otherwise) with a live specimen — heading in display size, body in a short paragraph — plus the family name and role.
+- **Mood board**: the stored mood board images in a responsive rounded-image grid with captions, sitting directly under the palette.
+- **Brand DNA and voice**: positioning line, personality traits and voice do/don't guidance rendered as readable prose rather than dumped markdown.
+- **Calls to action**: the brand's approved CTA phrases surfaced as styled buttons using the real palette, so the reader sees how the brand asks for the next step. A primary CTA button also appears at the end of the section.
+- Everything is read-only and public-safe; no editing controls in the shared view.
+
 ## Technical notes
+
 
 - `src/routes/v.$token.tsx`: switch the body to a fixed-height two-pane layout (`h-[calc(100svh-var(--masthead))]` with `overflow-hidden` on the wrapper and `overflow-y-auto` on each pane) instead of one document scroll; add the condensed sticky masthead; scroll the reading pane (not `window`) in `goTo`.
 - `src/components/share/ShareSidebar.tsx`: split into a non-scrolling head (pinned cards + search) and a `min-h-0 flex-1 overflow-y-auto` nav tree.
