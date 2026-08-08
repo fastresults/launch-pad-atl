@@ -11,7 +11,7 @@ import { ShareBrain } from "@/components/share/ShareBrain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, ArrowRight, Loader2, Lock, Menu, Sparkle } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, Loader2, Lock, Menu, Sparkle } from "lucide-react";
 
 export default function VentureSharePage() {
   const { token = "" } = useParams();
