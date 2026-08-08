@@ -101,6 +101,25 @@ export default function VentureSharePage() {
   const activeItem = activeIndex >= 0 ? items[activeIndex] : null;
   const activeSection = payload?.sections.find((s) => s.items.some((i) => i.key === activeKey));
 
+  const prevItem = activeIndex > 0 ? items[activeIndex - 1] : null;
+  const nextItem =
+    activeIndex >= 0 && activeIndex < items.length - 1 ? items[activeIndex + 1] : null;
+  const sectionOf = (key: string | null | undefined) =>
+    key ? payload?.sections.find((s) => s.items.some((i) => i.key === key)) ?? null : null;
+  const prevSection = sectionOf(prevItem?.key);
+  const nextSection = sectionOf(nextItem?.key);
+  /** True when the next asset opens a different chapter than the current one. */
+  const crossesChapter = !!nextSection && nextSection.key !== activeSection?.key;
+  /** True when the current asset is the first of its chapter (and not the very first). */
+  const opensChapter =
+    !!activeSection &&
+    activeSection.items[0]?.key === activeKey &&
+    payload?.sections[0]?.key !== activeSection.key;
+  const posInSection = activeSection
+    ? activeSection.items.findIndex((i) => i.key === activeKey) + 1
+    : 0;
+
+
   const hashFor = (key: string, step?: string | null) =>
     `${window.location.pathname}${window.location.search}#${step ? `${key}/${step}` : key}`;
 
