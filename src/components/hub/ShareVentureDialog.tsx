@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, ExternalLink, Image as ImageIcon, Link2, Loader2, Share2 } from "lucide-react";
+import { Check, Copy, ExternalLink, FileText, Image as ImageIcon, Link2, Loader2, Network, Share2 } from "lucide-react";
 import { invokeEdge } from "@/lib/edge-invoke";
 import {
   createVentureShare,
@@ -51,6 +51,7 @@ export function ShareVentureDialog({
   const [useExpiry, setUseExpiry] = useState(false);
   const [expiry, setExpiry] = useState("");
   const [chatEnabled, setChatEnabled] = useState(true);
+  const [mapEnabled, setMapEnabled] = useState(true);
 
 
   const shareQ = useQuery({
@@ -66,6 +67,7 @@ export function ShareVentureDialog({
     setUseExpiry(!!share.expires_at);
     setExpiry(share.expires_at ? share.expires_at.slice(0, 10) : "");
     setChatEnabled((share as any).chat_enabled !== false);
+    setMapEnabled((share as any).map_enabled !== false);
   }, [share?.id]);
 
 
@@ -86,6 +88,7 @@ export function ShareVentureDialog({
       const patch: any = {
         expires_at: useExpiry && expiry ? new Date(`${expiry}T23:59:59Z`).toISOString() : null,
         chat_enabled: chatEnabled,
+        map_enabled: mapEnabled,
       };
       if (!usePassword) patch.password_hash = null;
       else if (password) patch.password_hash = await sha256Hex(password);
@@ -127,9 +130,22 @@ export function ShareVentureDialog({
     if (!open || autoSweptRef.current === snapshotId) return;
     autoSweptRef.current = snapshotId;
     invokeEdge("venture-hero-sweep", { body: { snapshotId } }).catch(() => {});
+    invokeEdge("venture-exec-summary", { body: { snapshotId } }).catch(() => {});
   }, [open, snapshotId]);
 
 
+
+  const summarize = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await invokeEdge("venture-exec-summary", {
+        body: { snapshotId, force: true },
+      });
+      if (error) throw new Error(error.message);
+      return data as { summary?: string };
+    },
+    onSuccess: () => toast.success("Executive summary refreshed"),
+    onError: (e: any) => toast.error(e?.message ?? "Could not write the summary"),
+  });
 
   const revoke = useMutation({
     mutationFn: () => revokeVentureShare(share!.id),
@@ -234,6 +250,38 @@ export function ShareVentureDialog({
                     </p>
                   </div>
                   <Switch checked={chatEnabled} onCheckedChange={setChatEnabled} />
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Venture mind map</p>
+                    <p className="text-xs text-muted-foreground">
+                      Visitors can explore every asset as a connected map.
+                    </p>
+                  </div>
+                  <Switch checked={mapEnabled} onCheckedChange={setMapEnabled} />
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Executive summary</p>
+                    <p className="text-xs text-muted-foreground">
+                      A 300-word overview of every asset, shown first in the showcase.
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => summarize.mutate()}
+                    disabled={summarize.isPending}
+                  >
+                    {summarize.isPending ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileText className="mr-1.5 h-4 w-4" />
+                    )}
+                    Rewrite
+                  </Button>
                 </div>
 
                 <div className="flex items-center justify-between gap-4">

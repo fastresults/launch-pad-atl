@@ -42,7 +42,8 @@ export default function VentureSharePage() {
   useEffect(() => {
     if (!items.length) return;
     const fromHash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
-    const initial = items.find((i) => i.key === fromHash)?.key ?? items[0].key;
+    const initial =
+      fromHash === BRAIN_KEY ? BRAIN_KEY : items.find((i) => i.key === fromHash)?.key ?? items[0].key;
     setActiveKey((prev) => prev ?? initial);
   }, [items]);
 
