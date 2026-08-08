@@ -16,6 +16,8 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Check, Copy, ExternalLink, FileText, Image as ImageIcon, Link2, Loader2, Share2 } from "lucide-react";
 import { invokeEdge } from "@/lib/edge-invoke";
+import { supabase } from "@/integrations/supabase/client";
+import { TIMELINE_KEY } from "@/components/share/ShareSidebar";
 import {
   createVentureShare,
   getVentureShare,
@@ -63,6 +65,22 @@ export function ShareVentureDialog({
     enabled: open,
   });
   const share = shareQ.data;
+
+  // The toggle only makes sense once the venture actually has a cadence.
+  const timelineQ = useQuery({
+    queryKey: ["venture-has-timeline", snapshotId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("venture_snapshots")
+        .select("venture_timeline")
+        .eq("id", snapshotId)
+        .maybeSingle();
+      if (error) throw error;
+      return !!data?.venture_timeline;
+    },
+    enabled: open,
+  });
+  const hasTimeline = timelineQ.data === true;
 
   useEffect(() => {
     if (!share) return;
