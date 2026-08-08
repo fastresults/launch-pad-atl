@@ -65,9 +65,10 @@ const PROSE =
   "[&_h2]:mb-4 [&_h2]:mt-12 [&_h2]:font-serif [&_h2]:text-[22px] [&_h2]:leading-tight " +
   "[&_h3]:mb-3 [&_h3]:mt-10 [&_h3]:font-serif [&_h3]:text-[18px] " +
   "[&_hr]:my-10 [&_hr]:border-border/60 " +
-  "[&_li]:my-2.5 [&_li]:text-[15px] [&_li]:leading-[1.8] " +
+  "[&_li]:my-3 [&_li]:text-[16.5px] [&_li]:leading-[1.85] md:[&_li]:my-2.5 md:[&_li]:text-[15px] md:[&_li]:leading-[1.8] " +
   "[&_ol]:my-6 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6 " +
-  "[&_p]:mb-6 [&_p]:text-[15px] [&_p]:leading-[1.85] " +
+  "[&_p]:mb-7 [&_p]:text-[16.5px] [&_p]:leading-[1.9] md:[&_p]:mb-6 md:[&_p]:text-[15px] md:[&_p]:leading-[1.85] " +
+
   "[&_strong]:font-semibold [&_strong]:text-foreground " +
   "[&_ul]:my-6 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6 " +
   "[&>*:first-child]:mt-0";
