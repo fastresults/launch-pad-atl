@@ -268,8 +268,10 @@ export function TimelineCanvas({
                 height={height}
                 fill={i % 2 ? "hsl(0 0% 100% / 0.028)" : "hsl(0 0% 100% / 0.055)"}
               />
-              {/* A phase name that doesn't fit its band is worse than no name. */}
-              {(p.to - p.from) * pxPerDay > p.label.length * 6.6 + 16 && (
+              {/* Phases can overlap in time; only label the room actually free before the next one starts. */}
+              {(Math.min(p.to, phaseBands[i + 1]?.from ?? p.to) - p.from) * pxPerDay >
+                p.label.length * 7.4 + 16 && (
+
                 <text
                   x={x(p.from) + 8}
                   y={16}
