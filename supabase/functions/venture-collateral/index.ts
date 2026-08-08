@@ -29,6 +29,8 @@ import {
   KIND_LABEL,
   normalizeDetails,
 } from "../_shared/collateral-fields.ts";
+import { suggestDetails } from "../_shared/collateral-suggest.ts";
+
 import { type ArtDirection, directArt, hydrate } from "../_shared/brand-art-direction.ts";
 import { writeCollateralCopy } from "../_shared/collateral-copy.ts";
 import { resolveSpec } from "../_shared/collateral-specs.ts";
