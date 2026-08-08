@@ -5,6 +5,8 @@ import { ShareBrandBoard } from "@/components/share/ShareBrandBoard";
 import { ExecutiveMetrics } from "@/components/share/ExecutiveMetrics";
 import { VentureTimeline } from "@/components/timeline/VentureTimeline";
 import { TimelineBoundary } from "@/components/timeline/TimelineBoundary";
+import type { TimelineScenario } from "@/lib/venture-timeline";
+
 
 
 import { filterShowcaseContent } from "@/lib/share-content-filter";
