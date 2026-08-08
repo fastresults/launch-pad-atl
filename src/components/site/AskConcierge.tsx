@@ -12,7 +12,9 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const STORAGE_KEY = "sl.concierge.v2";
 const VOICE_PREF_KEY = "sl.concierge.voice.v1";
-const HIDDEN_PREFIXES = ["/login", "/signup", "/reset-password", "/unsubscribe", "/dashboard", "/admin", "/welcome", "/paused", "/workshop"];
+// "/v" = public venture showcase: it ships its own Second Brain chat, so the
+// site concierge would be a second, competing launcher in the same corner.
+const HIDDEN_PREFIXES = ["/login", "/signup", "/reset-password", "/unsubscribe", "/dashboard", "/admin", "/welcome", "/paused", "/workshop", "/v"];
 
 
 const STARTERS = [
