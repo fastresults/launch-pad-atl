@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { fetchSharePayload, trackShareView, type SharePayload } from "@/lib/venture-share.functions";
-import { ShareSidebar, BRAIN_KEY } from "@/components/share/ShareSidebar";
+import { ShareSidebar, BRAIN_KEY, TIMELINE_KEY } from "@/components/share/ShareSidebar";
+import { decodeScenario, encodeScenario, type TimelineScenario } from "@/lib/venture-timeline";
 import { ShareSection } from "@/components/share/ShareSection";
 import { ShareBrain } from "@/components/share/ShareBrain";
 
@@ -19,6 +20,9 @@ export default function VentureSharePage() {
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [navOpen, setNavOpen] = useState(false);
   const [condensed, setCondensed] = useState(false);
+  const [stepId, setStepId] = useState<string | null>(null);
+  const [seedQuestion, setSeedQuestion] = useState<string | null>(null);
+  const [readerScenario, setReaderScenario] = useState<TimelineScenario | null>(null);
   const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
 
@@ -43,24 +47,61 @@ export default function VentureSharePage() {
   // The hash keeps every asset individually linkable.
   useEffect(() => {
     if (!items.length) return;
-    const fromHash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    // The hash carries an asset key, optionally a timeline step: "key/step-id".
+    const raw = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    const [hashKey, hashStep] = raw.split("/");
     const initial =
-      fromHash === BRAIN_KEY ? BRAIN_KEY : items.find((i) => i.key === fromHash)?.key ?? items[0].key;
+      hashKey === BRAIN_KEY ? BRAIN_KEY : items.find((i) => i.key === hashKey)?.key ?? items[0].key;
     setActiveKey((prev) => prev ?? initial);
+    if (hashKey === TIMELINE_KEY && hashStep) setStepId(hashStep);
+    const params = new URLSearchParams(window.location.search);
+    const decoded = decodeScenario(params.get("s"));
+    if (decoded) setReaderScenario(decoded);
   }, [items]);
 
   const brainOn = (payload?.chatEnabled !== false || payload?.mapEnabled !== false) && !!payload;
   const brainActive = activeKey === BRAIN_KEY;
+  const timelineActive = activeKey === TIMELINE_KEY;
   const activeIndex = items.findIndex((i) => i.key === activeKey);
   const activeItem = activeIndex >= 0 ? items[activeIndex] : null;
   const activeSection = payload?.sections.find((s) => s.items.some((i) => i.key === activeKey));
 
-  const goTo = (key: string) => {
+  const hashFor = (key: string, step?: string | null) =>
+    `${window.location.pathname}${window.location.search}#${step ? `${key}/${step}` : key}`;
+
+  const goTo = (key: string, step?: string | null) => {
     setActiveKey(key);
-    history.replaceState(null, "", `#${key}`);
+    if (key !== TIMELINE_KEY) setStepId(null);
+    else if (step !== undefined) setStepId(step ?? null);
+    history.replaceState(null, "", hashFor(key, key === TIMELINE_KEY ? step ?? stepId : null));
     // The reading pane scrolls, not the window.
     paneRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    if (key === BRAIN_KEY) setCondensed(true);
+    if (key === BRAIN_KEY || key === TIMELINE_KEY) setCondensed(true);
+  };
+
+  /** Selecting a step keeps the link shareable down to the bar. */
+  const selectStep = (id: string | null) => {
+    setStepId(id);
+    history.replaceState(null, "", hashFor(TIMELINE_KEY, id));
+  };
+
+  /** A reader's what-if rides in the query string so they can send it back. */
+  const onScenarioChange = (s: TimelineScenario, dirty: boolean) => {
+    setReaderScenario(dirty ? s : null);
+    const params = new URLSearchParams(window.location.search);
+    if (dirty) params.set("s", encodeScenario(s));
+    else params.delete("s");
+    const qs = params.toString();
+    history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`,
+    );
+  };
+
+  const askBrain = (question: string) => {
+    setSeedQuestion(question);
+    goTo(BRAIN_KEY);
   };
 
 
@@ -205,7 +246,9 @@ export default function VentureSharePage() {
             <main
               ref={paneRef}
               onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 24)}
-              className={`min-w-0 flex-1 overflow-y-auto ${brainActive ? "flex flex-col py-6" : "pb-24 pt-8"}`}
+              className={`min-w-0 flex-1 overflow-y-auto ${
+                brainActive ? "flex flex-col py-6" : timelineActive ? "pb-16 pt-4" : "pb-24 pt-8"
+              }`}
             >
 
               {brainActive ? (
@@ -214,6 +257,7 @@ export default function VentureSharePage() {
                   password={submitted}
                   payload={payload}
                   onOpenItem={goTo}
+                  seedQuestion={seedQuestion}
                 />
               ) : (
                 <>
@@ -223,14 +267,23 @@ export default function VentureSharePage() {
                     </p>
                   )}
                   {activeItem && (
-                    <ShareSection item={activeItem} accent={payload.venture.colors?.accent ?? null} />
+                    <ShareSection
+                      item={activeItem}
+                      accent={payload.venture.colors?.accent ?? null}
+                      onOpenAsset={(key) => goTo(key)}
+                      onAsk={askBrain}
+                      selectedStepId={timelineActive ? stepId : null}
+                      onSelectStep={selectStep}
+                      scenarioOverride={timelineActive ? readerScenario : null}
+                      onScenarioChange={onScenarioChange}
+                    />
                   )}
                 </>
               )}
 
 
               {/* Prev / next keeps the whole set walkable without the sidebar. */}
-              <div hidden={brainActive} className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6">
+              <div hidden={brainActive || timelineActive} className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6">
                 {activeIndex > 0 ? (
                   <button
                     type="button"
