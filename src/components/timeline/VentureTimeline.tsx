@@ -17,6 +17,8 @@ import { TimelineMobile } from "@/components/timeline/TimelineMobile";
 import { ScenarioBar } from "@/components/timeline/ScenarioBar";
 import { ScenarioVerdict } from "@/components/timeline/ScenarioVerdict";
 import { TimelineStepPanel } from "@/components/timeline/TimelineStepPanel";
+import { TimelineList } from "@/components/timeline/TimelineList";
+
 
 export interface VentureTimelineProps {
   /** Raw jsonb from the venture, or null to render the deterministic fallback. */
@@ -71,7 +73,9 @@ export function VentureTimeline({
   const saved = useMemo(() => normalizeScenario(rawScenario), [rawScenario]);
   const [scenario, setScenarioState] = useState<TimelineScenario>(scenarioOverride ?? saved);
   const [localSelected, setLocalSelected] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
   const [compare, setCompare] = useState(true);
+
 
   const controlledSelection = selectedStepId !== undefined;
   const selected = controlledSelection ? selectedStepId ?? null : localSelected;
@@ -196,6 +200,9 @@ export function VentureTimeline({
               revenue={revenue}
               selectedId={selected}
               onSelect={(id) => setSelected(selected === id ? null : id)}
+              hoveredId={hovered}
+              onHover={setHovered}
+
 
               onNudge={
                 readOnly
@@ -239,6 +246,32 @@ export function VentureTimeline({
           />
         )}
       </div>
+
+      {!isMobile && (
+        <TimelineList
+          timeline={timeline}
+          layout={layout}
+          scenario={scenario}
+          selectedId={selected}
+          onSelect={setSelected}
+          hoveredId={hovered}
+          onHover={setHovered}
+          onOpenAsset={onOpenAsset}
+          onAsk={onAsk}
+          readOnly={readOnly}
+          onNudge={
+            readOnly
+              ? undefined
+              : (id, days) =>
+                  setScenario((s) => ({
+                    ...s,
+                    nudges: { ...(s.nudges ?? {}), [id]: Math.max(0, (s.nudges?.[id] ?? 0) + days) },
+                  }))
+          }
+        />
+      )}
+
+
 
       {onSaveScenario && dirty && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 p-3">

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Layout, LaidOutStep } from "@/lib/timeline-schedule";
-import { dayToDate } from "@/lib/timeline-schedule";
+import { dayToDate, formatDay } from "@/lib/timeline-schedule";
 import type { RevenueProjection } from "@/lib/timeline-revenue";
 import { money } from "@/lib/timeline-revenue";
 import type { TimelineScenario, VentureTimeline } from "@/lib/venture-timeline";
@@ -37,7 +37,11 @@ export interface CanvasProps {
   selectedId?: string | null;
   onSelect: (id: string) => void;
   onNudge?: (id: string, days: number) => void;
+  /** Cross-highlighting with the list below the track. */
+  hoveredId?: string | null;
+  onHover?: (id: string | null) => void;
   reducedMotion?: boolean;
+
 }
 
 /**
@@ -54,13 +58,23 @@ export function TimelineCanvas({
   selectedId,
   onSelect,
   onNudge,
+  hoveredId,
+  onHover,
   reducedMotion,
 }: CanvasProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(900);
   const [pxPerDay, setPxPerDay] = useState(4);
   const [originDay, setOriginDay] = useState(0);
-  const [hover, setHover] = useState<string | null>(null);
+  const [hoverLocal, setHoverLocal] = useState<string | null>(null);
+  const [hoverPt, setHoverPt] = useState<{ x: number; y: number } | null>(null);
+  const hover = hoverLocal ?? hoveredId ?? null;
+  const setHover = (id: string | null) => {
+    setHoverLocal(id);
+    if (!id) setHoverPt(null);
+    onHover?.(id);
+  };
+
 
   const lanes = layout.activeLanes;
   const showRibbon = !!revenue && revenue.points.length > 0;
@@ -347,24 +361,29 @@ export function TimelineCanvas({
             }),
           )}
 
-          {/* bars */}
-          {layout.steps.map((s) => (
-            <StepBar
-              key={s.step.id}
-              s={s}
-              laneIndex={lanes.findIndex((l) => l.id === s.lane)}
-              x={x}
-              pxPerDay={pxPerDay}
-              y={laneY(lanes.findIndex((l) => l.id === s.lane))}
-              active={selectedId === s.step.id}
-              hovered={hover === s.step.id}
-              reducedMotion={reducedMotion}
-              onSelect={onSelect}
-              onHover={setHover}
-              onNudge={onNudge}
-              dayAtX={dayAtX}
-            />
-          ))}
+          {/* bars — the hovered one is drawn last so its magnified label sits on top */}
+          {[...layout.steps]
+            .sort((a, b) => Number(a.step.id === hover) - Number(b.step.id === hover))
+            .map((s) => (
+              <StepBar
+                key={s.step.id}
+                s={s}
+                laneIndex={lanes.findIndex((l) => l.id === s.lane)}
+                x={x}
+                pxPerDay={pxPerDay}
+                y={laneY(lanes.findIndex((l) => l.id === s.lane))}
+                active={selectedId === s.step.id}
+                hovered={hover === s.step.id}
+                dimmed={!!hover && hover !== s.step.id}
+                reducedMotion={reducedMotion}
+                onSelect={onSelect}
+                onHover={setHover}
+                onHoverPoint={setHoverPt}
+                onNudge={onNudge}
+                dayAtX={dayAtX}
+              />
+            ))}
+
 
           {/* revenue ribbon */}
           {ribbonPath && revenue && (
@@ -457,11 +476,66 @@ export function TimelineCanvas({
         )}
       </svg>
 
+      {/* Floating detail — the bars are packed tight, so hovering lifts one out. */}
+      {!panning && hover && hoverPt && (() => {
+        const laid = layout.byId.get(hover);
+        if (!laid) return null;
+        const lane = lanes.find((l) => l.id === laid.lane);
+        const phase = timeline.phases.find((p) => p.id === laid.step.phase);
+        const days = Math.max(1, Math.round(laid.endDay - laid.startDay));
+        const CARD_W = 292;
+        const flip = hoverPt.x + CARD_W + 26 > width;
+        const left = Math.min(Math.max(8, flip ? hoverPt.x - CARD_W - 16 : hoverPt.x + 16), Math.max(8, width - CARD_W - 8));
+        const top = Math.min(Math.max(8, hoverPt.y - 14), Math.max(8, height - 176));
+        return (
+          <div
+            className={cn(
+              "pointer-events-none absolute z-20 rounded-xl border border-white/15 bg-[#0b0c10]/95 p-3 shadow-2xl shadow-black/60 backdrop-blur",
+              !reducedMotion && "animate-in fade-in-0 zoom-in-95 duration-150",
+            )}
+            style={{ left, top, width: CARD_W }}
+          >
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/40">
+              {phase?.label ?? "Step"} · {lane?.name ?? laid.lane}
+            </p>
+            <p className="mt-1 text-[14px] font-medium leading-snug text-white">{laid.step.title}</p>
+            <p className="mt-1.5 text-[11.5px] tabular-nums text-white/55">
+              {formatDay(scenario.startDate, laid.startDay)} → {formatDay(scenario.startDate, laid.endDay)} ·{" "}
+              {days} days · {Math.round(laid.step.effortHours)} hrs
+            </p>
+            {laid.step.doneWhen && (
+              <p className="mt-2 border-t border-white/10 pt-2 text-[12.5px] leading-relaxed text-white/70">
+                <span className="text-white/40">Done when · </span>
+                {laid.step.doneWhen}
+              </p>
+            )}
+            {!!laid.blockedDays && (
+              <p className="mt-2 text-[11.5px] text-amber-200/85">
+                {Math.round(laid.blockedDays)} days fall inside time you're away.
+              </p>
+            )}
+            {laid.endDay > laid.workEndDay && (
+              <p className="mt-1 text-[11.5px] text-white/45">
+                Includes a {Math.round(laid.endDay - laid.workEndDay)}-day wait.
+              </p>
+            )}
+            {layout.milestones
+              .filter((m) => m.milestone.afterStep === laid.step.id)
+              .map((m) => (
+                <p key={m.milestone.id} className="mt-2 text-[11.5px] font-medium text-emerald-300">
+                  Unlocks · {m.milestone.label}
+                </p>
+              ))}
+          </div>
+        );
+      })()}
+
       <div className="pointer-events-none absolute right-3 top-3 flex gap-1">
         <ZoomBtn label="Zoom out" onClick={() => setPxPerDay((z) => clampZoom(z / 1.4))}>−</ZoomBtn>
         <ZoomBtn label="Zoom in" onClick={() => setPxPerDay((z) => clampZoom(z * 1.4))}>+</ZoomBtn>
         <ZoomBtn label="Fit the whole plan" onClick={fit}>Fit</ZoomBtn>
       </div>
+
     </div>
   );
 }
@@ -489,9 +563,11 @@ function StepBar({
   pxPerDay,
   active,
   hovered,
+  dimmed,
   reducedMotion,
   onSelect,
   onHover,
+  onHoverPoint,
   onNudge,
   dayAtX,
 }: {
@@ -502,9 +578,11 @@ function StepBar({
   pxPerDay: number;
   active: boolean;
   hovered: boolean;
+  dimmed?: boolean;
   reducedMotion?: boolean;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
+  onHoverPoint?: (pt: { x: number; y: number } | null) => void;
   onNudge?: (id: string, days: number) => void;
   dayAtX: (px: number) => number;
 }) {
@@ -514,18 +592,37 @@ function StepBar({
   const bx = x(s.startDay);
   const w = Math.max(3, (s.workEndDay - s.startDay) * pxPerDay);
   const waitW = Math.max(0, (s.endDay - s.workEndDay) * pxPerDay);
-  const top = y + (LANE_H - BAR_H) / 2;
+  // Hovering lifts a bar out of a crowded track: taller, brighter, ringed.
+  const lift = hovered || active;
+  const barH = lift ? BAR_H + 10 : BAR_H;
+  const top = y + (LANE_H - barH) / 2;
+
+
+  const reportPoint = (e: React.PointerEvent | React.FocusEvent) => {
+    const svg = (e.currentTarget as SVGGElement).ownerSVGElement;
+    const rect = svg?.getBoundingClientRect();
+    if (!rect) return;
+    const cx = "clientX" in e ? (e as React.PointerEvent).clientX - rect.left : bx + w / 2;
+    onHoverPoint?.({ x: cx, y: top });
+  };
 
   return (
     <g
       data-step-bar
+      tabIndex={0}
+      role="button"
+      aria-label={s.step.title}
       onPointerDown={(e) => {
         e.stopPropagation();
         (e.currentTarget as any).setPointerCapture?.(e.pointerId);
         dragRef.current = { startX: e.clientX, moved: false };
       }}
       onPointerMove={(e) => {
-        if (!dragRef.current || !onNudge) return;
+        if (!dragRef.current) {
+          reportPoint(e);
+          return;
+        }
+        if (!onNudge) return;
         const dx = e.clientX - dragRef.current.startX;
         if (Math.abs(dx) > 4) dragRef.current.moved = true;
       }}
@@ -539,14 +636,33 @@ function StepBar({
         }
         onSelect(s.step.id);
       }}
-      onPointerEnter={() => onHover(s.step.id)}
+      onPointerEnter={(e) => {
+        onHover(s.step.id);
+        reportPoint(e);
+      }}
       onPointerLeave={() => onHover(null)}
-      style={{ cursor: onNudge ? "ew-resize" : "pointer" }}
+      onFocus={(e) => {
+        onHover(s.step.id);
+        reportPoint(e);
+      }}
+      onBlur={() => onHover(null)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(s.step.id);
+        }
+      }}
+      opacity={dimmed ? 0.38 : 1}
+      style={{
+        cursor: onNudge ? "ew-resize" : "pointer",
+        outline: "none",
+        ...(reducedMotion ? {} : { transition: "opacity 150ms ease" }),
+      }}
     >
       {waitW > 0 && (
         <rect
           x={bx + w}
-          y={top + BAR_H / 2 - 3}
+          y={top + barH / 2 - 3}
           width={waitW}
           height={6}
           rx={3}
@@ -554,35 +670,59 @@ function StepBar({
           fillOpacity={0.22}
         />
       )}
+      {lift && (
+        <rect
+          x={bx - 3}
+          y={top - 3}
+          width={w + 6}
+          height={barH + 6}
+          rx={10}
+          fill="none"
+          stroke="white"
+          strokeOpacity={0.28}
+        />
+      )}
       <rect
         x={bx}
         y={top}
         width={w}
-        height={BAR_H}
+        height={barH}
         rx={7}
         fill={tint}
-        fillOpacity={active ? 0.95 : hovered ? 0.8 : 0.62}
+        fillOpacity={active ? 1 : hovered ? 0.92 : 0.62}
         stroke={active ? "white" : "transparent"}
         strokeOpacity={0.85}
-        style={reducedMotion ? undefined : { transition: "x 220ms ease, width 220ms ease, fill-opacity 150ms ease" }}
+        style={
+          reducedMotion
+            ? undefined
+            : { transition: "x 220ms ease, y 160ms ease, width 220ms ease, height 160ms ease, fill-opacity 150ms ease" }
+        }
       />
-      {s.accelerated && <circle cx={bx + 8} cy={top + BAR_H / 2} r={2.5} fill="#0b0c10" fillOpacity={0.6} />}
+      {s.accelerated && <circle cx={bx + 8} cy={top + barH / 2} r={2.5} fill="#0b0c10" fillOpacity={0.6} />}
       {w > 54 && (
         <text
           x={bx + (s.accelerated ? 16 : 9)}
-          y={top + BAR_H / 2 + 4}
-          style={{ fontSize: 11, pointerEvents: "none" }}
+          y={top + barH / 2 + 4}
+          style={{ fontSize: lift ? 12 : 11, pointerEvents: "none" }}
           className="fill-[#0b0c10]"
         >
           {truncate(s.step.title, Math.max(4, Math.floor((w - 16) / 6.1)))}
         </text>
       )}
-      {w <= 54 && (hovered || active) && (
-        <text x={bx + w + 6} y={top + BAR_H / 2 + 4} style={{ fontSize: 11 }} className="fill-white/85">
-          {truncate(s.step.title, 34)}
+      {/* Too narrow to hold its own name — hovering renders it in full, above the track. */}
+      {w <= 54 && lift && (
+        <text
+          x={bx + w / 2}
+          y={top - 8}
+          textAnchor="middle"
+          style={{ fontSize: 12, pointerEvents: "none" }}
+          className="fill-white"
+        >
+          {truncate(s.step.title, 40)}
         </text>
       )}
     </g>
+
   );
 }
 
