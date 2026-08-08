@@ -132,17 +132,19 @@ export function ShareBrain({
       </header>
 
 
-      <div className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1" onPointerDown={stop} onTouchStart={stop}>
         {tab === "ask" && chatOn && (
           <ShareChatPanel
             token={token}
             password={password}
             ventureName={payload.venture.name}
             seedQuestion={seedQuestion}
+            onInteract={stop}
             embedded
           />
         )}
         {tab === "map" && mapOn && !graphOn && (
+
           <div className="h-full overflow-y-auto rounded-2xl border border-border/60 bg-card/40 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
