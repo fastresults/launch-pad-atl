@@ -67,6 +67,8 @@ type Item = {
     voice?: { summary?: string | null; principles?: string[]; dos?: string[]; donts?: string[] } | null;
     ctas?: string[];
   };
+  metrics?: { label: string; value: string; note?: string | null; source?: string | null }[];
+
 
 };
 
