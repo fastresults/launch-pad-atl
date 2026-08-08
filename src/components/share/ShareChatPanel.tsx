@@ -18,6 +18,7 @@ export function ShareChatPanel({
   ventureName,
   embedded = false,
   hideHeader = false,
+  seedQuestion,
 }: {
   token: string;
   password?: string;
@@ -25,7 +26,10 @@ export function ShareChatPanel({
   /** Render inline (fills its parent) instead of as a floating dock. */
   embedded?: boolean;
   hideHeader?: boolean;
+  /** Pre-fills the input — used when a timeline step hands over a question. */
+  seedQuestion?: string | null;
 }) {
+
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ShareChatMessage[]>([]);
   const [input, setInput] = useState("");
