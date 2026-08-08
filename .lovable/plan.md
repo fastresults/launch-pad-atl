@@ -49,6 +49,7 @@ Most shared links get opened on a phone. The showcase gets a purpose-built mobil
 - `supabase/functions/venture-share/index.ts` and `venture-share-chat/index.ts`: resolve the incoming identifier against `slug` first, then `token`; lower the minimum length guard from 8 to 3 and keep the 128 ceiling. Everything downstream still keys off the resolved `snapshot_id`, so no client-supplied venture id is ever trusted.
 - `ShareVentureDialog.tsx` / `ShareLinkBar.tsx`: show the slug as editable text, live validation, copy the short URL.
 - `src/routes/v.$token.tsx` needs no routing change — the param is just shorter.
+- Mobile: `useIsMobile()` drives a distinct mobile layout in `v.$token.tsx` (sticky compact masthead, bottom action bar, contents bottom sheet) rather than CSS-only hiding; `ShareSection.tsx` gets mobile type/spacing scales and scroll-fade tables; `ShareBrain.tsx` renders as a full-screen sheet with `dvh` sizing and `env(safe-area-inset-*)` padding; `ShareMindMap.tsx` lazy-loads and falls back to a cluster list below ~420px; swipe navigation via a lightweight touch handler on the reading pane.
 
 ## Build order
 
@@ -56,3 +57,5 @@ Most shared links get opened on a phone. The showcase gets a purpose-built mobil
 2. Server-side resolution by slug or token in both share functions.
 3. Slug generation on create + short random fallback.
 4. Editable slug UI with availability check in the share dialog.
+5. Mobile showcase rebuild: masthead, bottom bar + contents sheet, reading pane typography, Second Brain sheet, mind map fallback.
+
