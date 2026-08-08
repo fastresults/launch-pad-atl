@@ -1194,7 +1194,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       : 0;
 
   return (
-    <div className="theme-dark-scope -m-4 space-y-6 bg-background p-4 text-foreground md:-m-6 md:p-6">
+    <div className="theme-dark-scope space-y-6 rounded-2xl bg-background p-4 text-foreground sm:p-5">
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <DashboardWelcomeStrip snapshotId={snapshot.id} hasProgress={completeCount > 0} />
