@@ -223,6 +223,8 @@ export function RadialMindMap({
           branch,
           phase: seeded(itemId) * 4,
           match: matches(String(item.title || "")),
+          angle: localAngle,
+          labelLane: itemIndex % 3,
         };
         nodes.push(itemNode);
         links.push({
