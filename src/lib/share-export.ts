@@ -631,7 +631,9 @@ export async function generatePdf(doc: ExportDoc): Promise<Blob> {
       room(fitH + 16);
       pdf.addImage(img.dataUrl, "PNG", M + (CW - fit) / 2, y, fit, fitH);
       y += fitH + 8;
-      if (img.label) text(img.label, 8.5, "italic", "helvetica", 8, [130, 130, 138]);
+      if (img.label && img.label !== block.title) {
+        text(img.label, 8.5, "italic", "helvetica", 8, [130, 130, 138]);
+      }
     });
 
     if (block.markdown) {
