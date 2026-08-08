@@ -3,6 +3,9 @@ import type { ShareItem } from "@/lib/venture-share.functions";
 import { MarkdownProse } from "@/components/markdown/MarkdownProse";
 import { ShareBrandBoard } from "@/components/share/ShareBrandBoard";
 import { ExecutiveMetrics } from "@/components/share/ExecutiveMetrics";
+import { VentureTimeline } from "@/components/timeline/VentureTimeline";
+import { TimelineBoundary } from "@/components/timeline/TimelineBoundary";
+
 
 import { filterShowcaseContent } from "@/lib/share-content-filter";
 
@@ -48,7 +51,18 @@ export function ShareSection({ item, accent }: { item: ShareItem; accent?: strin
         )}
       </header>
 
-      {item.heroImageUrl ? (
+      {item.kind === "timeline" ? (
+        // The cadence is its own hero — art on top of it would only compete.
+        <TimelineBoundary resetKey={item.key}>
+          <VentureTimeline
+            timeline={item.timeline?.data}
+            scenario={item.timeline?.scenario}
+            metrics={item.metrics ?? null}
+            readOnly
+            className="mb-10"
+          />
+        </TimelineBoundary>
+      ) : item.heroImageUrl ? (
         <div className="mb-10 flex justify-center rounded-2xl border border-border/60 bg-muted/10 p-3">
           <img
             src={item.heroImageUrl}
@@ -62,7 +76,8 @@ export function ShareSection({ item, accent }: { item: ShareItem; accent?: strin
         <CoverPlate title={item.title} accent={accent} />
       )}
 
-      {!!item.metrics?.length && (
+
+      {item.kind !== "timeline" && !!item.metrics?.length && (
         <ExecutiveMetrics
           metrics={item.metrics}
           accent={accent}

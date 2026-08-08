@@ -47,13 +47,16 @@ export interface ShareItem {
   key: string;
   title: string;
   subtitle?: string | null;
-  kind: "doc" | "gallery";
+  kind: "doc" | "gallery" | "timeline";
   body?: string | null;
   heroImageUrl?: string | null;
   images?: { url: string; label?: string | null; width?: number | null; height?: number | null }[];
   brandBoard?: ShareBrandBoard;
   metrics?: ShareMetric[];
+  /** Launch cadence payload — raw timeline plus the founder's saved scenario. */
+  timeline?: { data: unknown; scenario: unknown } | null;
 }
+
 
 export interface SharePayload {
   venture: {

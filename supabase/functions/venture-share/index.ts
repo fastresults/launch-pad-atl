@@ -52,7 +52,9 @@ const HARD_EXCLUDED_DOC_TYPES = new Set(["ai_tool_stack_recommendation"]);
 type Item = {
   key: string;
   title: string;
-  kind: "doc" | "gallery";
+  kind: "doc" | "gallery" | "timeline";
+  timeline?: { data: unknown; scenario: unknown } | null;
+
   subtitle?: string | null;
   body?: string | null;
   heroImageUrl?: string | null;
@@ -471,6 +473,22 @@ Deno.serve(async (req) => {
           body: snap.roadmap_content,
         });
       }
+
+      // The launch cadence — readers can pan it and run their own what-ifs.
+      if (snap.venture_timeline && !excluded.has("overview:timeline")) {
+        overview.push({
+          key: "overview:timeline",
+          title: "The build, end to end",
+          subtitle: "Idea to cash flowing — drag the levers to see it your way",
+          kind: "timeline",
+          timeline: {
+            data: snap.venture_timeline,
+            scenario: snap.venture_timeline_scenario ?? null,
+          },
+          metrics: execMetrics,
+        });
+      }
+
     }
     if (overview.length) buckets.set("Overview", [...overview, ...(buckets.get("Overview") ?? [])]);
 
