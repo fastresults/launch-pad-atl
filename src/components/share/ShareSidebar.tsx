@@ -19,11 +19,15 @@ export function ShareSidebar({
   payload,
   activeKey,
   onNavigate,
+  variant = "rail",
 }: {
   payload: SharePayload;
   activeKey: string | null;
   onNavigate?: (key: string) => void;
+  /** "sheet" renders thumb-sized rows for the mobile contents sheet. */
+  variant?: "rail" | "sheet";
 }) {
+  const sheet = variant === "sheet";
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
 
@@ -78,7 +82,7 @@ export function ShareSidebar({
           href={`https://${website}`}
           target="_blank"
           rel="noreferrer noopener"
-          className="mb-3 flex shrink-0 items-center gap-3 rounded-xl border border-primary/50 bg-primary/10 px-3 py-2.5 transition-colors hover:border-primary hover:bg-primary/15"
+          className={cn("mb-3 flex shrink-0 items-center gap-3 rounded-xl border border-primary/50 bg-primary/10 px-3 transition-colors hover:border-primary hover:bg-primary/15", sheet ? "min-h-[52px] py-3" : "py-2.5")}
         >
           <ExternalLink className="h-4 w-4 shrink-0 text-primary" />
           <span className="min-w-0 flex-1">
@@ -99,7 +103,8 @@ export function ShareSidebar({
                 type="button"
                 onClick={() => onNavigate?.(p.key)}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors",
+                  "flex w-full items-center gap-3 rounded-xl border px-3 text-left transition-colors",
+                  sheet ? "min-h-[52px] py-3" : "py-2.5",
                   active
                     ? "border-primary/60 bg-primary/10"
                     : "border-border/60 bg-card/40 hover:border-primary/40",
@@ -123,7 +128,7 @@ export function ShareSidebar({
           onChange={(e) => setQuery(e.target.value)}
           placeholder={`Search ${total} assets`}
           aria-label="Search assets"
-          className="h-9 w-full rounded-lg border border-border/60 bg-card/40 pl-9 pr-3 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none"
+          className={cn(sheet ? "h-11 text-[15px]" : "h-9 text-[13px]", "w-full rounded-lg border border-border/60 bg-card/40 pl-9 pr-3 text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none")}
         />
       </div>
 
@@ -142,7 +147,8 @@ export function ShareSidebar({
                 type="button"
                 onClick={() => setOpen((p) => ({ ...p, [section.key]: !expanded }))}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] font-medium tracking-wide transition-colors",
+                  "flex w-full items-center gap-2 rounded-lg px-3 text-left font-medium tracking-wide transition-colors",
+                  sheet ? "min-h-[48px] py-3 text-[14px]" : "py-2 text-[13px]",
                   containsActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -169,7 +175,8 @@ export function ShareSidebar({
                             }
                           }}
                           className={cn(
-                            "-ml-[13px] flex items-start gap-2.5 rounded-r-lg py-1.5 pl-3 pr-2 text-[13px] leading-snug transition-colors",
+                            "-ml-[13px] flex items-start gap-2.5 rounded-r-lg pl-3 pr-2 leading-snug transition-colors",
+                            sheet ? "min-h-[44px] items-center py-2.5 text-[15px]" : "py-1.5 text-[13px]",
                             active
                               ? "border-l-2 border-primary font-medium text-foreground"
                               : "border-l-2 border-transparent text-muted-foreground hover:text-foreground",

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useDocumentTitle } from "@/lib/use-document-title";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { fetchSharePayload, trackShareView, type SharePayload } from "@/lib/venture-share.functions";
 import { ShareSidebar, BRAIN_KEY, TIMELINE_KEY } from "@/components/share/ShareSidebar";
 import { decodeScenario, encodeScenario, type TimelineScenario } from "@/lib/venture-timeline";
@@ -11,7 +12,18 @@ import { ShareBrain } from "@/components/share/ShareBrain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, ArrowRight, ExternalLink, Loader2, Lock, Menu, Sparkle } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ExternalLink,
+  List,
+  Loader2,
+  Lock,
+  Menu,
+  Share2,
+  Sparkle,
+} from "lucide-react";
+
 
 export default function VentureSharePage() {
   const { token = "" } = useParams();
@@ -23,8 +35,15 @@ export default function VentureSharePage() {
   const [stepId, setStepId] = useState<string | null>(null);
   const [seedQuestion, setSeedQuestion] = useState<string | null>(null);
   const [readerScenario, setReaderScenario] = useState<TimelineScenario | null>(null);
+  const isMobile = useIsMobile();
+  /** On a phone the second brain is a full-screen sheet, not a pane section. */
+  const [brainOpen, setBrainOpen] = useState(false);
+  const [blurbOpen, setBlurbOpen] = useState(false);
   const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
+  const touchX = useRef<number | null>(null);
+  const touchY = useRef<number | null>(null);
+
 
 
   const q = useQuery({
@@ -59,8 +78,17 @@ export default function VentureSharePage() {
     if (decoded) setReaderScenario(decoded);
   }, [items]);
 
+  // A #tool:brain link on a phone opens the sheet rather than the pane section.
+  useEffect(() => {
+    if (isMobile && activeKey === BRAIN_KEY) {
+      setBrainOpen(true);
+      setActiveKey(items[0]?.key ?? null);
+    }
+  }, [isMobile, activeKey, items]);
+
   const brainOn = (payload?.chatEnabled !== false || payload?.mapEnabled !== false) && !!payload;
   const brainActive = activeKey === BRAIN_KEY;
+
   const timelineActive = activeKey === TIMELINE_KEY;
   const activeIndex = items.findIndex((i) => i.key === activeKey);
   const activeItem = activeIndex >= 0 ? items[activeIndex] : null;
@@ -70,6 +98,12 @@ export default function VentureSharePage() {
     `${window.location.pathname}${window.location.search}#${step ? `${key}/${step}` : key}`;
 
   const goTo = (key: string, step?: string | null) => {
+    if (key === BRAIN_KEY && isMobile) {
+      // The brain takes the whole phone screen instead of replacing the reading pane.
+      setBrainOpen(true);
+      setNavOpen(false);
+      return;
+    }
     setActiveKey(key);
     if (key !== TIMELINE_KEY) setStepId(null);
     else if (step !== undefined) setStepId(step ?? null);
@@ -78,6 +112,35 @@ export default function VentureSharePage() {
     paneRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     if (key === BRAIN_KEY || key === TIMELINE_KEY) setCondensed(true);
   };
+
+  /** Swipe left/right walks the asset list on touch devices. */
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchX.current = e.touches[0].clientX;
+    touchY.current = e.touches[0].clientY;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchX.current === null || touchY.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    const dy = e.changedTouches[0].clientY - touchY.current;
+    touchX.current = null;
+    touchY.current = null;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+    const next = dx < 0 ? activeIndex + 1 : activeIndex - 1;
+    if (activeIndex >= 0 && next >= 0 && next < items.length) goTo(items[next].key);
+  };
+
+  /** Phones have a native share sheet; everything else copies the link. */
+  const shareLink = async () => {
+    const url = window.location.href;
+    const title = payload?.venture.name ?? "Venture showcase";
+    try {
+      if (navigator.share) await navigator.share({ title, url });
+      else await navigator.clipboard.writeText(url);
+    } catch {
+      /* dismissed */
+    }
+  };
+
 
   /** Selecting a step keeps the link shareable down to the bar. */
   const selectStep = (id: string | null) => {
@@ -171,90 +234,145 @@ export default function VentureSharePage() {
 
       {payload && (
         <div className="flex h-[100svh] flex-col overflow-hidden">
-          {/* Masthead — condenses once the reader starts working. */}
-          <header
-            className={`shrink-0 border-b border-border/60 bg-gradient-to-b from-card/70 to-background transition-all ${
-              condensed ? "py-2" : "py-6 md:py-10"
-            }`}
-          >
-            <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6 md:px-10">
-              <Sheet open={navOpen} onOpenChange={setNavOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open contents">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="theme-dark-scope flex w-[85vw] max-w-xs flex-col bg-background p-6">
-                  <ShareSidebar
-                    payload={payload}
-                    activeKey={activeKey}
-                    onNavigate={(k) => {
-                      goTo(k);
-                      setNavOpen(false);
-                    }}
+          {isMobile ? (
+            /* Phone masthead: one line, sticky, with the one-liner on demand. */
+            <header className="shrink-0 border-b border-border/60 bg-card/50 px-4 pt-[calc(env(safe-area-inset-top)+10px)] pb-2.5 backdrop-blur">
+              <div className="flex items-center gap-3">
+                {payload.venture.logoUrl && (
+                  <img
+                    src={payload.venture.logoUrl}
+                    alt={payload.venture.name}
+                    className={`shrink-0 rounded-lg object-contain transition-all ${
+                      condensed ? "h-8 w-8" : "h-10 w-10"
+                    }`}
                   />
-                </SheetContent>
-              </Sheet>
-
-              {payload.venture.logoUrl && (
-                <img
-                  src={payload.venture.logoUrl}
-                  alt={payload.venture.name}
-                  className={`shrink-0 rounded-lg object-contain transition-all ${
-                    condensed ? "h-9 w-9" : "h-12 w-12 md:h-16 md:w-16"
-                  }`}
-                />
-              )}
-              <div className="min-w-0">
-                {!condensed && (
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                    Venture showcase · {items.length} assets
-                  </p>
                 )}
-                <h1
-                  className={`truncate font-serif leading-tight tracking-tight ${
-                    condensed ? "text-[18px]" : "mt-1 text-[26px] md:text-[40px]"
-                  }`}
-                >
-                  {payload.venture.name}
-                </h1>
-                {payload.venture.oneLiner && !condensed && (
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-                    {payload.venture.oneLiner}
-                  </p>
-                )}
-              </div>
-              {payload.venture.website && (
-                <Button
-                  asChild
-                  size={condensed ? "sm" : "default"}
-                  className="ml-auto shrink-0"
-                >
+                <div className="min-w-0 flex-1">
+                  <h1 className="truncate font-serif text-[17px] leading-tight tracking-tight">
+                    {payload.venture.name}
+                  </h1>
+                  {!condensed && (
+                    <p className="text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                      {items.length} assets
+                    </p>
+                  )}
+                </div>
+                {payload.venture.website && (
                   <a
                     href={`https://${payload.venture.website}`}
                     target="_blank"
                     rel="noreferrer noopener"
+                    aria-label="Visit website"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-primary/50 bg-primary/10 text-primary"
                   >
-                    <ExternalLink className="mr-1.5 h-4 w-4" />
-                    Visit website
+                    <ExternalLink className="h-4 w-4" />
                   </a>
-                </Button>
-              )}
-              {brainOn && (
-                <Button
-                  variant="outline"
-                  size={condensed ? "sm" : "default"}
-                  className={`hidden shrink-0 md:inline-flex ${payload.venture.website ? "" : "ml-auto"}`}
-                  onClick={() => goTo(BRAIN_KEY)}
+                )}
+              </div>
+              {payload.venture.oneLiner && !condensed && (
+                <button
+                  type="button"
+                  onClick={() => setBlurbOpen((v) => !v)}
+                  className="mt-2 w-full text-left text-[13px] leading-relaxed text-muted-foreground"
                 >
-                  <Sparkle className="mr-1.5 h-4 w-4" />
-                  Ask this venture
-                </Button>
+                  <span className={blurbOpen ? "" : "line-clamp-2"}>{payload.venture.oneLiner}</span>
+                  <span className="mt-0.5 block text-[11px] text-primary">
+                    {blurbOpen ? "Less" : "More"}
+                  </span>
+                </button>
               )}
-            </div>
-          </header>
+            </header>
+          ) : (
+            /* Masthead — condenses once the reader starts working. */
+            <header
+              className={`shrink-0 border-b border-border/60 bg-gradient-to-b from-card/70 to-background transition-all ${
+                condensed ? "py-2" : "py-6 md:py-10"
+              }`}
+            >
+              <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6 md:px-10">
+                <Sheet open={navOpen} onOpenChange={setNavOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open contents">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="theme-dark-scope flex w-[85vw] max-w-xs flex-col bg-background p-6">
+                    <ShareSidebar
+                      payload={payload}
+                      activeKey={activeKey}
+                      onNavigate={(k) => {
+                        goTo(k);
+                        setNavOpen(false);
+                      }}
+                    />
+                  </SheetContent>
+                </Sheet>
 
-          <div className="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 gap-12 overflow-hidden px-6 md:px-10">
+                {payload.venture.logoUrl && (
+                  <img
+                    src={payload.venture.logoUrl}
+                    alt={payload.venture.name}
+                    className={`shrink-0 rounded-lg object-contain transition-all ${
+                      condensed ? "h-9 w-9" : "h-12 w-12 md:h-16 md:w-16"
+                    }`}
+                  />
+                )}
+                <div className="min-w-0">
+                  {!condensed && (
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+                      Venture showcase · {items.length} assets
+                    </p>
+                  )}
+                  <h1
+                    className={`truncate font-serif leading-tight tracking-tight ${
+                      condensed ? "text-[18px]" : "mt-1 text-[26px] md:text-[40px]"
+                    }`}
+                  >
+                    {payload.venture.name}
+                  </h1>
+                  {payload.venture.oneLiner && !condensed && (
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+                      {payload.venture.oneLiner}
+                    </p>
+                  )}
+                </div>
+                {payload.venture.website && (
+                  <Button
+                    asChild
+                    size={condensed ? "sm" : "default"}
+                    className="ml-auto shrink-0"
+                  >
+                    <a
+                      href={`https://${payload.venture.website}`}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      <ExternalLink className="mr-1.5 h-4 w-4" />
+                      Visit website
+                    </a>
+                  </Button>
+                )}
+                {brainOn && (
+                  <Button
+                    variant="outline"
+                    size={condensed ? "sm" : "default"}
+                    className={`hidden shrink-0 md:inline-flex ${payload.venture.website ? "" : "ml-auto"}`}
+                    onClick={() => goTo(BRAIN_KEY)}
+                  >
+                    <Sparkle className="mr-1.5 h-4 w-4" />
+                    Ask this venture
+                  </Button>
+                )}
+              </div>
+            </header>
+          )}
+
+
+          <div
+            className={`mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 gap-12 overflow-hidden ${
+              isMobile ? "px-5" : "px-6 md:px-10"
+            }`}
+          >
             <aside className="hidden w-72 shrink-0 py-8 lg:block">
               <ShareSidebar payload={payload} activeKey={activeKey} onNavigate={goTo} />
             </aside>
@@ -262,10 +380,19 @@ export default function VentureSharePage() {
             <main
               ref={paneRef}
               onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 24)}
+              onTouchStart={isMobile ? onTouchStart : undefined}
+              onTouchEnd={isMobile ? onTouchEnd : undefined}
               className={`min-w-0 flex-1 overflow-y-auto ${
-                brainActive ? "flex flex-col py-6" : timelineActive ? "pb-16 pt-4" : "pb-24 pt-8"
+                isMobile
+                  ? "pb-[calc(env(safe-area-inset-bottom)+96px)] pt-5"
+                  : brainActive
+                    ? "flex flex-col py-6"
+                    : timelineActive
+                      ? "pb-16 pt-4"
+                      : "pb-24 pt-8"
               }`}
             >
+
 
               {brainActive ? (
                 <ShareBrain
@@ -299,12 +426,17 @@ export default function VentureSharePage() {
 
 
               {/* Prev / next keeps the whole set walkable without the sidebar. */}
-              <div hidden={brainActive || timelineActive} className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6">
+              <div
+                hidden={brainActive || timelineActive}
+                className={`mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 ${
+                  isMobile ? "pt-4" : "pt-6"
+                }`}
+              >
                 {activeIndex > 0 ? (
                   <button
                     type="button"
                     onClick={() => goTo(items[activeIndex - 1].key)}
-                    className="group max-w-[46%] text-left"
+                    className={`group max-w-[46%] text-left ${isMobile ? "min-h-[56px] py-2" : ""}`}
                   >
                     <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                       <ArrowLeft className="h-3.5 w-3.5" /> Previous
@@ -320,7 +452,7 @@ export default function VentureSharePage() {
                   <button
                     type="button"
                     onClick={() => goTo(items[activeIndex + 1].key)}
-                    className="group max-w-[46%] text-right"
+                    className={`group max-w-[46%] text-right ${isMobile ? "min-h-[56px] py-2" : ""}`}
                   >
                     <span className="flex items-center justify-end gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
                       Next <ArrowRight className="h-3.5 w-3.5" />
@@ -340,8 +472,8 @@ export default function VentureSharePage() {
             </main>
           </div>
 
-          {/* One launcher only — it routes into the Second Brain section. */}
-          {brainOn && !brainActive && (
+          {/* Desktop keeps one floating launcher into the Second Brain section. */}
+          {brainOn && !brainActive && !isMobile && (
             <button
               type="button"
               onClick={() => goTo(BRAIN_KEY)}
@@ -351,6 +483,78 @@ export default function VentureSharePage() {
               Ask this venture
             </button>
           )}
+
+          {isMobile && (
+            <>
+              {/* Thumb-reachable bar: contents, second brain, share. */}
+              <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+                <div className="grid grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={() => setNavOpen(true)}
+                    className="flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"
+                  >
+                    <List className="h-5 w-5" />
+                    Contents
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => (brainOn ? setBrainOpen(true) : undefined)}
+                    disabled={!brainOn}
+                    className="flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] text-primary disabled:opacity-40"
+                  >
+                    <Sparkle className="h-5 w-5" />
+                    Ask
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void shareLink()}
+                    className="flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"
+                  >
+                    <Share2 className="h-5 w-5" />
+                    Share
+                  </button>
+                </div>
+              </nav>
+
+              <Sheet open={navOpen} onOpenChange={setNavOpen}>
+                <SheetContent
+                  side="bottom"
+                  className="theme-dark-scope flex h-[85dvh] flex-col rounded-t-3xl bg-background px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-6"
+                >
+                  <ShareSidebar
+                    payload={payload}
+                    activeKey={activeKey}
+                    variant="sheet"
+                    onNavigate={(k) => {
+                      goTo(k);
+                      setNavOpen(false);
+                    }}
+                  />
+                </SheetContent>
+              </Sheet>
+
+              <Sheet open={brainOpen} onOpenChange={setBrainOpen}>
+                <SheetContent
+                  side="bottom"
+                  className="theme-dark-scope flex h-[100dvh] flex-col rounded-none bg-background px-4 pb-[env(safe-area-inset-bottom)] pt-[calc(env(safe-area-inset-top)+16px)]"
+                >
+                  <ShareBrain
+                    token={token}
+                    password={submitted}
+                    payload={payload}
+                    mobile
+                    onOpenItem={(k) => {
+                      setBrainOpen(false);
+                      goTo(k);
+                    }}
+                    seedQuestion={seedQuestion}
+                  />
+                </SheetContent>
+              </Sheet>
+            </>
+          )}
+
         </div>
       )}
 

@@ -21,6 +21,7 @@ export function ShareBrain({
   payload,
   onOpenItem,
   seedQuestion,
+  mobile = false,
 }: {
   token: string;
   password?: string;
@@ -28,10 +29,16 @@ export function ShareBrain({
   onOpenItem: (key: string) => void;
   /** Question handed over from a timeline step. */
   seedQuestion?: string | null;
+  /** Rendered inside the mobile full-screen sheet. */
+  mobile?: boolean;
 }) {
   const chatOn = payload.chatEnabled !== false;
   const mapOn = payload.mapEnabled !== false;
   const [tab, setTab] = useState<"ask" | "map">(chatOn ? "ask" : "map");
+  // On very small screens the radial graph is unreadable — start with clusters.
+  const [graphOn, setGraphOn] = useState(
+    () => typeof window === "undefined" || window.innerWidth >= 420,
+  );
 
   useEffect(() => {
     if (seedQuestion && chatOn) setTab("ask");
@@ -44,7 +51,7 @@ export function ShareBrain({
   if (!tabs.length) return null;
 
   return (
-    <section className="flex h-full min-h-0 min-w-0 flex-col">
+    <section className={`flex min-h-0 min-w-0 flex-col ${mobile ? "h-full pb-[env(safe-area-inset-bottom)]" : "h-full"}`}>
       {/* One compact row: title and tabs share the line so the input stays on screen. */}
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 pb-4">
         <div className="min-w-0">
@@ -86,7 +93,43 @@ export function ShareBrain({
             embedded
           />
         )}
-        {tab === "map" && mapOn && (
+        {tab === "map" && mapOn && !graphOn && (
+          <div className="h-full overflow-y-auto rounded-2xl border border-border/60 bg-card/40 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                Clusters
+              </p>
+              <button
+                type="button"
+                onClick={() => setGraphOn(true)}
+                className="rounded-full border border-border/60 px-3 py-1.5 text-[12px] text-muted-foreground"
+              >
+                Open the map
+              </button>
+            </div>
+            <div className="space-y-5">
+              {payload.sections.map((section) => (
+                <div key={section.key}>
+                  <p className="mb-2 text-[13px] font-medium text-foreground">{section.label}</p>
+                  <ul className="space-y-1">
+                    {section.items.map((item) => (
+                      <li key={item.key}>
+                        <button
+                          type="button"
+                          onClick={() => onOpenItem(item.key)}
+                          className="flex min-h-[44px] w-full items-center rounded-lg border border-border/50 bg-background/40 px-3 text-left text-[14px] text-muted-foreground"
+                        >
+                          {item.title}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {tab === "map" && mapOn && graphOn && (
           <MindMapBoundary
             key={`${token}-${payload.share.updatedAt}`}
             resetKey={`${token}-${payload.share.updatedAt}`}
