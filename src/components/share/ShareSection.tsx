@@ -47,6 +47,7 @@ export function ShareSection({
   onSelectStep,
   scenarioOverride,
   onScenarioChange,
+  exportSlot,
 }: {
   item: ShareItem;
   accent?: string | null;
@@ -58,6 +59,8 @@ export function ShareSection({
   onSelectStep?: (id: string | null) => void;
   scenarioOverride?: TimelineScenario | null;
   onScenarioChange?: (s: TimelineScenario, dirty: boolean) => void;
+  /** Discreet Word / PDF / Drive export control for this section. */
+  exportSlot?: ReactNode;
 }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
@@ -65,16 +68,22 @@ export function ShareSection({
   return (
     <section id={item.key} className={`min-w-0 max-w-full scroll-mt-24 overflow-x-clip border-t border-border/60 first:border-t-0 ${item.kind === "timeline" ? "py-6" : "py-14"}`}>
       {/* The timeline carries its own headline — a second one only repeats it. */}
-      {item.kind !== "timeline" && (
-        <header className="mb-7">
-          <h2 className="font-serif text-[28px] leading-tight tracking-tight text-foreground md:text-[34px]">
-            {item.title}
-          </h2>
-          {item.subtitle && (
-            <p className="mt-2 text-sm text-muted-foreground">{item.subtitle}</p>
-          )}
+      {item.kind === "timeline" ? (
+        exportSlot && <div className="mb-3 flex justify-end">{exportSlot}</div>
+      ) : (
+        <header className="mb-7 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="font-serif text-[28px] leading-tight tracking-tight text-foreground md:text-[34px]">
+              {item.title}
+            </h2>
+            {item.subtitle && (
+              <p className="mt-2 text-sm text-muted-foreground">{item.subtitle}</p>
+            )}
+          </div>
+          {exportSlot}
         </header>
       )}
+
 
 
       {item.kind === "timeline" ? (
