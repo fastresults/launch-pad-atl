@@ -41,6 +41,14 @@ const CATEGORY_ORDER = [
   "Governance",
 ];
 
+/**
+ * Assets that are internal working notes for the founder and never belong in a
+ * public showcase. Hard-coded so it also applies to shares minted in the past.
+ */
+const HARD_EXCLUDED_DOC_TYPES = new Set(["ai_tool_stack_recommendation"]);
+
+
+
 type Item = {
   key: string;
   title: string;
@@ -49,7 +57,14 @@ type Item = {
   body?: string | null;
   heroImageUrl?: string | null;
   images?: { url: string; label?: string | null; width?: number | null; height?: number | null }[];
+  brandBoard?: {
+    paletteName?: string | null;
+    swatches: { label: string; hex: string }[];
+    fonts: { role: string; family: string }[];
+    logos: { url: string; label?: string | null }[];
+  };
 };
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -127,14 +142,22 @@ Deno.serve(async (req) => {
     const snap = snapRes.data;
     if (!snap) return json({ error: "This venture is no longer available.", code: "GONE" }, 404);
 
+    let signFailures = 0;
     const sign = async (bucket: string, path?: string | null) => {
       if (!path) return null;
-      const { data } = await admin.storage.from(bucket).createSignedUrl(path, SIGNED_TTL);
-      return data?.signedUrl ?? null;
+      const { data, error } = await admin.storage.from(bucket).createSignedUrl(path, SIGNED_TTL);
+      if (error || !data?.signedUrl) {
+        signFailures += 1;
+        console.error("[venture-share] sign failed", bucket, path, error?.message);
+        return null;
+      }
+      return data.signedUrl;
     };
 
     const types = new Map((typesRes.data ?? []).map((t: any) => [t.type, t]));
-    const docs = (docsRes.data ?? []).filter((d: any) => (d.content ?? "").trim().length > 0);
+    const docs = (docsRes.data ?? [])
+      .filter((d: any) => (d.content ?? "").trim().length > 0)
+      .filter((d: any) => !HARD_EXCLUDED_DOC_TYPES.has(d.document_type));
 
     // ---- Documents grouped by their catalog category -------------------------
     const buckets = new Map<string, Item[]>();
@@ -165,25 +188,63 @@ Deno.serve(async (req) => {
       });
     }
 
+
     // ---- Brand identity ------------------------------------------------------
     const kit: any = kitRes.data;
     const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
     const primaryLogo = logos.find((l) => l?.primary) ?? logos[0] ?? null;
     const logoUrl = primaryLogo ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}` : null;
 
+    const paletteColors: Record<string, string> =
+      (kit?.palette?.colors && typeof kit.palette.colors === "object" ? kit.palette.colors : {}) as any;
+
     if (kit && !excluded.has("cat:Brand")) {
       if (!excluded.has("brand:identity")) {
-        const palette = Array.isArray(kit.palette) ? kit.palette : (kit.palette?.colors ?? []);
         const lines: string[] = [];
         if (kit.dna?.positioning) lines.push(String(kit.dna.positioning));
         if (kit.voice?.summary) lines.push(String(kit.voice.summary));
+
+        const swatchOrder = [
+          ["primary", "Primary"],
+          ["secondary", "Secondary"],
+          ["accent", "Accent"],
+          ["fg", "Text"],
+          ["muted", "Muted"],
+          ["bg", "Surface"],
+          ["border", "Border"],
+        ];
+        const swatches = swatchOrder
+          .filter(([k]) => typeof paletteColors[k] === "string")
+          .map(([k, label]) => ({ label, hex: paletteColors[k] }));
+
+        // Logo variants: every stored mark, signed so the reader can see them.
+        const logoImages: { url: string; label?: string | null }[] = [];
+        for (const l of logos) {
+          const p = l?.preview_path ?? l?.svg_path ?? l?.path;
+          const url = await sign(BUCKET, p);
+          if (url) logoImages.push({ url, label: l?.label ?? l?.name ?? (l?.primary ? "Primary mark" : "Variant") });
+        }
+
         push("Brand", {
           key: "brand:identity",
           title: "Brand identity",
           subtitle: "Logo, palette and typography",
           kind: "doc",
-          body: lines.join("\n\n") || kit.guide_markdown || null,
+          body: lines.join("\n\n") || null,
           heroImageUrl: logoUrl,
+          brandBoard: {
+            paletteName: kit.palette?.name ?? null,
+            swatches,
+            fonts: [
+              kit.typography?.heading?.family
+                ? { role: "Headings", family: String(kit.typography.heading.family) }
+                : null,
+              kit.typography?.body?.family
+                ? { role: "Body", family: String(kit.typography.body.family) }
+                : null,
+            ].filter(Boolean) as { role: string; family: string }[],
+            logos: logoImages,
+          },
         });
         if (kit.guide_markdown && !excluded.has("brand:guide")) {
           push("Brand", {
@@ -194,8 +255,8 @@ Deno.serve(async (req) => {
             body: kit.guide_markdown,
           });
         }
-        void palette;
       }
+
 
       const collateral = collRes.data ?? [];
       if (collateral.length && !excluded.has("brand:collateral")) {
@@ -322,6 +383,15 @@ Deno.serve(async (req) => {
       })
       .map(([label, items]) => ({ key: `cat:${label}`, label, items }));
 
+    // A gallery section carries its own artwork; a document section is only
+    // "illustrated" when it has real header art.
+    const allItems = sections.flatMap((s) => s.items);
+    const illustrated = allItems.filter(
+      (i) => !!i.heroImageUrl || (i.kind === "gallery" && !!i.images?.length),
+    ).length;
+
+    if (signFailures) console.error("[venture-share] signed url failures:", signFailures);
+
     return json({
       venture: {
         name: snap.company_name ?? "Untitled venture",
@@ -330,10 +400,18 @@ Deno.serve(async (req) => {
         industry: snap.industry ?? null,
         logoUrl,
         founderName: snap.founder_name ?? null,
+        colors: {
+          primary: paletteColors.primary ?? null,
+          accent: paletteColors.accent ?? null,
+          secondary: paletteColors.secondary ?? null,
+        },
       },
       share: { title: share.title ?? null, updatedAt: share.updated_at },
+      chatEnabled: share.chat_enabled !== false,
+      coverage: { total: allItems.length, illustrated, signFailures },
       sections,
     });
+
   } catch (e) {
     console.error("[venture-share]", e);
     return json({ error: "Could not load this share." }, 500);

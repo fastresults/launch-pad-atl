@@ -5,6 +5,8 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { fetchSharePayload, trackShareView, type SharePayload } from "@/lib/venture-share.functions";
 import { ShareSidebar } from "@/components/share/ShareSidebar";
 import { ShareSection } from "@/components/share/ShareSection";
+import { ShareChatPanel } from "@/components/share/ShareChatPanel";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -174,7 +176,10 @@ export default function VentureSharePage() {
                   {activeSection.label}
                 </p>
               )}
-              {activeItem && <ShareSection item={activeItem} />}
+              {activeItem && (
+                <ShareSection item={activeItem} accent={payload.venture.colors?.accent ?? null} />
+              )}
+
 
               {/* Prev / next keeps the whole set walkable without the sidebar. */}
               <div className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6">
@@ -216,7 +221,11 @@ export default function VentureSharePage() {
             </main>
           </div>
 
+          {payload.chatEnabled !== false && (
+            <ShareChatPanel token={token} password={submitted} ventureName={payload.venture.name} />
+          )}
         </>
+
       )}
     </div>
   );

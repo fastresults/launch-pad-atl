@@ -3370,6 +3370,7 @@ export type Database = {
       }
       venture_shares: {
         Row: {
+          chat_enabled: boolean
           created_at: string
           excluded_keys: string[]
           expires_at: string | null
@@ -3385,6 +3386,7 @@ export type Database = {
           view_count: number
         }
         Insert: {
+          chat_enabled?: boolean
           created_at?: string
           excluded_keys?: string[]
           expires_at?: string | null
@@ -3400,6 +3402,7 @@ export type Database = {
           view_count?: number
         }
         Update: {
+          chat_enabled?: boolean
           created_at?: string
           excluded_keys?: string[]
           expires_at?: string | null

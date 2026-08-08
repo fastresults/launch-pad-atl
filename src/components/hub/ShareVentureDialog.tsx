@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, ExternalLink, Link2, Loader2, Share2 } from "lucide-react";
+import { Check, Copy, ExternalLink, Image as ImageIcon, Link2, Loader2, Share2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { invokeEdge } from "@/lib/edge-invoke";
 import {
   createVentureShare,
   getVentureShare,
@@ -23,6 +25,7 @@ import {
   shareUrl,
   updateVentureShare,
 } from "@/lib/venture-share.functions";
+
 
 /**
  * Owner control panel for the public venture showcase link: mint, protect,
@@ -48,6 +51,8 @@ export function ShareVentureDialog({
   const [usePassword, setUsePassword] = useState(false);
   const [useExpiry, setUseExpiry] = useState(false);
   const [expiry, setExpiry] = useState("");
+  const [chatEnabled, setChatEnabled] = useState(true);
+
 
   const shareQ = useQuery({
     queryKey: ["venture-share-owner", snapshotId],
@@ -61,7 +66,9 @@ export function ShareVentureDialog({
     setUsePassword(!!share.password_hash);
     setUseExpiry(!!share.expires_at);
     setExpiry(share.expires_at ? share.expires_at.slice(0, 10) : "");
+    setChatEnabled((share as any).chat_enabled !== false);
   }, [share?.id]);
+
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["venture-share-owner", snapshotId] });
 
@@ -79,6 +86,7 @@ export function ShareVentureDialog({
       if (!share) return;
       const patch: any = {
         expires_at: useExpiry && expiry ? new Date(`${expiry}T23:59:59Z`).toISOString() : null,
+        chat_enabled: chatEnabled,
       };
       if (!usePassword) patch.password_hash = null;
       else if (password) patch.password_hash = await sha256Hex(password);
@@ -91,6 +99,40 @@ export function ShareVentureDialog({
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not save"),
   });
+
+  /**
+   * Backfill header art for every completed asset that has none, so the public
+   * showcase never shows a section without its illustration.
+   */
+  const backfill = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase
+        .from("venture_documents")
+        .select("document_type,hero_image_path")
+        .eq("snapshot_id", snapshotId)
+        .eq("status", "complete");
+      if (error) throw error;
+      const missing = (data ?? []).filter((d: any) => !d.hero_image_path);
+      let ok = 0;
+      let failed = 0;
+      // Sequential: the image model is heavy and the edge worker is CPU-bound.
+      for (const d of missing) {
+        const res = await invokeEdge("venture-document-image", {
+          body: { snapshotId, documentType: (d as any).document_type, force: false },
+        });
+        if (res.error) failed += 1;
+        else ok += 1;
+      }
+      return { ok, failed, total: missing.length };
+    },
+    onSuccess: (r) => {
+      if (!r.total) toast.success("Every asset already has header art");
+      else if (r.failed) toast.warning(`Generated ${r.ok} of ${r.total} — ${r.failed} need another pass`);
+      else toast.success(`Generated header art for ${r.ok} assets`);
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not generate header art"),
+  });
+
 
   const revoke = useMutation({
     mutationFn: () => revokeVentureShare(share!.id),
@@ -189,6 +231,16 @@ export function ShareVentureDialog({
 
                 <div className="flex items-center justify-between gap-4">
                   <div>
+                    <p className="text-sm font-medium">Ask-anything chat</p>
+                    <p className="text-xs text-muted-foreground">
+                      Visitors can question the venture by typing or speaking.
+                    </p>
+                  </div>
+                  <Switch checked={chatEnabled} onCheckedChange={setChatEnabled} />
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
                     <p className="text-sm font-medium">Expire the link</p>
                     <p className="text-xs text-muted-foreground">Stops working after this date.</p>
                   </div>
@@ -197,7 +249,34 @@ export function ShareVentureDialog({
                 {useExpiry && (
                   <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
                 )}
+
+                <Separator />
+
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Header art</p>
+                    <p className="text-xs text-muted-foreground">
+                      {backfill.isPending
+                        ? "Generating missing header images…"
+                        : "Fill in any asset that is still missing its header image."}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => backfill.mutate()}
+                    disabled={backfill.isPending}
+                  >
+                    {backfill.isPending ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImageIcon className="mr-1.5 h-4 w-4" />
+                    )}
+                    Generate missing
+                  </Button>
+                </div>
               </div>
+
             </>
           )}
         </div>
