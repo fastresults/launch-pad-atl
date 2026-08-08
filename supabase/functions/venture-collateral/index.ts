@@ -379,16 +379,10 @@ Deno.serve(async (req) => {
         ? normalizeDetails(kit.contact_details)
         : null;
 
-      const filled = await seedWithSuggestions(
-        admin,
-        snapshotId,
-        // Confirmed values beat the structured seed, so hand them in as the base.
-        saved ? { ...kit, contact_details: saved } : kit,
-        saved
-          ? { ...(vctx ?? {}), profile: { ...(vctx?.profile ?? {}), ...saved } }
-          : vctx,
-        { force: action === "details:rescan" },
-      );
+      const filled = await seedWithSuggestions(admin, snapshotId, kit, vctx, {
+        force: action === "details:rescan",
+      });
+
 
       const details = saved ? normalizeDetails({ ...filled.details, ...saved }) : filled.details;
       // A suggestion the founder already overrode is no longer a suggestion.
