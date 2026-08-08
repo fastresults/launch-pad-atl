@@ -3,6 +3,8 @@ import { Loader2, MessageCircle, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
 import { ShareChatPanel } from "@/components/share/ShareChatPanel";
+import { MindMapBoundary } from "@/components/share/MindMapBoundary";
+
 
 const ShareMindMap = lazy(() =>
   import("@/components/share/ShareMindMap").then((m) => ({ default: m.ShareMindMap })),
@@ -77,16 +79,19 @@ export function ShareBrain({
           />
         )}
         {tab === "map" && mapOn && (
-          <Suspense
-            fallback={
-              <div className="flex h-full items-center justify-center rounded-2xl border border-border/60 bg-card/40">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            }
-          >
-            <ShareMindMap payload={payload} onOpenItem={onOpenItem} />
-          </Suspense>
+          <MindMapBoundary>
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center rounded-2xl border border-border/60 bg-card/40">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              }
+            >
+              <ShareMindMap payload={payload} onOpenItem={onOpenItem} />
+            </Suspense>
+          </MindMapBoundary>
         )}
+
       </div>
     </section>
   );

@@ -181,35 +181,27 @@ export function ShareMindMap({
         width={size.w}
         height={size.h}
         graphData={graph as any}
-        cooldownTicks={reducedMotion ? 90 : Infinity}
-        d3AlphaDecay={reducedMotion ? 0.0228 : 0.012}
-        d3VelocityDecay={reducedMotion ? 0.4 : 0.28}
+        cooldownTicks={120}
+        d3AlphaDecay={0.0228}
+        d3VelocityDecay={0.4}
         backgroundColor="rgba(0,0,0,0)"
         nodeRelSize={4}
         onNodeHover={(n: any) => setHover(n?.id ?? null)}
         onNodeClick={(n: any) => n?.itemKey && onOpenItem(n.itemKey)}
-        /* Fluid, floating connectors */
-        linkCurvature={(l: any) =>
-          reducedMotion
-            ? 0
-            : 0.12 + Math.sin(clockRef.current * 0.6 + seeded(linkId(l)) * 6.28) * 0.05
-        }
+        /* Fluid connectors: a fixed gentle curve per link (cheap, stable). */
+        linkCurvature={(l: any) => (reducedMotion ? 0 : 0.08 + seeded(linkId(l)) * 0.1)}
+
         linkColor={(l: any) => {
           const lit = touchesHover(l);
           const dim = hoverRef.current && !lit;
           if (lit) return withAlpha(l.color, 0.55);
-          const base =
-            0.14 +
-            (reducedMotion
-              ? 0
-              : Math.sin(clockRef.current * 0.8 + seeded(linkId(l)) * 6.28) * 0.05);
-          return `rgba(255,255,255,${dim ? base * 0.35 : base})`;
+          return `rgba(255,255,255,${dim ? 0.05 : 0.14})`;
         }}
         linkWidth={(l: any) => (touchesHover(l) ? 1.8 : 1)}
         /* Directional flow dots: root -> cluster -> asset */
         linkDirectionalParticles={(l: any) => {
           if (reducedMotion) return 0;
-          if (l.depth === 1) return compact ? 2 : 3;
+          if (l.depth === 1) return compact ? 1 : 2;
           return compact ? 0 : 1;
         }}
         linkDirectionalParticleSpeed={(l: any) =>
@@ -221,16 +213,7 @@ export function ShareMindMap({
           if (reducedMotion) return;
           clockRef.current += 1 / 60;
         }}
-        onEngineTick={() => {
-          if (reducedMotion) return;
-          // Keep the web gently drifting instead of freezing solid.
-          const t = clockRef.current;
-          for (const n of graph.nodes as any[]) {
-            if (n.vx === undefined) continue;
-            n.vx += Math.cos(t * n.speed + n.phase) * 0.012;
-            n.vy += Math.sin(t * n.speed * 0.85 + n.phase) * 0.012;
-          }
-        }}
+
         nodeCanvasObject={(node: any, ctx, scale) => {
           const isHover = hover === node.id;
           const neighbours = hover ? adjacency.get(hover) : null;
