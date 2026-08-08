@@ -598,16 +598,31 @@ function StepBar({
   const top = y + (LANE_H - barH) / 2;
 
 
+  const reportPoint = (e: React.PointerEvent | React.FocusEvent) => {
+    const svg = (e.currentTarget as SVGGElement).ownerSVGElement;
+    const rect = svg?.getBoundingClientRect();
+    if (!rect) return;
+    const cx = "clientX" in e ? (e as React.PointerEvent).clientX - rect.left : bx + w / 2;
+    onHoverPoint?.({ x: cx, y: top });
+  };
+
   return (
     <g
       data-step-bar
+      tabIndex={0}
+      role="button"
+      aria-label={s.step.title}
       onPointerDown={(e) => {
         e.stopPropagation();
         (e.currentTarget as any).setPointerCapture?.(e.pointerId);
         dragRef.current = { startX: e.clientX, moved: false };
       }}
       onPointerMove={(e) => {
-        if (!dragRef.current || !onNudge) return;
+        if (!dragRef.current) {
+          reportPoint(e);
+          return;
+        }
+        if (!onNudge) return;
         const dx = e.clientX - dragRef.current.startX;
         if (Math.abs(dx) > 4) dragRef.current.moved = true;
       }}
@@ -621,14 +636,33 @@ function StepBar({
         }
         onSelect(s.step.id);
       }}
-      onPointerEnter={() => onHover(s.step.id)}
+      onPointerEnter={(e) => {
+        onHover(s.step.id);
+        reportPoint(e);
+      }}
       onPointerLeave={() => onHover(null)}
-      style={{ cursor: onNudge ? "ew-resize" : "pointer" }}
+      onFocus={(e) => {
+        onHover(s.step.id);
+        reportPoint(e);
+      }}
+      onBlur={() => onHover(null)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(s.step.id);
+        }
+      }}
+      opacity={dimmed ? 0.38 : 1}
+      style={{
+        cursor: onNudge ? "ew-resize" : "pointer",
+        outline: "none",
+        ...(reducedMotion ? {} : { transition: "opacity 150ms ease" }),
+      }}
     >
       {waitW > 0 && (
         <rect
           x={bx + w}
-          y={top + BAR_H / 2 - 3}
+          y={top + barH / 2 - 3}
           width={waitW}
           height={6}
           rx={3}
@@ -636,35 +670,59 @@ function StepBar({
           fillOpacity={0.22}
         />
       )}
+      {lift && (
+        <rect
+          x={bx - 3}
+          y={top - 3}
+          width={w + 6}
+          height={barH + 6}
+          rx={10}
+          fill="none"
+          stroke="white"
+          strokeOpacity={0.28}
+        />
+      )}
       <rect
         x={bx}
         y={top}
         width={w}
-        height={BAR_H}
+        height={barH}
         rx={7}
         fill={tint}
-        fillOpacity={active ? 0.95 : hovered ? 0.8 : 0.62}
+        fillOpacity={active ? 1 : hovered ? 0.92 : 0.62}
         stroke={active ? "white" : "transparent"}
         strokeOpacity={0.85}
-        style={reducedMotion ? undefined : { transition: "x 220ms ease, width 220ms ease, fill-opacity 150ms ease" }}
+        style={
+          reducedMotion
+            ? undefined
+            : { transition: "x 220ms ease, y 160ms ease, width 220ms ease, height 160ms ease, fill-opacity 150ms ease" }
+        }
       />
-      {s.accelerated && <circle cx={bx + 8} cy={top + BAR_H / 2} r={2.5} fill="#0b0c10" fillOpacity={0.6} />}
+      {s.accelerated && <circle cx={bx + 8} cy={top + barH / 2} r={2.5} fill="#0b0c10" fillOpacity={0.6} />}
       {w > 54 && (
         <text
           x={bx + (s.accelerated ? 16 : 9)}
-          y={top + BAR_H / 2 + 4}
-          style={{ fontSize: 11, pointerEvents: "none" }}
+          y={top + barH / 2 + 4}
+          style={{ fontSize: lift ? 12 : 11, pointerEvents: "none" }}
           className="fill-[#0b0c10]"
         >
           {truncate(s.step.title, Math.max(4, Math.floor((w - 16) / 6.1)))}
         </text>
       )}
-      {w <= 54 && (hovered || active) && (
-        <text x={bx + w + 6} y={top + BAR_H / 2 + 4} style={{ fontSize: 11 }} className="fill-white/85">
-          {truncate(s.step.title, 34)}
+      {/* Too narrow to hold its own name — hovering renders it in full, above the track. */}
+      {w <= 54 && lift && (
+        <text
+          x={bx + w / 2}
+          y={top - 8}
+          textAnchor="middle"
+          style={{ fontSize: 12, pointerEvents: "none" }}
+          className="fill-white"
+        >
+          {truncate(s.step.title, 40)}
         </text>
       )}
     </g>
+
   );
 }
 
