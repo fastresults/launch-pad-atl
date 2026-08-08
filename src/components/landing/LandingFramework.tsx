@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { LandingVideoTestimonials } from "@/components/landing/LandingVideoTestimonials";
 import { LandingBusinessIdeasScroller } from "@/components/landing/LandingBusinessIdeasScroller";
-import { StageSketch } from "@/components/home/StageSketch";
+import { StageSketch, OverviewSketch } from "@/components/home/StageSketch";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {

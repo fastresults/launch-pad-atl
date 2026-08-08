@@ -6,7 +6,7 @@ import { VideoTestimonials } from "@/components/home/VideoTestimonials";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { FounderVideoWall } from "@/components/home/FounderVideoWall";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
-import { StageSketch } from "@/components/home/StageSketch";
+import { StageSketch, OverviewSketch } from "@/components/home/StageSketch";
 import { WorkshopStack } from "@/components/home/workshop/WorkshopStack";
 import { useSelectedWorkshop } from "@/hooks/use-selected-workshop";
 import { FOUNDATION_SLUG } from "@/lib/workshop-catalog";
