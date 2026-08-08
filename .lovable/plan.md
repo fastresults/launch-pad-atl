@@ -42,10 +42,29 @@ New behavior:
 - Starter questions stay, but as a compact row that collapses once the first message is sent.
 - The mind map keeps the same fixed height so switching tabs does not shift the layout.
 
+## 3. Full visual brand board in the shared link
+
+Today the shared "Brand identity" section shows only logo thumbnails, a small swatch row and font names as plain text. The rest of the brand — mood board, brand DNA, voice, and the calls to action — never reaches the reader.
+
+New behavior for the Brand identity section:
+
+- **Logo lockups**: primary mark shown large on a light surface and again on the brand's dark surface, with the variants beneath, each labeled.
+- **Color palette**: full-bleed swatch cards with role (Primary, Secondary, Accent, Text, Muted, Surface, Border), the hex value, and a click-to-copy action. Palette name shown as the heading.
+- **Typography**: each font rendered in its real typeface (loaded from Google Fonts when available, graceful fallback otherwise) with a live specimen — heading in display size, body in a short paragraph — plus the family name and role.
+- **Mood board**: the stored mood board images in a responsive rounded-image grid with captions, sitting directly under the palette.
+- **Brand DNA and voice**: positioning line, personality traits and voice do/don't guidance rendered as readable prose rather than dumped markdown.
+- **Calls to action**: the brand's approved CTA phrases surfaced as styled buttons using the real palette, so the reader sees how the brand asks for the next step. A primary CTA button also appears at the end of the section.
+- Everything is read-only and public-safe; no editing controls in the shared view.
+
 ## Technical notes
+
 
 - `src/routes/v.$token.tsx`: switch the body to a fixed-height two-pane layout (`h-[calc(100svh-var(--masthead))]` with `overflow-hidden` on the wrapper and `overflow-y-auto` on each pane) instead of one document scroll; add the condensed sticky masthead; scroll the reading pane (not `window`) in `goTo`.
 - `src/components/share/ShareSidebar.tsx`: split into a non-scrolling head (pinned cards + search) and a `min-h-0 flex-1 overflow-y-auto` nav tree.
 - `src/components/share/ShareBrain.tsx`: make the section a `flex h-full flex-col` with a compact header row, and hand the remaining height to the chat/map.
 - `src/components/share/ShareChatPanel.tsx`: when embedded, use `h-full` instead of `h-[min(68vh,640px)]`, autofocus the textarea, and collapse the starter suggestions into a horizontal chip row.
 - Use `100svh` so mobile browser chrome does not clip the input.
+- `supabase/functions/venture-share/index.ts`: extend `brandBoard` with `moodboard` (signed image URLs + captions), `dna` (positioning, traits), `voice` (summary, do/don't), and `ctas` (phrases pulled from the kit's voice/DNA, with a sane default derived from the venture offer). Sign mood board paths the same way logos are signed.
+- `src/components/share/ShareSection.tsx`: replace the compact brand strip with a `BrandBoard` block — logo lockups on light/dark, copyable swatch cards, live font specimens, mood board grid, DNA/voice prose, CTA buttons styled from the palette.
+- Load brand fonts on demand via a Google Fonts `<link>` injected only when the share payload names a family; fall back to the site's serif/sans if the family is unavailable.
+- CTA buttons in the shared view are visual specimens (non-navigating) unless the venture has a live site URL, in which case the primary CTA links to it.
