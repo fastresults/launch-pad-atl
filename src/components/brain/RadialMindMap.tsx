@@ -436,7 +436,7 @@ export function RadialMindMap({
                           width={chipW}
                           height={fontSize * 1.8}
                           rx={fontSize}
-                          fill="hsl(var(--background))"
+                          fill="var(--brain-halo)"
                           fillOpacity={isActive ? 0.96 : 0.85}
                           stroke={node.color}
                           strokeOpacity={isActive ? 0.7 : 0.35}
@@ -447,11 +447,11 @@ export function RadialMindMap({
                         y={labelY}
                         textAnchor={isRadial ? (side === 1 ? "start" : "end") : "middle"}
                         dominantBaseline={isRadial ? "middle" : undefined}
-                        fill="hsl(var(--foreground))"
+                        fill="var(--brain-ink)"
                         fontSize={fontSize}
                         fontWeight={node.kind === "item" ? (isActive ? 650 : 550) : 700}
                         paintOrder="stroke"
-                        stroke={chipped ? "none" : "hsl(var(--background))"}
+                        stroke={chipped ? "none" : "var(--brain-halo)"}
                         strokeWidth={chipped ? 0 : 5}
                         strokeOpacity={chipped ? 0 : 0.85}
                         strokeLinejoin="round"
