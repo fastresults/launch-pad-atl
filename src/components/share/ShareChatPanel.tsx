@@ -33,12 +33,19 @@ export function ShareChatPanel({
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
+
+  // Embedded in the showcase the panel is the point of the screen — focus it.
+  useEffect(() => {
+    if (embedded && window.matchMedia("(min-width: 1024px)").matches) inputRef.current?.focus();
+  }, [embedded]);
+
 
   async function send(text: string) {
     const q = text.trim();
