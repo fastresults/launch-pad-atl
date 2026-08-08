@@ -16,12 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   FIELD_SPECS, KIND_LABEL, auditDetails, normalizeField,
 } from "@/lib/brand/collateral-fields";
-import { getCollateralDetails, saveCollateralDetails } from "@/lib/collateral.functions";
+import { getCollateralDetails, rescanCollateralDetails, saveCollateralDetails } from "@/lib/collateral.functions";
+
 
 const GROUPS: Array<{ key: string; label: string; blurb: string }> = [
   { key: "identity", label: "Identity", blurb: "The name and line that appear on every piece." },
