@@ -64,8 +64,8 @@ export function TimelineCanvas({
 
   const lanes = layout.activeLanes;
   const showRibbon = !!revenue && revenue.points.length > 0;
-  const height =
-    RULER_H + lanes.length * LANE_H + (showRibbon ? RIBBON_H : 24) + 28;
+  const baseHeight = RULER_H + lanes.length * LANE_H + (showRibbon ? RIBBON_H : 24) + 28;
+
 
   const totalDays = Math.max(
     layout.totalDays,
