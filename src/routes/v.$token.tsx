@@ -326,6 +326,11 @@ export default function VentureSharePage() {
                     ) : null}
                   </p>
                 </div>
+                <SectionExportMenu
+                  label="Export everything"
+                  className="h-11 w-11"
+                  build={() => buildFullDoc(payload)}
+                />
                 {payload.venture.website && (
                   <a
                     href={`https://${payload.venture.website}`}
