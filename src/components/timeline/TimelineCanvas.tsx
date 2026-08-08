@@ -364,28 +364,60 @@ export function TimelineCanvas({
             </g>
           )}
 
-          {/* milestones */}
-          {layout.milestones.map((m) => (
-            <g key={m.milestone.id} transform={`translate(${x(m.day)},${RULER_H - 2})`}>
-              <line y1={0} y2={lanes.length * LANE_H + 6} stroke={MILESTONE_TINT[m.milestone.kind]} strokeOpacity={0.32} />
-              <rect
-                x={-5}
-                y={-5}
-                width={10}
-                height={10}
-                transform="rotate(45)"
-                fill={MILESTONE_TINT[m.milestone.kind]}
-              />
-              <text
-                x={9}
-                y={4}
-                style={{ fontSize: 10.5 }}
-                className="fill-white/80"
-              >
-                {m.milestone.label}
-              </text>
-            </g>
-          ))}
+          {/* milestones — labels stack into rows so they never overprint */}
+          {(() => {
+            const rowEnds: number[] = [];
+            const placed = [...layout.milestones]
+              .sort((a, b) => a.day - b.day)
+              .map((m) => {
+                const left = x(m.day) + 9;
+                const w = m.milestone.label.length * 5.6 + 14;
+                let row = rowEnds.findIndex((end) => left > end);
+                if (row < 0) {
+                  row = rowEnds.length;
+                  rowEnds.push(0);
+                }
+                rowEnds[row] = left + w;
+                return { m, row };
+              });
+            return placed.map(({ m, row }) => (
+              <g key={m.milestone.id} transform={`translate(${x(m.day)},${RULER_H - 2})`}>
+                <line
+                  y1={0}
+                  y2={lanes.length * LANE_H + 6}
+                  stroke={MILESTONE_TINT[m.milestone.kind]}
+                  strokeOpacity={0.32}
+                />
+                <rect
+                  x={-5}
+                  y={-5}
+                  width={10}
+                  height={10}
+                  transform="rotate(45)"
+                  fill={MILESTONE_TINT[m.milestone.kind]}
+                />
+                {/* Beyond three rows the header turns to noise — the diamond still marks it. */}
+                {row < 3 && (
+                  <>
+                    {row > 0 && (
+                      <line
+                        x1={0}
+                        y1={0}
+                        x2={0}
+                        y2={row * 13}
+                        stroke={MILESTONE_TINT[m.milestone.kind]}
+                        strokeOpacity={0.45}
+                      />
+                    )}
+                    <text x={9} y={4 + row * 13} style={{ fontSize: 10.5 }} className="fill-white/80">
+                      {m.milestone.label}
+                    </text>
+                  </>
+                )}
+              </g>
+            ));
+          })()}
+
 
           {/* today */}
           {todayDay > 0 && todayDay < totalDays && (
