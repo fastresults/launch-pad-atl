@@ -198,6 +198,9 @@ export function VentureTimeline({
               revenue={revenue}
               selectedId={selected}
               onSelect={(id) => setSelected(selected === id ? null : id)}
+              hoveredId={hovered}
+              onHover={setHovered}
+
 
               onNudge={
                 readOnly
