@@ -83,6 +83,7 @@ export function ShareVentureDialog({
       if (!share) return;
       const patch: any = {
         expires_at: useExpiry && expiry ? new Date(`${expiry}T23:59:59Z`).toISOString() : null,
+        chat_enabled: chatEnabled,
       };
       if (!usePassword) patch.password_hash = null;
       else if (password) patch.password_hash = await sha256Hex(password);
@@ -95,6 +96,40 @@ export function ShareVentureDialog({
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not save"),
   });
+
+  /**
+   * Backfill header art for every completed asset that has none, so the public
+   * showcase never shows a section without its illustration.
+   */
+  const backfill = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase
+        .from("venture_documents")
+        .select("document_type,hero_image_path")
+        .eq("snapshot_id", snapshotId)
+        .eq("status", "complete");
+      if (error) throw error;
+      const missing = (data ?? []).filter((d: any) => !d.hero_image_path);
+      let ok = 0;
+      let failed = 0;
+      // Sequential: the image model is heavy and the edge worker is CPU-bound.
+      for (const d of missing) {
+        const res = await invokeEdge("venture-document-image", {
+          body: { snapshotId, documentType: (d as any).document_type, force: false },
+        });
+        if (res.error) failed += 1;
+        else ok += 1;
+      }
+      return { ok, failed, total: missing.length };
+    },
+    onSuccess: (r) => {
+      if (!r.total) toast.success("Every asset already has header art");
+      else if (r.failed) toast.warning(`Generated ${r.ok} of ${r.total} — ${r.failed} need another pass`);
+      else toast.success(`Generated header art for ${r.ok} assets`);
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not generate header art"),
+  });
+
 
   const revoke = useMutation({
     mutationFn: () => revokeVentureShare(share!.id),
