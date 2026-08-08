@@ -185,7 +185,16 @@ export async function createVentureShare(
   ventureName?: string | null,
 ) {
   const userId = await getEffectiveUserId();
-  const slug = patch.slug ?? (await uniqueSlug(slugifyVentureName(ventureName)));
+  let name = ventureName ?? null;
+  if (!name && !patch.slug) {
+    const { data: snap } = await supabase
+      .from("venture_snapshots")
+      .select("company_name,business_concept")
+      .eq("id", snapshotId)
+      .maybeSingle();
+    name = (snap as any)?.company_name || null;
+  }
+  const slug = patch.slug ?? (await uniqueSlug(slugifyVentureName(name)));
   const { data, error } = await supabase
     .from("venture_shares")
     .insert({
