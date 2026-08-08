@@ -97,6 +97,16 @@ export function VentureTimeline({
     setScenarioState(saved);
   }, [savedKey, saved]);
 
+  // A what-if arriving from the URL wins over the saved plan, once.
+  const overrideKey = scenarioOverride ? JSON.stringify(scenarioOverride) : null;
+  const lastOverride = useRef<string | null>(overrideKey);
+  useEffect(() => {
+    if (lastOverride.current === overrideKey) return;
+    lastOverride.current = overrideKey;
+    if (overrideKey) setScenarioState(JSON.parse(overrideKey) as TimelineScenario);
+  }, [overrideKey]);
+
+
 
   const baselineScenario = useMemo(
     () => ({ ...defaultScenario(), startDate: scenario.startDate }),
