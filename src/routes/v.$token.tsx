@@ -3,14 +3,15 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { fetchSharePayload, trackShareView, type SharePayload } from "@/lib/venture-share.functions";
-import { ShareSidebar } from "@/components/share/ShareSidebar";
+import { ShareSidebar, BRAIN_KEY } from "@/components/share/ShareSidebar";
 import { ShareSection } from "@/components/share/ShareSection";
 import { ShareChatPanel } from "@/components/share/ShareChatPanel";
+import { ShareBrain } from "@/components/share/ShareBrain";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, ArrowRight, Loader2, Lock, Menu } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Lock, Menu, Sparkle } from "lucide-react";
 
 export default function VentureSharePage() {
   const { token = "" } = useParams();
@@ -41,10 +42,13 @@ export default function VentureSharePage() {
   useEffect(() => {
     if (!items.length) return;
     const fromHash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
-    const initial = items.find((i) => i.key === fromHash)?.key ?? items[0].key;
+    const initial =
+      fromHash === BRAIN_KEY ? BRAIN_KEY : items.find((i) => i.key === fromHash)?.key ?? items[0].key;
     setActiveKey((prev) => prev ?? initial);
   }, [items]);
 
+  const brainOn = (payload?.chatEnabled !== false || payload?.mapEnabled !== false) && !!payload;
+  const brainActive = activeKey === BRAIN_KEY;
   const activeIndex = items.findIndex((i) => i.key === activeKey);
   const activeItem = activeIndex >= 0 ? items[activeIndex] : null;
   const activeSection = payload?.sections.find((s) => s.items.some((i) => i.key === activeKey));
@@ -162,6 +166,16 @@ export default function VentureSharePage() {
                   </p>
                 )}
               </div>
+              {brainOn && (
+                <Button
+                  variant="outline"
+                  className="ml-auto hidden shrink-0 md:inline-flex"
+                  onClick={() => goTo(BRAIN_KEY)}
+                >
+                  <Sparkle className="mr-1.5 h-4 w-4" />
+                  Ask this venture
+                </Button>
+              )}
             </div>
           </header>
 
@@ -171,18 +185,29 @@ export default function VentureSharePage() {
             </aside>
 
             <main className="min-w-0 flex-1 pb-32 pt-10">
-              {activeSection && (
-                <p className="text-[11px] uppercase tracking-[0.22em] text-primary">
-                  {activeSection.label}
-                </p>
-              )}
-              {activeItem && (
-                <ShareSection item={activeItem} accent={payload.venture.colors?.accent ?? null} />
+              {brainActive ? (
+                <ShareBrain
+                  token={token}
+                  password={submitted}
+                  payload={payload}
+                  onOpenItem={goTo}
+                />
+              ) : (
+                <>
+                  {activeSection && (
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-primary">
+                      {activeSection.label}
+                    </p>
+                  )}
+                  {activeItem && (
+                    <ShareSection item={activeItem} accent={payload.venture.colors?.accent ?? null} />
+                  )}
+                </>
               )}
 
 
               {/* Prev / next keeps the whole set walkable without the sidebar. */}
-              <div className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6">
+              <div hidden={brainActive} className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6">
                 {activeIndex > 0 ? (
                   <button
                     type="button"
@@ -221,7 +246,7 @@ export default function VentureSharePage() {
             </main>
           </div>
 
-          {payload.chatEnabled !== false && (
+          {payload.chatEnabled !== false && !brainActive && (
             <ShareChatPanel token={token} password={submitted} ventureName={payload.venture.name} />
           )}
         </>

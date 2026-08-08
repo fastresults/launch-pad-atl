@@ -51,6 +51,8 @@ export interface SharePayload {
   };
   share: { title: string | null; updatedAt: string };
   chatEnabled?: boolean;
+  mapEnabled?: boolean;
+  executiveSummary?: string | null;
   coverage?: { total: number; illustrated: number; signFailures: number };
   sections: { key: string; label: string; items: ShareItem[] }[];
 }

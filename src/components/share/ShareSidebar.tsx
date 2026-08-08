@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, FileText, Search, Sparkle } from "lucide-react";
+
+/** Sidebar key for the featured second-brain tool (not a payload asset). */
+export const BRAIN_KEY = "tool:brain";
 
 /**
  * Table of contents for the public share page. With 60+ assets the list has to
@@ -37,8 +40,49 @@ export function ShareSidebar({
   const filtering = query.trim().length > 0;
   const total = payload.sections.reduce((n, s) => n + s.items.length, 0);
 
+  const brainOn = payload.chatEnabled !== false || payload.mapEnabled !== false;
+  const hasSummary = payload.sections.some((s) =>
+    s.items.some((i) => i.key === "overview:executive"),
+  );
+
+  const pinned = [
+    ...(brainOn
+      ? [{ key: BRAIN_KEY, label: "Second brain", hint: "Ask anything · mind map", icon: Sparkle }]
+      : []),
+    ...(hasSummary
+      ? [{ key: "overview:executive", label: "Executive summary", hint: "The venture in 300 words", icon: FileText }]
+      : []),
+  ];
+
   return (
     <div className="pb-16">
+      {pinned.length > 0 && (
+        <div className="mb-4 space-y-1.5">
+          {pinned.map((p) => {
+            const active = activeKey === p.key;
+            return (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => onNavigate?.(p.key)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors",
+                  active
+                    ? "border-primary/60 bg-primary/10"
+                    : "border-border/60 bg-card/40 hover:border-primary/40",
+                )}
+              >
+                <p.icon className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0">
+                  <span className="block truncate text-[13px] font-medium text-foreground">{p.label}</span>
+                  <span className="block truncate text-[11px] text-muted-foreground">{p.hint}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="relative mb-4">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <input

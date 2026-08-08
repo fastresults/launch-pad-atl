@@ -346,14 +346,25 @@ Deno.serve(async (req) => {
         [snap.city, snap.region].filter(Boolean).join(", ") || null,
         `${docs.length} assets`,
       ].filter(Boolean);
+      if (snap.executive_summary && !excluded.has("overview:executive")) {
+        overview.push({
+          key: "overview:executive",
+          title: "Executive summary",
+          subtitle: "Every asset in this showcase, in 300 words",
+          kind: "doc",
+          body: snap.executive_summary,
+          heroImageUrl: logoUrl,
+        });
+      }
       overview.push({
         key: "overview:summary",
         title: "At a glance",
         subtitle: stats.join(" · "),
         kind: "doc",
         body: snap.concept_summary || snap.business_concept || null,
-        heroImageUrl: logoUrl,
+        heroImageUrl: snap.executive_summary ? null : logoUrl,
       });
+
       if (snap.value_proposition) {
         overview.push({
           key: "overview:value",
@@ -408,8 +419,11 @@ Deno.serve(async (req) => {
       },
       share: { title: share.title ?? null, updatedAt: share.updated_at },
       chatEnabled: share.chat_enabled !== false,
+      mapEnabled: share.map_enabled !== false,
+      executiveSummary: snap.executive_summary ?? null,
       coverage: { total: allItems.length, illustrated, signFailures },
       sections,
+
     });
 
   } catch (e) {

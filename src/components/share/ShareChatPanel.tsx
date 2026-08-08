@@ -16,10 +16,15 @@ export function ShareChatPanel({
   token,
   password,
   ventureName,
+  embedded = false,
+  hideHeader = false,
 }: {
   token: string;
   password?: string;
   ventureName: string;
+  /** Render inline (fills its parent) instead of as a floating dock. */
+  embedded?: boolean;
+  hideHeader?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ShareChatMessage[]>([]);
@@ -96,7 +101,7 @@ export function ShareChatPanel({
     }
   }
 
-  if (!open) {
+  if (!embedded && !open) {
     return (
       <button
         type="button"
@@ -110,16 +115,26 @@ export function ShareChatPanel({
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex h-[min(70vh,560px)] w-[min(92vw,420px)] flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl">
+    <div
+      className={
+        embedded
+          ? "flex h-[min(68vh,640px)] w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/60"
+          : "fixed bottom-4 right-4 z-40 flex h-[min(70vh,560px)] w-[min(92vw,420px)] flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl"
+      }
+    >
+      {!hideHeader && (
       <header className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-foreground">Ask about {ventureName}</p>
           <p className="text-[11px] text-muted-foreground">Answers come from this venture's own assets</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close chat">
-          <X className="h-4 w-4" />
-        </Button>
+        {!embedded && (
+          <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close chat">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </header>
+      )}
 
       <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {!messages.length && (
