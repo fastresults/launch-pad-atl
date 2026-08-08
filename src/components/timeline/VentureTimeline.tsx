@@ -17,6 +17,8 @@ import { TimelineMobile } from "@/components/timeline/TimelineMobile";
 import { ScenarioBar } from "@/components/timeline/ScenarioBar";
 import { ScenarioVerdict } from "@/components/timeline/ScenarioVerdict";
 import { TimelineStepPanel } from "@/components/timeline/TimelineStepPanel";
+import { TimelineList } from "@/components/timeline/TimelineList";
+
 
 export interface VentureTimelineProps {
   /** Raw jsonb from the venture, or null to render the deterministic fallback. */
