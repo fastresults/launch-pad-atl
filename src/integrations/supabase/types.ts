@@ -3379,6 +3379,7 @@ export type Database = {
           map_enabled: boolean
           password_hash: string | null
           revoked_at: string | null
+          slug: string | null
           snapshot_id: string
           title: string | null
           token: string
@@ -3396,6 +3397,7 @@ export type Database = {
           map_enabled?: boolean
           password_hash?: string | null
           revoked_at?: string | null
+          slug?: string | null
           snapshot_id: string
           title?: string | null
           token: string
@@ -3413,6 +3415,7 @@ export type Database = {
           map_enabled?: boolean
           password_hash?: string | null
           revoked_at?: string | null
+          slug?: string | null
           snapshot_id?: string
           title?: string | null
           token?: string
@@ -4362,6 +4365,10 @@ export type Database = {
       sync_cohort_seat_cache: {
         Args: { _cohort_id: string }
         Returns: undefined
+      }
+      venture_share_slug_available: {
+        Args: { _slug: string }
+        Returns: boolean
       }
       verify_bulk_unlock: {
         Args: { _code: string; _snapshot_id: string; _user_id: string }
