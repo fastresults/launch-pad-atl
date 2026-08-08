@@ -67,6 +67,8 @@ type Item = {
     voice?: { summary?: string | null; principles?: string[]; dos?: string[]; donts?: string[] } | null;
     ctas?: string[];
   };
+  metrics?: { label: string; value: string; note?: string | null; source?: string | null }[];
+
 
 };
 
@@ -408,6 +410,11 @@ Deno.serve(async (req) => {
         [snap.city, snap.region].filter(Boolean).join(", ") || null,
         `${docs.length} assets`,
       ].filter(Boolean);
+      const execMetrics = Array.isArray(snap.executive_metrics)
+        ? (snap.executive_metrics as any[])
+            .filter((m) => m && m.label && m.value)
+            .slice(0, 6)
+        : [];
       if (snap.executive_summary && !excluded.has("overview:executive")) {
         overview.push({
           key: "overview:executive",
@@ -416,8 +423,10 @@ Deno.serve(async (req) => {
           kind: "doc",
           body: snap.executive_summary,
           heroImageUrl: logoUrl,
+          metrics: execMetrics,
         });
       }
+
       overview.push({
         key: "overview:summary",
         title: "At a glance",
@@ -483,6 +492,8 @@ Deno.serve(async (req) => {
       chatEnabled: share.chat_enabled !== false,
       mapEnabled: share.map_enabled !== false,
       executiveSummary: snap.executive_summary ?? null,
+      executiveMetrics: Array.isArray(snap.executive_metrics) ? snap.executive_metrics : null,
+
       coverage: { total: allItems.length, illustrated, signFailures },
       sections,
 
