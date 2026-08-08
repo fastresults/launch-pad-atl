@@ -48,7 +48,8 @@ function seeded(id: string) {
 }
 
 function safeColor(value: string | null | undefined, fallback: string) {
-  return typeof value === "string" && /^(#[\da-f]{3,8}|(?:rgb|hsl)a?\([^)]*\))$/i.test(value.trim())
+  return typeof value === "string" &&
+    /^(#[\da-f]{3,8}|(?:rgb|hsl)a?\([^)]*\)|(?:oklch|oklab|lab|lch|color)\([^)]*\))$/i.test(value.trim())
     ? value.trim()
     : fallback;
 }
