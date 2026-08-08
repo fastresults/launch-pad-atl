@@ -359,7 +359,11 @@ export default function VentureSharePage() {
           )}
 
 
-          <div className="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 gap-12 overflow-hidden px-6 md:px-10">
+          <div
+            className={`mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 gap-12 overflow-hidden ${
+              isMobile ? "px-5" : "px-6 md:px-10"
+            }`}
+          >
             <aside className="hidden w-72 shrink-0 py-8 lg:block">
               <ShareSidebar payload={payload} activeKey={activeKey} onNavigate={goTo} />
             </aside>
@@ -367,10 +371,19 @@ export default function VentureSharePage() {
             <main
               ref={paneRef}
               onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 24)}
+              onTouchStart={isMobile ? onTouchStart : undefined}
+              onTouchEnd={isMobile ? onTouchEnd : undefined}
               className={`min-w-0 flex-1 overflow-y-auto ${
-                brainActive ? "flex flex-col py-6" : timelineActive ? "pb-16 pt-4" : "pb-24 pt-8"
+                isMobile
+                  ? "pb-[calc(env(safe-area-inset-bottom)+96px)] pt-5"
+                  : brainActive
+                    ? "flex flex-col py-6"
+                    : timelineActive
+                      ? "pb-16 pt-4"
+                      : "pb-24 pt-8"
               }`}
             >
+
 
               {brainActive ? (
                 <ShareBrain
