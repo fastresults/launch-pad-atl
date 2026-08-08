@@ -60,9 +60,14 @@ type Item = {
   brandBoard?: {
     paletteName?: string | null;
     swatches: { label: string; hex: string }[];
-    fonts: { role: string; family: string }[];
+    fonts: { role: string; family: string; weight?: number | null }[];
     logos: { url: string; label?: string | null }[];
+    moodboard?: { url: string; caption?: string | null }[];
+    dna?: { positioning?: string | null; traits?: string[]; toneWords?: string[] } | null;
+    voice?: { summary?: string | null; principles?: string[]; dos?: string[]; donts?: string[] } | null;
+    ctas?: string[];
   };
+
 };
 
 
@@ -235,27 +240,74 @@ Deno.serve(async (req) => {
           if (url) logoImages.push({ url, label: l?.label ?? l?.name ?? (l?.primary ? "Primary mark" : "Variant") });
         }
 
+        // Mood board: entries hold either an absolute URL (scraped) or a
+        // storage path (uploaded), so resolve both shapes.
+        const moodEntries: any[] = Array.isArray(kit.moodboard) ? kit.moodboard : [];
+        const moodImages: { url: string; caption?: string | null }[] = [];
+        for (const m of moodEntries.slice(0, 12)) {
+          const raw = typeof m === "string" ? m : m?.url ?? m?.path ?? m?.storage_path;
+          if (!raw) continue;
+          const url = /^https?:\/\//i.test(String(raw)) ? String(raw) : await sign(BUCKET, String(raw));
+          if (url) moodImages.push({ url, caption: (typeof m === "object" && (m?.caption ?? m?.source)) || null });
+        }
+
+        const strArr = (v: any, max = 5): string[] =>
+          (Array.isArray(v) ? v : []).map((x) => String(x).trim()).filter(Boolean).slice(0, max);
+
+        // Real calls to action the venture already uses in its content plan.
+        const ctas = Array.from(
+          new Set(
+            [
+              ...strArr(kit.voice?.ctas, 6),
+              ...strArr(kit.dna?.ctas, 6),
+              ...(postsRes.data ?? []).map((p: any) => String(p?.cta ?? "").trim()),
+            ].filter((s) => s && s.length <= 60),
+          ),
+        ).slice(0, 4);
+
         push("Brand", {
           key: "brand:identity",
           title: "Brand identity",
-          subtitle: "Logo, palette and typography",
+          subtitle: "Logo, palette, typography, mood and voice",
           kind: "doc",
-          body: lines.join("\n\n") || null,
+          body: null,
           heroImageUrl: logoUrl,
           brandBoard: {
             paletteName: kit.palette?.name ?? null,
             swatches,
             fonts: [
               kit.typography?.heading?.family
-                ? { role: "Headings", family: String(kit.typography.heading.family) }
+                ? {
+                    role: "Headings",
+                    family: String(kit.typography.heading.family),
+                    weight: Number(kit.typography.heading.weight) || null,
+                  }
                 : null,
               kit.typography?.body?.family
-                ? { role: "Body", family: String(kit.typography.body.family) }
+                ? {
+                    role: "Body",
+                    family: String(kit.typography.body.family),
+                    weight: Number(kit.typography.body.weight) || null,
+                  }
                 : null,
-            ].filter(Boolean) as { role: string; family: string }[],
+            ].filter(Boolean) as { role: string; family: string; weight?: number | null }[],
             logos: logoImages,
+            moodboard: moodImages,
+            dna: {
+              positioning: kit.dna?.positioning ?? kit.dna?.promise ?? null,
+              traits: strArr(kit.dna?.traits ?? kit.dna?.personality),
+              toneWords: strArr(kit.voice?.tone_words, 6),
+            },
+            voice: {
+              summary: kit.voice?.summary ?? kit.voice?.rules ?? null,
+              principles: strArr(kit.voice?.bullets),
+              dos: strArr(kit.voice?.dos, 3),
+              donts: strArr(kit.voice?.donts, 3),
+            },
+            ctas,
           },
         });
+
         if (kit.guide_markdown && !excluded.has("brand:guide")) {
           push("Brand", {
             key: "brand:guide",

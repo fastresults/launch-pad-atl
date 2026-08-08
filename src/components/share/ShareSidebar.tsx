@@ -55,9 +55,10 @@ export function ShareSidebar({
   ];
 
   return (
-    <div className="pb-16">
+    <div className="flex h-full min-h-0 flex-col">
       {pinned.length > 0 && (
-        <div className="mb-4 space-y-1.5">
+        <div className="mb-4 shrink-0 space-y-1.5">
+
           {pinned.map((p) => {
             const active = activeKey === p.key;
             return (
@@ -83,7 +84,7 @@ export function ShareSidebar({
         </div>
       )}
 
-      <div className="relative mb-4">
+      <div className="relative mb-4 shrink-0">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <input
           value={query}
@@ -94,7 +95,12 @@ export function ShareSidebar({
         />
       </div>
 
-      <nav className="space-y-1 text-sm" aria-label="Contents">
+      {/* Only the tree scrolls, so the pinned tools and search never leave. */}
+      <nav
+        className="min-h-0 flex-1 space-y-1 overflow-y-auto pb-10 text-sm [mask-image:linear-gradient(to_bottom,black_calc(100%-32px),transparent)]"
+        aria-label="Contents"
+      >
+
         {sections.map((section) => {
           const expanded = filtering || (open[section.key] ?? false);
           const containsActive = section.items.some((i) => i.key === activeKey);

@@ -18,7 +18,10 @@ export default function VentureSharePage() {
   const [submitted, setSubmitted] = useState<string | undefined>(undefined);
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [navOpen, setNavOpen] = useState(false);
+  const [condensed, setCondensed] = useState(false);
+  const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
+
 
   const q = useQuery({
     queryKey: ["venture-share", token, submitted],
@@ -55,8 +58,11 @@ export default function VentureSharePage() {
   const goTo = (key: string) => {
     setActiveKey(key);
     history.replaceState(null, "", `#${key}`);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // The reading pane scrolls, not the window.
+    paneRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    if (key === BRAIN_KEY) setCondensed(true);
   };
+
 
 
   useDocumentTitle(
@@ -123,17 +129,21 @@ export default function VentureSharePage() {
 
 
       {payload && (
-        <>
-          {/* Masthead */}
-          <header className="border-b border-border/60 bg-gradient-to-b from-card/70 to-background">
-            <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6 py-8 md:px-10 md:py-12">
+        <div className="flex h-[100svh] flex-col overflow-hidden">
+          {/* Masthead — condenses once the reader starts working. */}
+          <header
+            className={`shrink-0 border-b border-border/60 bg-gradient-to-b from-card/70 to-background transition-all ${
+              condensed ? "py-2" : "py-6 md:py-10"
+            }`}
+          >
+            <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6 md:px-10">
               <Sheet open={navOpen} onOpenChange={setNavOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open contents">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="theme-dark-scope w-[85vw] max-w-xs overflow-y-auto bg-background p-6">
+                <SheetContent side="left" className="theme-dark-scope flex w-[85vw] max-w-xs flex-col bg-background p-6">
                   <ShareSidebar
                     payload={payload}
                     activeKey={activeKey}
@@ -149,17 +159,25 @@ export default function VentureSharePage() {
                 <img
                   src={payload.venture.logoUrl}
                   alt={payload.venture.name}
-                  className="h-12 w-12 shrink-0 rounded-lg object-contain md:h-16 md:w-16"
+                  className={`shrink-0 rounded-lg object-contain transition-all ${
+                    condensed ? "h-9 w-9" : "h-12 w-12 md:h-16 md:w-16"
+                  }`}
                 />
               )}
               <div className="min-w-0">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                  Venture showcase · {items.length} assets
-                </p>
-                <h1 className="mt-1 truncate font-serif text-[26px] leading-tight tracking-tight md:text-[40px]">
+                {!condensed && (
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+                    Venture showcase · {items.length} assets
+                  </p>
+                )}
+                <h1
+                  className={`truncate font-serif leading-tight tracking-tight ${
+                    condensed ? "text-[18px]" : "mt-1 text-[26px] md:text-[40px]"
+                  }`}
+                >
                   {payload.venture.name}
                 </h1>
-                {payload.venture.oneLiner && (
+                {payload.venture.oneLiner && !condensed && (
                   <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
                     {payload.venture.oneLiner}
                   </p>
@@ -168,6 +186,7 @@ export default function VentureSharePage() {
               {brainOn && (
                 <Button
                   variant="outline"
+                  size={condensed ? "sm" : "default"}
                   className="ml-auto hidden shrink-0 md:inline-flex"
                   onClick={() => goTo(BRAIN_KEY)}
                 >
@@ -178,12 +197,17 @@ export default function VentureSharePage() {
             </div>
           </header>
 
-          <div className="mx-auto flex max-w-[1400px] gap-12 px-6 md:px-10">
-            <aside className="sticky top-0 hidden h-screen w-72 shrink-0 overflow-y-auto py-10 lg:block">
+          <div className="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 gap-12 overflow-hidden px-6 md:px-10">
+            <aside className="hidden w-72 shrink-0 py-8 lg:block">
               <ShareSidebar payload={payload} activeKey={activeKey} onNavigate={goTo} />
             </aside>
 
-            <main className="min-w-0 flex-1 pb-32 pt-10">
+            <main
+              ref={paneRef}
+              onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 24)}
+              className={`min-w-0 flex-1 overflow-y-auto ${brainActive ? "flex flex-col py-6" : "pb-24 pt-8"}`}
+            >
+
               {brainActive ? (
                 <ShareBrain
                   token={token}
@@ -239,9 +263,11 @@ export default function VentureSharePage() {
                 )}
               </div>
 
-              <footer className="mt-12 border-t border-border/60 pt-8 text-xs text-muted-foreground">
-                Built with Startup Labs · The 14-Day Pivot Method
-              </footer>
+              {!brainActive && (
+                <footer className="mt-12 border-t border-border/60 pt-8 text-xs text-muted-foreground">
+                  Built with Startup Labs · The 14-Day Pivot Method
+                </footer>
+              )}
             </main>
           </div>
 
@@ -256,9 +282,9 @@ export default function VentureSharePage() {
               Ask this venture
             </button>
           )}
-        </>
-
+        </div>
       )}
+
     </div>
   );
 }
