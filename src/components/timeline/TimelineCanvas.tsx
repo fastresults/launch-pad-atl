@@ -301,6 +301,12 @@ export function TimelineCanvas({
       )}
       style={{ height }}
     >
+      {!armed && (
+        <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-white/10 bg-black/50 px-3 py-1 text-[11px] uppercase tracking-[0.14em] text-white/50 backdrop-blur">
+          Hover to activate zoom
+        </div>
+      )}
+
       <svg width={width} height={height} className="block">
         <defs>
           <linearGradient id="tl-ribbon" x1="0" y1="0" x2="0" y2="1">
