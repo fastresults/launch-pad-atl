@@ -89,6 +89,12 @@ export default function VentureSharePage() {
     `${window.location.pathname}${window.location.search}#${step ? `${key}/${step}` : key}`;
 
   const goTo = (key: string, step?: string | null) => {
+    if (key === BRAIN_KEY && isMobile) {
+      // The brain takes the whole phone screen instead of replacing the reading pane.
+      setBrainOpen(true);
+      setNavOpen(false);
+      return;
+    }
     setActiveKey(key);
     if (key !== TIMELINE_KEY) setStepId(null);
     else if (step !== undefined) setStepId(step ?? null);
@@ -97,6 +103,35 @@ export default function VentureSharePage() {
     paneRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     if (key === BRAIN_KEY || key === TIMELINE_KEY) setCondensed(true);
   };
+
+  /** Swipe left/right walks the asset list on touch devices. */
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchX.current = e.touches[0].clientX;
+    touchY.current = e.touches[0].clientY;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchX.current === null || touchY.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    const dy = e.changedTouches[0].clientY - touchY.current;
+    touchX.current = null;
+    touchY.current = null;
+    if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+    const next = dx < 0 ? activeIndex + 1 : activeIndex - 1;
+    if (activeIndex >= 0 && next >= 0 && next < items.length) goTo(items[next].key);
+  };
+
+  /** Phones have a native share sheet; everything else copies the link. */
+  const shareLink = async () => {
+    const url = window.location.href;
+    const title = payload?.venture.name ?? "Venture showcase";
+    try {
+      if (navigator.share) await navigator.share({ title, url });
+      else await navigator.clipboard.writeText(url);
+    } catch {
+      /* dismissed */
+    }
+  };
+
 
   /** Selecting a step keeps the link shareable down to the bar. */
   const selectStep = (id: string | null) => {
