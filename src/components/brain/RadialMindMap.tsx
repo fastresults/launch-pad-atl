@@ -174,6 +174,7 @@ export function RadialMindMap({
       match: true,
       angle: -Math.PI / 2,
       labelLane: 0,
+      order: 0,
     };
     nodes.push(root);
 
