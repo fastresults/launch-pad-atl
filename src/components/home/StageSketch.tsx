@@ -1,214 +1,185 @@
-// Hand-drawn, cross-hatched accent marks for each framework stage.
-// Stroke-only SVG using currentColor so each sketch inherits the section's
-// ink color. Purely decorative.
-
-import { useId } from "react";
+// Animated accent marks for each framework stage.
+// Color comes from the theme: accents use var(--primary), structural strokes
+// inherit currentColor from the section. Purely decorative.
+// Animation keyframes/classes live in src/styles.css (prefixed `sm-`).
 
 type Props = { stage: string; className?: string };
 
-/** 45° hatch fill, clipped to a silhouette path. */
-function Hatch({ clipId, spacing = 5 }: { clipId: string; spacing?: number }) {
-  const lines = [];
-  for (let x = -140; x < 200; x += spacing) {
-    lines.push(<line key={x} x1={x} y1={-20} x2={x + 160} y2={140} />);
-  }
-  return (
-    <g clipPath={`url(#${clipId})`} strokeWidth={0.55} opacity={0.5}>
-      {lines}
-    </g>
-  );
-}
-
 function Sketch({ stage }: { stage: string }) {
-  const uid = useId().replace(/[:]/g, "");
-  const c = (n: string) => `${uid}-${n}`;
-
   switch (stage) {
-    // 01 Foundation — laid cornerstone / stacked blocks
+    // 01 Foundation — slabs dropping into a stable stack
     case "01":
       return (
         <>
-          <defs>
-            <clipPath id={c("a")}>
-              <path d="M22 78 L60 58 L98 78 L60 98 Z" />
-            </clipPath>
-            <clipPath id={c("b")}>
-              <path d="M34 54 L60 41 L86 54 L60 67 Z" />
-            </clipPath>
-          </defs>
-          <path d="M22 78 L60 58 L98 78 L60 98 Z" />
-          <path d="M22 78 L22 86 L60 106 L98 86 L98 78" />
-          <path d="M60 98 L60 106" />
-          <path d="M34 54 L60 41 L86 54 L60 67 Z" />
-          <path d="M34 54 L34 61 M86 54 L86 61 M60 67 L60 74" />
-          <path d="M47 30 L60 23 L73 30 L60 37 Z" />
-          <Hatch clipId={c("a")} spacing={5} />
-          <Hatch clipId={c("b")} spacing={6} />
+          <line className="sm-base" x1="32" y1="204" x2="208" y2="204" />
+          <rect className="sm-slab" x="40" y="176" width="160" height="18" rx="3" />
+          <rect className="sm-slab sm-d1" x="52" y="152" width="136" height="18" rx="3" />
+          <rect className="sm-slab sm-d2" x="64" y="128" width="112" height="18" rx="3" />
+          <rect className="sm-slab sm-d3" x="76" y="104" width="88" height="18" rx="3" />
+          <rect className="sm-slab sm-cap sm-d4" x="108" y="76" width="24" height="18" rx="3" />
         </>
       );
 
-    // 02 Strategy — compass rose
+    // 02 Strategy — routes converging on one target
     case "02":
       return (
         <>
-          <defs>
-            <clipPath id={c("a")}>
-              <path d="M60 20 L71 55 L60 60 Z" />
-            </clipPath>
-            <clipPath id={c("b")}>
-              <path d="M60 100 L49 65 L60 60 Z" />
-            </clipPath>
-          </defs>
-          <path d="M60 16 C36 16 17 36 17 60 C17 84 36 104 60 104 C84 104 103 84 103 60 C103 36 84 16 60 16 Z" />
-          <path d="M60 24 C40 24 25 40 25 60 C25 80 40 96 60 96 C80 96 95 80 95 60 C95 40 80 24 60 24 Z" opacity={0.55} />
-          <path d="M60 20 L71 55 L60 60 L49 65 L60 100 L71 65 L60 60 L49 55 Z" />
-          <path d="M60 12 L60 18 M60 102 L60 108 M12 60 L18 60 M102 60 L108 60" />
-          <Hatch clipId={c("a")} spacing={3.5} />
-          <Hatch clipId={c("b")} spacing={3.5} />
+          <path className="sm-guide" d="M20 58 C 80 58, 112 96, 158 116" />
+          <path className="sm-guide" d="M20 120 C 80 120, 118 118, 158 120" />
+          <path className="sm-guide" d="M20 192 C 80 192, 116 148, 158 126" />
+          <path className="sm-run" d="M20 58 C 80 58, 112 96, 158 116" />
+          <path className="sm-run sm-d1" d="M20 120 C 80 120, 118 118, 158 120" />
+          <path className="sm-run sm-d2" d="M20 192 C 80 192, 116 148, 158 126" />
+          <circle className="sm-guide" cx="176" cy="121" r="30" />
+          <circle className="sm-ring" cx="176" cy="121" r="18" />
+          <circle className="sm-core" cx="176" cy="121" r="7" />
         </>
       );
 
-    // 03 Operations — meshed gears
+    // 03 Operations — counter-rotating rings around a turning square
     case "03":
       return (
         <>
-          <defs>
-            <clipPath id={c("a")}>
-              <path d="M46 22 C31 22 20 34 20 48 C20 63 31 74 46 74 C60 74 72 63 72 48 C72 34 60 22 46 22 Z" />
-            </clipPath>
-          </defs>
-          <path d="M46 22 C31 22 20 34 20 48 C20 63 31 74 46 74 C60 74 72 63 72 48 C72 34 60 22 46 22 Z" />
-          <path d="M46 36 C39 36 34 42 34 48 C34 55 39 60 46 60 C53 60 58 55 58 48 C58 42 53 36 46 36 Z" />
-          <path d="M46 16 L46 24 M46 72 L46 80 M14 48 L22 48 M70 48 L78 48 M24 26 L30 32 M62 64 L68 70 M68 26 L62 32 M30 64 L24 70" />
-          <path d="M83 60 C73 60 66 68 66 77 C66 87 73 94 83 94 C92 94 100 87 100 77 C100 68 92 60 83 60 Z" />
-          <path d="M83 70 C79 70 76 73 76 77 C76 81 79 84 83 84 C87 84 90 81 90 77 C90 73 87 70 83 70 Z" />
-          <path d="M83 55 L83 62 M83 92 L83 99 M61 77 L68 77 M98 77 L105 77" />
-          <path d="M20 104 L104 104" opacity={0.6} />
-          <Hatch clipId={c("a")} spacing={5} />
+          <circle className="sm-r1" cx="120" cy="120" r="88" />
+          <circle className="sm-r2" cx="120" cy="120" r="62" />
+          <circle className="sm-r3" cx="120" cy="120" r="38" />
+          <rect className="sm-sq" x="106" y="106" width="28" height="28" rx="4" />
+          <circle className="sm-tick" cx="120" cy="18" r="3.5" />
+          <circle className="sm-tick sm-d1" cx="222" cy="120" r="3.5" />
+          <circle className="sm-tick sm-d2" cx="120" cy="222" r="3.5" />
+          <circle className="sm-tick sm-d3" cx="18" cy="120" r="3.5" />
         </>
       );
 
-    // 04 Finance — coin stack with rising line
+    // 04 Finance — columns growing, then a trend line
     case "04":
       return (
         <>
-          <defs>
-            <clipPath id={c("a")}>
-              <path d="M26 84 L26 96 C26 101 42 105 56 105 C70 105 86 101 86 96 L86 84 Z" />
-            </clipPath>
-            <clipPath id={c("b")}>
-              <path d="M26 68 L26 80 C26 85 42 89 56 89 C70 89 86 85 86 80 L86 68 Z" />
-            </clipPath>
-          </defs>
-          <ellipse cx="56" cy="84" rx="30" ry="9" />
-          <path d="M26 84 L26 96 C26 101 42 105 56 105 C70 105 86 101 86 96 L86 84" />
-          <ellipse cx="56" cy="68" rx="30" ry="9" />
-          <path d="M26 68 L26 80 C26 85 42 89 56 89 C70 89 86 85 86 80 L86 68" />
-          <ellipse cx="56" cy="52" rx="30" ry="9" />
-          <path d="M26 52 L26 64 C26 69 42 73 56 73 C70 73 86 69 86 64 L86 52" />
-          <path d="M34 42 L52 26 L66 34 L92 12" opacity={0.75} />
-          <path d="M80 11 L93 11 L93 24" opacity={0.75} />
-          <Hatch clipId={c("a")} spacing={4} />
-          <Hatch clipId={c("b")} spacing={4.5} />
+          <line className="sm-axis" x1="34" y1="198" x2="206" y2="198" />
+          <rect className="sm-bar" x="42" y="154" width="22" height="44" rx="3" />
+          <rect className="sm-bar sm-d1" x="78" y="130" width="22" height="68" rx="3" />
+          <rect className="sm-bar sm-d2" x="114" y="142" width="22" height="56" rx="3" />
+          <rect className="sm-bar sm-d3" x="150" y="102" width="22" height="96" rx="3" />
+          <rect className="sm-bar sm-bar-hi sm-d4" x="186" y="74" width="22" height="124" rx="3" />
+          <polyline className="sm-trend" points="53,146 89,122 125,134 161,94 197,66" />
         </>
       );
 
-    // 05 Governance — shield with seal
+    // 05 Governance — an inner boundary sealing inside a fixed frame
     case "05":
       return (
         <>
-          <defs>
-            <clipPath id={c("a")}>
-              <path d="M60 14 L98 28 C98 62 86 90 60 106 C34 90 22 62 22 28 Z" />
-            </clipPath>
-          </defs>
-          <path d="M60 14 L98 28 C98 62 86 90 60 106 C34 90 22 62 22 28 Z" />
-          <path d="M60 23 L90 34 C90 61 80 84 60 97 C40 84 30 61 30 34 Z" opacity={0.55} />
-          <path d="M44 58 L55 70 L78 44" strokeWidth={1.6} />
-          <Hatch clipId={c("a")} spacing={6} />
+          <polygon className="sm-guide" points="120,38 191,79 191,161 120,202 49,161 49,79" />
+          <polygon className="sm-guide sm-faint" points="120,50 180,85 180,155 120,190 60,155 60,85" />
+          <g className="sm-spokes">
+            <line x1="120" y1="38" x2="120" y2="202" />
+            <line x1="49" y1="79" x2="191" y2="161" />
+            <line x1="191" y1="79" x2="49" y2="161" />
+          </g>
+          <polygon className="sm-seal" points="120,62 170,91 170,149 120,178 70,149 70,91" />
+          <circle className="sm-lock" cx="120" cy="120" r="8" />
         </>
       );
 
-    // 06 Brand — ink pot and nib
+    // 06 Brand — concentric arcs orbiting a steady centre
     case "06":
       return (
         <>
-          <defs>
-            <clipPath id={c("a")}>
-              <path d="M28 72 L30 100 C30 104 40 107 52 107 C64 107 74 104 74 100 L76 72 Z" />
-            </clipPath>
-            <clipPath id={c("b")}>
-              <path d="M96 14 L104 22 L70 60 L60 64 L64 54 Z" />
-            </clipPath>
-          </defs>
-          <ellipse cx="52" cy="72" rx="24" ry="7" />
-          <path d="M28 72 L30 100 C30 104 40 107 52 107 C64 107 74 104 74 100 L76 72" />
-          <path d="M36 66 L36 60 C36 56 42 54 52 54 C62 54 68 56 68 60 L68 66" opacity={0.7} />
-          <path d="M96 14 L104 22 L70 60 L60 64 L64 54 Z" />
-          <path d="M64 54 L70 60" opacity={0.7} />
-          <path d="M90 20 L98 28" opacity={0.7} />
-          <Hatch clipId={c("a")} spacing={5} />
-          <Hatch clipId={c("b")} spacing={3.5} />
+          <circle className="sm-guide sm-faint" cx="120" cy="120" r="78" />
+          <circle className="sm-guide sm-faint" cx="120" cy="120" r="36" />
+          <circle className="sm-a1" cx="120" cy="120" r="78" />
+          <circle className="sm-a2" cx="120" cy="120" r="57" />
+          <circle className="sm-a3" cx="120" cy="120" r="36" />
+          <circle className="sm-beat" cx="120" cy="120" r="7" />
         </>
       );
 
-    // 07 Marketing — lit desk lamp (echoes the reference sketch)
+    // 07 Marketing — a source broadcasting to receivers
     case "07":
       return (
         <>
-          <defs>
-            <clipPath id={c("a")}>
-              <path d="M62 34 L96 34 L86 62 L72 62 Z" />
-            </clipPath>
-            <clipPath id={c("b")}>
-              <path d="M22 98 C22 92 34 88 48 88 C62 88 74 92 74 98 Z" />
-            </clipPath>
-          </defs>
-          <path d="M22 98 C22 92 34 88 48 88 C62 88 74 92 74 98 Z" />
-          <path d="M14 104 L86 104" />
-          <path d="M48 88 L34 52 L60 30" strokeWidth={1.5} />
-          <path d="M34 52 L28 50 M34 52 L40 54" opacity={0.6} />
-          <circle cx="34" cy="52" r="3.5" />
-          <circle cx="60" cy="30" r="3.5" />
-          <path d="M62 34 L96 34 L86 62 L72 62 Z" />
-          <path d="M72 62 L86 62" opacity={0.7} />
-          <path d="M79 70 L79 80 M64 68 L58 78 M94 68 L100 78 M56 62 L46 66 M102 62 L112 66" opacity={0.65} />
-          <Hatch clipId={c("a")} spacing={4} />
-          <Hatch clipId={c("b")} spacing={4.5} />
+          <circle className="sm-src" cx="58" cy="120" r="9" />
+          <path className="sm-wave" d="M80 96 A34 34 0 0 1 80 144" />
+          <path className="sm-wave sm-d1" d="M97 82 A60 60 0 0 1 97 158" />
+          <path className="sm-wave sm-d2" d="M114 68 A86 86 0 0 1 114 172" />
+          <circle className="sm-rx sm-rx1" cx="196" cy="82" r="6" />
+          <circle className="sm-rx sm-rx2" cx="204" cy="120" r="6" />
+          <circle className="sm-rx sm-rx3" cx="196" cy="158" r="6" />
         </>
       );
 
-    // 08 Social & Content — paper plane with broadcast arcs
+    // 08 Social & Content — a network pulsing outward from the hub
     default:
       return (
         <>
-          <defs>
-            <clipPath id={c("a")}>
-              <path d="M14 58 L106 20 L70 96 L56 70 Z" />
-            </clipPath>
-          </defs>
-          <path d="M14 58 L106 20 L70 96 L56 70 Z" />
-          <path d="M106 20 L56 70" />
-          <path d="M56 70 L44 88 L58 82" opacity={0.8} />
-          <path d="M18 96 C24 84 34 76 46 72" opacity={0.5} />
-          <path d="M12 104 C20 88 34 78 50 74" opacity={0.35} />
-          <Hatch clipId={c("a")} spacing={5.5} />
+          <g className="sm-edges">
+            <line x1="120" y1="120" x2="62" y2="62" />
+            <line x1="120" y1="120" x2="120" y2="42" />
+            <line x1="120" y1="120" x2="186" y2="72" />
+            <line x1="120" y1="120" x2="196" y2="152" />
+            <line x1="120" y1="120" x2="128" y2="196" />
+            <line x1="120" y1="120" x2="48" y2="164" />
+            <line x1="62" y1="62" x2="120" y2="42" opacity="0.6" />
+            <line x1="186" y1="72" x2="196" y2="152" opacity="0.6" />
+            <line x1="128" y1="196" x2="48" y2="164" opacity="0.6" />
+          </g>
+          <line className="sm-edge-run" x1="120" y1="120" x2="62" y2="62" />
+          <line className="sm-edge-run sm-e2" x1="120" y1="120" x2="120" y2="42" />
+          <line className="sm-edge-run sm-e3" x1="120" y1="120" x2="186" y2="72" />
+          <line className="sm-edge-run sm-e4" x1="120" y1="120" x2="196" y2="152" />
+          <line className="sm-edge-run sm-e5" x1="120" y1="120" x2="128" y2="196" />
+          <line className="sm-edge-run sm-e6" x1="120" y1="120" x2="48" y2="164" />
+          <circle className="sm-node" cx="62" cy="62" r="5.5" />
+          <circle className="sm-node sm-e2" cx="120" cy="42" r="5.5" />
+          <circle className="sm-node sm-e3" cx="186" cy="72" r="5.5" />
+          <circle className="sm-node sm-e4" cx="196" cy="152" r="5.5" />
+          <circle className="sm-node sm-e5" cx="128" cy="196" r="5.5" />
+          <circle className="sm-node sm-e6" cx="48" cy="164" r="5.5" />
+          <circle className="sm-hub" cx="120" cy="120" r="8" />
         </>
       );
   }
+}
+
+/** 01-overview — grid of points swept by expanding rings. Used as a section mark. */
+export function OverviewSketch({ className }: { className?: string }) {
+  const dots: [number, number][] = [];
+  const skip = new Set(["120,84", "84,120", "120,120", "156,156"]);
+  for (const y of [48, 84, 120, 156, 192]) {
+    for (const x of [48, 84, 120, 156, 192]) {
+      if (!skip.has(`${x},${y}`)) dots.push([x, y]);
+    }
+  }
+  return (
+    <svg
+      viewBox="0 0 240 240"
+      className={`stagemark ${className ?? ""}`}
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <g className="sm-dots">
+        {dots.map(([x, y]) => (
+          <circle key={`${x}-${y}`} cx={x} cy={y} r="2.5" />
+        ))}
+      </g>
+      <circle className="sm-blip" cx="120" cy="84" r="3" />
+      <circle className="sm-blip sm-d1" cx="84" cy="120" r="3" />
+      <circle className="sm-blip sm-d2" cx="120" cy="120" r="3.5" />
+      <circle className="sm-blip sm-d3" cx="156" cy="156" r="3" />
+      <circle className="sm-sweep" cx="120" cy="120" r="96" />
+      <circle className="sm-sweep sm-s2" cx="120" cy="120" r="96" />
+      <circle className="sm-sweep sm-s3" cx="120" cy="120" r="96" />
+    </svg>
+  );
 }
 
 export function StageSketch({ stage, className }: Props) {
   return (
     <svg
-      viewBox="0 0 120 120"
-      className={className}
+      viewBox="0 0 240 240"
+      className={`stagemark ${className ?? ""}`}
       fill="none"
-      stroke="currentColor"
-      strokeWidth={1.25}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      vectorEffect="non-scaling-stroke"
       aria-hidden="true"
       focusable="false"
     >

@@ -6,7 +6,7 @@ import { VideoTestimonials } from "@/components/home/VideoTestimonials";
 import { CinematicHero } from "@/components/home/CinematicHero";
 import { FounderVideoWall } from "@/components/home/FounderVideoWall";
 import { HomeBusinessIdeasScroller } from "@/components/home/HomeBusinessIdeasScroller";
-import { StageSketch } from "@/components/home/StageSketch";
+import { StageSketch, OverviewSketch } from "@/components/home/StageSketch";
 import { WorkshopStack } from "@/components/home/workshop/WorkshopStack";
 import { useSelectedWorkshop } from "@/hooks/use-selected-workshop";
 import { FOUNDATION_SLUG } from "@/lib/workshop-catalog";
@@ -345,13 +345,18 @@ function Framework() {
     <TooltipProvider delayDuration={150}>
     <section className="border-t border-white/5 py-16 md:py-24">
       <div className="public-container px-6">
-        <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Not an accelerator. Not an incubator. Not a course.
-        </p>
-        <h2 className="public-heading max-w-3xl">
-          A foundation that can take money.{" "}
-          <span className="text-gradient-brand">Laid with you in one morning.</span>
-        </h2>
+        <div className="flex items-start justify-between gap-8">
+          <div>
+            <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+              Not an accelerator. Not an incubator. Not a course.
+            </p>
+            <h2 className="public-heading max-w-3xl">
+              A foundation that can take money.{" "}
+              <span className="text-gradient-brand">Laid with you in one morning.</span>
+            </h2>
+          </div>
+          <OverviewSketch className="hidden size-24 shrink-0 text-foreground/70 lg:block" />
+        </div>
         <p className="mt-4 max-w-3xl text-base text-muted-foreground md:text-lg">
           A course gives you videos. A chatbot gives you a folder of files. We sit down and write the four foundations your startup can build on — brand, product, marketing, operations. By that afternoon you're not planning anymore. You're holding the actual words, website PRD, and operating foundation your startup builds from next. {WORKSHOP_PRICE_LABEL} once. Yours to keep building.
         </p>

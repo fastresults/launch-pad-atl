@@ -558,3 +558,161 @@
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
 }
+
+/* ---------------------------------------------------------------
+   Framework stage marks (StageSketch / OverviewSketch)
+   Accent = var(--primary); structural strokes inherit currentColor.
+   --------------------------------------------------------------- */
+.stagemark {
+  --sm-acc: var(--primary);
+  overflow: visible;
+}
+.stagemark * { transform-box: view-box; transform-origin: center; }
+
+/* shared delays */
+.stagemark .sm-d1 { animation-delay: 0.32s; }
+.stagemark .sm-d2 { animation-delay: 0.64s; }
+.stagemark .sm-d3 { animation-delay: 0.96s; }
+.stagemark .sm-d4 { animation-delay: 1.28s; }
+
+/* generic structure */
+.stagemark .sm-guide { fill: none; stroke: currentColor; stroke-width: 1.5; opacity: 0.3; stroke-linejoin: round; }
+.stagemark .sm-faint { opacity: 0.18; stroke-width: 1; }
+
+/* 01 Foundation */
+@keyframes sm-drop {
+  0% { opacity: 0; transform: translateY(-28px); }
+  14% { opacity: 1; transform: translateY(0); }
+  86% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+@keyframes sm-basegrow {
+  0% { transform: scaleX(0.2); opacity: 0.2; }
+  10% { transform: scaleX(1); opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0.2; transform: scaleX(0.2); }
+}
+.stagemark .sm-slab { fill: currentColor; opacity: 0.28; animation: sm-drop 5s cubic-bezier(.2,.8,.3,1) infinite; }
+.stagemark .sm-cap { fill: var(--sm-acc); opacity: 1; animation-delay: 1.6s; }
+.stagemark .sm-base { stroke: var(--sm-acc); stroke-width: 2.5; stroke-linecap: round; animation: sm-basegrow 5s ease-out infinite; }
+
+/* 02 Strategy */
+@keyframes sm-run { from { stroke-dashoffset: 314; } to { stroke-dashoffset: 0; } }
+@keyframes sm-pulse {
+  0% { opacity: 0.7; transform: scale(0.9); }
+  45% { opacity: 0.15; transform: scale(1.25); }
+  100% { opacity: 0.7; transform: scale(0.9); }
+}
+@keyframes sm-corefade { 0%, 100% { opacity: 0.55; } 40% { opacity: 1; } }
+.stagemark .sm-run { fill: none; stroke: var(--sm-acc); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 14 300; animation: sm-run 3.2s linear infinite; }
+.stagemark .sm-ring { fill: none; stroke: currentColor; stroke-width: 1.5; opacity: 0.5; animation: sm-pulse 3.2s ease-out infinite; }
+.stagemark .sm-core { fill: var(--sm-acc); animation: sm-corefade 3.2s ease-in-out infinite; }
+
+/* 03 Operations */
+@keyframes sm-cw { to { transform: rotate(360deg); } }
+@keyframes sm-ccw { to { transform: rotate(-360deg); } }
+@keyframes sm-tick { 0%, 24% { opacity: 0.8; } 25%, 100% { opacity: 0.15; } }
+.stagemark .sm-r1 { fill: none; stroke: currentColor; opacity: 0.3; stroke-width: 2; stroke-dasharray: 3 11; animation: sm-cw 24s linear infinite; }
+.stagemark .sm-r2 { fill: none; stroke: currentColor; opacity: 0.55; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 100 300; animation: sm-ccw 11s linear infinite; }
+.stagemark .sm-r3 { fill: none; stroke: var(--sm-acc); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 48 200; animation: sm-cw 7s linear infinite; }
+.stagemark .sm-sq { fill: none; stroke: var(--sm-acc); stroke-width: 2; animation: sm-cw 9s linear infinite; }
+.stagemark .sm-tick { fill: currentColor; animation: sm-tick 2.2s steps(1, end) infinite; }
+
+/* 04 Finance */
+@keyframes sm-grow {
+  0% { transform: scaleY(0); }
+  18% { transform: scaleY(1); }
+  84% { transform: scaleY(1); }
+  100% { transform: scaleY(0); }
+}
+@keyframes sm-draw {
+  0%, 16% { stroke-dashoffset: 170; opacity: 0; }
+  22% { opacity: 1; }
+  52% { stroke-dashoffset: 0; opacity: 1; }
+  86% { opacity: 1; stroke-dashoffset: 0; }
+  100% { opacity: 0; stroke-dashoffset: 0; }
+}
+.stagemark .sm-bar { fill: currentColor; opacity: 0.28; transform-box: fill-box; transform-origin: bottom; animation: sm-grow 5s cubic-bezier(.2,.8,.3,1) infinite; }
+.stagemark .sm-bar-hi { fill: var(--sm-acc); opacity: 1; }
+.stagemark .sm-axis { stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; opacity: 0.4; }
+.stagemark .sm-trend { fill: none; stroke: var(--sm-acc); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 170; animation: sm-draw 5s ease-out infinite; }
+
+/* 05 Governance */
+@keyframes sm-seal {
+  0% { stroke-dashoffset: 348; }
+  45% { stroke-dashoffset: 0; }
+  88% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@keyframes sm-lock {
+  0%, 42% { transform: scale(0); opacity: 0; }
+  56% { transform: scale(1); opacity: 1; }
+  88% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+.stagemark .sm-spokes line { stroke: currentColor; stroke-width: 1; opacity: 0.2; }
+.stagemark .sm-seal { fill: none; stroke: var(--sm-acc); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 348; animation: sm-seal 4.4s cubic-bezier(.3,.7,.3,1) infinite; }
+.stagemark .sm-lock { fill: var(--sm-acc); animation: sm-lock 4.4s cubic-bezier(.2,1.4,.4,1) infinite; }
+
+/* 06 Brand */
+@keyframes sm-beat {
+  0%, 100% { transform: scale(0.8); opacity: 0.7; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+.stagemark .sm-a1 { fill: none; stroke: currentColor; opacity: 0.55; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 170 500; animation: sm-cw 14s linear infinite; }
+.stagemark .sm-a2 { fill: none; stroke: var(--sm-acc); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 200 400; animation: sm-ccw 9s linear infinite; }
+.stagemark .sm-a3 { fill: none; stroke: currentColor; opacity: 0.55; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 70 300; animation: sm-cw 6s linear infinite; }
+.stagemark .sm-beat { fill: var(--sm-acc); animation: sm-beat 3s ease-in-out infinite; }
+
+/* 07 Marketing */
+@keyframes sm-wave { 0% { opacity: 0; } 15% { opacity: 0.9; } 100% { opacity: 0; } }
+@keyframes sm-emit { 0%, 100% { opacity: 0.6; } 12% { opacity: 1; } }
+@keyframes sm-lit { 0%, 100% { fill: currentColor; opacity: 0.28; } 20%, 45% { fill: var(--sm-acc); opacity: 1; } }
+.stagemark .sm-wave { fill: none; stroke: var(--sm-acc); stroke-width: 2.5; stroke-linecap: round; opacity: 0; animation: sm-wave 2.8s ease-out infinite; }
+.stagemark .sm-src { fill: var(--sm-acc); animation: sm-emit 2.8s ease-out infinite; }
+.stagemark .sm-rx { fill: currentColor; opacity: 0.28; animation: sm-lit 2.8s ease-out infinite; }
+.stagemark .sm-rx1 { animation-delay: 1.15s; }
+.stagemark .sm-rx2 { animation-delay: 1.3s; }
+.stagemark .sm-rx3 { animation-delay: 1.45s; }
+
+/* 08 Social & Content */
+@keyframes sm-edgerun { from { stroke-dashoffset: 210; } to { stroke-dashoffset: 0; } }
+@keyframes sm-hubbeat {
+  0%, 100% { transform: scale(0.85); opacity: 0.75; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+.stagemark .sm-edges line { stroke: currentColor; stroke-width: 1.5; opacity: 0.28; }
+.stagemark .sm-edge-run { fill: none; stroke: var(--sm-acc); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 10 200; animation: sm-edgerun 2.6s linear infinite; }
+.stagemark .sm-node { fill: currentColor; opacity: 0.28; animation: sm-lit 2.6s ease-out infinite; }
+.stagemark .sm-hub { fill: var(--sm-acc); animation: sm-hubbeat 2.6s ease-in-out infinite; }
+.stagemark .sm-e2 { animation-delay: 0.32s; }
+.stagemark .sm-e3 { animation-delay: 0.64s; }
+.stagemark .sm-e4 { animation-delay: 0.96s; }
+.stagemark .sm-e5 { animation-delay: 1.28s; }
+.stagemark .sm-e6 { animation-delay: 1.6s; }
+
+/* Overview mark */
+@keyframes sm-sweep {
+  0% { transform: scale(0.1); opacity: 0; }
+  12% { opacity: 0.8; }
+  100% { transform: scale(1); opacity: 0; }
+}
+@keyframes sm-blip { 0%, 100% { opacity: 0.12; } 14% { opacity: 1; } 50% { opacity: 0.2; } }
+.stagemark .sm-dots circle { fill: currentColor; opacity: 0.28; }
+.stagemark .sm-blip { fill: var(--sm-acc); animation: sm-blip 3.6s ease-in-out infinite; }
+.stagemark .sm-sweep { fill: none; stroke: var(--sm-acc); stroke-width: 1.5; opacity: 0; animation: sm-sweep 3.6s cubic-bezier(.15,.6,.3,1) infinite; }
+.stagemark .sm-s2 { animation-delay: 1.2s; }
+.stagemark .sm-s3 { animation-delay: 2.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stagemark *,
+  .stagemark *::before,
+  .stagemark *::after {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+    stroke-dashoffset: 0 !important;
+  }
+  .stagemark .sm-wave,
+  .stagemark .sm-sweep { opacity: 0.5; }
+}
