@@ -159,6 +159,7 @@ export function VentureTimeline({
         scenario={scenario}
         onChange={setScenario}
         onReset={() => setScenario(saved)}
+        resetLabel={resetLabel}
         dirty={dirty}
         readOnly={readOnly}
       />
@@ -184,7 +185,8 @@ export function VentureTimeline({
               scenario={scenario}
               revenue={revenue}
               selectedId={selected}
-              onSelect={(id) => setSelected((s) => (s === id ? null : id))}
+              onSelect={(id) => setSelected(selected === id ? null : id)}
+
               onNudge={
                 readOnly
                   ? undefined
