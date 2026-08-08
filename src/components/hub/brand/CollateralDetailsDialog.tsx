@@ -43,6 +43,7 @@ export function CollateralDetailsDialog({
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState(false);
+  const [edited, setEdited] = useState<Record<string, boolean>>({});
 
   const q = useQuery({
     queryKey: ["collateralDetails", snapshotId],
@@ -54,7 +55,9 @@ export function CollateralDetailsDialog({
     if (q.data?.details && !touched) setDraft({ ...q.data.details });
   }, [q.data, touched]);
 
-  useEffect(() => { if (!open) setTouched(false); }, [open]);
+  useEffect(() => { if (!open) { setTouched(false); setEdited({}); } }, [open]);
+
+  const suggested = q.data?.suggested ?? {};
 
   const audit = useMemo(() => auditDetails(draft), [draft]);
   const blocked = Object.keys(audit.blockedKinds);
@@ -71,14 +74,34 @@ export function CollateralDetailsDialog({
     onError: (e: any) => toast.error(e.message || "Could not save details"),
   });
 
+  // Re-reads the brief and finished assets, then refills anything still blank.
+  const rescan = useMutation({
+    mutationFn: () => rescanCollateralDetails(snapshotId),
+    onSuccess: (data) => {
+      qc.setQueryData(["collateralDetails", snapshotId], data);
+      setDraft((d) => {
+        const next = { ...d };
+        for (const [k, v] of Object.entries(data.details ?? {})) {
+          if (!String(next[k] ?? "").trim() && !edited[k]) next[k] = v as string;
+        }
+        return next;
+      });
+      const n = Object.keys(data.suggested ?? {}).length;
+      toast.success(n ? `Filled ${n} field${n === 1 ? "" : "s"} from your own content.` : "Nothing new found in your content.");
+    },
+    onError: (e: any) => toast.error(e.message || "Could not re-scan your content"),
+  });
+
   const set = (key: string, value: string) => {
     setTouched(true);
+    setEdited((e) => ({ ...e, [key]: true }));
     setDraft((d) => ({ ...d, [key]: value }));
   };
 
   const blur = (key: string) => {
     setDraft((d) => ({ ...d, [key]: normalizeField(key as any, d[key] ?? "") }));
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
