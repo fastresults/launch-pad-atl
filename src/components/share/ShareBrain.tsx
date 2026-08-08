@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Loader2, MessageCircle, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
@@ -20,15 +20,22 @@ export function ShareBrain({
   password,
   payload,
   onOpenItem,
+  seedQuestion,
 }: {
   token: string;
   password?: string;
   payload: SharePayload;
   onOpenItem: (key: string) => void;
+  /** Question handed over from a timeline step. */
+  seedQuestion?: string | null;
 }) {
   const chatOn = payload.chatEnabled !== false;
   const mapOn = payload.mapEnabled !== false;
   const [tab, setTab] = useState<"ask" | "map">(chatOn ? "ask" : "map");
+
+  useEffect(() => {
+    if (seedQuestion && chatOn) setTab("ask");
+  }, [seedQuestion, chatOn]);
 
   const tabs: { id: "ask" | "map"; label: string; icon: typeof MessageCircle }[] = [
     ...(chatOn ? [{ id: "ask" as const, label: "Ask anything", icon: MessageCircle }] : []),
@@ -75,6 +82,7 @@ export function ShareBrain({
             token={token}
             password={password}
             ventureName={payload.venture.name}
+            seedQuestion={seedQuestion}
             embedded
           />
         )}
