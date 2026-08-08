@@ -79,7 +79,11 @@ export function ShareBrain({
           />
         )}
         {tab === "map" && mapOn && (
-          <MindMapBoundary>
+          <MindMapBoundary
+            key={`${token}-${payload.share.updatedAt}`}
+            resetKey={`${token}-${payload.share.updatedAt}`}
+            onAsk={() => setTab("ask")}
+          >
             <Suspense
               fallback={
                 <div className="flex h-full items-center justify-center rounded-2xl border border-border/60 bg-card/40">

@@ -1,57 +1,74 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import ForceGraph2D from "react-force-graph-2d";
-import { forceCollide } from "d3-force";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Minus, Plus, RotateCcw } from "lucide-react";
 import type { SharePayload } from "@/lib/venture-share.functions";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-type Node = {
+type MapNode = {
   id: string;
   label: string;
   kind: "root" | "cluster" | "item";
+  x: number;
+  y: number;
   radius: number;
   color: string;
   itemKey?: string;
-  /** per-node motion seed so nothing bobs in lockstep */
+  branch: string;
   phase: number;
-  speed: number;
-  amp: number;
 };
-type Link = { source: string; target: string; depth: 1 | 2; color: string };
 
-const CLUSTER_COLORS = [
-  "#e0b25c",
-  "#7fb3d5",
-  "#9fd6a0",
-  "#d69fc8",
-  "#e28f6d",
-  "#9aa7e0",
-  "#7fcfc4",
-  "#d8c26a",
+type MapLink = {
+  id: string;
+  source: MapNode;
+  target: MapNode;
+  color: string;
+  depth: 1 | 2;
+  path: string;
+};
+
+type Camera = { x: number; y: number; k: number };
+
+const VIEW_W = 1200;
+const VIEW_H = 760;
+const MIN_ZOOM = 0.7;
+const MAX_ZOOM = 2.8;
+const FALLBACK_COLORS = [
+  "#e0b25c", "#7fb3d5", "#9fd6a0", "#d69fc8",
+  "#e28f6d", "#9aa7e0", "#7fcfc4", "#d8c26a",
 ];
 
-/** Stable pseudo-random in [0,1) from a string id. */
-function seeded(id: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < id.length; i++) {
-    h ^= id.charCodeAt(i);
-    h = Math.imul(h, 16777619);
+function seeded(id: string) {
+  let hash = 2166136261;
+  for (let i = 0; i < id.length; i += 1) {
+    hash ^= id.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
   }
-  return ((h >>> 0) % 10000) / 10000;
+  return ((hash >>> 0) % 10000) / 10000;
 }
 
-function withAlpha(hex: string, alpha: number): string {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim());
-  if (!m) return hex;
-  const [r, g, b] = [m[1], m[2], m[3]].map((c) => parseInt(c, 16));
-  return `rgba(${r},${g},${b},${alpha})`;
+function safeColor(value: string | null | undefined, fallback: string) {
+  return typeof value === "string" && /^(#[\da-f]{3,8}|(?:rgb|hsl)a?\([^)]*\))$/i.test(value.trim())
+    ? value.trim()
+    : fallback;
 }
 
-/**
- * Public mind map of the venture. Built entirely from the share payload the
- * visitor already received, so it can never surface anything outside this
- * token's venture. The map is alive: orbs breathe and bob, connectors curve
- * and drift, and light pulses travel outward in the direction of the data.
- */
+function curve(source: MapNode, target: MapNode, bend: number) {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  const length = Math.max(1, Math.hypot(dx, dy));
+  const mx = (source.x + target.x) / 2 - (dy / length) * bend;
+  const my = (source.y + target.y) / 2 + (dx / length) * bend;
+  return `M ${source.x} ${source.y} Q ${mx} ${my} ${target.x} ${target.y}`;
+}
+
+function shortLabel(label: string, max = 28) {
+  return label.length > max ? `${label.slice(0, max - 1)}…` : label;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+/** A deterministic SVG map: no live force engine, canvas, or unbounded render loop. */
 export function ShareMindMap({
   payload,
   onOpenItem,
@@ -59,221 +76,338 @@ export function ShareMindMap({
   payload: SharePayload;
   onOpenItem: (key: string) => void;
 }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const fgRef = useRef<any>(null);
-  const clockRef = useRef(0);
-  const [size, setSize] = useState({ w: 800, h: 520 });
-  const [hover, setHover] = useState<string | null>(null);
-  const hoverRef = useRef<string | null>(null);
-  hoverRef.current = hover;
-
+  const surfaceRef = useRef<HTMLDivElement>(null);
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const gestureRef = useRef<{ distance: number; camera: Camera } | null>(null);
+  const cameraRef = useRef<Camera>({ x: 0, y: 0, k: 1 });
+  const instanceId = useId().replace(/:/g, "");
+  const [camera, setCamera] = useState<Camera>(cameraRef.current);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
+
+  const setSafeCamera = (next: Camera) => {
+    const safe = {
+      x: Number.isFinite(next.x) ? next.x : 0,
+      y: Number.isFinite(next.y) ? next.y : 0,
+      k: clamp(Number.isFinite(next.k) ? next.k : 1, MIN_ZOOM, MAX_ZOOM),
+    };
+    cameraRef.current = safe;
+    setCamera(safe);
+  };
+
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => setReducedMotion(mq.matches);
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
   }, []);
 
-  const compact = size.w < 640;
-
   useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([e]) => {
-      const r = e.contentRect;
-      setSize({ w: Math.max(320, r.width), h: Math.max(360, r.height) });
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
+    const element = surfaceRef.current;
+    if (!element) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const rect = element.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const dy = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1);
+      const current = cameraRef.current;
+      const nextK = clamp(current.k * Math.exp(-dy * 0.0015), MIN_ZOOM, MAX_ZOOM);
+      const px = ((event.clientX - rect.left) / rect.width) * VIEW_W;
+      const py = ((event.clientY - rect.top) / rect.height) * VIEW_H;
+      const ratio = nextK / current.k;
+      setSafeCamera({
+        k: nextK,
+        x: px - (px - current.x) * ratio,
+        y: py - (py - current.y) * ratio,
+      });
+    };
+    element.addEventListener("wheel", onWheel, { passive: false });
+    return () => element.removeEventListener("wheel", onWheel);
   }, []);
 
   const graph = useMemo(() => {
-    const nodes: Node[] = [];
-    const links: Link[] = [];
-    const rootColor = payload.venture.colors?.primary || "#e0b25c";
-    nodes.push({
-      id: "root",
-      label: payload.venture.name,
+    const nodes: MapNode[] = [];
+    const links: MapLink[] = [];
+    const usedIds = new Set<string>();
+    const uniqueId = (candidate: string) => {
+      const base = candidate.trim() || `node-${usedIds.size + 1}`;
+      let value = base;
+      let suffix = 2;
+      while (usedIds.has(value)) value = `${base}-${suffix++}`;
+      usedIds.add(value);
+      return value;
+    };
+
+    const root: MapNode = {
+      id: uniqueId("venture-root"),
+      label: String(payload.venture.name || "Venture"),
       kind: "root",
-      radius: 13,
-      color: rootColor,
+      x: VIEW_W / 2,
+      y: VIEW_H / 2,
+      radius: 28,
+      color: safeColor(payload.venture.colors?.primary, FALLBACK_COLORS[0]),
+      branch: "venture-root",
       phase: 0,
-      speed: 0.35,
-      amp: 0.05,
-    });
-    payload.sections.forEach((section, i) => {
-      const color = CLUSTER_COLORS[i % CLUSTER_COLORS.length];
-      const s = seeded(section.key);
-      nodes.push({
-        id: section.key,
-        label: section.label,
+    };
+    nodes.push(root);
+
+    const sections = (Array.isArray(payload.sections) ? payload.sections : []).filter(Boolean).slice(0, 18);
+    sections.forEach((section, sectionIndex) => {
+      const angle = -Math.PI / 2 + (sectionIndex * Math.PI * 2) / Math.max(1, sections.length);
+      const sectionColor = FALLBACK_COLORS[sectionIndex % FALLBACK_COLORS.length];
+      const branch = uniqueId(String(section.key || `section-${sectionIndex + 1}`));
+      const clusterDistance = sections.length > 10 ? 255 : 225;
+      const cluster: MapNode = {
+        id: branch,
+        label: String(section.label || `Section ${sectionIndex + 1}`),
         kind: "cluster",
-        radius: 8,
-        color,
-        phase: s * Math.PI * 2,
-        speed: 0.4 + s * 0.25,
-        amp: 0.06,
+        x: root.x + Math.cos(angle) * clusterDistance,
+        y: root.y + Math.sin(angle) * clusterDistance,
+        radius: 18,
+        color: sectionColor,
+        branch,
+        phase: seeded(branch) * 4,
+      };
+      nodes.push(cluster);
+      links.push({
+        id: `${root.id}-${cluster.id}`,
+        source: root,
+        target: cluster,
+        color: sectionColor,
+        depth: 1,
+        path: curve(root, cluster, (seeded(branch) - 0.5) * 28),
       });
-      links.push({ source: "root", target: section.key, depth: 1, color });
-      for (const item of section.items) {
-        const t = seeded(item.key);
-        nodes.push({
-          id: item.key,
-          label: item.title,
+
+      const items = (Array.isArray(section.items) ? section.items : []).filter(Boolean).slice(0, 40);
+      items.forEach((item, itemIndex) => {
+        const spread = Math.min(Math.PI * 0.9, Math.max(0.45, items.length * 0.12));
+        const localAngle = angle + (items.length === 1 ? 0 : -spread / 2 + (itemIndex * spread) / (items.length - 1));
+        const ring = 82 + (itemIndex % 3) * 30;
+        const itemId = uniqueId(String(item.key || `${branch}-item-${itemIndex + 1}`));
+        const itemNode: MapNode = {
+          id: itemId,
+          label: String(item.title || `Asset ${itemIndex + 1}`),
           kind: "item",
-          radius: 4.5,
-          color,
-          itemKey: item.key,
-          phase: t * Math.PI * 2,
-          speed: 0.7 + t * 0.6,
-          amp: 0.07,
+          x: cluster.x + Math.cos(localAngle) * ring,
+          y: cluster.y + Math.sin(localAngle) * ring,
+          radius: 8,
+          color: sectionColor,
+          itemKey: String(item.key || ""),
+          branch,
+          phase: seeded(itemId) * 4,
+        };
+        nodes.push(itemNode);
+        links.push({
+          id: `${cluster.id}-${itemNode.id}`,
+          source: cluster,
+          target: itemNode,
+          color: sectionColor,
+          depth: 2,
+          path: curve(cluster, itemNode, (seeded(itemId) - 0.5) * 18),
         });
-        links.push({ source: section.key, target: item.key, depth: 2, color });
-      }
+      });
     });
     return { nodes, links };
   }, [payload]);
 
-  // Neighbour lookup so hovering lights a whole branch.
-  const adjacency = useMemo(() => {
-    const m = new Map<string, Set<string>>();
-    for (const l of graph.links) {
-      if (!m.has(l.source)) m.set(l.source, new Set());
-      if (!m.has(l.target)) m.set(l.target, new Set());
-      m.get(l.source)!.add(l.target);
-      m.get(l.target)!.add(l.source);
-    }
-    return m;
-  }, [graph.links]);
+  const activeNode = activeId ? graph.nodes.find((node) => node.id === activeId) : null;
+  const activeBranch = activeNode?.branch ?? null;
 
-  useEffect(() => {
-    const fg = fgRef.current;
-    if (!fg) return;
-    fg.d3Force("collide", forceCollide((n: any) => n.radius + 10));
-    fg.d3Force("charge")?.strength(-150);
-    fg.d3Force("link")?.distance((l: any) => (l.depth === 1 ? 90 : 46));
-    const t = setTimeout(() => fg.zoomToFit(600, 40), 700);
-    return () => clearTimeout(t);
-  }, [graph]);
-
-  const linkId = (l: any) =>
-    `${typeof l.source === "object" ? l.source.id : l.source}->${
-      typeof l.target === "object" ? l.target.id : l.target
-    }`;
-
-  const touchesHover = (l: any) => {
-    const h = hoverRef.current;
-    if (!h) return false;
-    const s = typeof l.source === "object" ? l.source.id : l.source;
-    const t = typeof l.target === "object" ? l.target.id : l.target;
-    return s === h || t === h;
+  const zoomAtCenter = (factor: number) => {
+    const current = cameraRef.current;
+    const nextK = clamp(current.k * factor, MIN_ZOOM, MAX_ZOOM);
+    const ratio = nextK / current.k;
+    setSafeCamera({
+      k: nextK,
+      x: VIEW_W / 2 - (VIEW_W / 2 - current.x) * ratio,
+      y: VIEW_H / 2 - (VIEW_H / 2 - current.y) * ratio,
+    });
   };
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointersRef.current.size === 2) {
+      const [a, b] = [...pointersRef.current.values()];
+      gestureRef.current = { distance: Math.hypot(a.x - b.x, a.y - b.y), camera: cameraRef.current };
+    }
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const previous = pointersRef.current.get(event.pointerId);
+    if (!previous) return;
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    if (pointersRef.current.size === 2 && gestureRef.current) {
+      const [a, b] = [...pointersRef.current.values()];
+      const distance = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+      const start = gestureRef.current;
+      const nextK = clamp(start.camera.k * (distance / Math.max(1, start.distance)), MIN_ZOOM, MAX_ZOOM);
+      setSafeCamera({ ...start.camera, k: nextK });
+      return;
+    }
+    const dx = ((event.clientX - previous.x) / rect.width) * VIEW_W;
+    const dy = ((event.clientY - previous.y) / rect.height) * VIEW_H;
+    const current = cameraRef.current;
+    setSafeCamera({ ...current, x: current.x + dx, y: current.y + dy });
+  };
+
+  const endPointer = (event: React.PointerEvent<HTMLDivElement>) => {
+    pointersRef.current.delete(event.pointerId);
+    gestureRef.current = null;
+  };
+
+  if (graph.nodes.length === 1) {
+    return (
+      <div className="flex h-full min-h-[360px] items-center justify-center rounded-2xl border border-border/60 bg-card/40 p-6">
+        <p className="max-w-xs text-center text-sm text-muted-foreground">There are no shared assets to map yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div
-      ref={wrapRef}
-      className="relative h-[min(68vh,640px)] w-full overflow-hidden rounded-2xl border border-border/60 bg-card/40"
+      ref={surfaceRef}
+      className="relative h-full min-h-[360px] w-full touch-none select-none overflow-hidden rounded-2xl border border-border/60 bg-card/40"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endPointer}
+      onPointerCancel={endPointer}
+      aria-label={`Interactive mind map for ${payload.venture.name}`}
     >
-      <ForceGraph2D
-        ref={fgRef}
-        width={size.w}
-        height={size.h}
-        graphData={graph as any}
-        cooldownTicks={120}
-        d3AlphaDecay={0.0228}
-        d3VelocityDecay={0.4}
-        backgroundColor="rgba(0,0,0,0)"
-        nodeRelSize={4}
-        onNodeHover={(n: any) => setHover(n?.id ?? null)}
-        onNodeClick={(n: any) => n?.itemKey && onOpenItem(n.itemKey)}
-        /* Fluid connectors: a fixed gentle curve per link (cheap, stable). */
-        linkCurvature={(l: any) => (reducedMotion ? 0 : 0.08 + seeded(linkId(l)) * 0.1)}
+      <svg className="h-full w-full" viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="tree" aria-label="Venture assets">
+        <defs>
+          {graph.nodes.filter((node) => node.kind !== "item").map((node) => (
+            <filter key={node.id} id={`${instanceId}-glow-${node.id}`} x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation={node.kind === "root" ? 10 : 6} result="blur" />
+              <feFlood floodColor={node.color} floodOpacity="0.45" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          ))}
+        </defs>
+        <g transform={`translate(${camera.x} ${camera.y}) scale(${camera.k})`}>
+          <g aria-hidden="true">
+            {graph.links.map((link) => {
+              const highlighted = !activeBranch || link.source.branch === activeBranch || link.target.branch === activeBranch;
+              return (
+                <g key={link.id} opacity={highlighted ? 1 : 0.12}>
+                  <path
+                    d={link.path}
+                    fill="none"
+                    stroke={link.depth === 1 ? link.color : "currentColor"}
+                    strokeOpacity={link.depth === 1 ? 0.42 : 0.18}
+                    strokeWidth={link.depth === 1 ? 2.2 : 1.2}
+                    strokeDasharray={reducedMotion ? undefined : link.depth === 1 ? "8 9" : "4 8"}
+                  >
+                    {!reducedMotion && (
+                      <animate attributeName="stroke-dashoffset" from="34" to="0" dur={link.depth === 1 ? "5s" : "7s"} repeatCount="indefinite" />
+                    )}
+                  </path>
+                  {!reducedMotion && (link.depth === 1 || graph.nodes.length < 55) && (
+                    <circle r={link.depth === 1 ? 3.2 : 2.2} fill={link.color}>
+                      <animateMotion dur={`${4.5 + seeded(link.id) * 3}s`} repeatCount="indefinite" path={link.path} />
+                    </circle>
+                  )}
+                </g>
+              );
+            })}
+          </g>
 
-        linkColor={(l: any) => {
-          const lit = touchesHover(l);
-          const dim = hoverRef.current && !lit;
-          if (lit) return withAlpha(l.color, 0.55);
-          return `rgba(255,255,255,${dim ? 0.05 : 0.14})`;
-        }}
-        linkWidth={(l: any) => (touchesHover(l) ? 1.8 : 1)}
-        /* Directional flow dots: root -> cluster -> asset */
-        linkDirectionalParticles={(l: any) => {
-          if (reducedMotion) return 0;
-          if (l.depth === 1) return compact ? 1 : 2;
-          return compact ? 0 : 1;
-        }}
-        linkDirectionalParticleSpeed={(l: any) =>
-          (l.depth === 1 ? 0.006 : 0.0035) * (touchesHover(l) ? 2 : 1)
-        }
-        linkDirectionalParticleWidth={(l: any) => (touchesHover(l) ? 2.6 : 1.8)}
-        linkDirectionalParticleColor={(l: any) => withAlpha(l.color, touchesHover(l) ? 0.95 : 0.6)}
-        onRenderFramePre={() => {
-          if (reducedMotion) return;
-          clockRef.current += 1 / 60;
-        }}
+          {graph.nodes.map((node) => {
+            const highlighted = !activeBranch || node.branch === activeBranch || node.kind === "root";
+            const isActive = activeId === node.id;
+            const showLabel = node.kind !== "item" || isActive || camera.k > 1.5;
+            const canOpen = node.kind === "item" && Boolean(node.itemKey);
+            return (
+              <g
+                key={node.id}
+                role={canOpen ? "treeitem" : undefined}
+                tabIndex={canOpen ? 0 : undefined}
+                aria-label={canOpen ? `Open ${node.label}` : undefined}
+                transform={`translate(${node.x} ${node.y})`}
+                opacity={highlighted ? 1 : 0.2}
+                className={canOpen ? "cursor-pointer outline-none" : undefined}
+                onMouseEnter={() => setActiveId(node.id)}
+                onMouseLeave={() => setActiveId(null)}
+                onFocus={() => setActiveId(node.id)}
+                onBlur={() => setActiveId(null)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (canOpen && node.itemKey) onOpenItem(node.itemKey);
+                }}
+                onKeyDown={(event) => {
+                  if (canOpen && node.itemKey && (event.key === "Enter" || event.key === " ")) {
+                    event.preventDefault();
+                    onOpenItem(node.itemKey);
+                  }
+                }}
+              >
+                <title>{node.label}</title>
+                <g>
+                  {!reducedMotion && (
+                    <animateTransform
+                      attributeName="transform"
+                      type="translate"
+                      values={`0 0; 0 ${node.kind === "item" ? -3 : -5}; 0 0`}
+                      dur={`${4.5 + node.phase}s`}
+                      begin={`${node.phase * -1}s`}
+                      repeatCount="indefinite"
+                    />
+                  )}
+                  <circle
+                    r={node.radius * (isActive ? 1.22 : 1)}
+                    fill={node.color}
+                    stroke={isActive ? "currentColor" : node.color}
+                    strokeWidth={isActive ? 3 : 1}
+                    filter={node.kind !== "item" ? `url(#${instanceId}-glow-${node.id})` : undefined}
+                  >
+                    {!reducedMotion && (
+                      <animate
+                        attributeName="r"
+                        values={`${node.radius};${node.radius * 1.07};${node.radius}`}
+                        dur={`${3.5 + node.phase}s`}
+                        repeatCount="indefinite"
+                      />
+                    )}
+                  </circle>
+                  {showLabel && (
+                    <text
+                      y={node.radius + 14}
+                      textAnchor="middle"
+                      fill="currentColor"
+                      fontSize={node.kind === "root" ? 18 : node.kind === "cluster" ? 14 : 11}
+                      fontWeight={node.kind === "item" ? 500 : 650}
+                      paintOrder="stroke"
+                      stroke="hsl(var(--background))"
+                      strokeWidth="5"
+                      strokeLinejoin="round"
+                    >
+                      {shortLabel(node.label, node.kind === "item" ? 26 : 32)}
+                    </text>
+                  )}
+                </g>
+              </g>
+            );
+          })}
+        </g>
+      </svg>
 
-        nodeCanvasObject={(node: any, ctx, scale) => {
-          const isHover = hover === node.id;
-          const neighbours = hover ? adjacency.get(hover) : null;
-          const isNear = neighbours ? neighbours.has(node.id) : false;
-          const dim = hover && !isHover && !isNear;
-
-          // Breathing radius + a small bob so each orb feels buoyant.
-          const t = clockRef.current;
-          const breathe = reducedMotion ? 1 : 1 + Math.sin(t * node.speed + node.phase) * node.amp;
-          const bob = reducedMotion ? 0 : Math.sin(t * node.speed * 0.9 + node.phase) * 1.2;
-          const r = node.radius * breathe * (isHover ? 1.3 : 1);
-          const cx = node.x;
-          const cy = node.y + bob;
-
-          // Soft glow behind the anchor orbs.
-          if (node.kind !== "item" || isHover) {
-            const glow = ctx.createRadialGradient(cx, cy, r * 0.4, cx, cy, r * 2.6);
-            glow.addColorStop(0, withAlpha(node.color, isHover ? 0.4 : 0.26));
-            glow.addColorStop(1, withAlpha(node.color, 0));
-            ctx.beginPath();
-            ctx.arc(cx, cy, r * 2.6, 0, 2 * Math.PI);
-            ctx.fillStyle = glow;
-            ctx.globalAlpha = dim ? 0.25 : 1;
-            ctx.fill();
-          }
-
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-          ctx.fillStyle = node.color;
-          ctx.globalAlpha = dim ? 0.22 : node.kind === "item" && !isHover ? 0.88 : 1;
-          ctx.fill();
-          ctx.globalAlpha = 1;
-
-          const showLabel = node.kind !== "item" || isHover || isNear || scale > 1.6;
-          if (!showLabel) return;
-          const fontSize = (node.kind === "root" ? 13 : node.kind === "cluster" ? 11 : 9) / scale;
-          ctx.font = `${fontSize}px ui-sans-serif, system-ui`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "top";
-          ctx.fillStyle =
-            node.kind === "item"
-              ? `rgba(255,255,255,${dim ? 0.25 : 0.72})`
-              : `rgba(255,255,255,${dim ? 0.3 : 0.95})`;
-          const label = node.label.length > 34 ? `${node.label.slice(0, 33)}…` : node.label;
-          ctx.fillText(label, cx, cy + r + 2 / scale);
-        }}
-        nodePointerAreaPaint={(node: any, color, ctx) => {
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, node.radius + 5, 0, 2 * Math.PI);
-          ctx.fill();
-        }}
-      />
-      <p
-        className={cn(
-          "pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-background/70 px-3 py-1",
-          "text-[11px] text-muted-foreground backdrop-blur",
-        )}
-      >
-        Drag to explore · click any node to open that asset
+      <div className="absolute right-3 top-3 flex gap-1 rounded-md border border-border/60 bg-background/80 p-1 backdrop-blur">
+        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => zoomAtCenter(1.2)} aria-label="Zoom in">
+          <Plus />
+        </Button>
+        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => zoomAtCenter(1 / 1.2)} aria-label="Zoom out">
+          <Minus />
+        </Button>
+        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSafeCamera({ x: 0, y: 0, k: 1 })} aria-label="Reset view">
+          <RotateCcw />
+        </Button>
+      </div>
+      <p className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-background/75 px-3 py-1 text-center text-[11px] text-muted-foreground backdrop-blur">
+        Drag to explore · select an orb to open its asset
       </p>
     </div>
   );
