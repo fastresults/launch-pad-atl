@@ -52,7 +52,9 @@ const HARD_EXCLUDED_DOC_TYPES = new Set(["ai_tool_stack_recommendation"]);
 type Item = {
   key: string;
   title: string;
-  kind: "doc" | "gallery";
+  kind: "doc" | "gallery" | "timeline";
+  timeline?: { data: unknown; scenario: unknown } | null;
+
   subtitle?: string | null;
   body?: string | null;
   heroImageUrl?: string | null;
