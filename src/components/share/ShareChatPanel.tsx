@@ -192,6 +192,7 @@ export function ShareChatPanel({
       >
 
         <textarea
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -204,6 +205,7 @@ export function ShareChatPanel({
           placeholder={recording ? "Listening…" : "Type your question"}
           className="max-h-28 min-h-[40px] flex-1 resize-none rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/60"
         />
+
         <Button
           type="button"
           variant={recording ? "destructive" : "outline"}
