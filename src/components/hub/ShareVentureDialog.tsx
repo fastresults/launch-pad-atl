@@ -54,6 +54,7 @@ export function ShareVentureDialog({
   const [expiry, setExpiry] = useState("");
   const [chatEnabled, setChatEnabled] = useState(true);
   const [mapEnabled, setMapEnabled] = useState(true);
+  const [timelineEnabled, setTimelineEnabled] = useState(true);
 
 
   const shareQ = useQuery({
@@ -70,6 +71,7 @@ export function ShareVentureDialog({
     setExpiry(share.expires_at ? share.expires_at.slice(0, 10) : "");
     setChatEnabled((share as any).chat_enabled !== false);
     setMapEnabled((share as any).map_enabled !== false);
+    setTimelineEnabled(!(share.excluded_keys ?? []).includes(TIMELINE_KEY));
   }, [share?.id]);
 
 
@@ -91,6 +93,12 @@ export function ShareVentureDialog({
         expires_at: useExpiry && expiry ? new Date(`${expiry}T23:59:59Z`).toISOString() : null,
         chat_enabled: chatEnabled,
         map_enabled: mapEnabled,
+        excluded_keys: (() => {
+          const keys = new Set(share.excluded_keys ?? []);
+          if (timelineEnabled) keys.delete(TIMELINE_KEY);
+          else keys.add(TIMELINE_KEY);
+          return Array.from(keys);
+        })(),
       };
       if (!usePassword) patch.password_hash = null;
       else if (password) patch.password_hash = await sha256Hex(password);
@@ -310,6 +318,22 @@ export function ShareVentureDialog({
                     </p>
                   </div>
                   <Switch checked={chatEnabled} onCheckedChange={setChatEnabled} />
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Launch timeline</p>
+                    <p className="text-xs text-muted-foreground">
+                      {hasTimeline
+                        ? "Visitors can pan the build and run their own what-ifs."
+                        : "Generate the timeline in the hub to include it here."}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={timelineEnabled && hasTimeline}
+                    disabled={!hasTimeline}
+                    onCheckedChange={setTimelineEnabled}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between gap-4">
