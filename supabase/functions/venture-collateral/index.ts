@@ -79,11 +79,48 @@ function seedDetails(kit: any, ctxData: any): ContactDetails {
 async function loadKit(admin: any, snapshotId: string) {
   const { data: kit } = await admin
     .from("venture_brand_kits")
-    .select("palette, typography, logos, voice, dna, status, contact_details, contact_verified_at, art_direction")
+    .select(
+      "palette, typography, logos, voice, dna, status, contact_details, contact_verified_at, art_direction, contact_details_suggested, contact_suggested_at",
+    )
     .eq("snapshot_id", snapshotId)
     .maybeSingle();
   return kit;
 }
+
+/**
+ * Structured seed first, then an AI pass over the founder's own prose for
+ * whatever is still blank. Cached on the kit so re-opening the form is free.
+ */
+async function seedWithSuggestions(
+  admin: any,
+  snapshotId: string,
+  kit: any,
+  vctx: any,
+  opts: { force?: boolean } = {},
+): Promise<{ details: ContactDetails; suggested: Record<string, { value: string; basis: string }> }> {
+  const seeded = seedDetails(kit, vctx);
+
+  let suggested = (kit?.contact_details_suggested ?? null) as Record<string, any> | null;
+  if (opts.force || !suggested) {
+    suggested = await suggestDetails(admin, snapshotId, vctx, seeded);
+    await admin
+      .from("venture_brand_kits")
+      .update({ contact_details_suggested: suggested, contact_suggested_at: new Date().toISOString() })
+      .eq("snapshot_id", snapshotId);
+  }
+
+  // Structured data always wins — suggestions only fill genuine gaps.
+  const merged: ContactDetails = { ...seeded };
+  const applied: Record<string, { value: string; basis: string }> = {};
+  for (const [key, entry] of Object.entries(suggested ?? {})) {
+    const value = tidy((entry as any)?.value);
+    if (!value || tidy((merged as any)[key])) continue;
+    (merged as any)[key] = value;
+    applied[key] = { value, basis: tidy((entry as any)?.basis) || "inferred from your own material" };
+  }
+  return { details: normalizeDetails(merged), suggested: applied };
+}
+
 
 async function buildCtx(
   admin: any,
