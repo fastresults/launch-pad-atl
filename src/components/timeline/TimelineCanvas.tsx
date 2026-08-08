@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Layout, LaidOutStep } from "@/lib/timeline-schedule";
-import { dayToDate } from "@/lib/timeline-schedule";
+import { dayToDate, formatDay } from "@/lib/timeline-schedule";
 import type { RevenueProjection } from "@/lib/timeline-revenue";
 import { money } from "@/lib/timeline-revenue";
 import type { TimelineScenario, VentureTimeline } from "@/lib/venture-timeline";
