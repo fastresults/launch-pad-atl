@@ -86,7 +86,10 @@ export function ShareBrain({
 
 
   return (
-    <section className={`flex min-h-0 min-w-0 flex-col ${mobile ? "h-full pb-[env(safe-area-inset-bottom)]" : "h-full"}`}>
+    <section
+      ref={rootRef}
+      className={`flex min-h-0 min-w-0 flex-col ${mobile ? "h-full pb-[env(safe-area-inset-bottom)]" : "h-full"}`}
+    >
       {/* One compact row: title and tabs share the line so the input stays on screen. */}
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 pb-4">
         <div className="min-w-0">
@@ -97,26 +100,37 @@ export function ShareBrain({
         </div>
 
         {tabs.length > 1 && (
-          <div className="inline-flex shrink-0 rounded-full border border-border/60 bg-card/50 p-1">
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] transition-colors",
-                  tab === t.id
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <t.icon className="h-3.5 w-3.5" />
-                {t.label}
-              </button>
-            ))}
+          <div className="shrink-0">
+            <div className="inline-flex rounded-full border border-border/60 bg-card/50 p-1">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    stop();
+                    setTab(t.id);
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] transition-colors",
+                    tab === t.id
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <t.icon className="h-3.5 w-3.5" />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            {cycling && visible && (
+              <div className="mt-1.5 h-[2px] w-full overflow-hidden rounded-full bg-border/50">
+                <div key={tab} className="h-full w-full origin-left bg-primary/70 animate-[share-tab-cycle_4s_linear]" />
+              </div>
+            )}
           </div>
         )}
       </header>
+
 
       <div className="min-h-0 flex-1">
         {tab === "ask" && chatOn && (
