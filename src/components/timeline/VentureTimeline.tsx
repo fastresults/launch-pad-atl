@@ -245,6 +245,32 @@ export function VentureTimeline({
         )}
       </div>
 
+      {!isMobile && (
+        <TimelineList
+          timeline={timeline}
+          layout={layout}
+          scenario={scenario}
+          selectedId={selected}
+          onSelect={setSelected}
+          hoveredId={hovered}
+          onHover={setHovered}
+          onOpenAsset={onOpenAsset}
+          onAsk={onAsk}
+          readOnly={readOnly}
+          onNudge={
+            readOnly
+              ? undefined
+              : (id, days) =>
+                  setScenario((s) => ({
+                    ...s,
+                    nudges: { ...(s.nudges ?? {}), [id]: Math.max(0, (s.nudges?.[id] ?? 0) + days) },
+                  }))
+          }
+        />
+      )}
+
+
+
       {onSaveScenario && dirty && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 p-3">
           <Sparkle className="h-4 w-4 text-primary" />
