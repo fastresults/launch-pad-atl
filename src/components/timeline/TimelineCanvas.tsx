@@ -58,13 +58,23 @@ export function TimelineCanvas({
   selectedId,
   onSelect,
   onNudge,
+  hoveredId,
+  onHover,
   reducedMotion,
 }: CanvasProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(900);
   const [pxPerDay, setPxPerDay] = useState(4);
   const [originDay, setOriginDay] = useState(0);
-  const [hover, setHover] = useState<string | null>(null);
+  const [hoverLocal, setHoverLocal] = useState<string | null>(null);
+  const [hoverPt, setHoverPt] = useState<{ x: number; y: number } | null>(null);
+  const hover = hoverLocal ?? hoveredId ?? null;
+  const setHover = (id: string | null) => {
+    setHoverLocal(id);
+    if (!id) setHoverPt(null);
+    onHover?.(id);
+  };
+
 
   const lanes = layout.activeLanes;
   const showRibbon = !!revenue && revenue.points.length > 0;
