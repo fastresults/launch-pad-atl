@@ -46,10 +46,22 @@ export default function VentureSharePage() {
   /** On a phone the second brain is a full-screen sheet, not a pane section. */
   const [brainOpen, setBrainOpen] = useState(false);
   const [blurbOpen, setBlurbOpen] = useState(false);
+  /** Assets already opened this session, so the contents shows progress. */
+  const [viewed, setViewed] = useState<string[]>(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem(`share-viewed:${token}`) ?? "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [swipeHint, setSwipeHint] = useState(
+    () => typeof localStorage !== "undefined" && !localStorage.getItem("share-swipe-hint"),
+  );
   const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
   const touchX = useRef<number | null>(null);
   const touchY = useRef<number | null>(null);
+
 
 
 
