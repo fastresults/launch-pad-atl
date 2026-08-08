@@ -171,19 +171,23 @@ export function TimelineCanvas({
       setOriginDay(clampOrigin(anchorDay - (px - PAD_L) / next));
     };
 
+    const onMove = () => {
+      if (!armedRef.current) arm();
+    };
+
     el.addEventListener("wheel", onWheel, { passive: false });
     el.addEventListener("pointerenter", arm);
-    el.addEventListener("pointermove", () => {
-      if (!armedRef.current) arm();
-    });
+    el.addEventListener("pointermove", onMove);
     el.addEventListener("pointerleave", disarm);
     return () => {
       el.removeEventListener("wheel", onWheel);
       el.removeEventListener("pointerenter", arm);
+      el.removeEventListener("pointermove", onMove);
       el.removeEventListener("pointerleave", disarm);
       disarm();
     };
   }, [clampOrigin]);
+
 
 
   // --- drag to pan ------------------------------------------------------------
