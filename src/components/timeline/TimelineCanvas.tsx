@@ -243,14 +243,18 @@ export function TimelineCanvas({
                 height={height}
                 fill={i % 2 ? "hsl(0 0% 100% / 0.028)" : "hsl(0 0% 100% / 0.055)"}
               />
-              <text
-                x={x(p.from) + 8}
-                y={16}
-                className="fill-white/45"
-                style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase" }}
-              >
-                {p.label}
-              </text>
+              {/* A phase name that doesn't fit its band is worse than no name. */}
+              {(p.to - p.from) * pxPerDay > p.label.length * 6.6 + 16 && (
+                <text
+                  x={x(p.from) + 8}
+                  y={16}
+                  className="fill-white/45"
+                  style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase" }}
+                >
+                  {p.label}
+                </text>
+              )}
+
             </g>
           ))}
 
