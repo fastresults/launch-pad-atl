@@ -111,7 +111,18 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
             />
           )}
 
-          {kit && <div className="border-t border-white/10" />}
+          {kit && (
+            <>
+              <div className="border-t border-white/10" />
+              <BrandBoardSections
+                board={kitToBrandBoard(kit)}
+                blocks={["mood", "dna", "voice", "ctas"]}
+                emptyHint="Mood board, brand DNA, voice and calls to action appear here once you complete steps 3–5 of the brand wizard."
+              />
+              <div className="border-t border-white/10" />
+            </>
+          )}
+
 
           <BrandCollateral snapshot={snapshot} locked={locked} />
         </div>
