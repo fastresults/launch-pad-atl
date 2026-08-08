@@ -6,15 +6,18 @@ Today a share link looks like:
 https://startuplabs.online/v/7356a1c2d9f04b8e1a7c... (48 random characters)
 ```
 
-After this change it looks like:
+After this change it looks like the venture's actual name — for "Anderson Residential Elderly Care":
 
 ```text
-https://startuplabs.online/v/harbor-oak-care
+https://startuplabs.online/v/anderson-residential-elderly-care
 ```
+
+No invented or unrelated words are ever used. The slug always comes from the venture's own name (or from a name the founder types themselves).
 
 ## What changes
 
-1. **Every share gets a readable slug.** When a founder creates a share link, the slug is derived from the venture name (lowercased, hyphenated, trimmed to ~32 characters). If that slug is already taken, a short suffix is added (`harbor-oak-care-2`).
+1. **Every share gets a slug taken from the venture name.** On create, the venture name is lowercased and hyphenated (`Anderson Residential Elderly Care` → `anderson-residential-elderly-care`). Filler words are dropped only if needed to fit ~40 characters, keeping the leading, most identifying words (`anderson-residential-elderly-care`, then `anderson-residential`, then `anderson`). If the slug is already taken, a numeric suffix is added (`anderson-residential-2`).
+
 2. **Founders can edit it.** The share dialog shows the slug inline with the domain, with an "Edit" control. Rules: 3–40 characters, lowercase letters, numbers and hyphens only, must be unique, a small reserved-word list is blocked. Availability is checked as they type, and saving updates the live link.
 3. **No-name fallback.** If a venture has no usable name, the link falls back to a short random slug of 8 characters (`/v/k3m9dq2p`) instead of the current 48.
 4. **Old links keep working.** Existing long tokens continue to resolve, so anything already sent out stays live. The dialog shows the new short link for copying.
