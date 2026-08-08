@@ -167,8 +167,30 @@ export function TimelineCanvas({
 
   const ticks = useMemo(() => buildTicks(originDay, plotW / pxPerDay, pxPerDay), [originDay, plotW, pxPerDay]);
 
-  const laneY = (i: number) => RULER_H + i * LANE_H;
-  const ribbonY = RULER_H + lanes.length * LANE_H + 12;
+  // Milestone labels get their own band under the ruler, stacked into as many
+  // rows as the current zoom needs, so they never overprint each other or the lanes.
+  const milestonePlacement = useMemo(() => {
+    const rowEnds: number[] = [];
+    const placed = [...layout.milestones]
+      .sort((a, b) => a.day - b.day)
+      .map((m) => {
+        const left = x(m.day) + 9;
+        const w = m.milestone.label.length * 5.6 + 14;
+        let row = rowEnds.findIndex((end) => left > end);
+        if (row < 0) {
+          row = rowEnds.length;
+          rowEnds.push(0);
+        }
+        rowEnds[row] = left + w;
+        return { m, row: Math.min(row, 2) };
+      });
+    return { placed, rows: Math.min(Math.max(rowEnds.length, 1), 3) };
+  }, [layout.milestones, x]);
+
+  const bandH = milestonePlacement.rows * 13 + 6;
+  const laneY = (i: number) => RULER_H + bandH + i * LANE_H;
+  const ribbonY = RULER_H + bandH + lanes.length * LANE_H + 12;
+
 
   const phaseBands = useMemo(() => {
     const out: { id: string; label: string; from: number; to: number }[] = [];
