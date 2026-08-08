@@ -35,8 +35,15 @@ export default function VentureSharePage() {
   const [stepId, setStepId] = useState<string | null>(null);
   const [seedQuestion, setSeedQuestion] = useState<string | null>(null);
   const [readerScenario, setReaderScenario] = useState<TimelineScenario | null>(null);
+  const isMobile = useIsMobile();
+  /** On a phone the second brain is a full-screen sheet, not a pane section. */
+  const [brainOpen, setBrainOpen] = useState(false);
+  const [blurbOpen, setBlurbOpen] = useState(false);
   const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
+  const touchX = useRef<number | null>(null);
+  const touchY = useRef<number | null>(null);
+
 
 
   const q = useQuery({
