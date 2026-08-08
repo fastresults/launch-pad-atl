@@ -3449,6 +3449,7 @@ export type Database = {
           differentiation_statement: string | null
           enrichment_progress: Json | null
           epiphany_runs: Json
+          executive_metrics: Json | null
           executive_summary: string | null
           executive_summary_at: string | null
           extracted_data: Json | null
@@ -3500,6 +3501,7 @@ export type Database = {
           differentiation_statement?: string | null
           enrichment_progress?: Json | null
           epiphany_runs?: Json
+          executive_metrics?: Json | null
           executive_summary?: string | null
           executive_summary_at?: string | null
           extracted_data?: Json | null
@@ -3551,6 +3553,7 @@ export type Database = {
           differentiation_statement?: string | null
           enrichment_progress?: Json | null
           epiphany_runs?: Json
+          executive_metrics?: Json | null
           executive_summary?: string | null
           executive_summary_at?: string | null
           extracted_data?: Json | null
