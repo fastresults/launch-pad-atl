@@ -155,7 +155,7 @@ export function ShareVentureDialog({
     },
   });
 
-  const url = share ? shareUrl(share.token) : "";
+  const url = share ? shareUrl(share) : "";
 
   const copy = async () => {
     await navigator.clipboard.writeText(url);
