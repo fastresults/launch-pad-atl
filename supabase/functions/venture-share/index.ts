@@ -74,17 +74,27 @@ Deno.serve(async (req) => {
     const token = typeof body?.token === "string" ? body.token.trim() : "";
     const password = typeof body?.password === "string" ? body.password : "";
     const action = body?.action === "track" ? "track" : "get";
-    if (!token || token.length < 8 || token.length > 128) {
+    if (!token || token.length < 3 || token.length > 128) {
       return json({ error: "Invalid link" }, 400);
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    const { data: share } = await admin
+    // Links carry either the readable slug (new) or the long token (legacy).
+    let { data: share } = await admin
       .from("venture_shares")
       .select("*")
-      .eq("token", token)
+      .ilike("slug", token)
+      .is("revoked_at", null)
       .maybeSingle();
+
+    if (!share) {
+      ({ data: share } = await admin
+        .from("venture_shares")
+        .select("*")
+        .eq("token", token)
+        .maybeSingle());
+    }
 
     if (!share || share.revoked_at) return json({ error: "This link is no longer available.", code: "REVOKED" }, 404);
     if (share.expires_at && new Date(share.expires_at).getTime() < Date.now()) {
