@@ -1,5 +1,5 @@
 import { ArrowRight, ChevronDown, CalendarClock, FileText, MessageCircle } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Layout } from "@/lib/timeline-schedule";
 import { formatDayShort } from "@/lib/timeline-schedule";
