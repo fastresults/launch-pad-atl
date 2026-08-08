@@ -396,41 +396,29 @@ export function TimelineCanvas({
           {milestonePlacement.placed.map(({ m, row }) => (
               <g key={m.milestone.id} transform={`translate(${x(m.day)},${RULER_H - 2})`}>
 
-                <line
-                  y1={0}
-                  y2={lanes.length * LANE_H + 6}
-                  stroke={MILESTONE_TINT[m.milestone.kind]}
-                  strokeOpacity={0.32}
-                />
-                <rect
-                  x={-5}
-                  y={-5}
-                  width={10}
-                  height={10}
-                  transform="rotate(45)"
-                  fill={MILESTONE_TINT[m.milestone.kind]}
-                />
-                {/* Beyond three rows the header turns to noise — the diamond still marks it. */}
-                {row < 3 && (
-                  <>
-                    {row > 0 && (
-                      <line
-                        x1={0}
-                        y1={0}
-                        x2={0}
-                        y2={row * 13}
-                        stroke={MILESTONE_TINT[m.milestone.kind]}
-                        strokeOpacity={0.45}
-                      />
-                    )}
-                    <text x={9} y={4 + row * 13} style={{ fontSize: 10.5 }} className="fill-white/80">
-                      {m.milestone.label}
-                    </text>
-                  </>
-                )}
-              </g>
-            ));
-          })()}
+              <line
+                y1={0}
+                y2={bandH + lanes.length * LANE_H + 6}
+                stroke={MILESTONE_TINT[m.milestone.kind]}
+                strokeOpacity={0.32}
+              />
+              <rect
+                x={-5}
+                y={-5}
+                width={10}
+                height={10}
+                transform="rotate(45)"
+                fill={MILESTONE_TINT[m.milestone.kind]}
+              />
+              {/* Past three rows the header turns to noise — the diamond still marks the day. */}
+              {row < 3 && (
+                <text x={9} y={6 + row * 13} style={{ fontSize: 10.5 }} className="fill-white/80">
+                  {m.milestone.label}
+                </text>
+              )}
+            </g>
+          ))}
+
 
 
           {/* today */}
