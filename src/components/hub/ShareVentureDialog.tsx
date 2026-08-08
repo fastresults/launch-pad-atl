@@ -48,6 +48,8 @@ export function ShareVentureDialog({
   const [usePassword, setUsePassword] = useState(false);
   const [useExpiry, setUseExpiry] = useState(false);
   const [expiry, setExpiry] = useState("");
+  const [chatEnabled, setChatEnabled] = useState(true);
+
 
   const shareQ = useQuery({
     queryKey: ["venture-share-owner", snapshotId],
