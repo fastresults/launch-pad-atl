@@ -189,6 +189,16 @@ export function ShareVentureDialog({
 
                 <div className="flex items-center justify-between gap-4">
                   <div>
+                    <p className="text-sm font-medium">Ask-anything chat</p>
+                    <p className="text-xs text-muted-foreground">
+                      Visitors can question the venture by typing or speaking.
+                    </p>
+                  </div>
+                  <Switch checked={chatEnabled} onCheckedChange={setChatEnabled} />
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
                     <p className="text-sm font-medium">Expire the link</p>
                     <p className="text-xs text-muted-foreground">Stops working after this date.</p>
                   </div>
@@ -197,7 +207,34 @@ export function ShareVentureDialog({
                 {useExpiry && (
                   <Input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} />
                 )}
+
+                <Separator />
+
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Header art</p>
+                    <p className="text-xs text-muted-foreground">
+                      {backfill.isPending
+                        ? "Generating missing header images…"
+                        : "Fill in any asset that is still missing its header image."}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => backfill.mutate()}
+                    disabled={backfill.isPending}
+                  >
+                    {backfill.isPending ? (
+                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImageIcon className="mr-1.5 h-4 w-4" />
+                    )}
+                    Generate missing
+                  </Button>
+                </div>
               </div>
+
             </>
           )}
         </div>
