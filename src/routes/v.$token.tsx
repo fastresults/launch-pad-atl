@@ -5,7 +5,6 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { fetchSharePayload, trackShareView, type SharePayload } from "@/lib/venture-share.functions";
 import { ShareSidebar, BRAIN_KEY } from "@/components/share/ShareSidebar";
 import { ShareSection } from "@/components/share/ShareSection";
-import { ShareChatPanel } from "@/components/share/ShareChatPanel";
 import { ShareBrain } from "@/components/share/ShareBrain";
 
 import { Button } from "@/components/ui/button";
