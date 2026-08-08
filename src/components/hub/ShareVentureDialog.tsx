@@ -157,6 +157,30 @@ export function ShareVentureDialog({
 
   const url = share ? shareUrl(share) : "";
 
+  const [slugDraft, setSlugDraft] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
+  useEffect(() => {
+    if (share && !slugTouched) setSlugDraft(share.slug ?? share.token);
+  }, [share?.id, share?.slug, slugTouched]);
+
+  const cleanedSlug = slugDraft.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  const slugIssue = cleanedSlug ? slugError(cleanedSlug) : "Choose an address.";
+  const slugChanged = !!share && cleanedSlug !== (share.slug ?? "");
+
+  const saveSlug = useMutation({
+    mutationFn: async () => {
+      if (slugIssue) throw new Error(slugIssue);
+      if (!(await isSlugAvailable(cleanedSlug))) throw new Error("That address is already taken.");
+      return updateVentureShare(share!.id, { slug: cleanedSlug });
+    },
+    onSuccess: () => {
+      setSlugTouched(false);
+      invalidate();
+      toast.success("Link address updated");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not update the address"),
+  });
+
   const copy = async () => {
     await navigator.clipboard.writeText(url);
     setCopied(true);
