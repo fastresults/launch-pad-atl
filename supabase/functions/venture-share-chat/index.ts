@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     const [snapRes, typesRes, docsRes] = await Promise.all([
       admin
         .from("venture_snapshots")
-        .select("company_name,concept_summary,value_proposition,city,region,industry,founder_name")
+        .select("company_name,concept_summary,value_proposition,city,region,industry,founder_name,executive_summary")
         .eq("id", snapshotId)
         .maybeSingle(),
       admin.from("venture_document_types").select("type,name,sort_order").eq("active", true),
@@ -107,6 +107,9 @@ Deno.serve(async (req) => {
       "If the answer is not in the material, say so plainly and suggest which section comes closest.",
       "Be concise and concrete: short paragraphs or tight bullets, plain language, no filler preamble.",
       "Never invent numbers, dates, customers, or partnerships.",
+      "",
+      snap.executive_summary ? "# Executive summary" : "",
+      snap.executive_summary ?? "",
       "",
       "# Reference material",
       context || "(no documents available)",
