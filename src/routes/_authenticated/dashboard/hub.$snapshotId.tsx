@@ -1302,8 +1302,22 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       )}
 
 
+      {/* The whole build, end to end, as one thing the founder can argue with. */}
+      <TimelineHubCard
+        snapshotId={snapshot.id}
+        timeline={(snapshot as any).venture_timeline}
+        scenario={(snapshot as any).venture_timeline_scenario}
+        metrics={(snapshot as any).executive_metrics}
+        onOpenAsset={(key) => {
+          const d = docs.find((x: any) => x.document_type === key);
+          if (d) setViewerDoc(d);
+          else toast.info("That asset hasn't been written yet.");
+        }}
+      />
+
       <div className="space-y-3">
         <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} variant={isGuided ? "minimal" : "full"} />
+
         <LaunchPlanner14Day
         docs={docs}
         typeByKey={typeByKey}
