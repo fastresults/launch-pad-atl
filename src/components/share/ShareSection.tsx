@@ -60,7 +60,10 @@ export function ShareSection({ item, accent }: { item: ShareItem; accent?: strin
         <CoverPlate title={item.title} accent={accent} />
       )}
 
+      {!!item.metrics?.length && <ExecutiveMetrics metrics={item.metrics} accent={accent} />}
+
       {item.brandBoard && <ShareBrandBoard board={item.brandBoard} />}
+
 
 
 
