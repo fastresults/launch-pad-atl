@@ -8,6 +8,8 @@ import { ShareSidebar, BRAIN_KEY, TIMELINE_KEY } from "@/components/share/ShareS
 import { decodeScenario, encodeScenario, type TimelineScenario } from "@/lib/venture-timeline";
 import { ShareSection } from "@/components/share/ShareSection";
 import { ShareBrain } from "@/components/share/ShareBrain";
+import { SectionExportMenu } from "@/components/share/SectionExportMenu";
+import { buildFullDoc, buildSectionDoc } from "@/lib/share-export";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -324,6 +326,11 @@ export default function VentureSharePage() {
                     ) : null}
                   </p>
                 </div>
+                <SectionExportMenu
+                  label="Export everything"
+                  className="h-11 w-11"
+                  build={() => buildFullDoc(payload)}
+                />
                 {payload.venture.website && (
                   <a
                     href={`https://${payload.venture.website}`}
@@ -434,11 +441,17 @@ export default function VentureSharePage() {
                     </a>
                   </Button>
                 )}
+                <SectionExportMenu
+                  variant="button"
+                  label="Export everything"
+                  className={`shrink-0 ${payload.venture.website ? "" : "ml-auto"}`}
+                  build={() => buildFullDoc(payload)}
+                />
                 {brainOn && (
                   <Button
                     variant="outline"
                     size={condensed ? "sm" : "default"}
-                    className={`hidden shrink-0 md:inline-flex ${payload.venture.website ? "" : "ml-auto"}`}
+                    className="hidden shrink-0 md:inline-flex"
                     onClick={() => goTo(BRAIN_KEY)}
                   >
                     <Sparkle className="mr-1.5 h-4 w-4" />
@@ -512,6 +525,12 @@ export default function VentureSharePage() {
                       onSelectStep={selectStep}
                       scenarioOverride={timelineActive ? readerScenario : null}
                       onScenarioChange={onScenarioChange}
+                      exportSlot={
+                        <SectionExportMenu
+                          label={`Export ${activeItem.title}`}
+                          build={() => buildSectionDoc(payload, activeItem)}
+                        />
+                      }
                     />
                   )}
                 </>
