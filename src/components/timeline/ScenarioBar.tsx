@@ -19,15 +19,19 @@ export function ScenarioBar({
   scenario,
   onChange,
   onReset,
+  resetLabel,
   dirty,
   readOnly,
 }: {
   scenario: TimelineScenario;
   onChange: (next: TimelineScenario) => void;
   onReset: () => void;
+  /** Public showcases return to the founder's plan, not to a blank default. */
+  resetLabel?: string;
   dirty: boolean;
   readOnly?: boolean;
 }) {
+
   const set = (patch: Partial<TimelineScenario>) => onChange({ ...scenario, ...patch });
   const setLane = (id: string, patch: Partial<TimelineScenario["lanes"][number]>) =>
     set({ lanes: scenario.lanes.map((l) => (l.id === id ? { ...l, ...patch } : l)) });
@@ -60,7 +64,8 @@ export function ScenarioBar({
             className="ml-auto h-7 gap-1.5 text-[12px] text-white/60 hover:text-white"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Reset
+            {resetLabel ?? "Reset"}
+
           </Button>
         )}
       </div>

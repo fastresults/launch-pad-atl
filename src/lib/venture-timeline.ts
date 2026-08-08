@@ -518,3 +518,48 @@ export const BUDGET_LABELS = ["Bootstrapped", "A little to spend", "Funded start
 export function laneLabel(lanes: TimelineLane[], id: LaneId) {
   return lanes.find((l) => l.id === id)?.name ?? id;
 }
+
+/**
+ * Compact URL encoding for a scenario, so a reader on a shared showcase can
+ * pass their own what-if back to the founder as a plain link.
+ */
+export function encodeScenario(s: TimelineScenario): string {
+  const compact = {
+    l: s.lanes.map((l) => [l.id, Math.round(l.hoursPerWeek), l.enabled ? 1 : 0]),
+    d: s.startDate,
+    b: (s.blackouts ?? []).map((x) => [Math.round(x.startDay), Math.round(x.endDay), x.label]),
+    u: s.budgetLevel,
+    f: s.freedomLineMonthly,
+    n: s.nudges ?? {},
+    t: s.label ?? null,
+  };
+  const json = JSON.stringify(compact);
+  const b64 = typeof btoa === "function" ? btoa(unescape(encodeURIComponent(json))) : "";
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** Inverse of encodeScenario. Returns null when the string isn't ours. */
+export function decodeScenario(raw: string | null | undefined): TimelineScenario | null {
+  if (!raw) return null;
+  try {
+    const b64 = raw.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(escape(atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4))));
+    const c = JSON.parse(json);
+    if (!c || typeof c !== "object") return null;
+    return normalizeScenario({
+      lanes: Array.isArray(c.l)
+        ? c.l.map((l: any) => ({ id: l[0], hoursPerWeek: l[1], enabled: l[2] !== 0 }))
+        : undefined,
+      startDate: c.d,
+      blackouts: Array.isArray(c.b)
+        ? c.b.map((x: any) => ({ startDay: x[0], endDay: x[1], label: x[2] }))
+        : [],
+      budgetLevel: c.u,
+      freedomLineMonthly: c.f,
+      nudges: c.n,
+      label: c.t,
+    });
+  } catch {
+    return null;
+  }
+}

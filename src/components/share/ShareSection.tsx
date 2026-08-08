@@ -5,6 +5,8 @@ import { ShareBrandBoard } from "@/components/share/ShareBrandBoard";
 import { ExecutiveMetrics } from "@/components/share/ExecutiveMetrics";
 import { VentureTimeline } from "@/components/timeline/VentureTimeline";
 import { TimelineBoundary } from "@/components/timeline/TimelineBoundary";
+import type { TimelineScenario } from "@/lib/venture-timeline";
+
 
 
 import { filterShowcaseContent } from "@/lib/share-content-filter";
@@ -36,20 +38,44 @@ function CoverPlate({ title, accent }: { title: string; accent?: string | null }
 }
 
 /** One asset in the reading pane: document body, hero art, or an image grid. */
-export function ShareSection({ item, accent }: { item: ShareItem; accent?: string | null }) {
+export function ShareSection({
+  item,
+  accent,
+  onOpenAsset,
+  onAsk,
+  selectedStepId,
+  onSelectStep,
+  scenarioOverride,
+  onScenarioChange,
+}: {
+  item: ShareItem;
+  accent?: string | null;
+  /** Timeline steps can jump the reader to the asset they produce. */
+  onOpenAsset?: (assetKey: string) => void;
+  /** Timeline steps can hand a question to the second brain. */
+  onAsk?: (question: string) => void;
+  selectedStepId?: string | null;
+  onSelectStep?: (id: string | null) => void;
+  scenarioOverride?: TimelineScenario | null;
+  onScenarioChange?: (s: TimelineScenario, dirty: boolean) => void;
+}) {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
 
   return (
-    <section id={item.key} className="min-w-0 max-w-full scroll-mt-24 overflow-x-clip border-t border-border/60 py-14 first:border-t-0">
-      <header className="mb-7">
-        <h2 className="font-serif text-[28px] leading-tight tracking-tight text-foreground md:text-[34px]">
-          {item.title}
-        </h2>
-        {item.subtitle && (
-          <p className="mt-2 text-sm text-muted-foreground">{item.subtitle}</p>
-        )}
-      </header>
+    <section id={item.key} className={`min-w-0 max-w-full scroll-mt-24 overflow-x-clip border-t border-border/60 first:border-t-0 ${item.kind === "timeline" ? "py-6" : "py-14"}`}>
+      {/* The timeline carries its own headline — a second one only repeats it. */}
+      {item.kind !== "timeline" && (
+        <header className="mb-7">
+          <h2 className="font-serif text-[28px] leading-tight tracking-tight text-foreground md:text-[34px]">
+            {item.title}
+          </h2>
+          {item.subtitle && (
+            <p className="mt-2 text-sm text-muted-foreground">{item.subtitle}</p>
+          )}
+        </header>
+      )}
+
 
       {item.kind === "timeline" ? (
         // The cadence is its own hero — art on top of it would only compete.
@@ -58,10 +84,17 @@ export function ShareSection({ item, accent }: { item: ShareItem; accent?: strin
             timeline={item.timeline?.data}
             scenario={item.timeline?.scenario}
             metrics={item.metrics ?? null}
-            readOnly
+            selectedStepId={selectedStepId ?? null}
+            onSelectStep={onSelectStep}
+            scenarioOverride={scenarioOverride ?? null}
+            onScenarioChange={onScenarioChange}
+            onOpenAsset={onOpenAsset}
+            onAsk={onAsk}
+            resetLabel="Reset to the founder's plan"
             className="mb-10"
           />
         </TimelineBoundary>
+
       ) : item.heroImageUrl ? (
         <div className="mb-10 flex justify-center rounded-2xl border border-border/60 bg-muted/10 p-3">
           <img

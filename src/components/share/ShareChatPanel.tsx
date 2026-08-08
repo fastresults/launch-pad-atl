@@ -18,6 +18,7 @@ export function ShareChatPanel({
   ventureName,
   embedded = false,
   hideHeader = false,
+  seedQuestion,
 }: {
   token: string;
   password?: string;
@@ -25,7 +26,10 @@ export function ShareChatPanel({
   /** Render inline (fills its parent) instead of as a floating dock. */
   embedded?: boolean;
   hideHeader?: boolean;
+  /** Pre-fills the input — used when a timeline step hands over a question. */
+  seedQuestion?: string | null;
 }) {
+
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ShareChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -45,6 +49,16 @@ export function ShareChatPanel({
   useEffect(() => {
     if (embedded && window.matchMedia("(min-width: 1024px)").matches) inputRef.current?.focus();
   }, [embedded]);
+
+  // A question handed over from a timeline step lands in the box, ready to send.
+  useEffect(() => {
+    if (!seedQuestion) return;
+    setInput(seedQuestion);
+    setOpen(true);
+    inputRef.current?.focus();
+  }, [seedQuestion]);
+
+
 
 
   async function send(text: string) {

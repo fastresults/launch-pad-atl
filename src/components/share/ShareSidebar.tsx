@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
-import { ChevronRight, FileText, Search, Sparkle } from "lucide-react";
+import { ChevronRight, FileText, Route, Search, Sparkle } from "lucide-react";
 
 /** Sidebar key for the featured second-brain tool (not a payload asset). */
 export const BRAIN_KEY = "tool:brain";
+
+/** The launch cadence rides at the top of the contents, not buried in Overview. */
+export const TIMELINE_KEY = "overview:timeline";
+
 
 /**
  * Table of contents for the public share page. With 60+ assets the list has to
@@ -23,10 +27,16 @@ export function ShareSidebar({
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [query, setQuery] = useState("");
 
+  const hasTimeline = payload.sections.some((s) => s.items.some((i) => i.key === TIMELINE_KEY));
+
   const sections = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return payload.sections;
-    return payload.sections
+    // The timeline is pinned above, so it never appears twice in the tree.
+    const base = payload.sections
+      .map((s) => ({ ...s, items: s.items.filter((i) => i.key !== TIMELINE_KEY) }))
+      .filter((s) => s.items.length > 0);
+    if (!q) return base;
+    return base
       .map((s) => ({ ...s, items: s.items.filter((i) => i.title.toLowerCase().includes(q)) }))
       .filter((s) => s.items.length > 0);
   }, [payload.sections, query]);
@@ -49,10 +59,14 @@ export function ShareSidebar({
     ...(brainOn
       ? [{ key: BRAIN_KEY, label: "Second brain", hint: "Ask anything · mind map", icon: Sparkle }]
       : []),
+    ...(hasTimeline
+      ? [{ key: TIMELINE_KEY, label: "Launch timeline", hint: "Idea to cash flowing", icon: Route }]
+      : []),
     ...(hasSummary
       ? [{ key: "overview:executive", label: "Executive summary", hint: "The venture in 300 words", icon: FileText }]
       : []),
   ];
+
 
   return (
     <div className="flex h-full min-h-0 flex-col">
