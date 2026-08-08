@@ -22,11 +22,9 @@ import {
   ArrowLeft,
   ArrowRight,
   ExternalLink,
-  List,
   Loader2,
   Lock,
   Menu,
-  Share2,
   Sparkle,
 } from "lucide-react";
 
