@@ -26,8 +26,21 @@ No invented or unrelated words are ever used. The slug always comes from the ven
 ## Privacy note
 
 A guessable link is easier to share and also easier to stumble on. The slug is not a password. The dialog will make this explicit and nudge founders to turn on the existing password option for anything sensitive; short random slugs remain available for founders who want unguessable links.
+## Mobile-first showcase
 
-## Technical notes
+Most shared links get opened on a phone. The showcase gets a purpose-built mobile experience rather than a shrunken desktop one:
+
+- **Masthead**: compact single-line bar — logo, venture name, asset count. The long one-liner collapses to two lines with a "more" tap. Sticky, shrinks on scroll.
+- **Navigation**: the desktop sidebar is replaced by a bottom sheet ("Contents") opened from a persistent bottom bar, with search pinned at the top of the sheet, collapsible categories, and the active asset highlighted. Tapping an asset closes the sheet and returns you to the top of the reading pane.
+- **Bottom action bar**: three thumb-reachable controls — Contents, Ask (Second Brain), and Share. Nothing floats over the text; the current floating launcher is folded into this bar on mobile.
+- **Reading pane**: full-bleed width with comfortable side padding, larger base type and line height, generous paragraph spacing, images edge-to-edge with rounded corners, tables horizontally scrollable with a visible edge fade, and code/long URLs wrapped so nothing overflows.
+- **Prev/next**: large tap targets pinned above the bottom bar, plus horizontal swipe between assets.
+- **Second Brain on mobile**: opens as a full-screen sheet. Chat is a single column with a sticky composer above the keyboard, safe-area insets respected, voice button sized for thumbs. The mind map switches to a pinch/pan canvas with larger node hit areas and a "tap a node to open" hint; on very small screens it defaults to a grouped list view of clusters with the graph one tap away.
+- **Performance**: header images lazy-load with width-appropriate sizes, the mind map bundle loads only when its tab is opened, and the first asset renders without waiting for imagery.
+- **Polish**: safe-area padding for notch/home-indicator, 44px minimum tap targets, no horizontal page scroll at 320px, and copy-link uses the native share sheet when available.
+
+## What changes
+
 
 - Migration: add `slug text` to `venture_shares` with a unique index (case-insensitive, `where revoked_at is null`), and backfill existing rows from the venture name with collision suffixes. Keep `token` as-is for backward compatibility.
 - Slug helper in `src/lib/venture-share.functions.ts`: `slugifyVentureName()`, `newShortToken()` (8-char base32, no ambiguous characters), reserved-word list. `shareUrl()` prefers `slug ?? token`.
