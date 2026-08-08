@@ -361,24 +361,29 @@ export function TimelineCanvas({
             }),
           )}
 
-          {/* bars */}
-          {layout.steps.map((s) => (
-            <StepBar
-              key={s.step.id}
-              s={s}
-              laneIndex={lanes.findIndex((l) => l.id === s.lane)}
-              x={x}
-              pxPerDay={pxPerDay}
-              y={laneY(lanes.findIndex((l) => l.id === s.lane))}
-              active={selectedId === s.step.id}
-              hovered={hover === s.step.id}
-              reducedMotion={reducedMotion}
-              onSelect={onSelect}
-              onHover={setHover}
-              onNudge={onNudge}
-              dayAtX={dayAtX}
-            />
-          ))}
+          {/* bars — the hovered one is drawn last so its magnified label sits on top */}
+          {[...layout.steps]
+            .sort((a, b) => Number(a.step.id === hover) - Number(b.step.id === hover))
+            .map((s) => (
+              <StepBar
+                key={s.step.id}
+                s={s}
+                laneIndex={lanes.findIndex((l) => l.id === s.lane)}
+                x={x}
+                pxPerDay={pxPerDay}
+                y={laneY(lanes.findIndex((l) => l.id === s.lane))}
+                active={selectedId === s.step.id}
+                hovered={hover === s.step.id}
+                dimmed={!!hover && hover !== s.step.id}
+                reducedMotion={reducedMotion}
+                onSelect={onSelect}
+                onHover={setHover}
+                onHoverPoint={setHoverPt}
+                onNudge={onNudge}
+                dayAtX={dayAtX}
+              />
+            ))}
+
 
           {/* revenue ribbon */}
           {ribbonPath && revenue && (
