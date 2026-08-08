@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useDocumentTitle } from "@/lib/use-document-title";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { fetchSharePayload, trackShareView, type SharePayload } from "@/lib/venture-share.functions";
 import { ShareSidebar, BRAIN_KEY, TIMELINE_KEY } from "@/components/share/ShareSidebar";
 import { decodeScenario, encodeScenario, type TimelineScenario } from "@/lib/venture-timeline";
@@ -11,7 +12,18 @@ import { ShareBrain } from "@/components/share/ShareBrain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, ArrowRight, ExternalLink, Loader2, Lock, Menu, Sparkle } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ExternalLink,
+  List,
+  Loader2,
+  Lock,
+  Menu,
+  Share2,
+  Sparkle,
+} from "lucide-react";
+
 
 export default function VentureSharePage() {
   const { token = "" } = useParams();
