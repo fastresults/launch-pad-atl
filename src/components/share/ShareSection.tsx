@@ -5,9 +5,32 @@ import { MarkdownProse } from "@/components/markdown/MarkdownProse";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 
+/**
+ * Typographic stand-in used when an asset has no generated header art, so no
+ * section ever reads as unfinished.
+ */
+function CoverPlate({ title, accent }: { title: string; accent?: string | null }) {
+  return (
+    <div
+      className="mb-10 flex h-[180px] items-end overflow-hidden rounded-2xl border border-border/60 p-6 md:h-[220px]"
+      style={{
+        background: `linear-gradient(135deg, ${accent ?? "hsl(var(--primary))"}22, transparent 65%), hsl(var(--muted) / 0.25)`,
+      }}
+    >
+      <span
+        className="font-serif text-[26px] leading-tight text-foreground/80 md:text-[34px]"
+        style={{ borderLeft: `3px solid ${accent ?? "hsl(var(--primary))"}`, paddingLeft: 16 }}
+      >
+        {title}
+      </span>
+    </div>
+  );
+}
+
 /** One asset in the reading pane: document body, hero art, or an image grid. */
-export function ShareSection({ item }: { item: ShareItem }) {
+export function ShareSection({ item, accent }: { item: ShareItem; accent?: string | null }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
+
 
   return (
     <section id={item.key} className="min-w-0 max-w-full scroll-mt-24 overflow-x-clip border-t border-border/60 py-14 first:border-t-0">
