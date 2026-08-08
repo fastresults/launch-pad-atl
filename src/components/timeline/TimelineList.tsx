@@ -57,12 +57,16 @@ export function TimelineList({
       .filter((g) => g.steps.length);
   }, [timeline.phases, layout.steps]);
 
+  // Long reads stay out of the way until asked for — the track is the default view.
+  const [open, setOpen] = useState(false);
+
   const activeRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (selectedId && activeRef.current) {
-      activeRef.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
+    if (!selectedId) return;
+    setOpen(true);
+    if (activeRef.current) activeRef.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [selectedId]);
+
 
   const weeks = Math.max(1, Math.round(layout.totalDays / 7));
   let n = 0;
