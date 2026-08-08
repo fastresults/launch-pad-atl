@@ -118,7 +118,7 @@ export function ShareChatPanel({
     <div
       className={
         embedded
-          ? "flex h-[min(68vh,640px)] w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/60"
+          ? "flex h-full min-h-[320px] w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/60"
           : "fixed bottom-4 right-4 z-40 flex h-[min(70vh,560px)] w-[min(92vw,420px)] flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl"
       }
     >
@@ -138,22 +138,11 @@ export function ShareChatPanel({
 
       <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
         {!messages.length && (
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p>Ask anything — the model, the plan, the numbers, the next 14 days.</p>
-            {["What problem does this solve?", "How does it make money?", "What happens in the first 14 days?"].map(
-              (s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => send(s)}
-                  className="block w-full rounded-lg border border-border/60 px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:border-primary/50"
-                >
-                  {s}
-                </button>
-              ),
-            )}
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Ask anything — the model, the plan, the numbers, the next 14 days.
+          </p>
         )}
+
 
         {messages.map((m, i) => (
           <div
