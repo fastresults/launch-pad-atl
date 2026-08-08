@@ -37,7 +37,11 @@ export interface CanvasProps {
   selectedId?: string | null;
   onSelect: (id: string) => void;
   onNudge?: (id: string, days: number) => void;
+  /** Cross-highlighting with the list below the track. */
+  hoveredId?: string | null;
+  onHover?: (id: string | null) => void;
   reducedMotion?: boolean;
+
 }
 
 /**
