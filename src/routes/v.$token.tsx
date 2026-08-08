@@ -318,11 +318,13 @@ export default function VentureSharePage() {
                   <h1 className="truncate font-serif text-[17px] leading-tight tracking-tight">
                     {payload.venture.name}
                   </h1>
-                  {!condensed && (
-                    <p className="text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground">
-                      {items.length} assets
-                    </p>
-                  )}
+                  {/* Chapter + position never scroll away, so nobody loses their place. */}
+                  <p className="truncate text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground">
+                    {activeIndex >= 0 ? `${activeIndex + 1} / ${items.length}` : `${items.length} assets`}
+                    {activeSection ? (
+                      <span className="text-primary"> · {activeSection.label}</span>
+                    ) : null}
+                  </p>
                 </div>
                 {payload.venture.website && (
                   <a
@@ -348,7 +350,22 @@ export default function VentureSharePage() {
                   </span>
                 </button>
               )}
+              {/* Progress through the whole set. */}
+              <div className="mt-2 h-[2px] w-full overflow-hidden rounded-full bg-border/60">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  style={{
+                    width: `${items.length ? ((activeIndex + 1) / items.length) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+              <CategoryStepper
+                sections={payload.sections}
+                activeSectionKey={activeSection?.key ?? null}
+                onJump={(k) => k && goTo(k)}
+              />
             </header>
+
           ) : (
             /* Masthead — condenses once the reader starts working. */
             <header
