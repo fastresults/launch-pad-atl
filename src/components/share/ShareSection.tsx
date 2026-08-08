@@ -89,7 +89,7 @@ export function ShareSection({ item, accent }: { item: ShareItem; accent?: strin
         </div>
       )}
 
-      {item.body && <MarkdownProse>{item.body}</MarkdownProse>}
+      {item.body && <MarkdownProse>{filterShowcaseContent(item.body)}</MarkdownProse>}
 
 
       <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
