@@ -64,7 +64,8 @@ export function ScenarioBar({
             className="ml-auto h-7 gap-1.5 text-[12px] text-white/60 hover:text-white"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Reset
+            {resetLabel ?? "Reset"}
+
           </Button>
         )}
       </div>
