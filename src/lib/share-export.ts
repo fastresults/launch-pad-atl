@@ -432,7 +432,7 @@ export async function generateDocx(doc: ExportDoc): Promise<Blob> {
           ],
         }),
       );
-      if (img.label) {
+      if (img.label && img.label !== block.title) {
         children.push(
           new Paragraph({
             alignment: AlignmentType.CENTER,
