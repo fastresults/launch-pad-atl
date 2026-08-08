@@ -66,13 +66,25 @@ export function unwrapProseFences(md: string): string {
   let i = 0;
 
   while (i < lines.length) {
-    const open = lines[i].match(/^\s*(```|~~~)\s*([A-Za-z0-9+#-]*)\s*$/);
+    // Accept any info-string, not just a clean language token. Generators
+    // routinely emit ```markdown labeled `# Landing / DM copy` — the extra
+    // words are an authoring label, never content.
+    const open = lines[i].match(/^\s*(```|~~~)[ \t]*(\S.*)?$/);
     if (!open) {
       out.push(lines[i++]);
       continue;
     }
     const marker = open[1];
-    const lang = open[2] || "";
+    const info = (open[2] ?? "").trim();
+    const lang = (info.split(/[\s,]+/)[0] ?? "").replace(/[^A-Za-z0-9+#-]/g, "");
+    const rest = info.slice((info.split(/[\s,]+/)[0] ?? "").length).trim();
+    // A trailing label like: labeled `# Checkout CTA copy` / titled "X"
+    const labelMatch = rest.match(/[`"'“]?\s*#*\s*([^`"'”]+?)\s*[`"'”]?$/);
+    const label =
+      rest && labelMatch
+        ? labelMatch[1].replace(/^(labeled|labelled|titled|named|called)\s*/i, "").trim()
+        : "";
+
     const body: string[] = [];
     let j = i + 1;
     let closed = false;
@@ -90,11 +102,20 @@ export function unwrapProseFences(md: string): string {
 
     const text = body.join("\n");
     const keepFence =
-      REAL_CODE.test(lang) || (!/^(text|txt|plain|plaintext|markdown|md)$/i.test(lang) && lang !== "" ) || looksLikeCode(text);
+      REAL_CODE.test(lang) ||
+      (!/^(text|txt|plain|plaintext|markdown|md)$/i.test(lang) && lang !== "") ||
+      looksLikeCode(text);
+
+    // The label becomes a real heading so the reader keeps the section name
+    // without ever seeing the fence syntax.
+    if (label && label.length <= 80) {
+      out.push("", `### ${label}`, "");
+    }
 
     if (keepFence) {
-      out.push(lines[i], ...body, lines[j]);
+      out.push(`${marker}${lang}`, ...body, lines[j]);
     } else {
+
       for (const raw of body) {
         if (!raw.trim()) {
           out.push("");
