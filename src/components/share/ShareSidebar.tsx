@@ -6,6 +6,10 @@ import { ChevronRight, FileText, Route, Search, Sparkle } from "lucide-react";
 /** Sidebar key for the featured second-brain tool (not a payload asset). */
 export const BRAIN_KEY = "tool:brain";
 
+/** The launch cadence rides at the top of the contents, not buried in Overview. */
+export const TIMELINE_KEY = "overview:timeline";
+
+
 /**
  * Table of contents for the public share page. With 60+ assets the list has to
  * stay navigable: categories collapse, the active branch stays open, and a
