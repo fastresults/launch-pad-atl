@@ -20,7 +20,7 @@ export function ShareSection({ item }: { item: ShareItem }) {
         )}
       </header>
 
-      {item.heroImageUrl && (
+      {item.heroImageUrl ? (
         <div className="mb-10 flex justify-center rounded-2xl border border-border/60 bg-muted/10 p-3">
           <img
             src={item.heroImageUrl}
@@ -29,7 +29,60 @@ export function ShareSection({ item }: { item: ShareItem }) {
             className="max-h-[420px] w-auto max-w-full rounded-xl object-contain"
           />
         </div>
+      ) : (
+        // Every section still reads as designed when header art is missing.
+        <CoverPlate title={item.title} accent={accent} />
       )}
+
+      {item.brandBoard && (
+        <div className="mb-10 space-y-6 rounded-2xl border border-border/60 bg-muted/10 p-5">
+          {!!item.brandBoard.logos.length && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              {item.brandBoard.logos.map((l, i) => (
+                <figure key={`${l.url}-${i}`} className="rounded-xl border border-border/60 bg-background p-4">
+                  <img src={l.url} alt={l.label ?? "Logo"} className="mx-auto h-20 w-auto max-w-full object-contain" />
+                  {l.label && (
+                    <figcaption className="mt-3 text-center text-[11px] text-muted-foreground">{l.label}</figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          )}
+
+          {!!item.brandBoard.swatches.length && (
+            <div>
+              <p className="mb-3 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                {item.brandBoard.paletteName ?? "Palette"}
+              </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {item.brandBoard.swatches.map((s) => (
+                  <div key={s.label} className="overflow-hidden rounded-xl border border-border/60">
+                    <div className="h-16 w-full" style={{ background: s.hex }} />
+                    <div className="px-3 py-2">
+                      <p className="text-[12px] text-foreground">{s.label}</p>
+                      <p className="font-mono text-[11px] uppercase text-muted-foreground">{s.hex}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!!item.brandBoard.fonts.length && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {item.brandBoard.fonts.map((f) => (
+                <div key={f.role} className="rounded-xl border border-border/60 px-4 py-3">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{f.role}</p>
+                  <p className="mt-1 text-[20px] text-foreground" style={{ fontFamily: `${f.family}, serif` }}>
+                    {f.family}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
 
       {item.kind === "gallery" && !!item.images?.length && (
         <div className="mb-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
