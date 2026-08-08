@@ -20,6 +20,8 @@ type MapNode = {
   angle: number;
   /** Extra radial nudge so neighbouring labels in a fan do not collide. */
   labelLane: number;
+  /** Position within its parent fan, used to label only near neighbours on hover. */
+  order: number;
 };
 
 type MapLink = {
@@ -172,6 +174,7 @@ export function RadialMindMap({
       match: true,
       angle: -Math.PI / 2,
       labelLane: 0,
+      order: 0,
     };
     nodes.push(root);
 
@@ -194,6 +197,7 @@ export function RadialMindMap({
         match: matches(String(section.label || "")),
         angle,
         labelLane: 0,
+        order: sectionIndex,
       };
       nodes.push(cluster);
       links.push({
@@ -225,6 +229,7 @@ export function RadialMindMap({
           match: matches(String(item.title || "")),
           angle: localAngle,
           labelLane: itemIndex % 3,
+          order: itemIndex,
         };
         nodes.push(itemNode);
         links.push({
@@ -309,7 +314,7 @@ export function RadialMindMap({
       onPointerCancel={endPointer}
       aria-label={`Interactive mind map for ${model.center.label}`}
     >
-      <svg className="h-full w-full text-foreground" viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="tree" aria-label="Mind map">
+      <svg className="h-full w-full text-[color:var(--brain-ink)]" viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="tree" aria-label="Mind map">
         <defs>
           {graph.nodes.filter((node) => node.kind !== "item").map((node) => (
             <filter key={node.id} id={`${instanceId}-glow-${node.id}`} x="-100%" y="-100%" width="300%" height="300%">
@@ -355,23 +360,28 @@ export function RadialMindMap({
             const isActive = activeId === node.id;
             const inActiveBranch = Boolean(activeBranch) && node.branch === activeBranch;
             const searchHit = Boolean(query) && node.match;
-            // Item labels are always readable when their branch is in focus (hovered node,
-            // hovered branch, search hit) and when zoomed in. Nothing else, so a resting
-            // map stays clean but hovering never leaves the user guessing.
+            // Labels for the hovered node plus its near neighbours in the same fan: enough
+            // context to read the branch, without printing forty overlapping strings.
+            const nearActive =
+              inActiveBranch &&
+              activeNode?.kind === "item" &&
+              node.kind === "item" &&
+              Math.abs(node.order - activeNode.order) <= 2;
             const showLabel =
               node.kind !== "item" ||
               isActive ||
               searchHit ||
-              inActiveBranch ||
-              camera.k > 1.35;
+              nearActive ||
+              (inActiveBranch && activeNode?.kind === "cluster" && node.order % 3 === 0) ||
+              camera.k > 1.6;
             const canOpen = node.kind === "item" && Boolean(node.itemKey) && Boolean(onOpenItem);
             const opacity = !branchHighlighted ? 0.32 : query && !node.match && node.kind === "item" ? 0.4 : 1;
             const side = Math.cos(node.angle) >= 0 ? 1 : -1;
             const isRadial = node.kind === "item";
-            const labelMax = node.kind === "item" ? (isActive ? 40 : 24) : 32;
+            const labelMax = node.kind === "item" ? (isActive ? 40 : 22) : 32;
             const text = shortLabel(node.label, labelMax);
             const fontSize = node.kind === "root" ? 18 : node.kind === "cluster" ? 14 : isActive ? 13.5 : 11.5;
-            const chipped = isActive || (isRadial && inActiveBranch);
+            const chipped = isActive || (isRadial && (nearActive || searchHit));
             const labelX = isRadial ? side * (node.radius + 9 + node.labelLane * 4) : 0;
             const labelY = isRadial ? Math.sin(node.angle) * 3 + node.labelLane * 1.5 : node.radius + 14;
             const chipW = text.length * fontSize * 0.56 + 14;
@@ -436,7 +446,7 @@ export function RadialMindMap({
                           width={chipW}
                           height={fontSize * 1.8}
                           rx={fontSize}
-                          fill="hsl(var(--background))"
+                          fill="var(--brain-halo)"
                           fillOpacity={isActive ? 0.96 : 0.85}
                           stroke={node.color}
                           strokeOpacity={isActive ? 0.7 : 0.35}
@@ -447,11 +457,11 @@ export function RadialMindMap({
                         y={labelY}
                         textAnchor={isRadial ? (side === 1 ? "start" : "end") : "middle"}
                         dominantBaseline={isRadial ? "middle" : undefined}
-                        fill="hsl(var(--foreground))"
+                        fill="var(--brain-ink)"
                         fontSize={fontSize}
                         fontWeight={node.kind === "item" ? (isActive ? 650 : 550) : 700}
                         paintOrder="stroke"
-                        stroke={chipped ? "none" : "hsl(var(--background))"}
+                        stroke={chipped ? "none" : "var(--brain-halo)"}
                         strokeWidth={chipped ? 0 : 5}
                         strokeOpacity={chipped ? 0 : 0.85}
                         strokeLinejoin="round"
