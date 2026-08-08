@@ -309,7 +309,7 @@ export function RadialMindMap({
       onPointerCancel={endPointer}
       aria-label={`Interactive mind map for ${model.center.label}`}
     >
-      <svg className="h-full w-full text-foreground" viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="tree" aria-label="Mind map">
+      <svg className="h-full w-full text-[color:var(--brain-ink)]" viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="tree" aria-label="Mind map">
         <defs>
           {graph.nodes.filter((node) => node.kind !== "item").map((node) => (
             <filter key={node.id} id={`${instanceId}-glow-${node.id}`} x="-100%" y="-100%" width="300%" height="300%">
