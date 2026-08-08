@@ -64,7 +64,7 @@ export function filterShowcaseContent(md?: string | null): string {
           // Remove a lead-in line that only introduced the dropped block.
           while (out.length && !out[out.length - 1].trim()) out.pop();
           const prev = out[out.length - 1] ?? "";
-          if (/^[^#\-*|>].{0,120}:\s*$/.test(prev.trim())) out.pop();
+          if (/^(?:[-*]\s+)?[^#|>].{0,120}:\s*$/.test(prev.trim())) out.pop();
           out.push("");
           i = j + 1;
           continue;
