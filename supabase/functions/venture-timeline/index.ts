@@ -248,14 +248,17 @@ Deno.serve(async (req) => {
       console.error("[venture-timeline] generation failed", e);
     }
 
-    // A schedule that failed validation is worse than the honest default.
-    const finalTimeline = timeline ?? FALLBACK_TIMELINE();
-    finalTimeline.generatedAt = new Date().toISOString();
+    // Storing a schedule that failed validation is worse than storing nothing —
+    // the client renders its own honest default cadence when this column is null.
+    if (!timeline) {
+      return json({ error: "Could not sequence this venture yet. Try again in a moment." }, 502);
+    }
+    timeline.generatedAt = new Date().toISOString();
 
     const { error: upErr } = await admin
       .from("venture_snapshots")
       .update({
-        venture_timeline: finalTimeline,
+        venture_timeline: timeline,
         venture_timeline_at: new Date().toISOString(),
       })
       .eq("id", snapshotId);
@@ -267,10 +270,10 @@ Deno.serve(async (req) => {
     return json({
       ok: true,
       cached: false,
-      generated: !!timeline,
-      timeline: finalTimeline,
-      stepCount: finalTimeline.steps.length,
+      timeline,
+      stepCount: timeline.steps.length,
     });
+
   } catch (e) {
     console.error("[venture-timeline]", e);
     return json({ error: "Could not build the timeline." }, 500);
