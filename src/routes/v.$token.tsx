@@ -512,6 +512,12 @@ export default function VentureSharePage() {
                       onSelectStep={selectStep}
                       scenarioOverride={timelineActive ? readerScenario : null}
                       onScenarioChange={onScenarioChange}
+                      exportSlot={
+                        <SectionExportMenu
+                          label={`Export ${activeItem.title}`}
+                          build={() => buildSectionDoc(payload, activeItem)}
+                        />
+                      }
                     />
                   )}
                 </>
