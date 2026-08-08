@@ -20,6 +20,8 @@ type MapNode = {
   angle: number;
   /** Extra radial nudge so neighbouring labels in a fan do not collide. */
   labelLane: number;
+  /** Position within its parent fan, used to label only near neighbours on hover. */
+  order: number;
 };
 
 type MapLink = {
