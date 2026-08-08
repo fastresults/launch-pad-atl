@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { ShareItem } from "@/lib/venture-share.functions";
 import { MarkdownProse } from "@/components/markdown/MarkdownProse";
 import { ShareBrandBoard } from "@/components/share/ShareBrandBoard";
+import { ExecutiveMetrics } from "@/components/share/ExecutiveMetrics";
+
 import { filterShowcaseContent } from "@/lib/share-content-filter";
 
 
