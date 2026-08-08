@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Check, Copy, ExternalLink, Image as ImageIcon, Link2, Loader2, Share2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { invokeEdge } from "@/lib/edge-invoke";
 import {
   createVentureShare,
