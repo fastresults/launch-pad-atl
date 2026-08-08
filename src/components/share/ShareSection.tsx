@@ -36,7 +36,27 @@ function CoverPlate({ title, accent }: { title: string; accent?: string | null }
 }
 
 /** One asset in the reading pane: document body, hero art, or an image grid. */
-export function ShareSection({ item, accent }: { item: ShareItem; accent?: string | null }) {
+export function ShareSection({
+  item,
+  accent,
+  onOpenAsset,
+  onAsk,
+  selectedStepId,
+  onSelectStep,
+  scenarioOverride,
+  onScenarioChange,
+}: {
+  item: ShareItem;
+  accent?: string | null;
+  /** Timeline steps can jump the reader to the asset they produce. */
+  onOpenAsset?: (assetKey: string) => void;
+  /** Timeline steps can hand a question to the second brain. */
+  onAsk?: (question: string) => void;
+  selectedStepId?: string | null;
+  onSelectStep?: (id: string | null) => void;
+  scenarioOverride?: TimelineScenario | null;
+  onScenarioChange?: (s: TimelineScenario, dirty: boolean) => void;
+}) {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
 
@@ -58,10 +78,17 @@ export function ShareSection({ item, accent }: { item: ShareItem; accent?: strin
             timeline={item.timeline?.data}
             scenario={item.timeline?.scenario}
             metrics={item.metrics ?? null}
-            readOnly
+            selectedStepId={selectedStepId ?? null}
+            onSelectStep={onSelectStep}
+            scenarioOverride={scenarioOverride ?? null}
+            onScenarioChange={onScenarioChange}
+            onOpenAsset={onOpenAsset}
+            onAsk={onAsk}
+            resetLabel="Reset to the founder's plan"
             className="mb-10"
           />
         </TimelineBoundary>
+
       ) : item.heroImageUrl ? (
         <div className="mb-10 flex justify-center rounded-2xl border border-border/60 bg-muted/10 p-3">
           <img
