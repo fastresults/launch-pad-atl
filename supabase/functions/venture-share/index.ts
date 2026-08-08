@@ -427,23 +427,41 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Written write-ups when the summary pass produced them; the raw snapshot
+      // one-liners are only the fallback.
+      const blurbs = (snap.overview_blurbs ?? {}) as { glance?: string; value?: string };
+      const glanceBody = (blurbs.glance ?? "").trim() || snap.concept_summary || snap.business_concept || null;
+      const valueBody = (blurbs.value ?? "").trim() || snap.value_proposition || null;
+
+      const glanceFacts = [
+        snap.industry ? { label: "Industry", value: String(snap.industry) } : null,
+        [snap.city, snap.region].filter(Boolean).length
+          ? { label: "Based in", value: [snap.city, snap.region].filter(Boolean).join(", ") }
+          : null,
+        { label: "Built assets", value: String(docs.length) },
+        snap.founder_name ? { label: "Founder", value: String(snap.founder_name) } : null,
+      ].filter(Boolean) as { label: string; value: string }[];
+
       overview.push({
         key: "overview:summary",
         title: "At a glance",
         subtitle: stats.join(" · "),
         kind: "doc",
-        body: snap.concept_summary || snap.business_concept || null,
+        body: glanceBody,
         heroImageUrl: snap.executive_summary ? null : logoUrl,
+        metrics: glanceFacts,
       });
 
-      if (snap.value_proposition) {
+      if (valueBody) {
         overview.push({
           key: "overview:value",
           title: "Value proposition",
+          subtitle: "The promise, and why it beats the alternatives",
           kind: "doc",
-          body: snap.value_proposition,
+          body: valueBody,
         });
       }
+
       if (snap.roadmap_content && !excluded.has("overview:roadmap")) {
         overview.push({
           key: "overview:roadmap",
