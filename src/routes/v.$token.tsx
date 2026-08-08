@@ -58,8 +58,11 @@ export default function VentureSharePage() {
   const goTo = (key: string) => {
     setActiveKey(key);
     history.replaceState(null, "", `#${key}`);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // The reading pane scrolls, not the window.
+    paneRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    if (key === BRAIN_KEY) setCondensed(true);
   };
+
 
 
   useDocumentTitle(
