@@ -425,11 +425,18 @@ export default function VentureSharePage() {
                     </p>
                   )}
                 </div>
+                <SectionExportMenu
+                  variant="primary"
+                  label="Download all"
+                  className={`ml-auto shrink-0 ${condensed ? "h-9" : "h-10"}`}
+                  build={() => buildFullDoc(payload)}
+                />
                 {payload.venture.website && (
                   <Button
                     asChild
+                    variant="outline"
                     size={condensed ? "sm" : "default"}
-                    className="ml-auto shrink-0"
+                    className="shrink-0"
                   >
                     <a
                       href={`https://${payload.venture.website}`}
@@ -441,12 +448,6 @@ export default function VentureSharePage() {
                     </a>
                   </Button>
                 )}
-                <SectionExportMenu
-                  variant="button"
-                  label="Export everything"
-                  className={`shrink-0 ${payload.venture.website ? "" : "ml-auto"}`}
-                  build={() => buildFullDoc(payload)}
-                />
                 {brainOn && (
                   <Button
                     variant="outline"
