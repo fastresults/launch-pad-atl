@@ -225,88 +225,139 @@ export default function VentureSharePage() {
 
       {payload && (
         <div className="flex h-[100svh] flex-col overflow-hidden">
-          {/* Masthead — condenses once the reader starts working. */}
-          <header
-            className={`shrink-0 border-b border-border/60 bg-gradient-to-b from-card/70 to-background transition-all ${
-              condensed ? "py-2" : "py-6 md:py-10"
-            }`}
-          >
-            <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6 md:px-10">
-              <Sheet open={navOpen} onOpenChange={setNavOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open contents">
-                    <Menu className="h-5 w-5" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="theme-dark-scope flex w-[85vw] max-w-xs flex-col bg-background p-6">
-                  <ShareSidebar
-                    payload={payload}
-                    activeKey={activeKey}
-                    onNavigate={(k) => {
-                      goTo(k);
-                      setNavOpen(false);
-                    }}
+          {isMobile ? (
+            /* Phone masthead: one line, sticky, with the one-liner on demand. */
+            <header className="shrink-0 border-b border-border/60 bg-card/50 px-4 pt-[calc(env(safe-area-inset-top)+10px)] pb-2.5 backdrop-blur">
+              <div className="flex items-center gap-3">
+                {payload.venture.logoUrl && (
+                  <img
+                    src={payload.venture.logoUrl}
+                    alt={payload.venture.name}
+                    className={`shrink-0 rounded-lg object-contain transition-all ${
+                      condensed ? "h-8 w-8" : "h-10 w-10"
+                    }`}
                   />
-                </SheetContent>
-              </Sheet>
-
-              {payload.venture.logoUrl && (
-                <img
-                  src={payload.venture.logoUrl}
-                  alt={payload.venture.name}
-                  className={`shrink-0 rounded-lg object-contain transition-all ${
-                    condensed ? "h-9 w-9" : "h-12 w-12 md:h-16 md:w-16"
-                  }`}
-                />
-              )}
-              <div className="min-w-0">
-                {!condensed && (
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                    Venture showcase · {items.length} assets
-                  </p>
                 )}
-                <h1
-                  className={`truncate font-serif leading-tight tracking-tight ${
-                    condensed ? "text-[18px]" : "mt-1 text-[26px] md:text-[40px]"
-                  }`}
-                >
-                  {payload.venture.name}
-                </h1>
-                {payload.venture.oneLiner && !condensed && (
-                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-                    {payload.venture.oneLiner}
-                  </p>
-                )}
-              </div>
-              {payload.venture.website && (
-                <Button
-                  asChild
-                  size={condensed ? "sm" : "default"}
-                  className="ml-auto shrink-0"
-                >
+                <div className="min-w-0 flex-1">
+                  <h1 className="truncate font-serif text-[17px] leading-tight tracking-tight">
+                    {payload.venture.name}
+                  </h1>
+                  {!condensed && (
+                    <p className="text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                      {items.length} assets
+                    </p>
+                  )}
+                </div>
+                {payload.venture.website && (
                   <a
                     href={`https://${payload.venture.website}`}
                     target="_blank"
                     rel="noreferrer noopener"
+                    aria-label="Visit website"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-primary/50 bg-primary/10 text-primary"
                   >
-                    <ExternalLink className="mr-1.5 h-4 w-4" />
-                    Visit website
+                    <ExternalLink className="h-4 w-4" />
                   </a>
-                </Button>
-              )}
-              {brainOn && (
-                <Button
-                  variant="outline"
-                  size={condensed ? "sm" : "default"}
-                  className={`hidden shrink-0 md:inline-flex ${payload.venture.website ? "" : "ml-auto"}`}
-                  onClick={() => goTo(BRAIN_KEY)}
+                )}
+              </div>
+              {payload.venture.oneLiner && !condensed && (
+                <button
+                  type="button"
+                  onClick={() => setBlurbOpen((v) => !v)}
+                  className="mt-2 w-full text-left text-[13px] leading-relaxed text-muted-foreground"
                 >
-                  <Sparkle className="mr-1.5 h-4 w-4" />
-                  Ask this venture
-                </Button>
+                  <span className={blurbOpen ? "" : "line-clamp-2"}>{payload.venture.oneLiner}</span>
+                  <span className="mt-0.5 block text-[11px] text-primary">
+                    {blurbOpen ? "Less" : "More"}
+                  </span>
+                </button>
               )}
-            </div>
-          </header>
+            </header>
+          ) : (
+            /* Masthead — condenses once the reader starts working. */
+            <header
+              className={`shrink-0 border-b border-border/60 bg-gradient-to-b from-card/70 to-background transition-all ${
+                condensed ? "py-2" : "py-6 md:py-10"
+              }`}
+            >
+              <div className="mx-auto flex max-w-[1400px] items-center gap-5 px-6 md:px-10">
+                <Sheet open={navOpen} onOpenChange={setNavOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open contents">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="theme-dark-scope flex w-[85vw] max-w-xs flex-col bg-background p-6">
+                    <ShareSidebar
+                      payload={payload}
+                      activeKey={activeKey}
+                      onNavigate={(k) => {
+                        goTo(k);
+                        setNavOpen(false);
+                      }}
+                    />
+                  </SheetContent>
+                </Sheet>
+
+                {payload.venture.logoUrl && (
+                  <img
+                    src={payload.venture.logoUrl}
+                    alt={payload.venture.name}
+                    className={`shrink-0 rounded-lg object-contain transition-all ${
+                      condensed ? "h-9 w-9" : "h-12 w-12 md:h-16 md:w-16"
+                    }`}
+                  />
+                )}
+                <div className="min-w-0">
+                  {!condensed && (
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+                      Venture showcase · {items.length} assets
+                    </p>
+                  )}
+                  <h1
+                    className={`truncate font-serif leading-tight tracking-tight ${
+                      condensed ? "text-[18px]" : "mt-1 text-[26px] md:text-[40px]"
+                    }`}
+                  >
+                    {payload.venture.name}
+                  </h1>
+                  {payload.venture.oneLiner && !condensed && (
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+                      {payload.venture.oneLiner}
+                    </p>
+                  )}
+                </div>
+                {payload.venture.website && (
+                  <Button
+                    asChild
+                    size={condensed ? "sm" : "default"}
+                    className="ml-auto shrink-0"
+                  >
+                    <a
+                      href={`https://${payload.venture.website}`}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      <ExternalLink className="mr-1.5 h-4 w-4" />
+                      Visit website
+                    </a>
+                  </Button>
+                )}
+                {brainOn && (
+                  <Button
+                    variant="outline"
+                    size={condensed ? "sm" : "default"}
+                    className={`hidden shrink-0 md:inline-flex ${payload.venture.website ? "" : "ml-auto"}`}
+                    onClick={() => goTo(BRAIN_KEY)}
+                  >
+                    <Sparkle className="mr-1.5 h-4 w-4" />
+                    Ask this venture
+                  </Button>
+                )}
+              </div>
+            </header>
+          )}
+
 
           <div className="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 gap-12 overflow-hidden px-6 md:px-10">
             <aside className="hidden w-72 shrink-0 py-8 lg:block">
