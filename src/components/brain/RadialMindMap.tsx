@@ -429,17 +429,17 @@ export function RadialMindMap({
                   </circle>
                   {showLabel && (
                     <g pointerEvents="none">
-                      {isActive && (
+                      {chipped && (
                         <rect
                           x={isRadial ? (side === 1 ? labelX - 7 : labelX - chipW + 7) : -chipW / 2}
-                          y={labelY - (isRadial ? fontSize * 0.8 : fontSize * 0.9)}
+                          y={labelY - (isRadial ? fontSize * 0.85 : fontSize * 0.9)}
                           width={chipW}
-                          height={fontSize * 1.7}
+                          height={fontSize * 1.8}
                           rx={fontSize}
                           fill="hsl(var(--background))"
-                          fillOpacity="0.92"
+                          fillOpacity={isActive ? 0.96 : 0.85}
                           stroke={node.color}
-                          strokeOpacity="0.5"
+                          strokeOpacity={isActive ? 0.7 : 0.35}
                         />
                       )}
                       <text
@@ -447,12 +447,13 @@ export function RadialMindMap({
                         y={labelY}
                         textAnchor={isRadial ? (side === 1 ? "start" : "end") : "middle"}
                         dominantBaseline={isRadial ? "middle" : undefined}
-                        fill="currentColor"
+                        fill="hsl(var(--foreground))"
                         fontSize={fontSize}
-                        fontWeight={node.kind === "item" ? 500 : 650}
+                        fontWeight={node.kind === "item" ? (isActive ? 650 : 550) : 700}
                         paintOrder="stroke"
-                        stroke={isActive ? "none" : "hsl(var(--background))"}
-                        strokeWidth={isActive ? 0 : 5}
+                        stroke={chipped ? "none" : "hsl(var(--background))"}
+                        strokeWidth={chipped ? 0 : 5}
+                        strokeOpacity={chipped ? 0 : 0.85}
                         strokeLinejoin="round"
                       >
                         {text}
