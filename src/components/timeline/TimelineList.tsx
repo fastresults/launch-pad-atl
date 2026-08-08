@@ -1,5 +1,5 @@
 import { ArrowRight, ChevronDown, CalendarClock, FileText, MessageCircle } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Layout } from "@/lib/timeline-schedule";
 import { formatDayShort } from "@/lib/timeline-schedule";
@@ -57,26 +57,43 @@ export function TimelineList({
       .filter((g) => g.steps.length);
   }, [timeline.phases, layout.steps]);
 
+  // Long reads stay out of the way until asked for — the track is the default view.
+  const [open, setOpen] = useState(false);
+
   const activeRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (selectedId && activeRef.current) {
-      activeRef.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
+    if (!selectedId) return;
+    setOpen(true);
+    if (activeRef.current) activeRef.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [selectedId]);
+
 
   const weeks = Math.max(1, Math.round(layout.totalDays / 7));
   let n = 0;
 
   return (
     <section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4 md:p-5">
-      <header className="mb-4">
-        <Head>Step by step</Head>
-        <p className="text-[13px] text-white/55">
-          {layout.steps.length} steps · idea to first cash in {weeks} {weeks === 1 ? "week" : "weeks"}
-        </p>
-      </header>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="timeline-step-list"
+        className="flex w-full items-center gap-3 text-left"
+      >
+        <span className="min-w-0 flex-1">
+          <Head>Step by step</Head>
+          <span className="block text-[13px] text-white/55">
+            {layout.steps.length} steps · idea to first cash in {weeks} {weeks === 1 ? "week" : "weeks"}
+          </span>
+        </span>
+        <span className="flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1 text-[12px] text-white/65">
+          {open ? "Hide" : "Read the schedule"}
+          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+        </span>
+      </button>
 
-      <div className="space-y-6">
+      <div id="timeline-step-list" hidden={!open} className="mt-4 space-y-6">
+
         {groups.map(({ phase, steps }) => {
           const from = Math.min(...steps.map((s) => s.startDay));
           const to = Math.max(...steps.map((s) => s.endDay));
