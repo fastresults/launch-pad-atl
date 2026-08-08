@@ -357,11 +357,76 @@ Deno.serve(async (req) => {
     }
     if (!summary) return json({ error: "The summary came back empty." }, 502);
 
+    // ---- 4. The two overview sections ----------------------------------------
+    // "At a glance" and "Value proposition" render straight from the snapshot's
+    // one-line fields otherwise, which reads as scant next to the summary.
+    const blurbSources = [
+      "value_proposition",
+      "problem_solution",
+      "customer_personas",
+      "competitive_positioning",
+      "brand_messaging",
+      "market_analysis",
+      "pricing_offer_sheet",
+      "operating_plan",
+      "vision_mission",
+    ]
+      .map((t) => docs.find((d: any) => d.document_type === t))
+      .filter(Boolean)
+      .map((d: any) => `## ${nameOf(d.document_type)}\n${String(d.content).slice(0, 3000)}`)
+      .join("\n\n");
+
+    let blurbs: { glance: string; value: string } | null = null;
+    try {
+      const blurbInstructions = [
+        "You write the two short opening sections of a founder's venture showcase. Return json only.",
+        "",
+        'Shape: {"glance":"","value":""}',
+        "",
+        "glance — \"At a glance\": 130-170 words, two paragraphs separated by \\n\\n.",
+        "  What the startup is, who exactly it serves, where it operates, how it makes money, and what makes the model workable. Concrete, no hedging.",
+        "value — \"Value proposition\": 150-200 words, two or three paragraphs separated by \\n\\n.",
+        "  The customer's problem in their words, the promise this startup makes, why it beats the alternatives they'd otherwise pick, and who it is not for.",
+        "",
+        "Rules:",
+        "- Use only facts, prices and figures stated in the supplied assets. Never invent traction, customers, partners or dates.",
+        "- Plain prose. No headings, no bullets, no markdown, no hype adjectives.",
+        "- Never call this a plan, blueprint, playbook or roadmap. It is a built startup.",
+        "- json only, no commentary.",
+      ].join("\n");
+
+      const raw = await respondText(
+        [
+          `Startup: ${snap.company_name ?? "Untitled venture"}`,
+          snap.industry ? `Industry: ${snap.industry}` : "",
+          [snap.city, snap.region].filter(Boolean).length
+            ? `Location: ${[snap.city, snap.region].filter(Boolean).join(", ")}`
+            : "",
+          snap.value_proposition ? `Stated promise: ${snap.value_proposition}` : "",
+          snap.concept_summary || snap.business_concept
+            ? `Concept: ${snap.concept_summary || snap.business_concept}`
+            : "",
+          "",
+          blurbSources || excerpts.slice(0, 12000),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        blurbInstructions,
+      );
+      const parsed = parseJsonObject(raw);
+      const glance = String(parsed?.glance ?? "").trim();
+      const value = String(parsed?.value ?? "").trim();
+      if (glance.length > 120 && value.length > 120) blurbs = { glance, value };
+    } catch (e) {
+      console.error("[venture-exec-summary] overview blurbs failed", e);
+    }
+
     const { error: upErr } = await admin
       .from("venture_snapshots")
       .update({
         executive_summary: summary,
         executive_metrics: metrics,
+        ...(blurbs ? { overview_blurbs: blurbs } : {}),
         executive_summary_at: new Date().toISOString(),
       })
       .eq("id", snapshotId);
@@ -370,7 +435,8 @@ Deno.serve(async (req) => {
       return json({ error: "Could not save the summary." }, 500);
     }
 
-    return json({ ok: true, cached: false, summary, metrics, assetCount: docs.length });
+    return json({ ok: true, cached: false, summary, metrics, blurbs, assetCount: docs.length });
+
   } catch (e) {
     console.error("[venture-exec-summary]", e);
     return json({ error: e instanceof Error ? e.message : String(e) }, 500);
