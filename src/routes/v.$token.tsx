@@ -105,6 +105,23 @@ export default function VentureSharePage() {
     }
   }, [isMobile, activeKey, items]);
 
+  // Remember what has been read so the contents can show progress.
+  useEffect(() => {
+    if (!activeKey || activeKey === BRAIN_KEY) return;
+    setViewed((prev) => {
+      if (prev.includes(activeKey)) return prev;
+      const next = [...prev, activeKey];
+      try {
+        sessionStorage.setItem(`share-viewed:${token}`, JSON.stringify(next));
+      } catch {
+        /* private mode */
+      }
+      return next;
+    });
+  }, [activeKey, token]);
+
+
+
   const brainOn = (payload?.chatEnabled !== false || payload?.mapEnabled !== false) && !!payload;
   const brainActive = activeKey === BRAIN_KEY;
 
