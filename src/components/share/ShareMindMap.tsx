@@ -181,19 +181,16 @@ export function ShareMindMap({
         width={size.w}
         height={size.h}
         graphData={graph as any}
-        cooldownTicks={reducedMotion ? 90 : Infinity}
-        d3AlphaDecay={reducedMotion ? 0.0228 : 0.012}
-        d3VelocityDecay={reducedMotion ? 0.4 : 0.28}
+        cooldownTicks={120}
+        d3AlphaDecay={0.0228}
+        d3VelocityDecay={0.4}
         backgroundColor="rgba(0,0,0,0)"
         nodeRelSize={4}
         onNodeHover={(n: any) => setHover(n?.id ?? null)}
         onNodeClick={(n: any) => n?.itemKey && onOpenItem(n.itemKey)}
-        /* Fluid, floating connectors */
-        linkCurvature={(l: any) =>
-          reducedMotion
-            ? 0
-            : 0.12 + Math.sin(clockRef.current * 0.6 + seeded(linkId(l)) * 6.28) * 0.05
-        }
+        /* Fluid connectors: a fixed gentle curve per link (cheap, stable). */
+        linkCurvature={(l: any) => (reducedMotion ? 0 : 0.08 + seeded(linkId(l)) * 0.1)}
+
         linkColor={(l: any) => {
           const lit = touchesHover(l);
           const dim = hoverRef.current && !lit;
