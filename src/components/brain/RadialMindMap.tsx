@@ -197,6 +197,7 @@ export function RadialMindMap({
         match: matches(String(section.label || "")),
         angle,
         labelLane: 0,
+        order: sectionIndex,
       };
       nodes.push(cluster);
       links.push({
