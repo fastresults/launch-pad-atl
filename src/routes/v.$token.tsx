@@ -528,7 +528,8 @@ export default function VentureSharePage() {
                       onScenarioChange={onScenarioChange}
                       exportSlot={
                         <SectionExportMenu
-                          label={`Export ${activeItem.title}`}
+                          variant="pill"
+                          label="Download"
                           build={() => buildSectionDoc(payload, activeItem)}
                         />
                       }
