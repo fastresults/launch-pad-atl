@@ -170,6 +170,8 @@ export function RadialMindMap({
       branch: "mindmap-root",
       phase: 0,
       match: true,
+      angle: -Math.PI / 2,
+      labelLane: 0,
     };
     nodes.push(root);
 
