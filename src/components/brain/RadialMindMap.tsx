@@ -192,6 +192,8 @@ export function RadialMindMap({
         branch,
         phase: seeded(branch) * 4,
         match: matches(String(section.label || "")),
+        angle,
+        labelLane: 0,
       };
       nodes.push(cluster);
       links.push({
