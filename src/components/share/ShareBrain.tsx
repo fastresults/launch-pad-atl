@@ -3,6 +3,8 @@ import { Loader2, MessageCircle, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
 import { ShareChatPanel } from "@/components/share/ShareChatPanel";
+import { MindMapBoundary } from "@/components/share/MindMapBoundary";
+
 
 const ShareMindMap = lazy(() =>
   import("@/components/share/ShareMindMap").then((m) => ({ default: m.ShareMindMap })),
