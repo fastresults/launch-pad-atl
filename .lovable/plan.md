@@ -39,4 +39,4 @@ The bars are packed tightly enough that the labels collide and become unreadable
 
 ## Verification
 
-Typecheck, run the existing scheduler tests, then check in the browser: the list appears under the canvas in the hub card and on a share link, phase grouping and dates match the bars, clicking a row selects the bar (and updates the hash on the share link), expanded actions open an asset and seed the second brain, and the nudge controls are absent on the public view.
+Typecheck, run the existing scheduler tests, then check in the browser: the list appears under the canvas in the hub card and on a share link, phase grouping and dates match the bars, clicking a row selects the bar (and updates the hash on the share link), expanded actions open an asset and seed the second brain, the nudge controls are absent on the public view, and hovering a crowded bar magnifies it and shows a readable floating card that stays inside the canvas at both zoom extremes.
