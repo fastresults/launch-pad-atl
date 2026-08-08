@@ -3461,6 +3461,7 @@ export type Database = {
           is_favorite: boolean
           market_research: string | null
           market_scope: string | null
+          overview_blurbs: Json | null
           region: string | null
           research_artifacts: Json | null
           research_brief: Json | null
@@ -3513,6 +3514,7 @@ export type Database = {
           is_favorite?: boolean
           market_research?: string | null
           market_scope?: string | null
+          overview_blurbs?: Json | null
           region?: string | null
           research_artifacts?: Json | null
           research_brief?: Json | null
@@ -3565,6 +3567,7 @@ export type Database = {
           is_favorite?: boolean
           market_research?: string | null
           market_scope?: string | null
+          overview_blurbs?: Json | null
           region?: string | null
           research_artifacts?: Json | null
           research_brief?: Json | null

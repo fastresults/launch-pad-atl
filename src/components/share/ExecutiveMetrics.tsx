@@ -8,9 +8,13 @@ import type { ShareMetric } from "@/lib/venture-share.functions";
 export function ExecutiveMetrics({
   metrics,
   accent,
+  eyebrow = "By the numbers",
+  footnote = "Projections drawn from this venture's own financial and pricing assets — not guarantees.",
 }: {
   metrics: ShareMetric[];
   accent?: string | null;
+  eyebrow?: string;
+  footnote?: string | null;
 }) {
   if (!metrics?.length) return null;
   const line = accent ?? "hsl(var(--primary))";
@@ -18,7 +22,7 @@ export function ExecutiveMetrics({
   return (
     <div className="mb-10">
       <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-        By the numbers
+        {eyebrow}
       </p>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         {metrics.map((m) => (
@@ -42,9 +46,7 @@ export function ExecutiveMetrics({
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">
-        Projections drawn from this venture's own financial and pricing assets — not guarantees.
-      </p>
+      {footnote && <p className="mt-3 text-xs text-muted-foreground">{footnote}</p>}
     </div>
   );
 }
