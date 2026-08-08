@@ -122,13 +122,38 @@ export function TimelineCanvas({
   );
 
   // --- wheel zoom (native, non-passive) --------------------------------------
+  // The surface stays "asleep" until the pointer has rested on it for 2s, so a
+  // page scroll passing over the timeline never gets hijacked into a zoom.
   const zoomRef = useRef({ pxPerDay, originDay, plotW, totalDays });
   zoomRef.current = { pxPerDay, originDay, plotW, totalDays };
+  const armedRef = useRef(false);
+  const [armed, setArmed] = useState(false);
 
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const arm = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        armedRef.current = true;
+        setArmed(true);
+      }, 2000);
+    };
+    const disarm = () => {
+      if (timer) clearTimeout(timer);
+      timer = null;
+      armedRef.current = false;
+      setArmed(false);
+    };
+
     const onWheel = (e: WheelEvent) => {
+      if (!armedRef.current) {
+        // Let the page scroll past; restart the dwell timer.
+        arm();
+        return;
+      }
       e.preventDefault();
       const rect = el.getBoundingClientRect();
       const px = e.clientX - rect.left;
@@ -145,9 +170,21 @@ export function TimelineCanvas({
       setPxPerDay(next);
       setOriginDay(clampOrigin(anchorDay - (px - PAD_L) / next));
     };
+
     el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
+    el.addEventListener("pointerenter", arm);
+    el.addEventListener("pointermove", () => {
+      if (!armedRef.current) arm();
+    });
+    el.addEventListener("pointerleave", disarm);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("pointerenter", arm);
+      el.removeEventListener("pointerleave", disarm);
+      disarm();
+    };
   }, [clampOrigin]);
+
 
   // --- drag to pan ------------------------------------------------------------
   const drag = useRef<{ x: number; origin: number } | null>(null);
