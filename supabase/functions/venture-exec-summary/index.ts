@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
     let metrics: ExecMetric[] = [];
     if (moneyDocs.length) {
       const extractInstructions = [
-        "You extract hard figures from a founder's own финансовые documents. Return json only.",
+        "You extract hard figures from a founder's own financial documents. Return json only.",
         "",
         "Read the assets and return this json shape and nothing else:",
         '{"metrics":[{"label":"","value":"","note":"","source":""}]}',
