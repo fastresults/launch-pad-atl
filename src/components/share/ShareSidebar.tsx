@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
-import { ChevronRight, FileText, Search, Sparkle } from "lucide-react";
+import { ChevronRight, FileText, Route, Search, Sparkle } from "lucide-react";
 
 /** Sidebar key for the featured second-brain tool (not a payload asset). */
 export const BRAIN_KEY = "tool:brain";
