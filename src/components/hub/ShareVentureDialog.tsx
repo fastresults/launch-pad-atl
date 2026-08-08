@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Check, Copy, ExternalLink, FileText, Image as ImageIcon, Link2, Loader2, Network, Share2 } from "lucide-react";
+import { Check, Copy, ExternalLink, FileText, Image as ImageIcon, Link2, Loader2, Share2 } from "lucide-react";
 import { invokeEdge } from "@/lib/edge-invoke";
 import {
   createVentureShare,
