@@ -19,9 +19,11 @@ import { invokeEdge } from "@/lib/edge-invoke";
 import {
   createVentureShare,
   getVentureShare,
+  isSlugAvailable,
   revokeVentureShare,
   sha256Hex,
   shareUrl,
+  slugError,
   updateVentureShare,
 } from "@/lib/venture-share.functions";
 
