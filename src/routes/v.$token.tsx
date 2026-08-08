@@ -78,8 +78,17 @@ export default function VentureSharePage() {
     if (decoded) setReaderScenario(decoded);
   }, [items]);
 
+  // A #tool:brain link on a phone opens the sheet rather than the pane section.
+  useEffect(() => {
+    if (isMobile && activeKey === BRAIN_KEY) {
+      setBrainOpen(true);
+      setActiveKey(items[0]?.key ?? null);
+    }
+  }, [isMobile, activeKey, items]);
+
   const brainOn = (payload?.chatEnabled !== false || payload?.mapEnabled !== false) && !!payload;
   const brainActive = activeKey === BRAIN_KEY;
+
   const timelineActive = activeKey === TIMELINE_KEY;
   const activeIndex = items.findIndex((i) => i.key === activeKey);
   const activeItem = activeIndex >= 0 ? items[activeIndex] : null;
