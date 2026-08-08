@@ -3485,6 +3485,9 @@ export type Database = {
           updated_at: string
           user_id: string
           value_proposition: string | null
+          venture_timeline: Json | null
+          venture_timeline_at: string | null
+          venture_timeline_scenario: Json | null
           website_url: string | null
         }
         Insert: {
@@ -3538,6 +3541,9 @@ export type Database = {
           updated_at?: string
           user_id: string
           value_proposition?: string | null
+          venture_timeline?: Json | null
+          venture_timeline_at?: string | null
+          venture_timeline_scenario?: Json | null
           website_url?: string | null
         }
         Update: {
@@ -3591,6 +3597,9 @@ export type Database = {
           updated_at?: string
           user_id?: string
           value_proposition?: string | null
+          venture_timeline?: Json | null
+          venture_timeline_at?: string | null
+          venture_timeline_scenario?: Json | null
           website_url?: string | null
         }
         Relationships: []
