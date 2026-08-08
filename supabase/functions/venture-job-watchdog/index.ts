@@ -167,7 +167,44 @@ Deno.serve(async (req) => {
       resumed += logoCalls.length;
     }
 
-    return new Response(JSON.stringify({ ok: true, paused, unstuck, resumed }), {
+    // Header-art safety net: any recently touched venture that still has
+    // completed assets without illustrations gets swept in the background, so
+    // nobody has to open an asset (or a share link) to trigger generation.
+    let heroSweeps = 0;
+    try {
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: gaps } = await supabase
+        .from("venture_documents")
+        .select("snapshot_id, updated_at")
+        .eq("status", "complete")
+        .is("hero_image_path", null)
+        .gte("updated_at", since)
+        .order("updated_at", { ascending: false })
+        .limit(200);
+      const snapshotIds = Array.from(new Set((gaps ?? []).map((r: any) => r.snapshot_id))).slice(0, 3);
+      const sweeps = snapshotIds.map((snapshotId) =>
+        fetch(`${SUPABASE_URL}/functions/v1/venture-hero-sweep`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-key": SERVICE_KEY,
+            Authorization: `Bearer ${SERVICE_KEY}`,
+          },
+          body: JSON.stringify({ snapshotId }),
+        }).catch((e) => console.error("hero sweep failed", e)),
+      );
+      heroSweeps = sweeps.length;
+      if (sweeps.length) {
+        const pending = Promise.allSettled(sweeps);
+        const edgeRuntime = (globalThis as any).EdgeRuntime;
+        if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(pending);
+        else await pending;
+      }
+    } catch (e) {
+      console.error("hero sweep pass failed", e);
+    }
+
+    return new Response(JSON.stringify({ ok: true, paused, unstuck, resumed, heroSweeps }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

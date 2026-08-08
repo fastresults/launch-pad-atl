@@ -927,6 +927,23 @@ async function runJob(
     await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
 
   }
+
+  // Header art must never depend on someone opening the asset. Sweep the whole
+  // venture in the background once the run settles, so every completed asset
+  // (and therefore every share link) already has its illustration cached.
+  try {
+    const sweep = fetch(`${SUPABASE_URL}/functions/v1/venture-hero-sweep`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-key": SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+      },
+      body: JSON.stringify({ snapshotId }),
+    }).catch(() => {});
+    const edgeRuntime = (globalThis as any).EdgeRuntime;
+    if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(sweep);
+  } catch { /* best-effort */ }
 }
 
 
