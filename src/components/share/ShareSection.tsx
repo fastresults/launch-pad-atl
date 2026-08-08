@@ -77,7 +77,7 @@ export function ShareSection({ item, accent }: { item: ShareItem; accent?: strin
       )}
 
 
-      {!!item.metrics?.length && (
+      {item.kind !== "timeline" && !!item.metrics?.length && (
         <ExecutiveMetrics
           metrics={item.metrics}
           accent={accent}
