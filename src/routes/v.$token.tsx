@@ -11,18 +11,23 @@ import { ShareBrain } from "@/components/share/ShareBrain";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  CategoryStepper,
+  ChapterCard,
+  MobileBottomBar,
+  MobilePrevNext,
+} from "@/components/share/MobileReader";
 import {
   ArrowLeft,
   ArrowRight,
   ExternalLink,
-  List,
   Loader2,
   Lock,
   Menu,
-  Share2,
   Sparkle,
 } from "lucide-react";
+
 
 
 export default function VentureSharePage() {
@@ -39,10 +44,22 @@ export default function VentureSharePage() {
   /** On a phone the second brain is a full-screen sheet, not a pane section. */
   const [brainOpen, setBrainOpen] = useState(false);
   const [blurbOpen, setBlurbOpen] = useState(false);
+  /** Assets already opened this session, so the contents shows progress. */
+  const [viewed, setViewed] = useState<string[]>(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem(`share-viewed:${token}`) ?? "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [swipeHint, setSwipeHint] = useState(
+    () => typeof localStorage !== "undefined" && !localStorage.getItem("share-swipe-hint"),
+  );
   const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
   const touchX = useRef<number | null>(null);
   const touchY = useRef<number | null>(null);
+
 
 
 
@@ -86,6 +103,23 @@ export default function VentureSharePage() {
     }
   }, [isMobile, activeKey, items]);
 
+  // Remember what has been read so the contents can show progress.
+  useEffect(() => {
+    if (!activeKey || activeKey === BRAIN_KEY) return;
+    setViewed((prev) => {
+      if (prev.includes(activeKey)) return prev;
+      const next = [...prev, activeKey];
+      try {
+        sessionStorage.setItem(`share-viewed:${token}`, JSON.stringify(next));
+      } catch {
+        /* private mode */
+      }
+      return next;
+    });
+  }, [activeKey, token]);
+
+
+
   const brainOn = (payload?.chatEnabled !== false || payload?.mapEnabled !== false) && !!payload;
   const brainActive = activeKey === BRAIN_KEY;
 
@@ -93,6 +127,25 @@ export default function VentureSharePage() {
   const activeIndex = items.findIndex((i) => i.key === activeKey);
   const activeItem = activeIndex >= 0 ? items[activeIndex] : null;
   const activeSection = payload?.sections.find((s) => s.items.some((i) => i.key === activeKey));
+
+  const prevItem = activeIndex > 0 ? items[activeIndex - 1] : null;
+  const nextItem =
+    activeIndex >= 0 && activeIndex < items.length - 1 ? items[activeIndex + 1] : null;
+  const sectionOf = (key: string | null | undefined) =>
+    key ? payload?.sections.find((s) => s.items.some((i) => i.key === key)) ?? null : null;
+  const prevSection = sectionOf(prevItem?.key);
+  const nextSection = sectionOf(nextItem?.key);
+  /** True when the next asset opens a different chapter than the current one. */
+  const crossesChapter = !!nextSection && nextSection.key !== activeSection?.key;
+  /** True when the current asset is the first of its chapter (and not the very first). */
+  const opensChapter =
+    !!activeSection &&
+    activeSection.items[0]?.key === activeKey &&
+    payload?.sections[0]?.key !== activeSection.key;
+  const posInSection = activeSection
+    ? activeSection.items.findIndex((i) => i.key === activeKey) + 1
+    : 0;
+
 
   const hashFor = (key: string, step?: string | null) =>
     `${window.location.pathname}${window.location.search}#${step ? `${key}/${step}` : key}`;
@@ -125,9 +178,21 @@ export default function VentureSharePage() {
     touchX.current = null;
     touchY.current = null;
     if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+    dismissHint();
     const next = dx < 0 ? activeIndex + 1 : activeIndex - 1;
     if (activeIndex >= 0 && next >= 0 && next < items.length) goTo(items[next].key);
   };
+
+  /** The swipe cue is shown once per device, then never again. */
+  const dismissHint = () => {
+    setSwipeHint(false);
+    try {
+      localStorage.setItem("share-swipe-hint", "1");
+    } catch {
+      /* private mode */
+    }
+  };
+
 
   /** Phones have a native share sheet; everything else copies the link. */
   const shareLink = async () => {
@@ -251,11 +316,13 @@ export default function VentureSharePage() {
                   <h1 className="truncate font-serif text-[17px] leading-tight tracking-tight">
                     {payload.venture.name}
                   </h1>
-                  {!condensed && (
-                    <p className="text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground">
-                      {items.length} assets
-                    </p>
-                  )}
+                  {/* Chapter + position never scroll away, so nobody loses their place. */}
+                  <p className="truncate text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground">
+                    {activeIndex >= 0 ? `${activeIndex + 1} / ${items.length}` : `${items.length} assets`}
+                    {activeSection ? (
+                      <span className="text-primary"> · {activeSection.label}</span>
+                    ) : null}
+                  </p>
                 </div>
                 {payload.venture.website && (
                   <a
@@ -281,7 +348,22 @@ export default function VentureSharePage() {
                   </span>
                 </button>
               )}
+              {/* Progress through the whole set. */}
+              <div className="mt-2 h-[2px] w-full overflow-hidden rounded-full bg-border/60">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  style={{
+                    width: `${items.length ? ((activeIndex + 1) / items.length) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+              <CategoryStepper
+                sections={payload.sections}
+                activeSectionKey={activeSection?.key ?? null}
+                onJump={(k) => k && goTo(k)}
+              />
             </header>
+
           ) : (
             /* Masthead — condenses once the reader starts working. */
             <header
@@ -404,10 +486,21 @@ export default function VentureSharePage() {
                 />
               ) : (
                 <>
-                  {activeSection && (
-                    <p className="text-[11px] uppercase tracking-[0.22em] text-primary">
-                      {activeSection.label}
-                    </p>
+                  {isMobile && opensChapter && activeSection ? (
+                    <ChapterCard
+                      section={activeSection}
+                      activeKey={activeKey}
+                      onJump={(k) => goTo(k)}
+                    />
+                  ) : (
+                    activeSection && (
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-primary">
+                        {activeSection.label}
+                        {isMobile && posInSection
+                          ? ` · ${posInSection} of ${activeSection.items.length}`
+                          : ""}
+                      </p>
+                    )
                   )}
                   {activeItem && (
                     <ShareSection
@@ -426,43 +519,73 @@ export default function VentureSharePage() {
 
 
               {/* Prev / next keeps the whole set walkable without the sidebar. */}
-              <div
-                hidden={brainActive || timelineActive}
-                className={`mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 ${
-                  isMobile ? "pt-4" : "pt-6"
-                }`}
-              >
-                {activeIndex > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => goTo(items[activeIndex - 1].key)}
-                    className={`group max-w-[46%] text-left ${isMobile ? "min-h-[56px] py-2" : ""}`}
-                  >
-                    <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                      <ArrowLeft className="h-3.5 w-3.5" /> Previous
-                    </span>
-                    <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
-                      {items[activeIndex - 1].title}
-                    </span>
-                  </button>
-                ) : (
-                  <span />
-                )}
-                {activeIndex >= 0 && activeIndex < items.length - 1 && (
-                  <button
-                    type="button"
-                    onClick={() => goTo(items[activeIndex + 1].key)}
-                    className={`group max-w-[46%] text-right ${isMobile ? "min-h-[56px] py-2" : ""}`}
-                  >
-                    <span className="flex items-center justify-end gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-                      Next <ArrowRight className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
-                      {items[activeIndex + 1].title}
-                    </span>
-                  </button>
-                )}
-              </div>
+              {isMobile ? (
+                !brainActive && (
+                  <>
+                    {swipeHint && (
+                      <button
+                        type="button"
+                        onClick={dismissHint}
+                        className="mt-6 w-full rounded-xl border border-border/60 bg-card/40 px-3 py-2 text-[12px] text-muted-foreground"
+                      >
+                        Swipe left or tap Next to keep moving through the venture · Dismiss
+                      </button>
+                    )}
+                    <MobilePrevNext
+                      prev={prevItem ? { item: prevItem, sectionLabel: prevSection?.label } : null}
+                      next={nextItem ? { item: nextItem, sectionLabel: nextSection?.label } : null}
+                      nextSection={crossesChapter ? nextSection?.label ?? null : null}
+                      chapterDone={
+                        crossesChapter && activeSection
+                          ? {
+                              label: activeSection.label,
+                              position: `${activeSection.items.length} of ${activeSection.items.length}`,
+                            }
+                          : null
+                      }
+                      onGo={(k) => goTo(k)}
+                      onContents={() => setNavOpen(true)}
+                    />
+                  </>
+                )
+              ) : (
+                <div
+                  hidden={brainActive || timelineActive}
+                  className="mt-8 flex items-stretch justify-between gap-4 border-t border-border/60 pt-6"
+                >
+                  {activeIndex > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => goTo(items[activeIndex - 1].key)}
+                      className="group max-w-[46%] text-left"
+                    >
+                      <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                        <ArrowLeft className="h-3.5 w-3.5" /> Previous
+                      </span>
+                      <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
+                        {items[activeIndex - 1].title}
+                      </span>
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+                  {activeIndex >= 0 && activeIndex < items.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => goTo(items[activeIndex + 1].key)}
+                      className="group max-w-[46%] text-right"
+                    >
+                      <span className="flex items-center justify-end gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+                        Next <ArrowRight className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="mt-1 block truncate text-sm text-foreground group-hover:text-primary">
+                        {items[activeIndex + 1].title}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+
 
               {!brainActive && (
                 <footer className="mt-12 border-t border-border/60 pt-8 text-xs text-muted-foreground">
@@ -486,46 +609,27 @@ export default function VentureSharePage() {
 
           {isMobile && (
             <>
-              {/* Thumb-reachable bar: contents, second brain, share. */}
-              <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-                <div className="grid grid-cols-3">
-                  <button
-                    type="button"
-                    onClick={() => setNavOpen(true)}
-                    className="flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"
-                  >
-                    <List className="h-5 w-5" />
-                    Contents
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => (brainOn ? setBrainOpen(true) : undefined)}
-                    disabled={!brainOn}
-                    className="flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] text-primary disabled:opacity-40"
-                  >
-                    <Sparkle className="h-5 w-5" />
-                    Ask
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void shareLink()}
-                    className="flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground"
-                  >
-                    <Share2 className="h-5 w-5" />
-                    Share
-                  </button>
-                </div>
-              </nav>
+              {/* Thumb-reachable bar: contents, second brain, share, and forward motion. */}
+              <MobileBottomBar
+                brainOn={brainOn}
+                nextTitle={nextItem?.title ?? null}
+                onContents={() => setNavOpen(true)}
+                onAsk={() => setBrainOpen(true)}
+                onShare={() => void shareLink()}
+                onNext={() => nextItem && goTo(nextItem.key)}
+              />
 
               <Sheet open={navOpen} onOpenChange={setNavOpen}>
                 <SheetContent
                   side="bottom"
                   className="theme-dark-scope flex h-[85dvh] flex-col rounded-t-3xl bg-background px-4 pb-[calc(env(safe-area-inset-bottom)+12px)] pt-6"
                 >
+                  <SheetTitle className="sr-only">Contents</SheetTitle>
                   <ShareSidebar
                     payload={payload}
                     activeKey={activeKey}
                     variant="sheet"
+                    viewedKeys={viewed}
                     onNavigate={(k) => {
                       goTo(k);
                       setNavOpen(false);
@@ -539,6 +643,7 @@ export default function VentureSharePage() {
                   side="bottom"
                   className="theme-dark-scope flex h-[100dvh] flex-col rounded-none bg-background px-4 pb-[env(safe-area-inset-bottom)] pt-[calc(env(safe-area-inset-top)+16px)]"
                 >
+                  <SheetTitle className="sr-only">Second brain</SheetTitle>
                   <ShareBrain
                     token={token}
                     password={submitted}
@@ -550,8 +655,18 @@ export default function VentureSharePage() {
                     }}
                     seedQuestion={seedQuestion}
                   />
+                  {activeItem && (
+                    <button
+                      type="button"
+                      onClick={() => setBrainOpen(false)}
+                      className="mt-2 min-h-[48px] w-full shrink-0 rounded-xl border border-border/60 text-[13px] text-muted-foreground"
+                    >
+                      Back to {activeItem.title}
+                    </button>
+                  )}
                 </SheetContent>
               </Sheet>
+
             </>
           )}
 
