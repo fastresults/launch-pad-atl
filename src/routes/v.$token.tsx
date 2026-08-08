@@ -543,6 +543,14 @@ export default function VentureSharePage() {
               {isMobile ? (
                 !brainActive && (
                   <>
+                    {activeItem && (
+                      <SectionExportMenu
+                        variant="primary"
+                        label="Download this asset"
+                        className="mt-6 h-12 w-full rounded-2xl"
+                        build={() => buildSectionDoc(payload, activeItem)}
+                      />
+                    )}
                     {swipeHint && (
                       <button
                         type="button"
