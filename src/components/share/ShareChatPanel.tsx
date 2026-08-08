@@ -165,13 +165,32 @@ export function ShareChatPanel({
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
 
+      {/* Starter chips sit with the input, and disappear after the first ask. */}
+      {!messages.length && (
+        <div className="flex shrink-0 gap-2 overflow-x-auto border-t border-border/60 px-3 pt-3">
+          {["What problem does this solve?", "How does it make money?", "What happens in the first 14 days?"].map(
+            (s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => void send(s)}
+                className="shrink-0 rounded-full border border-border/60 px-3 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+              >
+                {s}
+              </button>
+            ),
+          )}
+        </div>
+      )}
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void send(input);
         }}
-        className="flex shrink-0 items-end gap-2 border-t border-border/60 p-3"
+        className={`flex shrink-0 items-end gap-2 p-3 ${messages.length ? "border-t border-border/60" : ""}`}
       >
+
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
