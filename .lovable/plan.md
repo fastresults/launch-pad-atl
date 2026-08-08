@@ -18,9 +18,32 @@ Create one markdown file that answers every field in the attached "Quick questio
 6. **Tone of copy** — punchy & bold, matched to existing site voice rules: "startup" not "business", "asset" not "document", "framework" not "template", and never framed as a plan/playbook — it's a done-with-you build.
 7. **Extras the form implies** — a suggested beat-by-beat shot list and on-screen copy for the 30 seconds, plus the CTA.
 
+## Attendee-facing Foundation brief (added section in the same file)
+
+A complete brief written for someone who has registered for a Startup Labs Foundation workshop — what the stage is, what they do in the room, and what they leave with. It goes in the same markdown file under its own heading so the animator has the substance, not just the specs.
+
+Contents:
+
+- **What Foundation is** — Stage 01, the bedrock every defensible startup is built on. The one drafting stage: the attendee writes the one-page story of their startup with worksheet support and AI sharpening. Every stage after Foundation switches to mentored working sessions that inherit and pressure-test this language.
+- **Before you arrive** — bring the idea, an open laptop, and any existing copy; no prep deck required.
+- **In the room (25-min core block)** — draft the Foundation four in this order: the "why customers pick you" line using the [Who] + [Problem] + [Outcome] + [Unfair advantage] frame; vision and mission side by side; the problem named in the customer's own words; then the one-page story last, as a distillation of the other three.
+- **The eight assets you walk out with** — each with the plain-English "what it is / what it changes for you" line already written on the site:
+  1. Your one-page story
+  2. What you stand for
+  3. The problem you solve
+  4. Why customers pick you
+  5. Your day-by-day launch plan
+  6. Your AI toolkit, picked for you
+  7. 25 ready-to-use AI prompts
+  8. Your weekly rhythm
+- **Where the work lives** — every asset lands on the attendee's dashboard under the Foundation stage immediately, editable forever, and every downstream stage reads from it.
+- **The first 48 hours after** — paste the "why customers pick you" line into the homepage hero; test the one-page story on three people who fit the buyer profile and refine where they get confused.
+- **How you know it worked** — a stranger can repeat your one-liner back to you correctly.
+
 ## Screenshots note
 
 The form also asks for screenshots of the section. Markdown can't carry image uploads — the file will instead point to the live section URL and describe the section layout precisely, so whoever animates it has the visual reference in words. Say the word if you'd rather I also drop captured PNGs into `public/`.
+
 
 ## Technical notes
 
