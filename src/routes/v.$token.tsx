@@ -11,7 +11,13 @@ import { ShareBrain } from "@/components/share/ShareBrain";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  CategoryStepper,
+  ChapterCard,
+  MobileBottomBar,
+  MobilePrevNext,
+} from "@/components/share/MobileReader";
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,6 +29,7 @@ import {
   Share2,
   Sparkle,
 } from "lucide-react";
+
 
 
 export default function VentureSharePage() {
