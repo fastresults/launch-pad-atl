@@ -29,9 +29,10 @@ const components = {
     return <code className={cn("whitespace-pre-wrap break-words", className)}>{children}</code>;
   },
   table: ({ children }: any) => (
-    <div className="my-8 max-w-full overflow-x-auto rounded-xl border border-border/60">
+    <div className="my-8 max-w-full overflow-x-auto rounded-xl border border-border/60 max-md:[mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)]">
       <table className="w-full border-collapse text-sm sm:min-w-[520px]">{children}</table>
     </div>
+
   ),
   th: ({ children }: any) => (
     <th className="border-b border-border/60 bg-muted/30 px-3 py-2 text-left align-top text-[13px] font-semibold [overflow-wrap:anywhere]">
