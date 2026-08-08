@@ -436,11 +436,17 @@ export default function VentureSharePage() {
                     </a>
                   </Button>
                 )}
+                <SectionExportMenu
+                  variant="button"
+                  label="Export everything"
+                  className={`shrink-0 ${payload.venture.website ? "" : "ml-auto"}`}
+                  build={() => buildFullDoc(payload)}
+                />
                 {brainOn && (
                   <Button
                     variant="outline"
                     size={condensed ? "sm" : "default"}
-                    className={`hidden shrink-0 md:inline-flex ${payload.venture.website ? "" : "ml-auto"}`}
+                    className="hidden shrink-0 md:inline-flex"
                     onClick={() => goTo(BRAIN_KEY)}
                   >
                     <Sparkle className="mr-1.5 h-4 w-4" />
