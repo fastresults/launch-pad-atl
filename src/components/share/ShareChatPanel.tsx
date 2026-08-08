@@ -148,111 +148,143 @@ export function ShareChatPanel({
     );
   }
 
+  const empty = !messages.length;
+
   return (
     <div
       className={
         embedded
-          ? "flex h-full min-h-[320px] w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/60"
+          ? "flex h-full min-h-[320px] w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card"
           : "fixed bottom-4 right-4 z-40 flex h-[min(70vh,560px)] w-[min(92vw,420px)] flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl"
       }
     >
       {!hideHeader && (
-      <header className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">Ask about {ventureName}</p>
-          <p className="text-[11px] text-muted-foreground">Answers come from this venture's own assets</p>
-        </div>
-        {!embedded && (
-          <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close chat">
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </header>
+        <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <Brain className="h-4 w-4 shrink-0 text-primary" />
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-foreground">Second Brain</div>
+              <div className="truncate text-[11px] text-muted-foreground">
+                Answers come from {ventureName}'s own assets
+              </div>
+            </div>
+          </div>
+          {!embedded && (
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close chat">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </header>
       )}
 
       <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
-        {!messages.length && (
-          <p className="text-sm text-muted-foreground">
-            Ask anything — the model, the plan, the numbers, the next 14 days.
-          </p>
+        {empty ? (
+          <div className="flex h-full flex-col justify-between gap-4">
+            <div className="space-y-2">
+              <p className="text-sm text-foreground">
+                Ask anything about this venture — the model, the offer, the numbers, the next 30 days.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Every answer is grounded in the assets shared on this page.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {STARTERS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    onInteract?.();
+                    void send(s);
+                  }}
+                  className="rounded-full border border-border/60 bg-background/60 px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/10"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          messages.map((m, i) =>
+            m.role === "user" ? (
+              <div key={i} className="flex justify-end">
+                <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm text-primary-foreground">
+                  {m.content}
+                </div>
+              </div>
+            ) : (
+              <div key={i} className="max-w-full text-sm text-foreground">
+                <MarkdownProse className="text-sm">{m.content}</MarkdownProse>
+              </div>
+            ),
+          )
         )}
 
-
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={
-              m.role === "user"
-                ? "ml-auto max-w-[85%] rounded-2xl bg-primary px-3.5 py-2.5 text-sm text-primary-foreground"
-                : "max-w-full rounded-2xl bg-muted/40 px-3.5 py-2.5"
-            }
-          >
-            {m.role === "user" ? m.content : <MarkdownProse className="text-sm">{m.content}</MarkdownProse>}
-          </div>
-        ))}
-
         {busy && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Thinking…
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" /> Thinking…
           </div>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
 
-      {/* Starter chips sit with the input, and disappear after the first ask. */}
-      {!messages.length && (
-        <div className="flex shrink-0 gap-2 overflow-x-auto border-t border-border/60 px-3 pt-3">
-          {["What problem does this solve?", "How does it make money?", "What happens in the first 14 days?"].map(
-            (s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => void send(s)}
-                className="shrink-0 rounded-full border border-border/60 px-3 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-              >
-                {s}
-              </button>
-            ),
-          )}
-        </div>
-      )}
-
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          onInteract?.();
           void send(input);
         }}
-        className={`flex shrink-0 items-end gap-2 p-3 ${messages.length ? "border-t border-border/60" : ""}`}
+        className="shrink-0 border-t border-border/60 p-3"
       >
-
-        <textarea
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void send(input);
-            }
-          }}
-          rows={1}
-          placeholder={recording ? "Listening…" : "Type your question"}
-          className="max-h-28 min-h-[40px] flex-1 resize-none rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/60"
-        />
-
-        <Button
-          type="button"
-          variant={recording ? "destructive" : "outline"}
-          size="icon"
-          onClick={() => void toggleRecording()}
-          aria-label={recording ? "Stop recording" : "Ask by voice"}
-        >
-          {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-        </Button>
-        <Button type="submit" size="icon" disabled={busy || !input.trim()} aria-label="Send question">
-          <Send className="h-4 w-4" />
-        </Button>
+        <div className="flex items-end gap-2 rounded-xl border border-border/60 bg-background/40 p-2 focus-within:border-primary/60">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onFocus={() => onInteract?.()}
+            onChange={(e) => {
+              onInteract?.();
+              setInput(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                onInteract?.();
+                void send(input);
+              }
+            }}
+            rows={1}
+            placeholder={recording ? "Listening… tap the square to send" : "Ask, or press the mic to speak"}
+            className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm focus:outline-none"
+            disabled={busy || recording}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              onInteract?.();
+              void toggleRecording();
+            }}
+            className={cn(
+              "inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 text-foreground hover:bg-muted disabled:opacity-40",
+              recording && "animate-pulse border-destructive/60 bg-destructive/20 text-destructive",
+            )}
+            aria-label={recording ? "Stop recording" : "Ask by voice"}
+          >
+            {recording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </button>
+          <button
+            type="submit"
+            disabled={busy || recording || !input.trim()}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40"
+            aria-label="Send question"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="mt-2 text-[10px] text-muted-foreground">
+          Grounded in this venture's brief, strategy, and finished assets.
+        </p>
       </form>
     </div>
   );
 }
+
