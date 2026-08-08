@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ShareItem } from "@/lib/venture-share.functions";
 import { MarkdownProse } from "@/components/markdown/MarkdownProse";
 import { ShareBrandBoard } from "@/components/share/ShareBrandBoard";
+import { filterShowcaseContent } from "@/lib/share-content-filter";
 
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -88,7 +89,7 @@ export function ShareSection({ item, accent }: { item: ShareItem; accent?: strin
         </div>
       )}
 
-      {item.body && <MarkdownProse>{item.body}</MarkdownProse>}
+      {item.body && <MarkdownProse>{filterShowcaseContent(item.body)}</MarkdownProse>}
 
 
       <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>

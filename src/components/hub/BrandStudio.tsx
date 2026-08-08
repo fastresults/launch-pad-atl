@@ -8,6 +8,8 @@ import { getBrandKit, resetBrandKit, upsertBrandKit } from "@/lib/brandKit.funct
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
 import { BrandIdentityHeader } from "@/components/hub/brand/BrandIdentityHeader";
 import { BrandCollateral } from "@/components/hub/brand/BrandCollateral";
+import { BrandBoardSections } from "@/components/brand/BrandBoardSections";
+import { kitToBrandBoard } from "@/lib/brand-board";
 import { SectionHeader } from "@/components/hub/SectionHeader";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/ui/confirm-dialog";
@@ -109,7 +111,18 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
             />
           )}
 
-          {kit && <div className="border-t border-white/10" />}
+          {kit && (
+            <>
+              <div className="border-t border-white/10" />
+              <BrandBoardSections
+                board={kitToBrandBoard(kit)}
+                blocks={["mood", "dna", "voice", "ctas"]}
+                emptyHint="Mood board, brand DNA, voice and calls to action appear here once you complete steps 3–5 of the brand wizard."
+              />
+              <div className="border-t border-white/10" />
+            </>
+          )}
+
 
           <BrandCollateral snapshot={snapshot} locked={locked} />
         </div>
