@@ -49,7 +49,41 @@ export function ShareBrain({
     ...(chatOn ? [{ id: "ask" as const, label: "Ask anything", icon: MessageCircle }] : []),
     ...(mapOn ? [{ id: "map" as const, label: "Mind map", icon: Network }] : []),
   ];
+
+  // Both tools take a turn every 4s so a visitor sees the map exists — until
+  // they show any intent, after which the panel stays exactly where they left it.
+  const [cycling, setCycling] = useState(false);
+  const rootRef = useRef<HTMLElement | null>(null);
+  const stop = useCallback(() => setCycling(false), []);
+
+  const canCycle = tabs.length > 1 && !seedQuestion;
+  useEffect(() => {
+    if (!canCycle) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    setCycling(true);
+  }, [canCycle]);
+
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.25 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!cycling || !visible) return;
+    const id = window.setInterval(() => {
+      setTab((t) => (t === "ask" ? "map" : "ask"));
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [cycling, visible]);
+
   if (!tabs.length) return null;
+
 
   return (
     <section className={`flex min-h-0 min-w-0 flex-col ${mobile ? "h-full pb-[env(safe-area-inset-bottom)]" : "h-full"}`}>
