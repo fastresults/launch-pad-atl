@@ -16,6 +16,10 @@ type MapNode = {
   branch: string;
   phase: number;
   match: boolean;
+  /** Outward direction of the node from its parent, used for label placement. */
+  angle: number;
+  /** Extra radial nudge so neighbouring labels in a fan do not collide. */
+  labelLane: number;
 };
 
 type MapLink = {
