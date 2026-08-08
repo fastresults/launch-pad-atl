@@ -327,8 +327,8 @@ export default function VentureSharePage() {
                   </p>
                 </div>
                 <SectionExportMenu
-                  label="Export everything"
-                  className="h-11 w-11"
+                  label="Download all"
+                  className="h-11 w-11 border-0 bg-primary text-primary-foreground hover:bg-primary/90"
                   build={() => buildFullDoc(payload)}
                 />
                 {payload.venture.website && (
@@ -425,11 +425,18 @@ export default function VentureSharePage() {
                     </p>
                   )}
                 </div>
+                <SectionExportMenu
+                  variant="primary"
+                  label="Download all"
+                  className={`ml-auto shrink-0 ${condensed ? "h-9" : "h-10"}`}
+                  build={() => buildFullDoc(payload)}
+                />
                 {payload.venture.website && (
                   <Button
                     asChild
+                    variant="outline"
                     size={condensed ? "sm" : "default"}
-                    className="ml-auto shrink-0"
+                    className="shrink-0"
                   >
                     <a
                       href={`https://${payload.venture.website}`}
@@ -441,12 +448,6 @@ export default function VentureSharePage() {
                     </a>
                   </Button>
                 )}
-                <SectionExportMenu
-                  variant="button"
-                  label="Export everything"
-                  className={`shrink-0 ${payload.venture.website ? "" : "ml-auto"}`}
-                  build={() => buildFullDoc(payload)}
-                />
                 {brainOn && (
                   <Button
                     variant="outline"
@@ -527,7 +528,8 @@ export default function VentureSharePage() {
                       onScenarioChange={onScenarioChange}
                       exportSlot={
                         <SectionExportMenu
-                          label={`Export ${activeItem.title}`}
+                          variant="pill"
+                          label="Download"
                           build={() => buildSectionDoc(payload, activeItem)}
                         />
                       }
@@ -541,6 +543,14 @@ export default function VentureSharePage() {
               {isMobile ? (
                 !brainActive && (
                   <>
+                    {activeItem && (
+                      <SectionExportMenu
+                        variant="primary"
+                        label="Download this asset"
+                        className="mt-6 h-12 w-full rounded-2xl"
+                        build={() => buildSectionDoc(payload, activeItem)}
+                      />
+                    )}
                     {swipeHint && (
                       <button
                         type="button"
