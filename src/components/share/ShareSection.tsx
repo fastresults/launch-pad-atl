@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { ShareItem } from "@/lib/venture-share.functions";
 import { MarkdownProse } from "@/components/markdown/MarkdownProse";
 import { ShareBrandBoard } from "@/components/share/ShareBrandBoard";
