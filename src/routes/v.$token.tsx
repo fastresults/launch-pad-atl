@@ -219,7 +219,11 @@ export default function VentureSharePage() {
             </main>
           </div>
 
+          {payload.chatEnabled !== false && (
+            <ShareChatPanel token={token} password={submitted} ventureName={payload.venture.name} />
+          )}
         </>
+
       )}
     </div>
   );
