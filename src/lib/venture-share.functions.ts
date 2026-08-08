@@ -160,8 +160,10 @@ export function publicOrigin() {
   return isPrivateHost ? PUBLIC_ORIGIN : window.location.origin;
 }
 
-export function shareUrl(token: string) {
-  return `${publicOrigin()}/v/${token}`;
+/** Accepts a share row or a raw identifier; always prefers the readable slug. */
+export function shareUrl(share: string | { slug?: string | null; token: string }) {
+  const id = typeof share === "string" ? share : share.slug || share.token;
+  return `${publicOrigin()}/v/${id}`;
 }
 
 export async function getVentureShare(snapshotId: string): Promise<VentureShare | null> {
@@ -177,14 +179,20 @@ export async function getVentureShare(snapshotId: string): Promise<VentureShare 
   return (data as VentureShare) ?? null;
 }
 
-export async function createVentureShare(snapshotId: string, patch: Partial<VentureShare> = {}) {
+export async function createVentureShare(
+  snapshotId: string,
+  patch: Partial<VentureShare> = {},
+  ventureName?: string | null,
+) {
   const userId = await getEffectiveUserId();
+  const slug = patch.slug ?? (await uniqueSlug(slugifyVentureName(ventureName)));
   const { data, error } = await supabase
     .from("venture_shares")
     .insert({
       snapshot_id: snapshotId,
       user_id: userId,
       token: newToken(),
+      slug,
       excluded_keys: [],
       ...patch,
     })
