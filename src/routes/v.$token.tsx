@@ -180,9 +180,21 @@ export default function VentureSharePage() {
     touchX.current = null;
     touchY.current = null;
     if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+    dismissHint();
     const next = dx < 0 ? activeIndex + 1 : activeIndex - 1;
     if (activeIndex >= 0 && next >= 0 && next < items.length) goTo(items[next].key);
   };
+
+  /** The swipe cue is shown once per device, then never again. */
+  const dismissHint = () => {
+    setSwipeHint(false);
+    try {
+      localStorage.setItem("share-swipe-hint", "1");
+    } catch {
+      /* private mode */
+    }
+  };
+
 
   /** Phones have a native share sheet; everything else copies the link. */
   const shareLink = async () => {
