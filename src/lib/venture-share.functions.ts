@@ -35,6 +35,14 @@ export interface ShareBrandBoard {
 }
 
 
+/** One verified figure pulled from the venture's own finance assets. */
+export interface ShareMetric {
+  label: string;
+  value: string;
+  note?: string | null;
+  source?: string | null;
+}
+
 export interface ShareItem {
   key: string;
   title: string;
@@ -44,6 +52,7 @@ export interface ShareItem {
   heroImageUrl?: string | null;
   images?: { url: string; label?: string | null; width?: number | null; height?: number | null }[];
   brandBoard?: ShareBrandBoard;
+  metrics?: ShareMetric[];
 }
 
 export interface SharePayload {
@@ -60,9 +69,11 @@ export interface SharePayload {
   chatEnabled?: boolean;
   mapEnabled?: boolean;
   executiveSummary?: string | null;
+  executiveMetrics?: ShareMetric[] | null;
   coverage?: { total: number; illustrated: number; signFailures: number };
   sections: { key: string; label: string; items: ShareItem[] }[];
 }
+
 
 
 function newToken() {
