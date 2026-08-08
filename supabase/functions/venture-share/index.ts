@@ -410,6 +410,11 @@ Deno.serve(async (req) => {
         [snap.city, snap.region].filter(Boolean).join(", ") || null,
         `${docs.length} assets`,
       ].filter(Boolean);
+      const execMetrics = Array.isArray(snap.executive_metrics)
+        ? (snap.executive_metrics as any[])
+            .filter((m) => m && m.label && m.value)
+            .slice(0, 6)
+        : [];
       if (snap.executive_summary && !excluded.has("overview:executive")) {
         overview.push({
           key: "overview:executive",
@@ -418,8 +423,10 @@ Deno.serve(async (req) => {
           kind: "doc",
           body: snap.executive_summary,
           heroImageUrl: logoUrl,
+          metrics: execMetrics,
         });
       }
+
       overview.push({
         key: "overview:summary",
         title: "At a glance",
