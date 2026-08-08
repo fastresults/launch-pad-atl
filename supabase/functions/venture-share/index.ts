@@ -419,8 +419,11 @@ Deno.serve(async (req) => {
       },
       share: { title: share.title ?? null, updatedAt: share.updated_at },
       chatEnabled: share.chat_enabled !== false,
+      mapEnabled: share.map_enabled !== false,
+      executiveSummary: snap.executive_summary ?? null,
       coverage: { total: allItems.length, illustrated, signFailures },
       sections,
+
     });
 
   } catch (e) {
