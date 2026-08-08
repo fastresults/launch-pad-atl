@@ -50,6 +50,16 @@ export function ShareChatPanel({
     if (embedded && window.matchMedia("(min-width: 1024px)").matches) inputRef.current?.focus();
   }, [embedded]);
 
+  // A question handed over from a timeline step lands in the box, ready to send.
+  useEffect(() => {
+    if (!seedQuestion) return;
+    setInput(seedQuestion);
+    setOpen(true);
+    inputRef.current?.focus();
+  }, [seedQuestion]);
+
+
+
 
   async function send(text: string) {
     const q = text.trim();
