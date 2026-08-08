@@ -2776,6 +2776,8 @@ export type Database = {
         Row: {
           art_direction: Json | null
           contact_details: Json | null
+          contact_details_suggested: Json | null
+          contact_suggested_at: string | null
           contact_verified_at: string | null
           created_at: string
           dna: Json
@@ -2796,6 +2798,8 @@ export type Database = {
         Insert: {
           art_direction?: Json | null
           contact_details?: Json | null
+          contact_details_suggested?: Json | null
+          contact_suggested_at?: string | null
           contact_verified_at?: string | null
           created_at?: string
           dna?: Json
@@ -2816,6 +2820,8 @@ export type Database = {
         Update: {
           art_direction?: Json | null
           contact_details?: Json | null
+          contact_details_suggested?: Json | null
+          contact_suggested_at?: string | null
           contact_verified_at?: string | null
           created_at?: string
           dna?: Json

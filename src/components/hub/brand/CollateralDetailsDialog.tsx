@@ -16,12 +16,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import {
   FIELD_SPECS, KIND_LABEL, auditDetails, normalizeField,
 } from "@/lib/brand/collateral-fields";
-import { getCollateralDetails, saveCollateralDetails } from "@/lib/collateral.functions";
+import { getCollateralDetails, rescanCollateralDetails, saveCollateralDetails } from "@/lib/collateral.functions";
+
 
 const GROUPS: Array<{ key: string; label: string; blurb: string }> = [
   { key: "identity", label: "Identity", blurb: "The name and line that appear on every piece." },
@@ -42,6 +43,7 @@ export function CollateralDetailsDialog({
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState(false);
+  const [edited, setEdited] = useState<Record<string, boolean>>({});
 
   const q = useQuery({
     queryKey: ["collateralDetails", snapshotId],
@@ -53,7 +55,9 @@ export function CollateralDetailsDialog({
     if (q.data?.details && !touched) setDraft({ ...q.data.details });
   }, [q.data, touched]);
 
-  useEffect(() => { if (!open) setTouched(false); }, [open]);
+  useEffect(() => { if (!open) { setTouched(false); setEdited({}); } }, [open]);
+
+  const suggested = q.data?.suggested ?? {};
 
   const audit = useMemo(() => auditDetails(draft), [draft]);
   const blocked = Object.keys(audit.blockedKinds);
@@ -70,14 +74,34 @@ export function CollateralDetailsDialog({
     onError: (e: any) => toast.error(e.message || "Could not save details"),
   });
 
+  // Re-reads the brief and finished assets, then refills anything still blank.
+  const rescan = useMutation({
+    mutationFn: () => rescanCollateralDetails(snapshotId),
+    onSuccess: (data) => {
+      qc.setQueryData(["collateralDetails", snapshotId], data);
+      setDraft((d) => {
+        const next = { ...d };
+        for (const [k, v] of Object.entries(data.details ?? {})) {
+          if (!String(next[k] ?? "").trim() && !edited[k]) next[k] = v as string;
+        }
+        return next;
+      });
+      const n = Object.keys(data.suggested ?? {}).length;
+      toast.success(n ? `Filled ${n} field${n === 1 ? "" : "s"} from your own content.` : "Nothing new found in your content.");
+    },
+    onError: (e: any) => toast.error(e.message || "Could not re-scan your content"),
+  });
+
   const set = (key: string, value: string) => {
     setTouched(true);
+    setEdited((e) => ({ ...e, [key]: true }));
     setDraft((d) => ({ ...d, [key]: value }));
   };
 
   const blur = (key: string) => {
     setDraft((d) => ({ ...d, [key]: normalizeField(key as any, d[key] ?? "") }));
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -96,7 +120,7 @@ export function CollateralDetailsDialog({
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
           {q.isLoading ? (
             <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />Auditing what we already know…
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />Reading your brief and assets to pre-fill this…
             </div>
           ) : (
             <div className="space-y-6">
@@ -139,6 +163,9 @@ export function CollateralDetailsDialog({
                       {fields.map((f) => {
                         const flag = audit.flags[f.key] ?? { level: "ok" };
                         const bad = flag.level !== "ok";
+                        const sug = !edited[f.key] && suggested[f.key]?.value === (draft[f.key] ?? "")
+                          ? suggested[f.key]
+                          : null;
                         return (
                           <div
                             key={f.key}
@@ -149,6 +176,11 @@ export function CollateralDetailsDialog({
                               {f.required && <span className="text-destructive">*</span>}
                               {flag.level === "missing" && <Badge variant="destructive" className="h-4 px-1 text-[9px]">Missing</Badge>}
                               {flag.level === "suspect" && <Badge variant="outline" className="h-4 border-amber-500/50 px-1 text-[9px] text-amber-500">Check</Badge>}
+                              {sug && (
+                                <Badge variant="outline" className="h-4 gap-0.5 border-primary/40 px-1 text-[9px] text-primary">
+                                  <Sparkles className="h-2.5 w-2.5" />Suggested
+                                </Badge>
+                              )}
                             </Label>
                             {f.multiline ? (
                               <Textarea
@@ -170,8 +202,8 @@ export function CollateralDetailsDialog({
                                 className={`mt-1 text-sm ${bad ? "border-amber-500/60" : ""}`}
                               />
                             )}
-                            <p className={`mt-1 text-[10px] ${bad ? "text-amber-500" : "text-muted-foreground"}`}>
-                              {flag.message ?? f.help}
+                            <p className={`mt-1 text-[10px] ${bad ? "text-amber-500" : sug ? "text-primary/80" : "text-muted-foreground"}`}>
+                              {flag.message ?? (sug ? sug.basis : f.help)}
                             </p>
                           </div>
                         );
@@ -191,6 +223,18 @@ export function CollateralDetailsDialog({
               : "Not confirmed yet"}
           </span>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => rescan.mutate()}
+              disabled={rescan.isPending || q.isLoading}
+              title="Re-read your brief and finished assets to fill anything still blank"
+            >
+              {rescan.isPending
+                ? <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                : <Sparkles className="mr-1 h-3 w-3" />}
+              Re-scan my content
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button size="sm" onClick={() => save.mutate()} disabled={save.isPending || q.isLoading}>
               {save.isPending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}

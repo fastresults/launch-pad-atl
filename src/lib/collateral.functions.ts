@@ -100,8 +100,12 @@ export async function downloadCollateralZip(items: CollateralItem[], company: st
 
 // ── text inventory ──────────────────────────────────────────────────────────
 
+export type CollateralSuggestion = { value: string; basis: string };
+
 export type CollateralDetailsPayload = {
   details: Record<string, string>;
+  /** Fields the AI filled in from the founder's own material. */
+  suggested: Record<string, CollateralSuggestion>;
   verifiedAt: string | null;
   audit: any;
 };
@@ -109,7 +113,23 @@ export type CollateralDetailsPayload = {
 /** Pre-filled text inventory plus the audit grading each field. */
 export async function getCollateralDetails(snapshotId: string): Promise<CollateralDetailsPayload> {
   const data = await call({ action: "details:get", snapshotId });
-  return { details: data?.details ?? {}, verifiedAt: data?.verifiedAt ?? null, audit: data?.audit ?? null };
+  return {
+    details: data?.details ?? {},
+    suggested: data?.suggested ?? {},
+    verifiedAt: data?.verifiedAt ?? null,
+    audit: data?.audit ?? null,
+  };
+}
+
+/** Re-read the brief and finished assets to refresh the suggested values. */
+export async function rescanCollateralDetails(snapshotId: string): Promise<CollateralDetailsPayload> {
+  const data = await call({ action: "details:rescan", snapshotId });
+  return {
+    details: data?.details ?? {},
+    suggested: data?.suggested ?? {},
+    verifiedAt: data?.verifiedAt ?? null,
+    audit: data?.audit ?? null,
+  };
 }
 
 export async function saveCollateralDetails(snapshotId: string, details: Record<string, string>) {

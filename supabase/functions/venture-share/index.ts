@@ -510,6 +510,15 @@ Deno.serve(async (req) => {
 
     if (signFailures) console.error("[venture-share] signed url failures:", signFailures);
 
+    // The website the founder confirmed for print is the same one worth
+    // featuring on the public showcase.
+    const rawWebsite = String(
+      (kit?.contact_details as any)?.website ?? snap.website_url ?? "",
+    ).trim();
+    const website = rawWebsite
+      ? rawWebsite.replace(/^https?:\/\//i, "").replace(/\/+$/, "").trim() || null
+      : null;
+
     return json({
       venture: {
         name: snap.company_name ?? "Untitled venture",
@@ -518,12 +527,14 @@ Deno.serve(async (req) => {
         industry: snap.industry ?? null,
         logoUrl,
         founderName: snap.founder_name ?? null,
+        website,
         colors: {
           primary: paletteColors.primary ?? null,
           accent: paletteColors.accent ?? null,
           secondary: paletteColors.secondary ?? null,
         },
       },
+
       share: { title: share.title ?? null, updatedAt: share.updated_at },
       chatEnabled: share.chat_enabled !== false,
       mapEnabled: share.map_enabled !== false,

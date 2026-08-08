@@ -29,6 +29,8 @@ import {
   KIND_LABEL,
   normalizeDetails,
 } from "../_shared/collateral-fields.ts";
+import { suggestDetails } from "../_shared/collateral-suggest.ts";
+
 import { type ArtDirection, directArt, hydrate } from "../_shared/brand-art-direction.ts";
 import { writeCollateralCopy } from "../_shared/collateral-copy.ts";
 import { resolveSpec } from "../_shared/collateral-specs.ts";
@@ -79,11 +81,48 @@ function seedDetails(kit: any, ctxData: any): ContactDetails {
 async function loadKit(admin: any, snapshotId: string) {
   const { data: kit } = await admin
     .from("venture_brand_kits")
-    .select("palette, typography, logos, voice, dna, status, contact_details, contact_verified_at, art_direction")
+    .select(
+      "palette, typography, logos, voice, dna, status, contact_details, contact_verified_at, art_direction, contact_details_suggested, contact_suggested_at",
+    )
     .eq("snapshot_id", snapshotId)
     .maybeSingle();
   return kit;
 }
+
+/**
+ * Structured seed first, then an AI pass over the founder's own prose for
+ * whatever is still blank. Cached on the kit so re-opening the form is free.
+ */
+async function seedWithSuggestions(
+  admin: any,
+  snapshotId: string,
+  kit: any,
+  vctx: any,
+  opts: { force?: boolean } = {},
+): Promise<{ details: ContactDetails; suggested: Record<string, { value: string; basis: string }> }> {
+  const seeded = seedDetails(kit, vctx);
+
+  let suggested = (kit?.contact_details_suggested ?? null) as Record<string, any> | null;
+  if (opts.force || !suggested) {
+    suggested = await suggestDetails(admin, snapshotId, vctx, seeded);
+    await admin
+      .from("venture_brand_kits")
+      .update({ contact_details_suggested: suggested, contact_suggested_at: new Date().toISOString() })
+      .eq("snapshot_id", snapshotId);
+  }
+
+  // Structured data always wins — suggestions only fill genuine gaps.
+  const merged: ContactDetails = { ...seeded };
+  const applied: Record<string, { value: string; basis: string }> = {};
+  for (const [key, entry] of Object.entries(suggested ?? {})) {
+    const value = tidy((entry as any)?.value);
+    if (!value || tidy((merged as any)[key])) continue;
+    (merged as any)[key] = value;
+    applied[key] = { value, basis: tidy((entry as any)?.basis) || "inferred from your own material" };
+  }
+  return { details: normalizeDetails(merged), suggested: applied };
+}
+
 
 async function buildCtx(
   admin: any,
@@ -334,22 +373,36 @@ Deno.serve(async (req) => {
 
     // Text audit — the field inventory plus what's missing, pre-filled from the
     // venture so the founder confirms rather than types from scratch.
-    if (action === "details:get") {
+    if (action === "details:get" || action === "details:rescan") {
       const kit = await loadKit(admin, snapshotId);
       if (!kit) return json({ error: "No brand kit yet — run the Brand Wizard first.", code: "NO_BRAND_KIT" }, 400);
       const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
       const saved = kit.contact_details && Object.keys(kit.contact_details).length
         ? normalizeDetails(kit.contact_details)
         : null;
-      const details = saved ?? seedDetails(kit, vctx);
+
+      const filled = await seedWithSuggestions(admin, snapshotId, kit, vctx, {
+        force: action === "details:rescan",
+      });
+
+
+      const details = saved ? normalizeDetails({ ...filled.details, ...saved }) : filled.details;
+      // A suggestion the founder already overrode is no longer a suggestion.
+      const suggested: Record<string, { value: string; basis: string }> = {};
+      for (const [k, v] of Object.entries(filled.suggested)) {
+        if (details[k as keyof ContactDetails] === v.value) suggested[k] = v;
+      }
+
       return json({
         details,
+        suggested,
         verifiedAt: saved ? kit.contact_verified_at : null,
         audit: auditDetails(details),
         specs: FIELD_SPECS,
         kindLabels: KIND_LABEL,
       });
     }
+
 
     if (action === "details:save") {
       const incoming = (body?.details ?? {}) as ContactDetails;

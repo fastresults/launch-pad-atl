@@ -66,6 +66,8 @@ export interface SharePayload {
     industry: string | null;
     logoUrl: string | null;
     founderName: string | null;
+    /** Bare domain (no scheme) confirmed by the founder, when they have one. */
+    website?: string | null;
     colors?: { primary: string | null; accent: string | null; secondary: string | null };
   };
   share: { title: string | null; updatedAt: string };

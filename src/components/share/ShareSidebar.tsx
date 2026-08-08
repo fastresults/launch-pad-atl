@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
-import { ChevronRight, FileText, Route, Search, Sparkle } from "lucide-react";
+import { ArrowUpRight, ChevronRight, ExternalLink, FileText, Route, Search, Sparkle } from "lucide-react";
 
 /** Sidebar key for the featured second-brain tool (not a payload asset). */
 export const BRAIN_KEY = "tool:brain";
@@ -68,8 +68,26 @@ export function ShareSidebar({
   ];
 
 
+  const website = payload.venture.website?.trim() || null;
+
   return (
     <div className="flex h-full min-h-0 flex-col">
+      {website && (
+        // The live site is the one link a visitor is most likely to want.
+        <a
+          href={`https://${website}`}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="mb-3 flex shrink-0 items-center gap-3 rounded-xl border border-primary/50 bg-primary/10 px-3 py-2.5 transition-colors hover:border-primary hover:bg-primary/15"
+        >
+          <ExternalLink className="h-4 w-4 shrink-0 text-primary" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-medium text-foreground">Visit website</span>
+            <span className="block truncate text-[11px] text-muted-foreground">{website}</span>
+          </span>
+          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        </a>
+      )}
       {pinned.length > 0 && (
         <div className="mb-4 shrink-0 space-y-1.5">
 

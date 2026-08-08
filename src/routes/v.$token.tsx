@@ -11,7 +11,7 @@ import { ShareBrain } from "@/components/share/ShareBrain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, ArrowRight, Loader2, Lock, Menu, Sparkle } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, Loader2, Lock, Menu, Sparkle } from "lucide-react";
 
 export default function VentureSharePage() {
   const { token = "" } = useParams();
@@ -224,11 +224,27 @@ export default function VentureSharePage() {
                   </p>
                 )}
               </div>
+              {payload.venture.website && (
+                <Button
+                  asChild
+                  size={condensed ? "sm" : "default"}
+                  className="ml-auto shrink-0"
+                >
+                  <a
+                    href={`https://${payload.venture.website}`}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    <ExternalLink className="mr-1.5 h-4 w-4" />
+                    Visit website
+                  </a>
+                </Button>
+              )}
               {brainOn && (
                 <Button
                   variant="outline"
                   size={condensed ? "sm" : "default"}
-                  className="ml-auto hidden shrink-0 md:inline-flex"
+                  className={`hidden shrink-0 md:inline-flex ${payload.venture.website ? "" : "ml-auto"}`}
                   onClick={() => goTo(BRAIN_KEY)}
                 >
                   <Sparkle className="mr-1.5 h-4 w-4" />
