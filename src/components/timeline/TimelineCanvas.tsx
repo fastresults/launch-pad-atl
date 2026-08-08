@@ -393,23 +393,9 @@ export function TimelineCanvas({
           )}
 
           {/* milestones — labels stack into rows so they never overprint */}
-          {(() => {
-            const rowEnds: number[] = [];
-            const placed = [...layout.milestones]
-              .sort((a, b) => a.day - b.day)
-              .map((m) => {
-                const left = x(m.day) + 9;
-                const w = m.milestone.label.length * 5.6 + 14;
-                let row = rowEnds.findIndex((end) => left > end);
-                if (row < 0) {
-                  row = rowEnds.length;
-                  rowEnds.push(0);
-                }
-                rowEnds[row] = left + w;
-                return { m, row };
-              });
-            return placed.map(({ m, row }) => (
+          {milestonePlacement.placed.map(({ m, row }) => (
               <g key={m.milestone.id} transform={`translate(${x(m.day)},${RULER_H - 2})`}>
+
                 <line
                   y1={0}
                   y2={lanes.length * LANE_H + 6}
