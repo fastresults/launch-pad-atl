@@ -1,9 +1,10 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, MessageCircle, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
 import { ShareChatPanel } from "@/components/share/ShareChatPanel";
 import { MindMapBoundary } from "@/components/share/MindMapBoundary";
+
 
 
 const ShareMindMap = lazy(() =>
@@ -48,10 +49,47 @@ export function ShareBrain({
     ...(chatOn ? [{ id: "ask" as const, label: "Ask anything", icon: MessageCircle }] : []),
     ...(mapOn ? [{ id: "map" as const, label: "Mind map", icon: Network }] : []),
   ];
+
+  // Both tools take a turn every 4s so a visitor sees the map exists — until
+  // they show any intent, after which the panel stays exactly where they left it.
+  const [cycling, setCycling] = useState(false);
+  const rootRef = useRef<HTMLElement | null>(null);
+  const stop = useCallback(() => setCycling(false), []);
+
+  const canCycle = tabs.length > 1 && !seedQuestion;
+  useEffect(() => {
+    if (!canCycle) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    setCycling(true);
+  }, [canCycle]);
+
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.25 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!cycling || !visible) return;
+    const id = window.setInterval(() => {
+      setTab((t) => (t === "ask" ? "map" : "ask"));
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [cycling, visible]);
+
   if (!tabs.length) return null;
 
+
   return (
-    <section className={`flex min-h-0 min-w-0 flex-col ${mobile ? "h-full pb-[env(safe-area-inset-bottom)]" : "h-full"}`}>
+    <section
+      ref={rootRef}
+      className={`flex min-h-0 min-w-0 flex-col ${mobile ? "h-full pb-[env(safe-area-inset-bottom)]" : "h-full"}`}
+    >
       {/* One compact row: title and tabs share the line so the input stays on screen. */}
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 pb-4">
         <div className="min-w-0">
@@ -62,38 +100,51 @@ export function ShareBrain({
         </div>
 
         {tabs.length > 1 && (
-          <div className="inline-flex shrink-0 rounded-full border border-border/60 bg-card/50 p-1">
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] transition-colors",
-                  tab === t.id
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <t.icon className="h-3.5 w-3.5" />
-                {t.label}
-              </button>
-            ))}
+          <div className="shrink-0">
+            <div className="inline-flex rounded-full border border-border/60 bg-card/50 p-1">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    stop();
+                    setTab(t.id);
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] transition-colors",
+                    tab === t.id
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <t.icon className="h-3.5 w-3.5" />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            {cycling && visible && (
+              <div className="mt-1.5 h-[2px] w-full overflow-hidden rounded-full bg-border/50">
+                <div key={tab} className="h-full w-full origin-left bg-primary/70 animate-[share-tab-cycle_4s_linear]" />
+              </div>
+            )}
           </div>
         )}
       </header>
 
-      <div className="min-h-0 flex-1">
+
+      <div className="min-h-0 flex-1" onPointerDown={stop} onTouchStart={stop}>
         {tab === "ask" && chatOn && (
           <ShareChatPanel
             token={token}
             password={password}
             ventureName={payload.venture.name}
             seedQuestion={seedQuestion}
+            onInteract={stop}
             embedded
           />
         )}
         {tab === "map" && mapOn && !graphOn && (
+
           <div className="h-full overflow-y-auto rounded-2xl border border-border/60 bg-card/40 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
