@@ -394,7 +394,8 @@ export function TimelineCanvas({
 
           {/* milestones — labels stack into rows so they never overprint */}
           {milestonePlacement.placed.map(({ m, row }) => (
-              <g key={m.milestone.id} transform={`translate(${x(m.day)},${RULER_H - 2})`}>
+            <g key={m.milestone.id} transform={`translate(${x(m.day)},${RULER_H - 2})`}>
+
 
               <line
                 y1={0}
