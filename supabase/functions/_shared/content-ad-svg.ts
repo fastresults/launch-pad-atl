@@ -618,27 +618,56 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
   if (args.logoSvgText || args.logoBytes || args.logoDataUrl) {
     const size = args.logoSize || "sm";
     const aspect = args.logoAspect || 1;
-    const preferred: Corner[] = args.logoCorner
-      ? [args.logoCorner as Corner]
-      : ["bottom-right", "top-right", "top-left", "bottom-left"];
-    const candidates: Corner[] = Array.from(
-      new Set<Corner>([...preferred, "top-right", "top-left", "bottom-right", "bottom-left"]),
+    const capFrac = LOGO_HEIGHT_CAP[args.aspect] ?? 0.11;
+    // Sit diagonally opposite the type lockup by default.
+    const preferred: CornerId[] = args.logoCorner
+      ? [args.logoCorner as CornerId]
+      : layout === "centered-plate"
+        ? ["top-right", "top-left", "bottom-right", "bottom-left"]
+        : ["top-right", "top-left", "bottom-right", "bottom-left"];
+    const candidates: CornerId[] = Array.from(
+      new Set<CornerId>([...preferred, "top-right", "top-left", "bottom-right", "bottom-left"]),
     );
 
-    let chosen: { corner: Corner; box: ReturnType<typeof logoBox>; lumBehind: number; score: number } | null = null;
+    const boxes = {} as Record<CornerId, { x: number; y: number; w: number; h: number }>;
+    const collides: Partial<Record<CornerId, boolean>> = {};
+    const contrastByCorner: Partial<Record<CornerId, number>> = {};
+    const lumByCorner: Partial<Record<CornerId, number>> = {};
+    const boxByCorner = {} as Record<CornerId, ReturnType<typeof logoBox>>;
     for (const corner of candidates) {
-      const box = logoBox(W, H, aspect, size, corner, inset);
-      const rect: Rect = { x: box.x, y: box.y, w: box.boxW, h: box.boxH };
-      const collides = typeRect ? intersects(rect, typeRect, Math.round(inset * 0.6)) : false;
+      const box = logoBox(W, H, aspect, size, corner as Corner, inset, capFrac);
+      boxByCorner[corner] = box;
+      boxes[corner] = { x: box.x, y: box.y, w: box.boxW, h: box.boxH };
+      collides[corner] = typeRect
+        ? intersects({ x: box.x, y: box.y, w: box.boxW, h: box.boxH }, typeRect, Math.round(inset * 0.6))
+        : false;
       const stat = sampler.sample(box.x, box.y, box.boxW, box.boxH, W, H);
       const behind = stat ? stat.lum : lum(surface);
-      const busy = stat ? stat.variance / 255 : 0.3;
-      const bestInkContrast = Math.max(contrastOf(lum("#FFFFFF"), behind), contrastOf(lum(planInk), behind));
-      const score = (collides ? -100 : 0) + bestInkContrast - busy * 4;
-      if (!chosen || score > chosen.score) chosen = { corner, box, lumBehind: behind, score };
+      lumByCorner[corner] = behind;
+      contrastByCorner[corner] = Math.max(contrastOf(lum("#FFFFFF"), behind), contrastOf(lum(planInk), behind));
+    }
+
+    // Emptiness first, contrast second — and never on a face.
+    const scores = scoreCorners({ sampler, W, H, boxes, collides, contrast: contrastByCorner, preferred });
+    const pick = pickCorner(scores);
+    const chosen = pick
+      ? {
+          corner: pick.corner as Corner,
+          box: boxByCorner[pick.corner],
+          lumBehind: lumByCorner[pick.corner] ?? lum(surface),
+          score: pick.score,
+        }
+      : null;
+    if (pick) {
+      metrics.logo_placement = {
+        edge: Number(pick.edge.toFixed(3)),
+        skin_pct: Number(pick.skinPct.toFixed(3)),
+        face_avoided: scores.some((s) => s.faceLikely),
+      };
     }
 
     if (chosen) {
+
       const darkInk = lum(planInk) < 0.32 ? planInk : "#0B0F19";
       // Pick whichever ink actually reads on the pixels behind the mark.
       const whiteRatio = contrastOf(lum("#FFFFFF"), chosen.lumBehind);
