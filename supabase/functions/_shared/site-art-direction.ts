@@ -11,6 +11,8 @@
 // + brand traits + tone words) and injected into the PRD prompt as a hard
 // constraint. The model is never handed the menu again.
 
+import { imageCraftBlock } from "./image-craft.ts";
+
 export type SiteArchetype = {
   key: string;
   name: string;
