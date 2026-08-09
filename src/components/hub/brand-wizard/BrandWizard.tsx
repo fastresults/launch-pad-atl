@@ -530,7 +530,13 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
 /* ---------- STEP 4: Moodboard & Logo ---------- */
 function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const qc = useQueryClient();
-  const [logos, setLogos] = useState<any[]>(kit?.logos ?? []);
+  // Committed marks live on the brand kit — never in local state, or a commit
+  // made in Logo Studio leaves this step (and the PRD button) looking empty.
+  // `logoOverride` is only an optimistic echo until the kit query refetches.
+  const [logoOverride, setLogoOverride] = useState<any[] | null>(null);
+  const kitLogos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
+  const logos = logoOverride ?? kitLogos;
+  useEffect(() => { setLogoOverride(null); }, [kit?.logos]);
   const [moodboard, setMoodboard] = useState<any[]>(kit?.moodboard ?? []);
   const [refs, setRefs] = useState<string[]>(kit?.dna?._logoReferences ?? []);
 
@@ -594,7 +600,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     abortToken.current += 1;
     try {
       const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_force_reset" } });
-      setLogos([]);
+      setLogoOverride(null);
       setLogoPhase("idle");
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["brandLogoRun", snapshot.id] }),
@@ -615,10 +621,11 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     (d) => d.render_status && d.render_status !== "ready" && d.render_status !== "pending",
   );
 
-  useEffect(() => {
-    const ready = runDirections.filter((d) => d.status === "ready" || d.status === "needs_review").map((d) => d.asset).filter((a) => a?.url);
-    if (ready.length) setLogos(ready);
-  }, [runDirections]);
+  // In-progress run concepts stay concepts (rendered from `runDirections`):
+  // they carry no `primary` flag, so they must never stand in for the
+  // committed mark on the brand kit.
+
+
 
   const processLogoRun = async (initialRun: any) => {
     let run = initialRun;
@@ -708,7 +715,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     mutationFn: async () => {
       if (refs.length < 1) throw new Error("Upload at least one logo you admire first — it sets the craft standard for this run.");
       const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 3, referenceImages: refs } });
-      setLogos([]);
+      setLogoOverride(null);
       await processLogoRun(created.run);
       return created;
     },
@@ -743,7 +750,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const selectDirection = useMutation({
     mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_select_direction", runId: item.run_id, directionId: item.id } }),
     onSuccess: (out: any) => {
-      if (Array.isArray(out?.logos)) setLogos(out.logos);
+      if (Array.isArray(out?.logos)) setLogoOverride(out.logos);
       qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
       logoRunQ.refetch();
       toast.success("Mark selected — it's now your primary logo in the Live Brand");
@@ -765,7 +772,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       });
     },
     onSuccess: (out: any) => {
-      if (Array.isArray(out?.logos)) setLogos(out.logos);
+      if (Array.isArray(out?.logos)) setLogoOverride(out.logos);
       qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
       logoRunQ.refetch();
       toast.success("Your logo is selected and saved to the Live Brand");
@@ -1010,6 +1017,9 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       <LogoStudio
         snapshotId={snapshot.id}
         onCommitted={() => {
+          // Drop any optimistic list so the freshly committed mark from the
+          // kit wins immediately — chip, preview and PRD button all update.
+          setLogoOverride(null);
           qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
         }}
       />
