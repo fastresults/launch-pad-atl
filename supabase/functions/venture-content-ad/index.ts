@@ -629,9 +629,27 @@ Deno.serve(async (req) => {
       // Sibling hooks from the same week so the claim isn't repeated in-set,
       // and the campaign kicker taxonomy so labels stay consistent.
       siblingHooks,
-      kickerTaxonomy: campaignCard?.kicker_taxonomy ?? [],
+      // Audience-shaped kickers from the arc win over topic labels.
+      kickerTaxonomy: (arcWeek?.kicker_taxonomy?.length ? arcWeek.kicker_taxonomy : campaignCard?.kicker_taxonomy) ?? [],
+      // Where this week sits in the funnel, the claim it owns, what earlier
+      // weeks already spent, and how hard it is allowed to ask.
+      stage: arcWeek
+        ? { label: arcWeek.stage_label, job: arcWeek.job, audience: arcWeek.audience, temperature: arcWeek.temperature }
+        : null,
+      assignedAngle: arcWeek?.claim || null,
+      usedClaims,
+      ctaRung: arcWeek
+        ? {
+            rung: arcWeek.cta_rung,
+            brief: CTA_RUNG_BRIEF[arcWeek.cta_rung],
+            offer: arc?.offer?.name
+              ? [arc.offer.name, arc.offer.terms, arc.offer.ask].filter(Boolean).join(" — ")
+              : null,
+          }
+        : null,
       // The hook/body are source material — the copy pass writes the headline.
       post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
+
 
       headlineOverride: resolvedHeadline.mode === "none"
         ? { mode: "none" }
