@@ -36,6 +36,15 @@ import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
 import { profileFor } from "../_shared/prompt-profiles.ts";
 import { checkIdentity, correctionPrompt, substituteIdentity } from "../_shared/identity-guard.ts";
 import { brandLogoUrl } from "../_shared/venture-context.ts";
+import { archetypeForPrompt } from "../_shared/site-art-direction.ts";
+import {
+  brandFactsFromKit,
+  enforceWebsitePrdDepth,
+  expandWebsitePrdMasterPrompt,
+  masterPromptStats,
+  prdQualityMetrics,
+  type PrdVentureFacts,
+} from "../_shared/website-prd.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
