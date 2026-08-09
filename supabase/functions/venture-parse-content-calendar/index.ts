@@ -30,6 +30,7 @@ type ParsedPost = {
   day?: string;
   platform?: string;
   pillar?: string;
+  stage?: string;
   format?: string;
   hook?: string;
   body?: string;
@@ -44,6 +45,8 @@ const HEADER_MAP: Record<string, keyof ParsedPost> = {
   "day": "day",
   "platform": "platform",
   "pillar": "pillar",
+  "stage": "stage",
+  "funnel stage": "stage",
   "format": "format",
   "hook": "hook",
   "body": "body",
@@ -209,10 +212,12 @@ Deno.serve(async (req) => {
       const platformMix = platforms.length ? platforms.join(", ") : "Instagram, Facebook, LinkedIn";
 
       const sys = `You draft social-media posts for a small startup's ongoing content calendar.
-Return STRICT JSON: { "posts": [ { "platform": string, "pillar": string, "format": string, "hook": string, "body": string, "cta": string, "hashtags": string[], "asset_notes": string, "best_time": string, "day": string } ] }
+Return STRICT JSON: { "posts": [ { "platform": string, "stage": string, "pillar": string, "format": string, "hook": string, "body": string, "cta": string, "hashtags": string[], "asset_notes": string, "best_time": string, "day": string } ] }
 Rules:
 - Produce exactly 3 posts for Week ${week}.
 - Distribute across these platforms (one each if possible): ${platformMix}.
+- This week sits on a funnel arc. Weeks 1-2 are cold (Disrupt, Reframe — no hard ask), 3-5 are warm (Proof, Differentiate, Objection), 6-8 are hot (Offer, Proof at scale, Urgency — ask for the sale outright). Set "stage" accordingly and match every CTA to it.
+- ONE claim for the week. Do not restate any claim the existing calendar already made, in any wording.
 - Vary pillars from prior weeks; keep tone consistent.
 - Hook: 120–170 characters, ONE complete sentence (or two tight clauses). Written to fill 4 lines on a 1:1 ad — do NOT end mid-clause, do NOT dangle on a conjunction ('and', 'or', 'but', 'because', 'with', 'that'). Finish the thought with punctuation.
 - Body <= 400 chars, cta <= 80 chars.
@@ -271,6 +276,7 @@ Draft 3 posts for Week ${week}.`;
           day: p.day ?? null,
           platform,
           pillar: p.pillar ?? null,
+          stage: p.stage ?? null,
           format: p.format ?? null,
           hook,
           body: p.body ?? null,
@@ -331,6 +337,7 @@ Draft 3 posts for Week ${week}.`;
         day: p.day ?? null,
         platform: p.platform ?? null,
         pillar: p.pillar ?? null,
+        stage: p.stage ?? null,
         format: p.format ?? null,
         hook: p.hook ?? null,
         body: p.body ?? null,
