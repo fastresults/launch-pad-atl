@@ -526,8 +526,32 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
 
     if (chosen) {
       const darkInk = lum(planInk) < 0.32 ? planInk : "#0B0F19";
-      const inkHex = chosen.lumBehind < 0.5 ? "#FFFFFF" : darkInk;
-      const ratio = contrastOf(lum(inkHex), chosen.lumBehind);
+      // Pick whichever ink actually reads on the pixels behind the mark.
+      const whiteRatio = contrastOf(lum("#FFFFFF"), chosen.lumBehind);
+      const darkRatio = contrastOf(lum(darkInk), chosen.lumBehind);
+      let inkHex = whiteRatio >= darkRatio ? "#FFFFFF" : darkInk;
+      let ratio = Math.max(whiteRatio, darkRatio);
+
+      // Ads held a lower bar than covers: a 3.5:1 mark on a busy plate is a
+      // smudge. Below 4.5:1 we lay a quiet brand plate and re-pick the ink.
+      const MIN_LOGO_CONTRAST = 4.5;
+      let plated = false;
+      let plateBox: ReturnType<typeof logoBox> | null = null;
+      if (ratio < MIN_LOGO_CONTRAST) {
+        const plateFill = chosen.lumBehind < 0.5 ? surface : "#FFFFFF";
+        const plateLum = lum(plateFill);
+        const wOnPlate = contrastOf(lum("#FFFFFF"), plateLum);
+        const dOnPlate = contrastOf(lum(darkInk), plateLum);
+        inkHex = wOnPlate >= dOnPlate ? "#FFFFFF" : darkInk;
+        ratio = Math.max(wOnPlate, dOnPlate);
+        plated = true;
+        plateBox = chosen.box;
+        const pad = Math.round(inset * 0.4);
+        parts.push(
+          `<rect x="${plateBox.x - pad}" y="${plateBox.y - pad}" width="${plateBox.boxW + pad * 2}" height="${plateBox.boxH + pad * 2}" rx="${Math.round(minDim * 0.008)}" fill="${plateFill}" opacity="0.88"/>`,
+        );
+      }
+
       const built = await buildVectorInkLogoPng({
         svgText: args.logoSvgText ?? null,
         bytes: args.logoBytes ?? null,
@@ -544,8 +568,10 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
         metrics.logo_corner = chosen.corner;
         metrics.logo_ink = built ? inkHex : null;
         metrics.logo_contrast = Number(ratio.toFixed(2));
+        (metrics as any).logo_plate = plated;
       }
     }
+
   }
 
   if (defs.length) parts.splice(fonts?.styleBlock ? 2 : 1, 0, `<defs>${defs.join("")}</defs>`);
