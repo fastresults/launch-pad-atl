@@ -494,7 +494,38 @@ export function RegenerateAssetDialog({
           </div>
 
 
-
+          {/* Scene — what the image actually depicts, derived from this venture */}
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-xs font-medium">Scene</label>
+              <button
+                type="button"
+                onClick={() => { setSceneText(""); setRefreshScenes(true); }}
+                disabled={busy}
+                className="text-[11px] text-muted-foreground hover:text-foreground"
+                title="Re-derive fresh scene ideas from your venture"
+              >
+                <RotateCcw className="mr-0.5 -mt-0.5 inline h-3 w-3" /> Shuffle scenes
+              </button>
+            </div>
+            {currentScene && !sceneText && (
+              <div className="mb-1.5 rounded-md border border-border bg-muted/40 p-2 text-[11px] text-muted-foreground">
+                Last used: {currentScene}
+              </div>
+            )}
+            <Textarea
+              rows={2}
+              placeholder="Leave blank to let us choose a scene from your venture (e.g. a creator ring-light setup mid-shoot, product boxes staged for a UGC unboxing)"
+              value={sceneText}
+              onChange={(e) => setSceneText(e.target.value.slice(0, 400))}
+              disabled={busy}
+            />
+            <div className="mt-1 text-[10px] text-muted-foreground">
+              {refreshScenes
+                ? "Fresh scene ideas will be derived from your venture before generating."
+                : "Scenes are derived from what your business actually does — override here to direct the shot yourself."}
+            </div>
+          </div>
 
 
           {mode === "regenerate" && (
