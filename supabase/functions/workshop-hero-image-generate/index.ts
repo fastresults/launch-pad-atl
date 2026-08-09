@@ -1,6 +1,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { scenePrompt } from "../_shared/hero-scene-prompt.ts";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 /** Ten years — the bucket is private, so the public hero reads a signed link. */
 const SIGNED_URL_TTL = 60 * 60 * 24 * 365 * 10;
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
     if (!b64) return json({ error: "No image returned by the model" }, 502);
 
     // ---- store -------------------------------------------------------------
-    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const bytes = decodeBase64(b64);
     const path = `${workshopSlug}/${painId}/${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("workshop-hero-images")

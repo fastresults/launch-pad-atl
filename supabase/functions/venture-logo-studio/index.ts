@@ -723,7 +723,7 @@ Deno.serve(async (req) => {
       const b64 = String(body?.data ?? "");
       const isSvg = String(body?.mime ?? "").includes("svg");
       if (!b64) throw new Error("No file received.");
-      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const bytes = decodeBase64(b64);
 
       let svg: string;
       let traced = true;

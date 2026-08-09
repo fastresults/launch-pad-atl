@@ -5,6 +5,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { buildVisualPrompt, stripMarkdown } from "../_shared/hero-prompt.ts";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -182,7 +183,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "No image returned by model" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const bytes = decodeBase64(b64);
     const path = nextPath(ownerId, deliverableKey, previousPath);
 
     const { error: upErr } = await admin.storage.from(BUCKET).upload(path, bytes, {

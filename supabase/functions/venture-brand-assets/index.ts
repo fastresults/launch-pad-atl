@@ -58,6 +58,7 @@ import {
   type BusinessProfile,
 } from "../_shared/logo-business-read.ts";
 import {
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
   JURY_SYSTEM,
   juryInstruction,
   parseJuryVerdict,
@@ -792,7 +793,7 @@ function buildPromptGeneric(kind: string, ctx: any, tokens: any, extra?: string,
 }
 
 async function uploadAsset(supabase: any, snapshotId: string, userId: string, kind: string, b64: string, prompt: string) {
-  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const bytes = decodeBase64(b64);
   const path = `${userId}/brand/${snapshotId}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.png`;
   const { error: upErr } = await supabase.storage.from("user-media").upload(path, bytes, {
     contentType: "image/png",
@@ -1192,7 +1193,7 @@ Deno.serve(async (req) => {
         const png = await rasterizeSvg(variants.mark, 1024);
         if (png) {
           const { error: upErr } = await supabase.storage.from("user-media")
-            .upload(previewPath, Uint8Array.from(atob(png), (c) => c.charCodeAt(0)), { contentType: "image/png", upsert: true });
+            .upload(previewPath, decodeBase64(png), { contentType: "image/png", upsert: true });
           if (!upErr) renderPath = previewPath;
         }
 
@@ -1368,7 +1369,7 @@ Deno.serve(async (req) => {
       const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
       if (!match) throw new Error("Upload a PNG, JPG or SVG file.");
       const contentType = match[1];
-      const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
+      const bytes = decodeBase64(match[2]);
       const ext = contentType.includes("svg") ? "svg" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : contentType.includes("webp") ? "webp" : "png";
       const path = `${userId}/brand/${snapshotId}/logo-upload-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("user-media").upload(path, bytes, { contentType, upsert: true });

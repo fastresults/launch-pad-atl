@@ -1,5 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -93,7 +94,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const bytes = decodeBase64(b64);
     const path = `${deckSlug}/${slideId}/${field}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("deck-images")
