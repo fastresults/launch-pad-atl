@@ -135,8 +135,11 @@ export function buildContentAdPrompt(args: {
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
   serverRenderedHeadline?: boolean;
   posterLayout?: string;
-  /** Pre-resolved scene so the caller can QA against the same frame it briefed. */
-  scene?: SceneDirective;
+  /** Reserved type-band share of canvas height, locked by the campaign card. */
+  bandRatio?: number | null;
+  /** Week-level campaign look every poster in the set shares. */
+  campaign?: { grade: string; timeOfDay: string; lens: string; throughLine?: string } | null;
+
 }): string {
   const { aspect, post } = args;
   const asset = specForAspect(aspect);
