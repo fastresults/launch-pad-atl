@@ -1326,6 +1326,7 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
               <CircleCheck className="h-3.5 w-3.5" /> Website PRD is current with this brand
             </span>
           )}
+          {websitePrd.exists && !websitePrd.running && <PrdExportActions doc={websitePrd.prd} />}
           <Button
             onClick={regenerateWebsitePrd}
             disabled={websitePrd.running}
