@@ -301,6 +301,20 @@ Deno.serve(async (req) => {
     const asset = specForAspect(aspect);
     const ctx = await loadVentureContext(admin, snapshotId);
     step("venture context loaded");
+
+    // Venture-specific scene brief — the same art direction the social covers
+    // use. Without this the shared art director falls through to the generic
+    // founder-metaphor libraries (compasses, coastal highways).
+    const sceneOverride = typeof body?.sceneOverride === "string" ? body.sceneOverride.slice(0, 400) : "";
+    const refreshScenes = body?.refreshScenes === true;
+    let sceneBrief: any = null;
+    try {
+      sceneBrief = await ensureSceneBrief(admin, snapshotId, ctx, { force: refreshScenes });
+    } catch (e) {
+      console.warn("[content-ad] scene brief unavailable", e);
+    }
+    if (sceneBrief) (ctx as any).sceneBrief = sceneBrief;
+    step("scene brief ready", { scenes: sceneBrief?.scenes?.length ?? 0, override: !!sceneOverride });
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
     step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText });
 
