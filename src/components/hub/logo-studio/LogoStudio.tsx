@@ -208,6 +208,28 @@ export default function LogoStudio({
     onError: (e: any) => toast.error(e.message),
   });
 
+  const addFiles = async (list: FileList | File[] | null) => {
+    const files = Array.from(list ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!files.length) return;
+    const room = Math.max(0, 5 - references.length);
+    if (room === 0) { toast.error("You can keep up to 5 inspiration images"); return; }
+    const batch = files.slice(0, room);
+    if (files.length > room) toast.message(`Only ${room} more image${room === 1 ? "" : "s"} fit — extras skipped`);
+    setUploadQueue(batch.length);
+    for (const file of batch) {
+      try {
+        await uploadReference.mutateAsync(file);
+      } catch {
+        /* toast handled in mutation */
+      } finally {
+        setUploadQueue((n) => Math.max(0, n - 1));
+      }
+    }
+    setUploadQueue(0);
+  };
+
+
+
   const getDirection = useMutation({
     mutationFn: () =>
       studio({
