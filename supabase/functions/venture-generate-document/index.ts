@@ -324,15 +324,17 @@ export async function generateOne(
 
   const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
   const tone = trackTone(snap.track);
-  const systemPrompt = tone ? `${baseSystemPrompt}\n\n${tone}` : baseSystemPrompt;
+  const profile = profileFor(documentType);
+  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra].filter(Boolean).join("\n\n");
 
   // Build the user prompt. If we have a brain, use the sliced brain JSON
   // instead of dumping raw extracted_data + research_brief. Saves ~70% of
   // the previous prompt size and eliminates signal dilution.
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
-  const preamble = compactPreamble(ctx);
+  const preamble = compactPreamble(ctx, { hasBrandKit: !!brandKit });
 
   const brandBlock = brandKitBlock(brandKit, snapshotId);
+
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
 
   // Ground the document in the founder's Second Brain corpus (uploaded
