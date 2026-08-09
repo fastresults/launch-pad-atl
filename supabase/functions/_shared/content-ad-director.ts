@@ -139,6 +139,9 @@ export function buildContentAdPrompt(args: {
   bandRatio?: number | null;
   /** Week-level campaign look every poster in the set shares. */
   campaign?: { grade: string; timeOfDay: string; lens: string; throughLine?: string } | null;
+  /** Pre-resolved scene so the caller can QA against the same frame it briefed. */
+  scene?: SceneDirective;
+
 
 }): string {
   const { aspect, post } = args;
