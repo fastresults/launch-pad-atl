@@ -39,7 +39,15 @@ export function mentionsCompany(raw: string, companyName?: string | null): boole
 
 export function checkIdentity(
   raw: string,
-  opts: { companyName?: string | null; logoUrl?: string | null; requireImagery?: boolean },
+  opts: {
+    companyName?: string | null;
+    logoUrl?: string | null;
+    requireImagery?: boolean;
+    /** PRD only: minimum rows the Imagery Plan table must carry. */
+    minImageryRows?: number;
+    /** PRD only: the archetype name the document must commit to. */
+    archetypeName?: string | null;
+  },
 ): IdentityCheck {
   const nameMissing = !mentionsCompany(raw, opts.companyName);
   const logo = (opts.logoUrl ?? "").trim();
@@ -47,8 +55,35 @@ export function checkIdentity(
   const imageryMissing = !!opts.requireImagery &&
     !/<img\s/i.test(raw) &&
     !/imagery plan/i.test(raw);
-  return { nameMissing, logoMissing, imageryMissing, ok: !nameMissing && !logoMissing && !imageryMissing };
+
+  // An "Imagery Plan" heading with three rows under it is not an art direction.
+  // Count table rows that carry a prompt-ish cell so thin plans fail the gate.
+  let imageryThin = false;
+  if (opts.requireImagery && !imageryMissing) {
+    const min = opts.minImageryRows ?? 12;
+    const rows = raw.split("\n").filter((l) => {
+      const t = l.trim();
+      return t.startsWith("|") && (t.match(/\|/g)?.length ?? 0) >= 5 &&
+        !/^\|[\s\-:|]+\|$/.test(t);
+    });
+    imageryThin = rows.length < min;
+  }
+
+  const archetype = (opts.archetypeName ?? "").trim();
+  const artDirectionMissing = !!archetype &&
+    !raw.toLowerCase().includes(archetype.toLowerCase());
+
+  return {
+    nameMissing,
+    logoMissing,
+    imageryMissing,
+    imageryThin,
+    artDirectionMissing,
+    ok: !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
+      !artDirectionMissing,
+  };
 }
+
 
 /** Corrective instruction appended to a second gateway pass when a check fails. */
 export function correctionPrompt(
