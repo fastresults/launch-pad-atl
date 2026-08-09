@@ -69,9 +69,19 @@ const ARTICLE_TITLE_PATTERNS: { re: RegExp; why: string }[] = [
   { re: /\b(navigating|exploring|understanding|discussing|considering)\b/i, why: "gerund topic phrasing" },
 ];
 
-const VERBS_OK = /\b(is|are|isn't|aren't|was|were|get|gets|got|make|makes|made|take|takes|keep|keeps|turn|turns|build|builds|built|start|starts|stop|stops|find|finds|know|knows|need|needs|want|wants|beat|beats|win|wins|cost|costs|save|saves|pay|pays|run|runs|call|calls|ask|asks|leave|leaves|stay|stays|come|comes|go|goes|can|can't|won't|don't|doesn't|should|shouldn't|will|deserve|deserves|belong|belongs|feel|feels|look|looks|works?|help|helps|hire|hires|choose|chooses|change|changes|fix|fixes|carry|carries|hold|holds|show|shows|matter|matters)\b/i;
+const VERBS_OK = /\b(is|are|isn't|aren't|was|were|get|gets|got|make|makes|made|take|takes|keep|keeps|turn|turns|build|builds|built|start|starts|stop|stops|find|finds|know|knows|need|needs|want|wants|beat|beats|win|wins|cost|costs|save|saves|pay|pays|run|runs|call|calls|ask|asks|leave|leaves|stay|stays|come|comes|go|goes|can|can't|won't|don't|doesn't|should|shouldn't|will|deserve|deserves|belong|belongs|feel|feels|look|looks|works?|help|helps|hire|hires|choose|chooses|change|changes|fix|fixes|carry|carries|hold|holds|show|shows|matter|matters|drain|drains|drained|validate|validates|prove|proves|proved|test|tests|ship|ships|shipped|launch|launches|scale|scales|spend|spends|waste|wastes|burn|burns|buy|buys|sell|sells|close|closes|convert|converts|earn|earns|grow|grows|lose|loses|lost|kill|kills|skip|skips|book|books|fund|funds|price|prices|charge|charges|track|tracks|measure|measures|cut|cuts|raise|raises|fill|fills|open|opens|answer|answers|reply|replies|follow|follows|teach|teaches|learn|learns|trust|trusts|believe|believes|decide|decides|delay|delays|risk|risks|owe|owes|beats|outsell|outsells|outperform|outperforms|let|lets|watch|watches|write|writes|read|reads|send|sends|post|posts|share|shares|use|uses|swap|swaps|replace|replaces|double|doubles|halve|halves|protect|protects|defend|defends|earned|paid|built|drove|drive|drives|move|moves|shrink|shrinks|stretch|stretches|add|adds|remove|removes)\b/i;
 
 /** Reject anything that isn't a written headline. Returns a reason, or null. */
+/** Split issues into hard (never ship) and soft (a style flag only). */
+export function headlineIssueDetail(h: string, cap: number, kicker = ""): { issue: string | null; soft: boolean } {
+  const issue = headlineIssue(h, cap, kicker);
+  if (!issue) return { issue: null, soft: false };
+  // The verb lexicon can't know every claim verb. A line that clears every
+  // other gate is a written headline, not a fallback — flag it, ship it.
+  const soft = issue === "names a topic instead of making a claim" || issue === "reads as a topic with a subtitle";
+  return { issue, soft };
+}
+
 export function headlineIssue(h: string, cap: number, kicker = ""): string | null {
   const t = (h || "").trim();
   if (!t) return "empty";
@@ -155,6 +165,7 @@ export async function buildPosterCopy(args: {
 
   let ai: { kicker?: string; headline?: string; ctaLine?: string; rationale?: string } = {};
   let issue: string | null = "no ai key";
+  let soft = false;
 
   if (args.apiKey) {
     const sys = `You are an award-winning advertising copywriter writing the headline on a printed poster. The post below is your SOURCE MATERIAL, not your headline — never quote or truncate it.
@@ -214,14 +225,22 @@ Source CTA: ${post.cta ?? ""}`;
 
     try {
       ai = await ask();
-      issue = headlineIssue(ai.headline ?? "", cap, ai.kicker ?? "");
-      if (issue) {
+      let detail = headlineIssueDetail(ai.headline ?? "", cap, ai.kicker ?? "");
+      issue = detail.issue;
+      soft = detail.soft;
+      if (issue && !soft) {
         const retry = await ask(
           `Your headline "${ai.headline ?? ""}" was rejected: ${issue}. Write a different line — ${MIN_WORDS}-${MAX_WORDS} words, under ${cap} characters, with a verb, that makes a claim a reader can act on. Do not restate the source hook.`,
         );
-        const retryIssue = headlineIssue(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
-        if (retry.headline && !retryIssue) { ai = { ...ai, ...retry }; issue = null; }
-        else console.warn("[poster-copy] headline rejected twice", { first: ai.headline, second: retry.headline, issue, retryIssue });
+        const retryDetail = headlineIssueDetail(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
+        if (retry.headline && !retryDetail.issue) {
+          ai = { ...ai, ...retry }; issue = null; soft = false;
+        } else if (retry.headline && retryDetail.soft) {
+          // The second attempt only tripped the soft gate — better than a hard reject.
+          ai = { ...ai, ...retry }; issue = retryDetail.issue; soft = true;
+        } else {
+          console.warn("[poster-copy] headline rejected twice", { first: ai.headline, second: retry.headline, issue, retryIssue: retryDetail.issue });
+        }
       }
     } catch (e) {
       console.warn("poster copy failed", e);
@@ -229,13 +248,14 @@ Source CTA: ${post.cta ?? ""}`;
     }
   }
 
-  const wrote = !!ai.headline && !issue;
+  // A soft flag (verb lexicon miss) still counts as a written headline.
+  const wrote = !!ai.headline && (!issue || soft);
   return {
     kicker: ai.kicker || fb.kicker,
     headline: wrote ? ai.headline! : (ai.headline ? firstClause(ai.headline, cap) : fb.headline),
     ctaLine: ai.ctaLine || fb.ctaLine,
     source: wrote ? "written" : "fallback",
-    headlineIssue: wrote ? null : issue,
+    headlineIssue: issue,
     rationale: ai.rationale ?? null,
     truncated: wrote ? false : true,
   };

@@ -16,6 +16,8 @@ import { buildContentAdSvgBytes, type PosterLayout } from "../_shared/content-ad
 import { buildPosterCopy, shortenHeadline } from "../_shared/poster-copy.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
+import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
+import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -299,6 +301,20 @@ Deno.serve(async (req) => {
     const asset = specForAspect(aspect);
     const ctx = await loadVentureContext(admin, snapshotId);
     step("venture context loaded");
+
+    // Venture-specific scene brief — the same art direction the social covers
+    // use. Without this the shared art director falls through to the generic
+    // founder-metaphor libraries (compasses, coastal highways).
+    const sceneOverride = typeof body?.sceneOverride === "string" ? body.sceneOverride.slice(0, 400) : "";
+    const refreshScenes = body?.refreshScenes === true;
+    let sceneBrief: any = null;
+    try {
+      sceneBrief = await ensureSceneBrief(admin, snapshotId, ctx, { force: refreshScenes });
+    } catch (e) {
+      console.warn("[content-ad] scene brief unavailable", e);
+    }
+    if (sceneBrief) (ctx as any).sceneBrief = sceneBrief;
+    step("scene brief ready", { scenes: sceneBrief?.scenes?.length ?? 0, override: !!sceneOverride });
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
     step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText });
 
@@ -315,6 +331,16 @@ Deno.serve(async (req) => {
 
 
     const variationSeed = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
+
+    // Resolve the scene ONCE so the prompt, the QA pass and the saved metadata
+    // all reference the same commissioned frame.
+    const scene: SceneDirective = resolveSceneDirective(ctx, {
+      discriminator: `${post.id ?? "post"}|${aspect}|${variationSeed}`,
+      pillar: post.pillar,
+      format: post.format,
+      assetNotes: post.asset_notes,
+      override: sceneOverride || null,
+    });
 
     const buildPrompt = (retryNote?: string) => buildContentAdPrompt({
       aspect,
@@ -337,6 +363,7 @@ Deno.serve(async (req) => {
       // model must leave the top band as unmarked negative space.
       serverRenderedHeadline: true,
       posterLayout,
+      scene,
     });
 
 
@@ -423,6 +450,65 @@ Deno.serve(async (req) => {
       (qa as any).signature_composited = true;
       step("signature splash composited");
     }
+
+    // --- Relevance QA: does the plate actually depict the commissioned scene
+    // for this line of work? One corrective retry, then keep the better frame.
+    const sceneSource = sceneOverride ? "founder_override" : (sceneBrief ? "venture_brief" : "library_fallback");
+    const sceneMeta = {
+      depict: scene.depict,
+      setting: scene.setting,
+      camera: scene.camera,
+      composition: scene.composition,
+      source: sceneSource,
+    };
+    (qa as any).scene = sceneMeta;
+    const businessLine = sceneBrief?.business_line
+      || [ctx?.snap?.sub_industry, ctx?.snap?.industry].filter(Boolean).join(" / ")
+      || "this venture";
+    if ((Date.now() - requestStartedAt) < 60_000) {
+      try {
+        const rel = await checkSceneRelevance({
+          pngB64: bytesToB64(bytes),
+          depict: scene.depict,
+          businessLine,
+        });
+        (qa as any).scene_relevant = rel.ok;
+        if (!rel.ok) {
+          console.warn(`[content-ad ${reqId}] scene relevance failed:`, rel.note);
+          const retry = await generate(
+            `${rel.note} Rebuild the frame around the SCENE DIRECTIVE exactly: ${scene.depict} Setting: ${scene.setting}. It must be unmistakably about ${businessLine}. One continuous photograph only — no torn paper, no collage, no composited layers.`,
+          );
+          const retryBytes = b64ToBytes(retry.b64);
+          const retryRel = await checkSceneRelevance({
+            pngB64: retry.b64,
+            depict: scene.depict,
+            businessLine,
+          });
+          const retryQa = runContrastQa(retryBytes, plan);
+          if (retryRel.ok && retryQa.observed.ratio >= qa.observed.ratio * 0.8) {
+            bytes = retryBytes;
+            result = retry;
+            qa = retryQa;
+            const minPct2 = (plan.signatureMinCoveragePct ?? 12) * 0.75;
+            if (qa.observed.signatureVisible === false || (qa.observed.signatureCoveragePct ?? 0) < minPct2) {
+              bytes = compositeSignatureSplash(bytes, plan);
+              qa = runContrastQa(bytes, plan);
+              (qa as any).signature_composited = true;
+            }
+            (qa as any).scene = sceneMeta;
+            (qa as any).scene_relevant = true;
+          } else {
+            (qa as any).scene_note = rel.note;
+          }
+          (qa as any).scene_retried = true;
+          step("scene relevance retry done", { used: (qa as any).scene_relevant === true });
+        }
+      } catch (e) {
+        console.warn(`[content-ad ${reqId}] relevance QA skipped`, e);
+      }
+    }
+
+
 
 
     // ---- Editorial poster typography (server-side SVG overlay) ----
