@@ -287,6 +287,21 @@ Source CTA: ${post.cta ?? ""}${
           console.warn("[poster-copy] headline rejected twice", { first: ai.headline, second: retry.headline, issue, retryIssue: retryDetail.issue });
         }
       }
+      // Cross-week repetition: a line that restates a claim an earlier week
+      // already spent teaches a returning viewer nothing.
+      const echoed = usedClaimEcho(ai.headline ?? "", used);
+      if (echoed) {
+        const retry = await ask(
+          `Your headline restates a claim week ${echoed.index + 1} of this campaign already made ("${echoed.claim}"). Make a different argument entirely — the one this week owns${args.assignedAngle ? `: ${args.assignedAngle}` : ""}.`,
+        );
+        const retryDetail = headlineIssueDetail(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
+        if (retry.headline && !usedClaimEcho(retry.headline, used) && (!retryDetail.issue || retryDetail.soft)) {
+          ai = { ...ai, ...retry }; issue = retryDetail.issue; soft = retryDetail.soft;
+        } else {
+          repeats = echoed.claim;
+          console.warn("[poster-copy] headline repeats an earlier week's claim", { headline: ai.headline, claim: echoed.claim });
+        }
+      }
     } catch (e) {
       console.warn("poster copy failed", e);
       issue = "copy pass failed";
@@ -295,10 +310,14 @@ Source CTA: ${post.cta ?? ""}${
 
   // A soft flag (verb lexicon miss) still counts as a written headline.
   const wrote = !!ai.headline && (!issue || soft);
+  // A "none" rung deliberately ships without an ask.
+  const suppressCta = args.ctaRung?.rung === "none";
   return {
     kicker: ai.kicker || fb.kicker,
     headline: wrote ? ai.headline! : (ai.headline ? firstClause(ai.headline, cap) : fb.headline),
-    ctaLine: ai.ctaLine || fb.ctaLine,
+    ctaLine: suppressCta ? "" : (ai.ctaLine || fb.ctaLine),
+    repeatsClaim: repeats,
+
     source: wrote ? "written" : "fallback",
     headlineIssue: issue,
     rationale: ai.rationale ?? null,
