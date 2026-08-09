@@ -1,34 +1,52 @@
-// Logo Studio — an AI-first design interview.
+// Logo Studio — a directed brief, not an interview.
 //
-// There is no queue, no job ledger, no background worker and nothing that can
-// stall. Every action is one synchronous request the founder is watching:
+//   start              open an empty session (nothing is drawn, nothing is asked)
+//   upload_reference   store one inspiration image with the reason it is there
+//   remove_reference   drop one
+//   direction          read the brand guide + Second Brain + the founder's own
+//                      description, then commit to ONE creative direction, a set
+//                      law and three concepts
+//   revise_direction   the founder corrects the direction in plain words
+//   concepts           render the three marks under the set law, jury each one,
+//                      one automatic redraw for anything that fails
+//   refine             free-form direction on one mark -> one redraw
+//   approve            TRACE the approved mark into brand-coloured vectors
+//   commit             assemble the lockup family and write it into the brand kit
+//   upload_own / reset
 //
-//   start          read the venture and write a ~100 word design brief proposing one mark
-//   revise_brief   the founder corrects the brief; the designer rewrites it
-//   approve_brief  draw the first mark and open the interview
-//   answer         record the answer, ask the next question, draw ONE evolved mark
-//   back           step the conversation back and take a different branch
-//   refine         free-form direction on the current mark -> one redraw
-//   approve        TRACE the approved rough into brand-coloured vectors
-//   commit         assemble the lockup family and write it into the brand kit
-//
-// One mark at a time. Fidelity rule: approving traces the artwork the founder is
-// looking at. The mark is never redrawn between approval and delivery.
+// Fidelity rule: approving traces the artwork the founder is looking at. The
+// mark is never redrawn between approval and delivery.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
+import { MODELS } from "../_shared/models.ts";
 import {
-  mergeRequirements,
-  nextTurn,
-  openingBrief,
-  roughPrompt,
-  ROUGH_NEGATIVE,
-  type InterviewTurn,
-  type RoughDirection,
-  type StudioContext,
-} from "../_shared/logo-interview.ts";
+  buildCreativeDirection,
+  chatJson,
+  refineConceptBrief,
+  type Concept,
+  type CreativeDirection,
+  type DirectionDossier,
+  type FounderIntake,
+  type ReferenceImage,
+} from "../_shared/logo-direction.ts";
+import {
+  BUSINESS_READ_SYSTEM,
+  businessProfileBlock,
+  businessReadPrompt,
+  parseBusinessProfile,
+  type BusinessProfile,
+} from "../_shared/logo-business-read.ts";
+import {
+  REFERENCE_READ_INSTRUCTION,
+  REFERENCE_READ_SYSTEM,
+  parseCraftSpec,
+  type CraftSpec,
+} from "../_shared/logo-reference-read.ts";
+import { buildLogoRenderPrompt, logoNegativePrompt } from "../_shared/logo-render-prompt.ts";
+import { JURY_SYSTEM, juryInstruction, parseJuryVerdict } from "../_shared/logo-jury.ts";
 import { traceLogo } from "../_shared/logo-trace.ts";
 import { composeLockups } from "../_shared/logo-lockup.ts";
 import {
@@ -37,7 +55,6 @@ import {
   higgsfieldConfigured,
   renderLogoConcept,
 } from "../_shared/higgsfield.ts";
-
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,33 +71,25 @@ const STRATEGY_DOCS = [
   "positioning_statement", "brand_positioning", "value_proposition", "messaging_framework",
   "brand_voice", "ideal_customer_profile", "customer_persona", "offer_design",
   "business_model_canvas", "one_page_business_plan", "elevator_pitch", "market_analysis",
+  "naming_rationale", "differentiation",
 ];
 
-type Rough = {
+type Mark = {
   id: string;
+  concept_id: string;
   title: string;
+  idea: string;
+  second_read: string;
+  reads_as: string;
   brief: string;
-  change_note?: string;
+  change_note: string;
   path: string;
   url: string | null;
   provider: string;
+  jury?: { pass: boolean; note: string; scores: Record<string, number> } | null;
 };
 
-
-type Step = {
-  index: number;
-  question: string;
-  helper: string;
-  read_back: string | null;
-  choices: { label: string; description: string }[];
-  allow_free_text: boolean;
-  multi_select: boolean;
-  done: boolean;
-  roughs: Rough[];
-  render_error: string | null;
-  answer: string | null;
-  chosen_rough_id: string | null;
-};
+type Round = { index: number; label: string; marks: Mark[]; error: string | null };
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -122,8 +131,6 @@ async function gatewayRender(prompt: string, references: string[], model: string
       else return new Uint8Array(await (await fetch(first.url)).arrayBuffer());
     }
     if (!b64) throw new Error("image gateway returned no image");
-    // decodeBase64 allocates a single sized buffer; atob + Uint8Array.from over a
-    // multi-MB string spikes memory hard enough to trip the worker's limit.
     const bytes = decodeBase64(b64);
     b64 = undefined;
     return bytes;
@@ -132,12 +139,7 @@ async function gatewayRender(prompt: string, references: string[], model: string
   }
 }
 
-/**
- * Draw one rough. The reference-conditioned gateway render leads because it can
- * actually SEE the moodboard; Higgsfield is the fallback. Whichever drew it is
- * reported back to the founder — never a silent substitution.
- */
-async function drawRough(prompt: string, references: string[]): Promise<{ bytes: Uint8Array; provider: string }> {
+async function drawMark(prompt: string, references: string[]): Promise<{ bytes: Uint8Array; provider: string }> {
   const failures: string[] = [];
   try {
     return { bytes: await gatewayRender(prompt, references, "google/gemini-3-pro-image"), provider: "gemini-3-pro" };
@@ -149,7 +151,7 @@ async function drawRough(prompt: string, references: string[]): Promise<{ bytes:
   if (higgsfieldConfigured()) {
     try {
       const result = await renderLogoConcept(
-        { prompt, negativePrompt: ROUGH_NEGATIVE, enhancePrompt: false },
+        { prompt, negativePrompt: logoNegativePrompt(), enhancePrompt: false },
         { timeoutMs: 90_000 },
       );
       return { bytes: await fetchRenderBytes(result.imageUrl), provider: "higgsfield" };
@@ -163,7 +165,7 @@ async function drawRough(prompt: string, references: string[]): Promise<{ bytes:
 async function uploadPng(supabase: any, userId: string, snapshotId: string, bytes: Uint8Array, tag: string) {
   const path = `${userId}/logo-studio/${snapshotId}/${tag}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.png`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, bytes, { contentType: "image/png", upsert: true });
-  if (error) throw new Error(`Could not store the rough: ${error.message}`);
+  if (error) throw new Error(`Could not store the mark: ${error.message}`);
   const { data } = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 7);
   return { path, url: data?.signedUrl ?? null };
 }
@@ -177,65 +179,56 @@ async function uploadSvg(supabase: any, userId: string, snapshotId: string, svg:
   return { path, url: data?.signedUrl ?? null };
 }
 
-/**
- * Draw the single mark for this turn. One rough, never a set.
- *
- * When there is already a mark on the table its image leads the reference list
- * so the model edits that artwork instead of guessing a new one from text.
- */
-async function drawOne(
-  supabase: any,
-  userId: string,
-  snapshotId: string,
-  direction: RoughDirection,
-  tokens: any,
-  companyName: string,
-  references: string[],
-  requirements: string[] = [],
-  editRef?: string | null,
-): Promise<{ roughs: Rough[]; error: string | null }> {
-  try {
-    const prompt = roughPrompt(direction, tokens, companyName, requirements, Boolean(editRef));
-    const refs = editRef ? [editRef, ...references.filter((r) => r !== editRef)] : references;
-    const { bytes, provider } = await drawRough(prompt, refs);
-    const stored = await uploadPng(supabase, userId, snapshotId, bytes, "rough");
-    return {
-      roughs: [{
-        id: crypto.randomUUID(),
-        title: direction.title,
-        brief: direction.render_brief,
-        change_note: direction.change_note ?? "",
-        path: stored.path,
-        url: stored.url,
-        provider,
-      }],
-      error: null,
-    };
-  } catch (e) {
-    return { roughs: [], error: `The mark could not be drawn. ${errorMessage(e).slice(0, 240)}` };
-  }
-}
+/* ----------------------------- the brand read ----------------------------- */
 
-
-/* ----------------------------- context ----------------------------- */
-
-async function buildStudioContext(supabase: any, ctx: any, tokens: any, kit: any): Promise<{ studio: StudioContext; references: string[] }> {
+function ventureBlockOf(ctx: any): string {
   const snap = ctx.snap ?? {};
   const brain = ctx.brain ?? {};
-  const ventureBlock = [
+  return [
     snap.company_name ? `Name: ${snap.company_name}` : "",
-    snap.industry ? `Industry: ${snap.industry}` : "",
+    snap.industry ? `Industry: ${snap.industry}${snap.sub_industry ? ` / ${snap.sub_industry}` : ""}` : "",
     snap.concept_summary ? `Concept: ${String(snap.concept_summary).slice(0, 900)}` : "",
+    snap.value_proposition ? `Value proposition: ${String(snap.value_proposition).slice(0, 600)}` : "",
     snap.target_audience ? `Customer: ${String(snap.target_audience).slice(0, 600)}` : "",
     snap.differentiation_statement ? `Differentiation: ${String(snap.differentiation_statement).slice(0, 600)}` : "",
     brain?.problem ? `Problem solved: ${String(brain.problem).slice(0, 600)}` : "",
     snap.location ? `Where they operate: ${snap.location}` : "",
   ].filter(Boolean).join("\n");
+}
 
+function brainBlockOf(ctx: any): string {
+  const brain = ctx.brain ?? {};
+  return Object.entries(brain)
+    .filter(([, v]) => typeof v === "string" && v.trim())
+    .map(([k, v]) => `${k}: ${String(v).slice(0, 700)}`)
+    .join("\n");
+}
+
+/** The brand guide is the FIRST reference: palette roles, type, voice, mood. */
+function brandGuideBlockOf(kit: any, tokens: any): string {
+  const colors = tokens?.colors ?? {};
+  const voice = kit?.voice ?? {};
+  const dna = kit?.dna ?? {};
+  const list = (v: unknown, n = 6) => (Array.isArray(v) ? v.map(String).slice(0, n).join(", ") : "");
+  return [
+    `Palette — primary ${colors.primary ?? "—"}, secondary ${colors.secondary ?? "—"}, accent ${colors.accent ?? "—"}`,
+    tokens?.fonts?.heading ? `Headings: ${tokens.fonts.heading}` : "",
+    tokens?.fonts?.body ? `Body: ${tokens.fonts.body}` : "",
+    dna.positioning ? `Positioning: ${String(dna.positioning).slice(0, 400)}` : "",
+    list(dna.traits ?? dna.mood ?? dna.personality) ? `Brand traits: ${list(dna.traits ?? dna.mood ?? dna.personality)}` : "",
+    voice.summary ? `Voice: ${String(voice.summary).slice(0, 400)}` : "",
+    list(voice.tone_words ?? voice.toneWords) ? `Tone words: ${list(voice.tone_words ?? voice.toneWords)}` : "",
+    list(voice.dos) ? `Voice do: ${list(voice.dos)}` : "",
+    list(voice.donts) ? `Voice don't: ${list(voice.donts)}` : "",
+    Array.isArray(kit?.moodboard) && kit.moodboard.length ? `Moodboard: ${kit.moodboard.length} tiles attached as visual reference` : "",
+  ].filter(Boolean).join("\n");
+}
+
+async function docsBlockOf(supabase: any, snapshotId: string): Promise<string> {
   const { data: docs } = await supabase
     .from("venture_documents")
     .select("document_type, content")
-    .eq("snapshot_id", snap.id)
+    .eq("snapshot_id", snapshotId)
     .eq("status", "complete");
   const byType = new Map<string, string>();
   for (const doc of docs ?? []) {
@@ -246,120 +239,204 @@ async function buildStudioContext(supabase: any, ctx: any, tokens: any, kit: any
     const content = byType.get(type);
     if (content) picked.push(`### ${type}\n${content.slice(0, 2200)}`);
   }
-  // Anything else they have finished, lightly, so the designer knows the scope.
-  const others = [...byType.keys()].filter((k) => !STRATEGY_DOCS.includes(k));
-  if (others.length) picked.push(`### also completed\n${others.join(", ")}`);
+  return picked.join("\n\n");
+}
 
-  const colors = tokens?.colors ?? {};
-  const tokensBlock = [
-    `Primary ${colors.primary ?? "—"}, secondary ${colors.secondary ?? "—"}, accent ${colors.accent ?? "—"}`,
-    `Headings ${tokens?.fonts?.heading ?? "—"} / body ${tokens?.fonts?.body ?? "—"}`,
-    Array.isArray(tokens?.mood) ? `Personality: ${tokens.mood.join(", ")}` : "",
-  ].filter(Boolean).join("\n");
-
+async function moodboardUrls(supabase: any, kit: any): Promise<string[]> {
   const tiles = Array.isArray(kit?.moodboard) ? kit.moodboard : [];
-  const references: string[] = [];
-  for (const tile of tiles.slice(0, 4)) {
+  const urls: string[] = [];
+  for (const tile of tiles.slice(0, 3)) {
     const path = typeof tile?.path === "string" ? tile.path : "";
     if (path) {
       try {
         const { data } = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60);
-        if (data?.signedUrl) { references.push(data.signedUrl); continue; }
-      } catch { /* fall through to the stored url */ }
+        if (data?.signedUrl) { urls.push(data.signedUrl); continue; }
+      } catch { /* fall through */ }
     }
-    if (typeof tile?.url === "string" && tile.url.startsWith("http")) references.push(tile.url);
+    if (typeof tile?.url === "string" && tile.url.startsWith("http")) urls.push(tile.url);
   }
-
-  return {
-    studio: {
-      companyName: snap.company_name ?? "the brand",
-      ventureBlock,
-      docsBlock: picked.join("\n\n"),
-      tokensBlock,
-      moodboardBlock: tiles.length ? `${tiles.length} moodboard tiles are attached as visual references.` : "",
-    },
-    references,
-  };
+  return urls;
 }
 
-/* ----------------------------- session ----------------------------- */
-
-function historyOf(steps: Step[]): { question: string; answer: string; chosen?: string | null }[] {
-  return steps
-    .filter((s) => s.answer !== null)
-    .map((s) => ({
-      question: s.question,
-      answer: s.answer ?? "",
-      chosen: s.roughs.find((r) => r.id === s.chosen_rough_id)?.title ?? null,
-    }));
-}
-
-/** The last mark drawn in this session, if any — the artwork the founder is looking at. */
-function currentRough(steps: Step[]): Rough | null {
-  for (let i = steps.length - 1; i >= 0; i--) {
-    const rough = (steps[i].roughs ?? [])[0];
-    if (rough) return rough;
+async function readBusinessProfile(ctx: any, tokensBlock: string, docsBlock: string): Promise<BusinessProfile | null> {
+  try {
+    const parsed = await chatJson(LOVABLE_API_KEY, [
+      { role: "system", content: BUSINESS_READ_SYSTEM },
+      { role: "user", content: businessReadPrompt(ventureBlockOf(ctx), docsBlock, tokensBlock) },
+    ], { model: MODELS.pro, timeoutMs: 90_000 });
+    return parseBusinessProfile(parsed);
+  } catch (e) {
+    console.warn("business read failed", errorMessage(e));
+    return null;
   }
-  return null;
 }
 
-async function buildStep(
-  supabase: any,
-  userId: string,
-  snapshotId: string,
-  studio: StudioContext,
-  references: string[],
-  tokens: any,
-  steps: Step[],
-  brief: string,
-  instruction?: string,
-  overrideDirection?: RoughDirection,
-  requirements: string[] = [],
-  editSource?: Rough | null,
-): Promise<{ step: Step; turn: InterviewTurn }> {
-  const source = editSource === undefined ? currentRough(steps) : editSource;
-  const currentDirection: RoughDirection | null = source
-    ? { title: source.title, render_brief: source.brief, change_note: "" }
-    : null;
+async function readCraftSpec(references: ReferenceImage[]): Promise<CraftSpec | null> {
+  const urls = references.map((r) => r.url).filter((u) => typeof u === "string" && (u.startsWith("http") || u.startsWith("data:image/")));
+  if (!urls.length) return null;
+  try {
+    const content: any[] = [{ type: "text", text: REFERENCE_READ_INSTRUCTION }];
+    for (const url of urls.slice(0, 4)) content.push({ type: "image_url", image_url: { url } });
+    const parsed = await chatJson(LOVABLE_API_KEY, [
+      { role: "system", content: REFERENCE_READ_SYSTEM },
+      { role: "user", content },
+    ], { model: MODELS.pro, timeoutMs: 90_000 });
+    return parseCraftSpec(parsed);
+  } catch (e) {
+    console.warn("reference read failed", errorMessage(e));
+    return null;
+  }
+}
 
-  const turn = await nextTurn(
-    LOVABLE_API_KEY, studio, historyOf(steps), brief, instruction, requirements, currentDirection,
-  );
-  const { roughs, error } = await drawOne(
-    supabase, userId, snapshotId, overrideDirection ?? turn.direction, tokens, studio.companyName, references,
-    turn.requirements, source?.url ?? null,
-  );
+/* ----------------------------- the jury ----------------------------- */
 
-  return {
-    turn,
-    step: {
-      index: steps.length,
-      question: turn.question,
-      helper: turn.helper,
-      read_back: turn.read_back,
-      choices: turn.choices,
-      allow_free_text: turn.allow_free_text,
-      multi_select: turn.multi_select,
-      done: turn.done,
-      roughs,
-      render_error: error,
-      answer: null,
-      chosen_rough_id: null,
+async function juryReview(
+  imageUrl: string,
+  concept: Concept,
+  direction: CreativeDirection,
+  profile: BusinessProfile | null,
+  spec: CraftSpec | null,
+  palette: string[],
+  mood: string,
+) {
+  try {
+    const parsed = await chatJson(LOVABLE_API_KEY, [
+      { role: "system", content: JURY_SYSTEM },
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: juryInstruction(
+              concept.idea, concept.craft_move, concept.logo_type, spec, profile,
+              { palette, mood }, direction.set_law,
+            ),
+          },
+          { type: "image_url", image_url: { url: imageUrl } },
+        ],
+      },
+    ], { model: MODELS.pro, timeoutMs: 90_000 });
+    return parseJuryVerdict(parsed) ?? { pass: true, note: "", scores: {} };
+  } catch (e) {
+    console.warn("jury unavailable", errorMessage(e));
+    // A failed jury must never block delivery.
+    return { pass: true, note: "", scores: {} };
+  }
+}
+
+/* ----------------------------- drawing one concept ----------------------------- */
+
+type RenderEnv = {
+  supabase: any;
+  userId: string;
+  snapshotId: string;
+  direction: CreativeDirection;
+  profile: BusinessProfile | null;
+  spec: CraftSpec | null;
+  tokens: any;
+  companyName: string;
+  references: string[];
+  palette: string[];
+  mood: string;
+  deadline: number;
+};
+
+function promptFor(env: RenderEnv, concept: Concept, correction?: string | null): string {
+  return buildLogoRenderPrompt(
+    {
+      name: concept.title,
+      idea: concept.render_brief || concept.idea,
+      craftMove: concept.craft_move,
+      imagery: concept.reads_as,
+      logoType: concept.logo_type,
+      readsAs: concept.reads_as,
+      meaning: env.direction.core_idea,
+      secondRead: concept.second_read,
+      setLaw: env.direction.set_law,
     },
-  };
+    {
+      brandName: env.companyName,
+      palette: env.palette,
+      moodboard: env.mood,
+      personality: env.direction.attributes,
+      headingFont: env.tokens?.fonts?.heading,
+      bodyFont: env.tokens?.fonts?.body,
+      referenceCount: env.references.length,
+    },
+    env.profile,
+    env.spec,
+    correction ?? null,
+  );
 }
 
-/** Signed urls expire; re-sign everything the client is about to render. */
-async function withFreshUrls(supabase: any, session: any, brand?: unknown) {
-  const steps: Step[] = Array.isArray(session?.steps) ? session.steps : [];
-  for (const step of steps) {
-    for (const rough of step.roughs ?? []) {
-      if (!rough?.path) continue;
+/**
+ * Draw one concept, judge it, and give it exactly one corrective redraw if the
+ * jury rejects it and there is time left in this invocation.
+ */
+async function renderConcept(env: RenderEnv, concept: Concept, editRef?: string | null): Promise<Mark | { error: string }> {
+  const refs = editRef ? [editRef, ...env.references] : env.references;
+  try {
+    let { bytes, provider } = await drawMark(promptFor(env, concept), refs);
+    let stored = await uploadPng(env.supabase, env.userId, env.snapshotId, bytes, "mark");
+
+    let verdict = stored.url
+      ? await juryReview(stored.url, concept, env.direction, env.profile, env.spec, env.palette, env.mood)
+      : { pass: true, note: "", scores: {} };
+
+    if (!verdict.pass && verdict.note && Date.now() < env.deadline) {
       try {
-        const { data } = await supabase.storage.from(BUCKET).createSignedUrl(rough.path, 60 * 60 * 6);
-        if (data?.signedUrl) rough.url = data.signedUrl;
+        const retry = await drawMark(promptFor(env, concept, verdict.note), refs);
+        const retryStored = await uploadPng(env.supabase, env.userId, env.snapshotId, retry.bytes, "mark");
+        bytes = retry.bytes;
+        provider = retry.provider;
+        stored = retryStored;
+        verdict = retryStored.url
+          ? await juryReview(retryStored.url, concept, env.direction, env.profile, env.spec, env.palette, env.mood)
+          : verdict;
+      } catch (e) {
+        console.warn("redraw failed", errorMessage(e));
+      }
+    }
+
+    return {
+      id: crypto.randomUUID(),
+      concept_id: concept.id,
+      title: concept.title,
+      idea: concept.idea,
+      second_read: concept.second_read,
+      reads_as: concept.reads_as,
+      brief: concept.render_brief,
+      change_note: "",
+      path: stored.path,
+      url: stored.url,
+      provider,
+      jury: verdict,
+    };
+  } catch (e) {
+    return { error: `${concept.title}: ${errorMessage(e).slice(0, 200)}` };
+  }
+}
+
+/* ----------------------------- session helpers ----------------------------- */
+
+async function withFreshUrls(supabase: any, session: any, brand?: unknown) {
+  const rounds: Round[] = Array.isArray(session?.steps) ? session.steps : [];
+  for (const round of rounds) {
+    for (const mark of round.marks ?? []) {
+      if (!mark?.path) continue;
+      try {
+        const { data } = await supabase.storage.from(BUCKET).createSignedUrl(mark.path, 60 * 60 * 6);
+        if (data?.signedUrl) mark.url = data.signedUrl;
       } catch { /* keep the stored url */ }
     }
+  }
+  const refs: ReferenceImage[] = Array.isArray(session?.inspiration) ? session.inspiration : [];
+  for (const ref of refs) {
+    if (!ref?.path) continue;
+    try {
+      const { data } = await supabase.storage.from(BUCKET).createSignedUrl(ref.path, 60 * 60 * 6);
+      if (data?.signedUrl) ref.url = data.signedUrl;
+    } catch { /* keep the stored url */ }
   }
   if (session?.approved_rough?.path) {
     try {
@@ -367,8 +444,25 @@ async function withFreshUrls(supabase: any, session: any, brand?: unknown) {
       if (data?.signedUrl) session.approved_rough.url = data.signedUrl;
     } catch { /* keep the stored url */ }
   }
-  return { ...session, steps, brand: brand ?? null };
+  return { ...session, steps: rounds, inspiration: refs, brand: brand ?? null };
 }
+
+function normalizeIntake(raw: any, references: ReferenceImage[]): FounderIntake {
+  const dials: Record<string, number> = {};
+  for (const [key, value] of Object.entries(raw?.dials ?? {})) {
+    const n = Number(value);
+    if (Number.isFinite(n)) dials[key] = Math.min(5, Math.max(1, Math.round(n)));
+  }
+  return {
+    description: String(raw?.description ?? "").slice(0, 4000),
+    markType: ["symbol", "wordmark", "lettermark", "combination", "open"].includes(raw?.markType) ? raw.markType : "open",
+    dials,
+    avoid: Array.isArray(raw?.avoid) ? raw.avoid.map((a: any) => String(a).slice(0, 160)).filter(Boolean).slice(0, 12) : [],
+    references,
+  };
+}
+
+/* ----------------------------- handler ----------------------------- */
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -400,20 +494,26 @@ Deno.serve(async (req) => {
 
     const { data: kit } = await supabase
       .from("venture_brand_kits")
-      .select("palette, typography, dna, logos, moodboard")
+      .select("palette, typography, dna, voice, logos, moodboard")
       .eq("snapshot_id", snapshotId)
       .maybeSingle();
+
     const tokens = {
       colors: kit?.palette?.colors ?? snap.brand_tokens?.colors,
-      fonts: kit?.typography ? { heading: kit.typography.heading?.family, body: kit.typography.body?.family } : snap.brand_tokens?.fonts,
+      fonts: kit?.typography
+        ? { heading: kit.typography.heading?.family, body: kit.typography.body?.family }
+        : snap.brand_tokens?.fonts,
       mood: kit?.dna?.mood ?? kit?.dna?.personality ?? snap.brand_tokens?.mood,
     };
+    const palette = [tokens.colors?.primary, tokens.colors?.secondary, tokens.colors?.accent]
+      .filter((c: any) => typeof c === "string" && /^#[0-9a-f]{3,8}$/i.test(c));
+    const moodWords = Array.isArray(tokens.mood) ? tokens.mood.join(", ") : String(tokens.mood ?? "");
 
-    // Everything the client needs to typeset a live lockup preview beside the mark.
     const brand = {
       companyName: snap.company_name ?? "",
       headingFont: tokens.fonts?.heading ?? null,
       primary: tokens.colors?.primary ?? null,
+      palette,
     };
 
     const loadSession = async (id?: string) => {
@@ -430,161 +530,156 @@ Deno.serve(async (req) => {
       return json({ ok: true, session: session ? await withFreshUrls(supabase, session, brand) : null });
     }
 
-    /* ---------------- start (write the brief — nothing is drawn yet) ---------------- */
+    /* ---------------- start ---------------- */
     if (action === "start") {
-      const { studio } = await buildStudioContext(supabase, ctx, tokens, kit);
-      const proposal = await openingBrief(LOVABLE_API_KEY, studio);
-
       const { data, error } = await supabase.from("venture_logo_sessions").insert({
         snapshot_id: snapshotId,
         user_id: userId,
-        status: "briefing",
-        brief: {
-          summary: proposal.design_brief,
-          proposal: proposal.design_brief,
-          direction: proposal.direction,
-          requirements: proposal.requirements,
-        },
+        status: "intake",
+        brief: {},
         steps: [],
+        inspiration: [],
         last_error: null,
       }).select().single();
       if (error) throw error;
       return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
-
-    const sessionId: string = body?.sessionId ?? "";
-    const session = await loadSession(sessionId);
+    const session = await loadSession(body?.sessionId ?? "");
     if (!session) throw new Error("No logo session found. Start a new one.");
-    const steps: Step[] = Array.isArray(session.steps) ? session.steps : [];
-    const carried: string[] = Array.isArray(session.brief?.requirements) ? session.brief.requirements : [];
+    const rounds: Round[] = Array.isArray(session.steps) ? session.steps : [];
+    const references: ReferenceImage[] = Array.isArray(session.inspiration) ? session.inspiration : [];
+    const direction: CreativeDirection | null = session.brief?.direction ?? null;
 
-    /* ---------------- drop_requirement (the founder retracts one) ---------------- */
-    if (action === "drop_requirement") {
-      const target = String(body?.requirement ?? "");
-      const kept = carried.filter((r) => r !== target);
-      const { data, error } = await supabase.from("venture_logo_sessions").update({
-        brief: { ...(session.brief ?? {}), requirements: kept },
-      }).eq("id", session.id).select().single();
+    /* ---------------- upload_reference ---------------- */
+    if (action === "upload_reference") {
+      const b64 = String(body?.data ?? "");
+      if (!b64) throw new Error("No file received.");
+      const reason = String(body?.reason ?? "overall feeling").slice(0, 60);
+      const bytes = decodeBase64(b64);
+      const stored = await uploadPng(supabase, userId, snapshotId, bytes, "inspiration");
+      const next = [...references, {
+        url: stored.url ?? "",
+        path: stored.path,
+        reason,
+        label: String(body?.filename ?? "").slice(0, 80),
+      }].slice(0, 5);
+
+      const { data, error } = await supabase.from("venture_logo_sessions")
+        .update({ inspiration: next }).eq("id", session.id).select().single();
       if (error) throw error;
       return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
-    /* ---------------- revise_brief ---------------- */
-    if (action === "revise_brief") {
+    /* ---------------- remove_reference ---------------- */
+    if (action === "remove_reference") {
+      const path = String(body?.path ?? "");
+      const next = references.filter((r) => r.path !== path);
+      const { data, error } = await supabase.from("venture_logo_sessions")
+        .update({ inspiration: next }).eq("id", session.id).select().single();
+      if (error) throw error;
+      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
+    }
+
+    /* ---------------- direction / revise_direction ---------------- */
+    if (action === "direction" || action === "revise_direction") {
+      const intake = normalizeIntake(
+        action === "direction" ? body?.intake : session.brief?.intake,
+        references,
+      );
       const correction = String(body?.instruction ?? "").trim();
-      if (!correction) throw new Error("Tell the designer what to change in the brief.");
-      const { studio } = await buildStudioContext(supabase, ctx, tokens, kit);
-      const proposal = await openingBrief(
-        LOVABLE_API_KEY, studio, correction, session.brief?.proposal ?? "",
-        mergeRequirements(carried, [correction]),
+
+      const docsBlock = await docsBlockOf(supabase, snapshotId);
+      const brandGuideBlock = brandGuideBlockOf(kit, tokens);
+
+      // The business read and the reference read are independent — run together.
+      const [profile, spec] = await Promise.all([
+        session.brief?.profile
+          ? Promise.resolve(session.brief.profile as BusinessProfile)
+          : readBusinessProfile(ctx, brandGuideBlock, docsBlock),
+        session.brief?.craft_spec && action === "revise_direction"
+          ? Promise.resolve(session.brief.craft_spec as CraftSpec)
+          : readCraftSpec(references),
+      ]);
+
+      const dossier: DirectionDossier = {
+        companyName: snap.company_name ?? "the brand",
+        ventureBlock: ventureBlockOf(ctx),
+        brandGuideBlock,
+        brainBlock: brainBlockOf(ctx),
+        docsBlock,
+        profile,
+        craftSpec: spec,
+        palette,
+      };
+
+      const nextDirection = await buildCreativeDirection(
+        LOVABLE_API_KEY, dossier, intake,
+        action === "revise_direction" ? direction : null,
+        correction || undefined,
       );
 
       const { data, error } = await supabase.from("venture_logo_sessions").update({
-        status: "briefing",
+        status: "direction",
         brief: {
-          summary: proposal.design_brief,
-          proposal: proposal.design_brief,
-          direction: proposal.direction,
-          requirements: proposal.requirements,
+          ...(session.brief ?? {}),
+          intake,
+          profile,
+          craft_spec: spec,
+          direction: nextDirection,
+          corrections: [
+            ...(Array.isArray(session.brief?.corrections) ? session.brief.corrections : []),
+            ...(correction ? [correction] : []),
+          ].slice(-10),
         },
+        steps: action === "direction" ? [] : rounds,
         last_error: null,
       }).eq("id", session.id).select().single();
       if (error) throw error;
       return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
-    /* ---------------- approve_brief (draw the first mark) ---------------- */
-    if (action === "approve_brief") {
-      // A note typed into the brief box is never discarded: it rewrites the brief
-      // first, and only then is the mark drawn.
-      const pending = String(body?.instruction ?? "").trim();
-      const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
+    const profile: BusinessProfile | null = session.brief?.profile ?? null;
+    const spec: CraftSpec | null = session.brief?.craft_spec ?? null;
 
-      let proposal: string = session.brief?.proposal ?? "";
-      let direction: RoughDirection | undefined = session.brief?.direction ?? undefined;
-      let requirements = carried;
+    const buildEnv = async (): Promise<RenderEnv> => ({
+      supabase,
+      userId,
+      snapshotId,
+      direction: direction!,
+      profile,
+      spec,
+      tokens,
+      companyName: snap.company_name ?? "",
+      references: await moodboardUrls(supabase, kit),
+      palette: [direction!.colour_roles.dominant, direction!.colour_roles.secondary, direction!.colour_roles.accent]
+        .filter(Boolean),
+      mood: moodWords,
+      // Leave room in the invocation for a corrective redraw, not more.
+      deadline: Date.now() + 150_000,
+    });
 
-      if (pending) {
-        const revised = await openingBrief(
-          LOVABLE_API_KEY, studio, pending, proposal, mergeRequirements(carried, [pending]),
-        );
-        proposal = revised.design_brief;
-        direction = revised.direction;
-        requirements = revised.requirements;
-      }
+    /* ---------------- concepts ---------------- */
+    if (action === "concepts") {
+      if (!direction) throw new Error("Approve a direction first.");
+      const env = await buildEnv();
 
-      const { step, turn } = await buildStep(
-        supabase, userId, snapshotId, studio, references, tokens, [], proposal,
-        `The founder approved this brief:\n${proposal}\n\nDraw that mark now and ask your first refining question about it.`,
-        direction,
-        requirements,
-        null,
-      );
+      const results = await Promise.all(direction.concepts.map((c) => renderConcept(env, c)));
+      const marks = results.filter((r): r is Mark => (r as Mark).id !== undefined);
+      const errors = results.filter((r): r is { error: string } => (r as any).error !== undefined).map((r) => r.error);
+      if (!marks.length) throw new Error(`No mark could be drawn. ${errors.join(" | ").slice(0, 300)}`);
 
-
-      const { data, error } = await supabase.from("venture_logo_sessions").update({
-        status: "interviewing",
-        steps: [step],
-        brief: {
-          ...(session.brief ?? {}),
-          proposal,
-          direction,
-          summary: turn.brief_summary || proposal,
-          requirements: mergeRequirements(requirements, turn.requirements),
-        },
-        last_error: step.render_error,
-      }).eq("id", session.id).select().single();
-      if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
-    }
-
-    /* ---------------- answer ---------------- */
-    if (action === "answer") {
-      const answer = String(body?.answer ?? "").trim();
-      const chosenRoughId = body?.chosenRoughId ?? null;
-      if (!answer && !chosenRoughId) throw new Error("Pick an option or type an answer.");
-
-      const current = steps[steps.length - 1];
-      if (!current) throw new Error("This session has no open question.");
-      current.answer = answer || (current.roughs.find((r) => r.id === chosenRoughId)?.title ?? "");
-      current.chosen_rough_id = chosenRoughId;
-
-      const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
-      const { step, turn } = await buildStep(
-        supabase, userId, snapshotId, studio, references, tokens, steps, session.brief?.summary ?? "",
-        undefined, undefined, carried,
-      );
-      const nextSteps = [...steps, step];
+      const round: Round = {
+        index: rounds.length,
+        label: direction.headline || "First set",
+        marks,
+        error: errors.length ? errors.join(" | ").slice(0, 300) : null,
+      };
 
       const { data, error } = await supabase.from("venture_logo_sessions").update({
-        steps: nextSteps,
-        brief: {
-          ...(session.brief ?? {}),
-          summary: turn.brief_summary,
-          requirements: mergeRequirements(carried, turn.requirements),
-        },
-        last_error: step.render_error,
-      }).eq("id", session.id).select().single();
-      if (error) throw error;
-      return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
-    }
-
-
-
-    /* ---------------- back ---------------- */
-    if (action === "back") {
-      const target = Math.max(0, Math.min(steps.length - 1, Number(body?.toStep ?? steps.length - 2)));
-      const trimmed = steps.slice(0, target + 1);
-      const last = trimmed[trimmed.length - 1];
-      if (last) { last.answer = null; last.chosen_rough_id = null; }
-      const { data, error } = await supabase.from("venture_logo_sessions").update({
-        steps: trimmed,
-        status: "interviewing",
-        approved_rough: null,
-        vector_svg: null,
-        vector_path: null,
-        last_error: null,
+        status: "concepts",
+        steps: [...rounds, round],
+        last_error: round.error,
       }).eq("id", session.id).select().single();
       if (error) throw error;
       return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
@@ -592,43 +687,51 @@ Deno.serve(async (req) => {
 
     /* ---------------- refine ---------------- */
     if (action === "refine") {
+      if (!direction) throw new Error("Approve a direction first.");
       const instruction = String(body?.instruction ?? "").trim();
-      const roughId = body?.roughId ?? null;
       if (!instruction) throw new Error("Tell the designer what to change.");
-      const source = steps.flatMap((s) => s.roughs ?? []).find((r) => r.id === roughId) ?? null;
+      const markId = String(body?.markId ?? "");
+      const source = rounds.flatMap((r) => r.marks ?? []).find((m) => m.id === markId);
+      if (!source) throw new Error("That mark is no longer in this session.");
 
-      const { studio, references } = await buildStudioContext(supabase, ctx, tokens, kit);
-      const { step, turn } = await buildStep(
-        supabase, userId, snapshotId, studio, references, tokens, steps, session.brief?.summary ?? "",
-        source
-          ? `They are looking at the mark titled "${source.title}" (${source.brief}) and said: ${instruction}. Redraw THAT mark — same idea, their change applied.`
-          : instruction,
-        undefined,
-        mergeRequirements(carried, [instruction]),
-        source,
-      );
-      const nextSteps = [...steps, step];
+      const baseConcept: Concept = direction.concepts.find((c) => c.id === source.concept_id) ?? {
+        id: source.concept_id,
+        title: source.title,
+        idea: source.idea,
+        second_read: source.second_read,
+        reads_as: source.reads_as,
+        craft_move: "",
+        logo_type: "symbol",
+        render_brief: source.brief,
+      };
+
+      const revised = await refineConceptBrief(LOVABLE_API_KEY, direction, baseConcept, instruction);
+      const env = await buildEnv();
+      const result = await renderConcept(env, revised, source.url);
+      if ((result as any).error) throw new Error((result as any).error);
+      const mark = result as Mark;
+      mark.change_note = instruction.slice(0, 200);
+
+      const round: Round = { index: rounds.length, label: `Refine — ${revised.title}`, marks: [mark], error: null };
+      const nextConcepts = direction.concepts.map((c) => (c.id === revised.id ? revised : c));
+
       const { data, error } = await supabase.from("venture_logo_sessions").update({
-        steps: nextSteps,
-        brief: {
-          ...(session.brief ?? {}),
-          summary: turn.brief_summary,
-          requirements: mergeRequirements(carried, turn.requirements),
-        },
-        last_error: step.render_error,
+        status: "concepts",
+        steps: [...rounds, round],
+        brief: { ...(session.brief ?? {}), direction: { ...direction, concepts: nextConcepts } },
+        last_error: null,
       }).eq("id", session.id).select().single();
       if (error) throw error;
       return json({ ok: true, session: await withFreshUrls(supabase, data, brand) });
     }
 
-
     /* ---------------- approve (trace) ---------------- */
     if (action === "approve") {
-      const roughId = body?.roughId;
-      const rough = steps.flatMap((s) => s.roughs ?? []).find((r) => r.id === roughId);
-      if (!rough) throw new Error("That mark is no longer in this session.");
+      const markId = String(body?.markId ?? body?.roughId ?? "");
+      const mark = rounds.flatMap((r) => r.marks ?? []).find((m) => m.id === markId);
+      if (!mark) throw new Error("That mark is no longer in this session.");
 
-      const { data: file, error: dlError } = await supabase.storage.from(BUCKET).download(rough.path);
+      const { data: file, error: dlError } = await supabase.storage.from(BUCKET).download(mark.path);
       if (dlError || !file) throw new Error(`Could not read the approved mark: ${dlError?.message ?? "missing file"}`);
       const bytes = new Uint8Array(await file.arrayBuffer());
 
@@ -637,7 +740,7 @@ Deno.serve(async (req) => {
 
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         status: "approved",
-        approved_rough: rough,
+        approved_rough: mark,
         vector_svg: traced.svg,
         vector_path: stored.path,
         traced: traced.traced,
@@ -685,11 +788,13 @@ Deno.serve(async (req) => {
         svg_url: mark.url,
         svg_path: mark.path,
         preview_url: mark.url,
-        direction_name: approved.title ?? "Logo Studio mark",
-        logo_type: session.brief?.mark_type ?? "combination mark",
+        direction_name: approved.title ?? direction?.headline ?? "Logo Studio mark",
+        logo_type: direction?.concepts.find((c) => c.id === approved.concept_id)?.logo_type ?? "combination mark",
         symbol_concept: approved.brief ?? "",
-        one_line_idea: approved.title ?? "",
-        meaning: session.brief?.summary ?? "",
+        one_line_idea: approved.idea ?? approved.title ?? "",
+        meaning: direction?.core_idea ?? "",
+        second_read: approved.second_read ?? "",
+        set_law: direction?.set_law ?? "",
         source: "logo_studio",
         session_id: session.id,
         variants: {
@@ -737,7 +842,19 @@ Deno.serve(async (req) => {
       const stored = await uploadSvg(supabase, userId, snapshotId, svg, "vector");
       const { data, error } = await supabase.from("venture_logo_sessions").update({
         status: "approved",
-        approved_rough: { id: crypto.randomUUID(), title: "Your uploaded mark", brief: "Uploaded by the founder", path: stored.path, url: stored.url, provider: "upload" },
+        approved_rough: {
+          id: crypto.randomUUID(),
+          concept_id: "upload",
+          title: "Your uploaded mark",
+          idea: "Uploaded by the founder",
+          second_read: "",
+          reads_as: "",
+          brief: "Uploaded by the founder",
+          change_note: "",
+          path: stored.path,
+          url: stored.url,
+          provider: "upload",
+        },
         vector_svg: svg,
         vector_path: stored.path,
         traced,
