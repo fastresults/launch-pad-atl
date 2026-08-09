@@ -360,10 +360,35 @@ function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   if (guards.some((g) => /hub/i.test(g))) addAvoid("airport terminals", "planes", "hubcaps");
   if (guards.some((g) => /garden/i.test(g))) addAvoid("soil", "gardeners", "plant nursery");
 
-  const lib = pickLibrary(track, ind);
+
+  // Venture-specific scene brief (derived from this business's own concept)
+  // takes priority over the static industry libraries. The libraries are the
+  // cold-start fallback only.
+  const brief = ctx?.sceneBrief;
+  const briefScenes: SceneVariant[] = Array.isArray(brief?.scenes) && brief.scenes.length >= 4
+    ? brief.scenes as SceneVariant[]
+    : [];
+  if (Array.isArray(brief?.avoid)) addAvoid(...brief.avoid.filter((a: any) => typeof a === "string").slice(0, 14));
+
+  // Founder override wins outright.
+  const override = (signal?.override ?? "").trim();
+  if (override.length > 10) {
+    return {
+      depict: customer ? `${override} Audience implied: ${customer}.` : override,
+      subjects: ["as described in the DEPICT line"],
+      setting: "as described in the DEPICT line",
+      mood: "confident, real, on-brand",
+      camera: CAMERAS[hash32(override + "|cam") % CAMERAS.length],
+      composition: COMPOSITIONS[hash32(override + "|comp") % COMPOSITIONS.length],
+      avoid: [...avoidBase],
+    };
+  }
+
+  const lib = briefScenes.length ? briefScenes : pickLibrary(track, ind);
 
   // Score every variant by tag match against post signals; hash-rotate ties.
   const signalStr = [signal?.pillar, signal?.format, signal?.assetNotes].filter(Boolean).join(" ").toLowerCase();
+
   const scored = lib.map((v, i) => {
     let score = 0;
     if (v.tags?.length && signalStr) {
