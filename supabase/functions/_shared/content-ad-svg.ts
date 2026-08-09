@@ -68,6 +68,13 @@ export type PosterMetrics = {
   headline_fits: boolean;
   /** widest rendered line as a % of the available text column */
   longest_line_pct: number | null;
+  /** measured contrast of the CTA affordance */
+  cta_contrast?: number | null;
+  /** resolved type-band share of canvas height */
+  band_ratio?: number | null;
+  /** why the logo corner was chosen (saliency read) */
+  logo_placement?: { edge: number; skin_pct: number; face_avoided: boolean } | null;
+
 };
 
 
