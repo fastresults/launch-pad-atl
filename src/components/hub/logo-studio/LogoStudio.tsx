@@ -152,8 +152,25 @@ export default function LogoStudio({
 
   const land = (data: any) => { if (data?.session) setSession(data.session); };
 
-  const direction = session?.brief?.direction ?? null;
-  const rounds = session?.steps ?? [];
+  // Sessions written by the previous interview pipeline are still in the table.
+  // Only a direction from the current pipeline is renderable; anything older
+  // drops the founder back to the describe pane instead of crashing.
+  const rawDirection = session?.brief?.direction as Direction | undefined;
+  const direction: Direction | null =
+    rawDirection && rawDirection.colour_roles && Array.isArray(rawDirection.concepts) ? rawDirection : null;
+
+  const rounds: Round[] = useMemo(
+    () =>
+      (Array.isArray(session?.steps) ? session!.steps : [])
+        .map((r: any, i: number) => ({
+          index: typeof r?.index === "number" ? r.index : i,
+          label: r?.label ?? "Marks",
+          marks: Array.isArray(r?.marks) ? r.marks : [],
+          error: r?.error ?? null,
+        }))
+        .filter((r) => r.marks.length > 0),
+    [session],
+  );
   const latest = rounds[rounds.length - 1] ?? null;
   const earlier = useMemo(() => rounds.slice(0, -1).flatMap((r) => r.marks ?? []), [rounds]);
   const references = session?.inspiration ?? [];
