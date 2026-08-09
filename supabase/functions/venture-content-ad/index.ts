@@ -363,12 +363,47 @@ Deno.serve(async (req) => {
       .map((p: any) => String(p.hook ?? "").trim())
       .filter(Boolean)
       .slice(0, 6);
+    // --- Flight-level campaign architecture ------------------------------
+    // The card says how the week LOOKS; the arc says what it ARGUES, and which
+    // rung of the CTA ladder it is allowed to ask for.
+    let arc: CampaignArc | null = null;
+    try {
+      const { data: allPosts } = await admin
+        .from("venture_content_calendar_posts")
+        .select("week, pillar, format, platform, hook")
+        .eq("snapshot_id", snapshotId)
+        .order("week", { ascending: true });
+      const weekNumbers = Array.from(
+        new Set([...(allPosts ?? []).map((p: any) => Number(p.week)).filter(Number.isFinite), weekNo]),
+      ).sort((a, b) => a - b);
+      arc = await ensureCampaignArc(
+        admin,
+        snapshotId,
+        weekNumbers,
+        () => deriveCampaignArc({
+          weekNumbers,
+          posts: allPosts ?? [],
+          businessLine: sceneBrief?.business_line ?? null,
+          brandName: ctx?.company_name ?? kit?.company_name ?? null,
+          valueProp: ctx?.value_proposition ?? null,
+          customer: ctx?.customer ?? null,
+        }),
+        { force: body?.refreshArc === true },
+      );
+    } catch (e) {
+      console.warn("[content-ad] campaign arc unavailable", e);
+    }
+    const arcWeek = weekCard(arc, weekNo);
+    const usedClaims = claimsBefore(arc, weekNo);
     step("campaign card ready", {
       week: weekNo,
       grade: campaignCard?.grade ?? null,
       layout: posterLayout,
       band: bandRatio,
+      stage: arcWeek?.stage ?? null,
+      cta_rung: arcWeek?.cta_rung ?? null,
     });
+
 
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
     step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText });
