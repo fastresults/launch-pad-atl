@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useWebsitePrd } from "@/components/hub/brand/use-website-prd";
+import { PrdExportActions } from "@/components/hub/brand/PrdExportActions";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
 
 
@@ -164,6 +165,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
                     <Eye className="mr-1 h-3 w-3" />Read PRD
                   </Button>
                 )}
+                {websitePrd.exists && !websitePrd.running && <PrdExportActions doc={websitePrd.prd} />}
                 <Button
                   size="sm"
                   variant={websitePrd.stale || !websitePrd.exists ? "default" : "outline"}
