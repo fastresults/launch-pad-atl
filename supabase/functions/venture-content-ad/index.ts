@@ -586,8 +586,13 @@ Deno.serve(async (req) => {
       brandName: ctx?.company_name ?? kit?.company_name ?? null,
       valueProp: ctx?.value_proposition ?? null,
       headlineCap,
+      // Sibling hooks from the same week so the claim isn't repeated in-set,
+      // and the campaign kicker taxonomy so labels stay consistent.
+      siblingHooks,
+      kickerTaxonomy: campaignCard?.kicker_taxonomy ?? [],
       // The hook/body are source material — the copy pass writes the headline.
       post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
+
       headlineOverride: resolvedHeadline.mode === "none"
         ? { mode: "none" }
         : resolvedHeadline.mode === "custom"
