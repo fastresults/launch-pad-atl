@@ -16,6 +16,8 @@ import { useConfirm } from "@/components/ui/confirm-dialog";
 
 export function BrandStudio({ snapshot }: { snapshot: any }) {
   const [open, setOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<{ url: string; caption?: string | null } | null>(null);
+
   const qc = useQueryClient();
   const confirm = useConfirm();
   const kitQ = useQuery({
