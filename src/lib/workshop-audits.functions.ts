@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getWorkshopAudit } from "@/lib/workshop-audit";
 import { getWorkshopPains } from "@/lib/workshop-pains";
 import { getCatalogWorkshop } from "@/lib/workshop-catalog";
+import { getSessionUser } from "@/lib/effective-user";
 
 export type AuditIntakeRow = {
   id: string;
@@ -51,8 +52,7 @@ const INTAKES = "workshop_audit_intakes";
 const AUDITS = "workshop_audits";
 
 export async function getMyIntake(slug: string): Promise<AuditIntakeRow | null> {
-  const { data: auth } = await supabase.auth.getUser();
-  const uid = auth.user?.id;
+  const uid = (await getSessionUser())?.id;
   if (!uid) return null;
   const { data, error } = await supabase
     .from(INTAKES)
@@ -69,8 +69,7 @@ export async function saveMyIntake(input: {
   answers: Record<string, string>;
   submit?: boolean;
 }): Promise<AuditIntakeRow> {
-  const { data: auth } = await supabase.auth.getUser();
-  const uid = auth.user?.id;
+  const uid = (await getSessionUser())?.id;
   if (!uid) throw new Error("You need to be signed in.");
   const { data, error } = await supabase
     .from(INTAKES)
@@ -90,8 +89,7 @@ export async function saveMyIntake(input: {
 }
 
 export async function getMyAudit(slug: string): Promise<AuditRow | null> {
-  const { data: auth } = await supabase.auth.getUser();
-  const uid = auth.user?.id;
+  const uid = (await getSessionUser())?.id;
   if (!uid) return null;
   const { data, error } = await supabase
     .from(AUDITS)

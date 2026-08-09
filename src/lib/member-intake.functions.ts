@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { enqueueTransactionalEmail } from "@/lib/email/enqueue";
 
-import { getEffectiveUserId } from "@/lib/effective-user";
+import { getEffectiveUserId, getSessionUser } from "@/lib/effective-user";
 
 const ADMIN_NOTIFY_EMAIL = "fastresults@gmail.com";
 
@@ -28,7 +28,7 @@ export async function submitMyIntake(data: { startup_type: string; startup_name?
   if (error) throw new Error(error.message);
 
   try {
-    const { data: authData } = await supabase.auth.getUser();
+    const authData = { user: await getSessionUser() };
     const email = authData?.user?.email;
     const displayName = (authData?.user?.user_metadata?.full_name as string | undefined)
       || (authData?.user?.user_metadata?.name as string | undefined)

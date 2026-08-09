@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from "@/lib/effective-user";
 
 export type MemberStatusValue = "pending" | "approved" | "rejected" | "paused";
 
@@ -193,7 +194,7 @@ export async function restoreMemberToPending(input: any) {
 
 export async function setFoundersHubAccess(input: any) {
   const { userId, grant } = unwrap<{ userId: string; grant: boolean }>(input);
-  const me = (await supabase.auth.getUser()).data.user;
+  const me = await getSessionUser();
   const patch: Record<string, any> = {
     founders_hub_access: grant,
     founders_hub_granted_at: grant ? new Date().toISOString() : null,

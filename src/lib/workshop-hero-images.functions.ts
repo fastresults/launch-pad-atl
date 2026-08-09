@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { scenePrompt } from "@/lib/workshop-pains";
+import { getSessionUser } from "@/lib/effective-user";
 
 export const HERO_IMAGE_BUCKET = "workshop-hero-images";
 
@@ -147,7 +148,7 @@ export async function uploadHeroImage(input: {
     .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
   if (signErr) throw signErr;
 
-  const { data: userRes } = await supabase.auth.getUser();
+  const userRes = { user: await getSessionUser() };
   const { data, error } = await supabase
     .from("workshop_hero_images")
     .insert({

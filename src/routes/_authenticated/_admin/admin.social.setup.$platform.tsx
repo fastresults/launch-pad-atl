@@ -399,9 +399,9 @@ export default function AdminSocialSetupPlatform() {
 }
 
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from "@/lib/effective-user";
 async function saveNotes(platform: string, notes: string) {
-  const { data: u } = await supabase.auth.getUser();
-  const uid = u?.user?.id;
+  const uid = (await getSessionUser())?.id;
   if (!uid) return;
   await supabase
     .from("social_setup_progress")
