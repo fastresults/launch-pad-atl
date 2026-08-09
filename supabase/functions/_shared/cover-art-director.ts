@@ -644,6 +644,9 @@ export function buildCoverArtPrompt(args: {
   headlineOverride?: HeadlineOverride;
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
   sceneSignal?: SceneSignal;
+  /** Pre-resolved scene (so the caller can QA against the same scene). */
+  scene?: SceneDirective;
+
   // When true, we render the headline server-side after generation. The prompt
   // suppresses all glyphs and reserves the top band as unmarked negative space.
   serverRenderedHeadline?: boolean;
