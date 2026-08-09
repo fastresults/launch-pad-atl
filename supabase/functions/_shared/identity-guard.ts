@@ -20,9 +20,6 @@ function extractFaqAnswers(raw: string): number[] {
   const lines = raw.split("\n");
   const out: number[] = [];
   let current: string[] | null = null;
-  const isQuestion = (l: string) =>
-    /\?\s*(\*\*)?\s*$/.test(l.trim()) &&
-    /^(#{3,6}\s|\*\*|-\s\*\*|\d+\.\s|\*\*Q|Q\d*[:.]))?/.test(l.trim()) === true;
   for (const l of lines) {
     const t = l.trim();
     const q = /\?\s*(\*\*)?$/.test(t) && t.length > 12 && t.length < 200;
