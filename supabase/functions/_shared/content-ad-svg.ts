@@ -196,14 +196,28 @@ function fitDisplay(text: string, maxW: number, minDim: number, maxLines: number
   const min = Math.round(30 * s);
   const floor = Math.max(12, Math.round(20 * s));
 
+  // Editorial posters breathe: prefer a setting that leaves a margin of air at
+  // the end of the longest line (and two lines over three) rather than the
+  // largest size that merely fits inside the column.
+  let widest: Fitted | null = null;   // biggest type that fits at all
+  let relaxed: Fitted | null = null;  // fits with a little air (<=92%)
+  let preferred: Fitted | null = null; // two lines, generous air (<=88%)
+  const idealLines = Math.min(2, maxLines);
+
   for (let size = max; size >= min; size -= 2) {
     const lines = wrap(clean, size, maxW, maxLines);
     if (!lines) continue;
     const lineHeight = Math.round(size * 1.12);
     // Shrink the type before letting the block run past its height budget.
     if (lines.length * lineHeight > maxBlockH) continue;
-    return { lines, size, lineHeight, fits: true, longestPct: longestPctOf(lines, size, maxW) };
+    const cand: Fitted = { lines, size, lineHeight, fits: true, longestPct: longestPctOf(lines, size, maxW) };
+    if (!widest) widest = cand;
+    if (!relaxed && cand.longestPct <= 92) relaxed = cand;
+    if (!preferred && cand.longestPct <= 88 && cand.lines.length <= idealLines) preferred = cand;
+    if (preferred) break;
   }
+  if (preferred || relaxed || widest) return preferred ?? relaxed ?? widest!;
+
 
   // Nothing fit at the comfortable range — keep shrinking, and allow one extra
   // line, before we ever consider dropping copy.
