@@ -98,8 +98,10 @@ has nothing to place.
   `systemExtra` wiring, `{Company}` substitution, post-generation validation + retry.
 - `supabase/functions/_shared/venture-context.ts` — hard identity header; suppress
   `brand_tokens` when a kit is present.
-- `supabase/functions/_shared/deliverable-prompts.ts` — logo `<img>` requirement in
-  the header and brand-token sections.
+- `supabase/functions/_shared/deliverable-prompts.ts` — logo `<img>` requirement plus
+  the per-section imagery plan and the no-two-text-only-sections rule.
+- `supabase/functions/_shared/prompt-profiles.ts` — add "Imagery plan and art
+  direction" to the `website_prd` spine.
 - `supabase/functions/venture-bulk-generate/index.ts` — same identity/profile wiring
   so bulk runs behave identically.
 
@@ -108,5 +110,6 @@ No database migration and no UI change.
 ## Verification
 
 Regenerate the website PRD for this venture and confirm the saved content contains
-"UCG Production & Syndication Agency" and at least one `<img src=".../brand-logo/...">`
-tag, with no invented brand name anywhere.
+"UCG Production & Syndication Agency", at least one `<img src=".../brand-logo/...">`
+tag, and an imagery table covering every section of every page — with no invented
+brand name anywhere.
