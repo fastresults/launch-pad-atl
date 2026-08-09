@@ -338,7 +338,21 @@ Deno.serve(async (req) => {
     }
 
     const ctx = await loadVentureContext(admin, snapshotId);
+
+    // Venture-specific scene brief: what THIS business actually looks like at
+    // work. Derived once from the venture brain and cached on the snapshot.
+    const sceneOverride = typeof body?.sceneOverride === "string" ? body.sceneOverride.slice(0, 400) : "";
+    const refreshScenes = body?.refreshScenes === true;
+    let sceneBrief: any = null;
+    try {
+      sceneBrief = await ensureSceneBrief(admin, snapshotId, ctx, { force: refreshScenes });
+    } catch (e) {
+      console.warn("[social-cover] scene brief unavailable", e);
+    }
+    if (sceneBrief) (ctx as any).sceneBrief = sceneBrief;
+
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText, skipReason: logoSkipReason } = await fetchPrimaryLogo(admin, kit);
+
 
     const isAvatar = asset.kind === "avatar";
 
