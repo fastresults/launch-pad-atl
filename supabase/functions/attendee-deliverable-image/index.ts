@@ -4,8 +4,8 @@
 // venture-doc-images bucket (private, user-scoped).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { buildVisualPrompt, stripMarkdown } from "../_shared/hero-prompt.ts";
 import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
+import { buildVisualPrompt, stripMarkdown } from "../_shared/hero-prompt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

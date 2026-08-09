@@ -1,7 +1,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { scenePrompt } from "../_shared/hero-scene-prompt.ts";
-import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 /** Ten years — the bucket is private, so the public hero reads a signed link. */
 const SIGNED_URL_TTL = 60 * 60 * 24 * 365 * 10;

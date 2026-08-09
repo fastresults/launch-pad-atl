@@ -18,6 +18,7 @@
 
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
 import {
@@ -58,7 +59,6 @@ import {
   type BusinessProfile,
 } from "../_shared/logo-business-read.ts";
 import {
-import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
   JURY_SYSTEM,
   juryInstruction,
   parseJuryVerdict,
