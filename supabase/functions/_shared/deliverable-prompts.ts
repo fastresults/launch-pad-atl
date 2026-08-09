@@ -53,7 +53,7 @@ Render a sitemap as an indented tree. SHIP ALL of these routes (rename to fit th
 - /legal/privacy and /legal/terms
 
 ## 3. Global Elements (fully specified, ready to build)
-- Header: logo placement, nav items in order, primary CTA label + destination
+- Header: logo placement rendered as the literal \`<img src="{primary logo URL from the Brand Kit}" alt="{Company} logo" />\` tag, its display height, nav items in order, primary CTA label + destination
 - Footer: column structure with full link lists, newsletter capture copy + field labels, social links, copyright line
 - Announcement bar: one-line copy + CTA (or "omit if not needed" with reason)
 - 404 page: H1, body, primary CTA
