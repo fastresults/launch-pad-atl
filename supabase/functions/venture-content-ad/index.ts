@@ -16,6 +16,8 @@ import { buildContentAdSvgBytes, type PosterLayout } from "../_shared/content-ad
 import { buildPosterCopy, shortenHeadline } from "../_shared/poster-copy.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
+import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
+import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
