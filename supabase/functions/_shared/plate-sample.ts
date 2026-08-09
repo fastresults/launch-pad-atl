@@ -107,4 +107,48 @@ export class PlateSampler {
       variance: (sd(qr, mr) + sd(qg, mg) + sd(qb, mb)) / 3,
     };
   }
+
+  /**
+   * Structural read of a rectangle: how much high-frequency detail sits in it
+   * and how much of it looks like skin. Used to keep the brand mark off faces
+   * and out of busy areas rather than judging a corner on contrast alone.
+   */
+  detail(x: number, y: number, w: number, h: number, canvasW: number, canvasH: number): RegionDetail | null {
+    const png = this.png;
+    if (!png) return null;
+    const sx = png.width / Math.max(1, canvasW);
+    const sy = png.height / Math.max(1, canvasH);
+    const x0 = Math.max(0, Math.floor(x * sx));
+    const y0 = Math.max(0, Math.floor(y * sy));
+    const x1 = Math.min(png.width, Math.ceil((x + w) * sx));
+    const y1 = Math.min(png.height, Math.ceil((y + h) * sy));
+    if (x1 - x0 < 2 || y1 - y0 < 2) return null;
+
+    const stepX = Math.max(1, Math.floor((x1 - x0) / 48));
+    const stepY = Math.max(1, Math.floor((y1 - y0) / 48));
+    let n = 0;
+    let edgeSum = 0;
+    let skin = 0;
+    const at = (px: number, py: number) => (png.width * py + px) << 2;
+    for (let py = y0; py < y1 - stepY; py += stepY) {
+      for (let px = x0; px < x1 - stepX; px += stepX) {
+        const i = at(px, py);
+        const r = png.data[i], g = png.data[i + 1], b = png.data[i + 2];
+        const yl = 0.299 * r + 0.587 * g + 0.114 * b;
+        const ir = at(px + stepX, py);
+        const id = at(px, py + stepY);
+        const yr = 0.299 * png.data[ir] + 0.587 * png.data[ir + 1] + 0.114 * png.data[ir + 2];
+        const yd = 0.299 * png.data[id] + 0.587 * png.data[id + 1] + 0.114 * png.data[id + 2];
+        edgeSum += (Math.abs(yl - yr) + Math.abs(yl - yd)) / 2;
+        // Coarse skin-tone test (Kovac rule) — good enough to veto a corner
+        // that is very likely a face, which is all we need here.
+        const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+        if (r > 95 && g > 40 && b > 20 && mx - mn > 15 && Math.abs(r - g) > 15 && r > g && r > b) skin++;
+        n++;
+      }
+    }
+    if (!n) return null;
+    return { edge: edgeSum / n / 255, skinPct: skin / n };
+  }
 }
+
