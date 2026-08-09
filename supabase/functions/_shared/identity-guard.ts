@@ -65,6 +65,9 @@ export function checkIdentity(
   // An "Imagery Plan" heading with three rows under it is not an art direction.
   // Count table rows that carry a prompt-ish cell so thin plans fail the gate.
   let imageryThin = false;
+  let imageryCraftMissing = false;
+  let portraitCraftMissing = false;
+  let imageryTooDark = false;
   if (opts.requireImagery && !imageryMissing) {
     const min = opts.minImageryRows ?? 12;
     const rows = raw.split("\n").filter((l) => {
@@ -73,6 +76,21 @@ export function checkIdentity(
         !/^\|[\s\-:|]+\|$/.test(t);
     });
     imageryThin = rows.length < min;
+
+    // Craft columns: exposure targets and an overlay/scrim plan must exist.
+    const hasExposure = /luminance|exposure/i.test(raw);
+    const hasOverlay = /scrim|overlay/i.test(raw);
+    imageryCraftMissing = !hasExposure || !hasOverlay;
+
+    // People rows must carry the studio portrait recipe.
+    const mentionsPeople =
+      /\b(portrait|headshot|founder|team member|testimonial|person|people|face)\b/i.test(raw);
+    portraitCraftMissing = mentionsPeople &&
+      !(/85\s*mm/i.test(raw) && /catchlight/i.test(raw) && /skin texture/i.test(raw));
+
+    // Darkness may only appear alongside an exposure target and a CSS scrim.
+    const darkTalk = /\b(near-?black|very dark|moody|pitch[- ]black|darkened)\b/i.test(raw);
+    imageryTooDark = darkTalk && !(hasExposure && hasOverlay);
   }
 
   const archetype = (opts.archetypeName ?? "").trim();
@@ -84,8 +102,12 @@ export function checkIdentity(
     logoMissing,
     imageryMissing,
     imageryThin,
+    imageryCraftMissing,
+    portraitCraftMissing,
+    imageryTooDark,
     artDirectionMissing,
     ok: !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
+      !imageryCraftMissing && !portraitCraftMissing && !imageryTooDark &&
       !artDirectionMissing,
   };
 }
