@@ -13,6 +13,12 @@ export type IdentityCheck = {
   imageryMissing: boolean;
   /** PRD only: the imagery plan exists but is too thin to art-direct a site. */
   imageryThin?: boolean;
+  /** PRD only: rows lack exposure / overlay craft columns. */
+  imageryCraftMissing?: boolean;
+  /** PRD only: people are specified without the studio portrait recipe. */
+  portraitCraftMissing?: boolean;
+  /** PRD only: darkness is baked into image prompts instead of a CSS scrim. */
+  imageryTooDark?: boolean;
   /** PRD only: the locked art direction was never named in the document. */
   artDirectionMissing?: boolean;
   ok: boolean;
@@ -59,6 +65,9 @@ export function checkIdentity(
   // An "Imagery Plan" heading with three rows under it is not an art direction.
   // Count table rows that carry a prompt-ish cell so thin plans fail the gate.
   let imageryThin = false;
+  let imageryCraftMissing = false;
+  let portraitCraftMissing = false;
+  let imageryTooDark = false;
   if (opts.requireImagery && !imageryMissing) {
     const min = opts.minImageryRows ?? 12;
     const rows = raw.split("\n").filter((l) => {
@@ -67,6 +76,21 @@ export function checkIdentity(
         !/^\|[\s\-:|]+\|$/.test(t);
     });
     imageryThin = rows.length < min;
+
+    // Craft columns: exposure targets and an overlay/scrim plan must exist.
+    const hasExposure = /luminance|exposure/i.test(raw);
+    const hasOverlay = /scrim|overlay/i.test(raw);
+    imageryCraftMissing = !hasExposure || !hasOverlay;
+
+    // People rows must carry the studio portrait recipe.
+    const mentionsPeople =
+      /\b(portrait|headshot|founder|team member|testimonial|person|people|face)\b/i.test(raw);
+    portraitCraftMissing = mentionsPeople &&
+      !(/85\s*mm/i.test(raw) && /catchlight/i.test(raw) && /skin texture/i.test(raw));
+
+    // Darkness may only appear alongside an exposure target and a CSS scrim.
+    const darkTalk = /\b(near-?black|very dark|moody|pitch[- ]black|darkened)\b/i.test(raw);
+    imageryTooDark = darkTalk && !(hasExposure && hasOverlay);
   }
 
   const archetype = (opts.archetypeName ?? "").trim();
@@ -78,8 +102,12 @@ export function checkIdentity(
     logoMissing,
     imageryMissing,
     imageryThin,
+    imageryCraftMissing,
+    portraitCraftMissing,
+    imageryTooDark,
     artDirectionMissing,
     ok: !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
+      !imageryCraftMissing && !portraitCraftMissing && !imageryTooDark &&
       !artDirectionMissing,
   };
 }
@@ -115,7 +143,22 @@ export function correctionPrompt(
     fixes.push(
       `The Imagery Plan is too thin to art-direct a site. Expand it to at least ${
         opts.minImageryRows ?? 12
-      } rows — every section of every route gets its own row — and give each row a 30–60 word generation prompt naming subject, lens/composition, lighting, colour grade and mood in the brand's visual language. Generic prompts like "hero image of team" are rejected.`,
+      } rows — every section of every route gets its own row — and give each row a 55–90 word generation prompt naming subject, lens/composition, lighting, exposure target, colour grade and mood in the brand's visual language. Generic prompts like "hero image of team" are rejected.`,
+    );
+  }
+  if (check.imageryCraftMissing) {
+    fixes.push(
+      'The Imagery Plan has no craft specification. Add an "Exposure & contrast target" column and a "Text-overlay plan" column to every row. Exposure targets are numeric (e.g. "subject at 35–55% luminance, open shadows", "face at 45–60% luminance with catchlights"), never adjectives. The overlay plan names the CSS gradient scrim direction and which side of the frame stays clean, or says "no type on image". Every generation prompt must open with its craft recipe (exposure, lens/technique, composition, legibility test) before describing the subject.',
+    );
+  }
+  if (check.portraitCraftMissing) {
+    fixes.push(
+      "Every image containing a person must use the studio portrait recipe verbatim: 85mm equivalent at roughly f/2, soft key at 45 degrees with fill and a rim light for separation, catchlights in both eyes, real skin texture with visible pores and natural asymmetry, face at 45–60% luminance, waist-up or head-and-shoulders with eye contact, real environment softly out of focus. Explicitly forbid plastic or CGI skin, uncanny symmetry, malformed hands, and any burned-in text, captions or hex codes.",
+    );
+  }
+  if (check.imageryTooDark) {
+    fixes.push(
+      "You baked darkness into the images. Rewrite every prompt so the render ships properly exposed and legible, and state that darkening for headline contrast is applied in CSS as a token-based gradient scrim over the clean image. No prompt may ask for a near-black, murky or heavily darkened frame.",
     );
   }
   if (check.artDirectionMissing) {

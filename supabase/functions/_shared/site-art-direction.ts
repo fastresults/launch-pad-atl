@@ -11,6 +11,8 @@
 // + brand traits + tone words) and injected into the PRD prompt as a hard
 // constraint. The model is never handed the menu again.
 
+import { imageCraftBlock } from "./image-craft.ts";
+
 export type SiteArchetype = {
   key: string;
   name: string;
@@ -97,11 +99,12 @@ export const SITE_ARCHETYPES: SiteArchetype[] = [
       "A chapter-numbered structure with full-bleed openers between every major section",
     ],
     imagery:
-      "Cinematic stills with strong directional lighting, shallow depth of field, and a consistent colour grade pulled from the brand palette.",
+      "Cinematic stills with strong directional lighting, shallow depth of field, and a consistent colour grade pulled from the brand palette. 'Near-black' describes the UI chrome, NOT the photographs: every subject stays properly exposed at 35–55% luminance with open shadows, and headline contrast comes from a CSS gradient scrim laid over a clean image — never from a darkened render.",
     never: [
       "Light-grey section backgrounds alternating with white",
       "Icon grids",
       "Screenshot-in-a-browser-frame hero",
+      "A hero image so dark the subject is unreadable, or darkness baked into the render instead of applied as a CSS scrim",
     ],
   },
   {
@@ -203,11 +206,12 @@ export const SITE_ARCHETYPES: SiteArchetype[] = [
       "A three-panel sequential offer presentation instead of a pricing card grid",
     ],
     imagery:
-      "Editorial still life and portraiture with controlled light, deep shadow and one focal object per frame.",
+      "Editorial still life and portraiture with controlled light, deep shadow and one focal object per frame. Deep shadow means shaped falloff around a correctly exposed subject — the focal object and any face stay legible at 45–60% luminance with catchlights intact; text contrast is a CSS scrim, never a darker render.",
     never: [
       "Feature grids",
       "Badges, ribbons or discount callouts",
       "More than one CTA style on a page",
+      "A hero or portrait so dark the subject is unreadable",
     ],
   },
   {
@@ -428,5 +432,5 @@ export function artDirectionBlock(a: SiteArchetype): string {
 
 export function archetypeForPrompt(input: ArchetypeInput): { archetype: SiteArchetype; block: string } {
   const archetype = selectArchetype(input);
-  return { archetype, block: artDirectionBlock(archetype) };
+  return { archetype, block: `${artDirectionBlock(archetype)}\n\n${imageCraftBlock()}` };
 }
