@@ -138,8 +138,13 @@ export async function buildPosterCopy(args: {
   brandName?: string | null;
   valueProp?: string | null;
   headlineCap?: number;
+  /** Other hooks in the same week — the line must not repeat their claim. */
+  siblingHooks?: string[];
+  /** Campaign kicker vocabulary so eyebrows stay consistent across the set. */
+  kickerTaxonomy?: string[];
   post: { hook?: string | null; body?: string | null; cta?: string | null; pillar?: string | null; platform?: string | null };
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string } | null;
+
 }): Promise<PosterCopy> {
   const { post, headlineOverride } = args;
   const cap = Math.max(28, Math.min(72, args.headlineCap ?? 52));
