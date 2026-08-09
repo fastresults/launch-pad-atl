@@ -14,6 +14,8 @@ import type { AdAspect } from "./content-ad-director.ts";
 import { type LogoSize, buildVectorInkLogoPng } from "./logo-compositor.ts";
 import { loadPosterFonts } from "./poster-fonts.ts";
 import { PlateSampler, contrastOf, relLuminance } from "./plate-sample.ts";
+import { scoreCorners, pickCorner, type CornerId } from "./plate-saliency.ts";
+
 
 export type PosterLayout = "bottom-scrim" | "centered-plate" | "edge-rule";
 
