@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import { Wand2 } from "lucide-react";
 import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
+import { LogoSetPanel } from "@/components/hub/brand/LogoSetPanel";
 import { cn } from "@/lib/utils";
 
 /**
