@@ -263,7 +263,23 @@ export async function generateOne(
   const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
   const tone = trackTone(snap.track);
   const profile = profileFor(documentType);
-  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra].filter(Boolean).join("\n\n");
+
+  // Website PRDs get a committed art direction (one archetype per venture) so
+  // every generated site expresses a real design point of view instead of the
+  // same hero → 3-up grid → pricing stack.
+  const isPrd = documentType === "website_prd";
+  const art = isPrd
+    ? archetypeForPrompt({
+      snapshotId,
+      track: snap.track,
+      brandKit: brandKit as Record<string, any> | null,
+      freeText: [snap.concept_summary, snap.value_proposition].filter(Boolean).join(" "),
+    })
+    : null;
+
+  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra, art?.block]
+    .filter(Boolean).join("\n\n");
+
 
   // Build the user prompt. If we have a brain, use the sliced brain JSON
   // instead of dumping raw extracted_data + research_brief. Saves ~70% of
