@@ -587,6 +587,63 @@ Deno.serve(async (req) => {
       }
     }
 
+    // --- Relevance QA: does the frame actually depict the commissioned scene
+    // for this line of work? One corrective retry, then ship the better of the two.
+    if (scene) {
+      (qa as any).scene = {
+        depict: scene.depict,
+        setting: scene.setting,
+        camera: scene.camera,
+        composition: scene.composition,
+        source: sceneOverride ? "founder_override" : (sceneBrief ? "venture_brief" : "library_fallback"),
+      };
+      const businessLine = sceneBrief?.business_line
+        || [ctx?.snap?.sub_industry, ctx?.snap?.industry].filter(Boolean).join(" / ")
+        || "this venture";
+      try {
+        const rel = await checkSceneRelevance({
+          pngB64: bytesToB64(bytes),
+          depict: scene.depict,
+          businessLine,
+        });
+        (qa as any).scene_relevant = rel.ok;
+        if (!rel.ok) {
+          console.warn("[social-cover] scene relevance failed:", rel.note);
+          const retry = await generate(
+            `${rel.note} Rebuild the frame around the SCENE DIRECTIVE exactly: ${scene.depict} Setting: ${scene.setting}. It must be unmistakably about ${businessLine}.`,
+          );
+          const retryBytes = b64ToBytes(retry.b64);
+          const retryRel = await checkSceneRelevance({
+            pngB64: retry.b64,
+            depict: scene.depict,
+            businessLine,
+          });
+          const retryQa = runContrastQa(retryBytes, plan);
+          if (retryRel.ok && retryQa.observed.ratio >= qa.observed.ratio * 0.8) {
+            bytes = retryBytes;
+            result = retry;
+            qa = retryQa;
+            (qa as any).scene = {
+              depict: scene.depict,
+              setting: scene.setting,
+              camera: scene.camera,
+              composition: scene.composition,
+              source: sceneOverride ? "founder_override" : (sceneBrief ? "venture_brief" : "library_fallback"),
+            };
+            (qa as any).scene_relevant = true;
+            (qa as any).scene_retried = true;
+          } else {
+            (qa as any).scene_retried = true;
+            (qa as any).scene_note = rel.note;
+          }
+        }
+      } catch (e) {
+        console.warn("[social-cover] relevance QA skipped", e);
+      }
+    }
+
+
+
     // --- Guaranteed logo placement: composite the user's actual brand mark
     // into the reserved zone (or center, for avatars). The model only paints
     // a clean negative-space chip; we own the final logo pixels.
