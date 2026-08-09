@@ -252,9 +252,10 @@ Deno.serve(async (req) => {
     const aspect = (["1:1", "4:5", "9:16"] as const).includes(body?.aspect) ? body.aspect as AdAspect : "1:1";
     const direction = String(body?.direction || "editorial") as ArtDirectionId;
     if (!ART_DIRECTIONS.some((d) => d.id === direction)) return json({ error: `Unknown direction: ${direction}` }, 400);
-    const posterLayout: PosterLayout = (["bottom-scrim", "centered-plate", "edge-rule"] as const).includes(body?.posterLayout)
+    const requestedPosterLayout: PosterLayout | null = (["bottom-scrim", "centered-plate", "edge-rule"] as const).includes(body?.posterLayout)
       ? body.posterLayout
-      : "bottom-scrim";
+      : null;
+
 
     const { data: post } = await admin
       .from("venture_content_calendar_posts")
