@@ -2868,6 +2868,7 @@ export type Database = {
           prompt_used: string | null
           qa_notes: Json | null
           qa_status: string | null
+          set_qa: Json | null
           signed_url: string | null
           signed_url_expires_at: string | null
           snapshot_id: string
@@ -2894,6 +2895,7 @@ export type Database = {
           prompt_used?: string | null
           qa_notes?: Json | null
           qa_status?: string | null
+          set_qa?: Json | null
           signed_url?: string | null
           signed_url_expires_at?: string | null
           snapshot_id: string
@@ -2920,6 +2922,7 @@ export type Database = {
           prompt_used?: string | null
           qa_notes?: Json | null
           qa_status?: string | null
+          set_qa?: Json | null
           signed_url?: string | null
           signed_url_expires_at?: string | null
           snapshot_id?: string
@@ -3022,6 +3025,7 @@ export type Database = {
       venture_content_progress: {
         Row: {
           art_direction: string | null
+          campaign_cards: Json
           created_at: string
           current_step: number
           default_aspects: string[] | null
@@ -3034,6 +3038,7 @@ export type Database = {
         }
         Insert: {
           art_direction?: string | null
+          campaign_cards?: Json
           created_at?: string
           current_step?: number
           default_aspects?: string[] | null
@@ -3046,6 +3051,7 @@ export type Database = {
         }
         Update: {
           art_direction?: string | null
+          campaign_cards?: Json
           created_at?: string
           current_step?: number
           default_aspects?: string[] | null
