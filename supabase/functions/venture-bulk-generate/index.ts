@@ -13,6 +13,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   BRAND_KIT_REQUIRED_TYPES,
   brandKitBlock,
+  brandLogoUrl,
   compactPreamble,
   distillDeps,
   isBrandKitUsable,
@@ -34,6 +35,8 @@ import {
   stripCitations,
 } from "../_shared/deliverable-prompts.ts";
 import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
+import { profileFor } from "../_shared/prompt-profiles.ts";
+import { checkIdentity, correctionPrompt, substituteIdentity } from "../_shared/identity-guard.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { LAUNCH_14DAY_PLAN } from "../_shared/launch-14day-plan.ts";
 
@@ -230,11 +233,12 @@ async function generateOne(
   // System prompt: specialized first, fallback to base; layer track tone on top.
   const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
   const tone = trackTone(snap.track);
-  const systemPrompt = tone ? `${baseSystemPrompt}\n\n${tone}` : baseSystemPrompt;
+  const profile = profileFor(documentType);
+  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra].filter(Boolean).join("\n\n");
 
   // User prompt: compact preamble + brain slice (or raw fallback) + distilled deps.
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
-  const preamble = compactPreamble(ctx);
+  const preamble = compactPreamble(ctx, { hasBrandKit: !!brandKit });
 
   const brandBlock = brandKitBlock(brandKit, snapshotId);
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
@@ -398,6 +402,52 @@ async function generateOne(
       console.warn("continuation pass failed", e);
     }
   }
+
+  // ---- Identity guard: real company name + committed logo, or a repair pass.
+  {
+    const lockedName = (snap.company_name ?? "").trim() || null;
+    const lockedLogo = brandKit && Array.isArray(brandKit.logos) && brandKit.logos.length
+      ? brandLogoUrl(snapshotId)
+      : null;
+    raw = substituteIdentity(raw, lockedName);
+    const identity = checkIdentity(raw, {
+      companyName: lockedName,
+      logoUrl: lockedLogo,
+      requireImagery: isPrd,
+    });
+    if (!identity.ok) {
+      console.warn("identity guard failed", documentType, identity);
+      try {
+        const fixRes = await callGateway([
+          ...baseMessages,
+          { role: "assistant", content: raw.slice(0, 40_000) },
+          { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo }) },
+        ]);
+        if (fixRes.ok) {
+          const fixJson = await fixRes.json();
+          let fixed = substituteIdentity(
+            stripCitations(fixJson.choices?.[0]?.message?.content ?? ""),
+            lockedName,
+          );
+          const recheck = checkIdentity(fixed, {
+            companyName: lockedName,
+            logoUrl: lockedLogo,
+            requireImagery: isPrd,
+          });
+          if (fixed.length > raw.length * 0.6 && (recheck.ok || (!recheck.nameMissing && identity.nameMissing))) {
+            raw = fixed;
+            truncated = String(fixJson.choices?.[0]?.finish_reason ?? "").toLowerCase() === "length";
+          }
+        } else {
+          await fixRes.text();
+        }
+      } catch (e) {
+        console.warn("identity repair pass failed", e);
+      }
+    }
+  }
+
+
 
   if (isPrd) {
     raw = await expandWebsitePrdMasterPrompt(raw);

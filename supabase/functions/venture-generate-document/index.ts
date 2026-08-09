@@ -33,6 +33,9 @@ import {
   stripCitations,
 } from "../_shared/deliverable-prompts.ts";
 import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
+import { profileFor } from "../_shared/prompt-profiles.ts";
+import { checkIdentity, correctionPrompt, substituteIdentity } from "../_shared/identity-guard.ts";
+import { brandLogoUrl } from "../_shared/venture-context.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
@@ -324,15 +327,17 @@ export async function generateOne(
 
   const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
   const tone = trackTone(snap.track);
-  const systemPrompt = tone ? `${baseSystemPrompt}\n\n${tone}` : baseSystemPrompt;
+  const profile = profileFor(documentType);
+  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra].filter(Boolean).join("\n\n");
 
   // Build the user prompt. If we have a brain, use the sliced brain JSON
   // instead of dumping raw extracted_data + research_brief. Saves ~70% of
   // the previous prompt size and eliminates signal dilution.
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
-  const preamble = compactPreamble(ctx);
+  const preamble = compactPreamble(ctx, { hasBrandKit: !!brandKit });
 
   const brandBlock = brandKitBlock(brandKit, snapshotId);
+
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
 
   // Ground the document in the founder's Second Brain corpus (uploaded
@@ -439,12 +444,64 @@ export async function generateOne(
   // Strip any citation residue the model may have produced despite instructions.
   raw = stripCitations(raw);
 
+  // ---- Identity guard: the company name and the committed logo are not optional.
+  const lockedName = (snap.company_name ?? "").trim() || null;
+  const lockedLogo = brandKit && Array.isArray(brandKit.logos) && brandKit.logos.length
+    ? brandLogoUrl(snapshotId)
+    : null;
+  raw = substituteIdentity(raw, lockedName);
+
+  const identity = checkIdentity(raw, {
+    companyName: lockedName,
+    logoUrl: lockedLogo,
+    requireImagery: isPrd,
+  });
+  if (!identity.ok) {
+    console.warn("identity guard failed", documentType, identity);
+    try {
+      const fixRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: modelId,
+          max_tokens: maxTokens,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+            { role: "assistant", content: raw.slice(0, 40_000) },
+            { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo }) },
+          ],
+        }),
+      }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: 0 });
+      if (fixRes.ok) {
+        const fixJson = await fixRes.json();
+        let fixed = stripCitations(fixJson.choices?.[0]?.message?.content ?? "");
+        fixed = substituteIdentity(fixed, lockedName);
+        const recheck = checkIdentity(fixed, {
+          companyName: lockedName,
+          logoUrl: lockedLogo,
+          requireImagery: isPrd,
+        });
+        // Only accept the repair when it is both substantial and better.
+        if (fixed.length > raw.length * 0.6 && (recheck.ok || (!recheck.nameMissing && identity.nameMissing))) {
+          raw = fixed;
+          truncated = String(fixJson.choices?.[0]?.finish_reason ?? "").toLowerCase() === "length";
+        }
+      } else {
+        await fixRes.text();
+      }
+    } catch (e) {
+      console.warn("identity repair pass failed", e);
+    }
+  }
+
   if (isPrd) {
     raw = await expandWebsitePrdMasterPrompt(raw);
     raw = enforceWebsitePrdDepth(raw);
     const stats = masterPromptStats(raw);
     if (stats.complete && stats.words >= 1800) truncated = false;
   }
+
 
   if (truncated) {
     quality = Math.min(quality, 60);
