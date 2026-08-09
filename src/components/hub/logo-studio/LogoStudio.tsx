@@ -123,6 +123,8 @@ export default function LogoStudio({
   const [avoid, setAvoid] = useState<string[]>([]);
   const [avoidDraft, setAvoidDraft] = useState("");
   const [refReason, setRefReason] = useState("shape");
+  const [dragging, setDragging] = useState(false);
+  const [uploadQueue, setUploadQueue] = useState(0);
 
   const [directionNote, setDirectionNote] = useState("");
   const [refineFor, setRefineFor] = useState<Mark | null>(null);
