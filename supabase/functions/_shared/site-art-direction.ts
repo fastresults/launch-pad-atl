@@ -432,5 +432,9 @@ export function artDirectionBlock(a: SiteArchetype): string {
 
 export function archetypeForPrompt(input: ArchetypeInput): { archetype: SiteArchetype; block: string } {
   const archetype = selectArchetype(input);
-  return { archetype, block: `${artDirectionBlock(archetype)}\n\n${imageCraftBlock()}` };
+  return {
+    archetype,
+    block: `${artDirectionBlock(archetype)}\n\n${imageCraftBlock()}\n\n${copyCraftBlock()}`,
+  };
 }
+
