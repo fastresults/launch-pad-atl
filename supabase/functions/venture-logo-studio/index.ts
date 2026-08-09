@@ -34,7 +34,6 @@ import {
 } from "../_shared/logo-direction.ts";
 import {
   BUSINESS_READ_SYSTEM,
-  businessProfileBlock,
   businessReadPrompt,
   parseBusinessProfile,
   type BusinessProfile,
