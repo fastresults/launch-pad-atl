@@ -337,11 +337,11 @@ export async function generateOne(
   ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
 
   // S5 — Per-deliverable model tier ('pro' | 'flash' | 'lite').
-  // website_prd is force-upgraded to Pro + extra output tokens so the
-  // 1,800–2,400-word master prompt block can finish without truncation.
-  const isPrd = documentType === "website_prd";
-  const modelId = isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
-  const maxTokens = isPrd ? 16000 : 16000;
+  // website_prd runs on Pro: it is the longest and most design-sensitive
+  // document in the system, and Flash flattens layout and copy quality.
+  const modelId = isPrd ? modelForTier("pro") : modelForTier(type.model_tier);
+  const maxTokens = isPrd ? 24000 : 16000;
+
 
   let aiRes: Response;
   try {
