@@ -974,10 +974,26 @@ export function DocumentViewer({
                   : "Save to My Files"}
             </Button>
             {doc?.document_type === "website_prd" && (
-              <Button size="sm" onClick={onCopyPrdPrompt}>
-                Copy prompt only
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => regenerateWebsitePrd()}
+                  disabled={prdRepairing || !doc?.snapshot_id}
+                  title="Rebuild this PRD with your current locked brand"
+                >
+                  {prdRepairing ? (
+                    <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Rebuilding…</>
+                  ) : (
+                    <><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Regenerate</>
+                  )}
+                </Button>
+                <Button size="sm" onClick={onCopyPrdPrompt}>
+                  Copy prompt only
+                </Button>
+              </>
             )}
+
           </div>
         </div>
 
