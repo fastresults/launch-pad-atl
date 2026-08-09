@@ -1125,11 +1125,13 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 /* ---------- STEP 5: Voice & Review ---------- */
 function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
   const qc = useQueryClient();
+  const websitePrd = useWebsitePrd(snapshot.id, kit?.locked_at ?? null);
   const [voice, setVoice] = useState<any>(kit?.voice ?? {
     attributes: { formal: 50, warm: 50, witty: 50, expert: 50 },
     rules: "",
   });
   const [saving, setSaving] = useState(false);
+  const [prdJustUpdated, setPrdJustUpdated] = useState(false);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   const lock = useMutation({
@@ -1182,6 +1184,18 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
     } catch (e: any) {
       toast.error(e.message || "Save failed");
     } finally { setSaving(false); }
+  };
+
+  const regenerateWebsitePrd = async () => {
+    setPrdJustUpdated(false);
+    try {
+      await upsertBrandKit(snapshot.id, { voice });
+      await qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      await websitePrd.regenerate.mutateAsync(undefined);
+      setPrdJustUpdated(true);
+    } catch {
+      // The shared Website PRD mutation owns the user-facing error message.
+    }
   };
 
   const heading = kit?.typography?.heading?.family;
@@ -1305,8 +1319,25 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
 
       <div className="sticky bottom-0 z-20 -mx-6 -mb-8 flex flex-wrap items-center justify-between gap-2 border-t border-border bg-background/95 px-6 py-4 shadow-lg backdrop-blur">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button onClick={() => lock.mutate()} disabled={lock.isPending || !kit?.palette || !kit?.typography}>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2">
+          {(prdJustUpdated || (websitePrd.exists && !websitePrd.stale)) && !websitePrd.running && (
+            <span className="inline-flex items-center gap-1 text-xs text-status-success">
+              <CircleCheck className="h-3.5 w-3.5" /> Website PRD is current with this brand
+            </span>
+          )}
+          <Button
+            onClick={regenerateWebsitePrd}
+            disabled={websitePrd.running}
+            className="shrink-0"
+          >
+            {websitePrd.running ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
+            {websitePrd.running
+              ? "Generating Website PRD…"
+              : websitePrd.exists
+                ? "Regenerate Website PRD"
+                : "Generate Website PRD"}
+          </Button>
+          <Button variant="outline" onClick={() => lock.mutate()} disabled={lock.isPending || !kit?.palette || !kit?.typography}>
             {lock.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
             {kit?.guide_markdown ? "Regenerate style guide" : "Generate brand style guide"}
           </Button>
