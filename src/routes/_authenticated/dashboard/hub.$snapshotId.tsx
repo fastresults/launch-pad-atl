@@ -1612,7 +1612,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                         {generating ? (
                           <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Rebuilding…</>
                         ) : (
-                          <><RotateCcw className="mr-1 h-3 w-3" />Regenerate</>
+                          <><RefreshCw className="mr-1 h-3 w-3" />Regenerate</>
                         )}
                       </Button>
                     )}
