@@ -5,7 +5,7 @@
 
 import type { AssetSpec, ArtDirectionId } from "./social-platform-specs.ts";
 import type { CanvasPlan } from "./canvas-plan.ts";
-import { buildCoverArtPrompt, type HeadlineOverride } from "./cover-art-director.ts";
+import { buildCoverArtPrompt, type HeadlineOverride, type SceneDirective } from "./cover-art-director.ts";
 
 export type AdAspect = "1:1" | "4:5" | "9:16";
 
@@ -135,6 +135,8 @@ export function buildContentAdPrompt(args: {
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
   serverRenderedHeadline?: boolean;
   posterLayout?: string;
+  /** Pre-resolved scene so the caller can QA against the same frame it briefed. */
+  scene?: SceneDirective;
 }): string {
   const { aspect, post } = args;
   const asset = specForAspect(aspect);
@@ -166,6 +168,11 @@ server-side afterwards — render ZERO letters, numerals, glyphs, signage, capti
 - No collage, no illustration, no 3D render, no flat vector shapes, no UI mockups, no stock-photo
   clichés (handshakes in suits, thumbs-up, generic laptops on white desks).
 - Colour grade the photograph toward the brand palette; avoid saturated colours outside it.
+- ONE continuous, un-manipulated photograph. No torn paper, ripped edges, peeled layers, tape,
+  foil, paint strokes, halftone overlays, double exposure, cut-outs, frames-within-frames or any
+  composited/collaged treatment. If it could not have come straight out of a camera, it is wrong.
+- The reserved type band must be genuinely calm: no faces, hands, text-bearing objects, hard edges
+  or high-frequency texture (wood grain, foliage, brickwork) inside it.
 - Keep the far bottom-right corner quiet — a small vector mark is composited there. Do not paint any
   box, plate, chip, badge or panel anywhere on the image.`;
 
@@ -184,6 +191,7 @@ server-side afterwards — render ZERO letters, numerals, glyphs, signage, capti
     headlineOverride: resolvedHeadline,
     logoZone: args.logoZone,
     serverRenderedHeadline: args.serverRenderedHeadline,
+    scene: args.scene,
     sceneSignal: {
       // Stable per-post discriminator so retries land on the same scene; add
       // the variationSeed so "regenerate" rotates to a fresh scene.
