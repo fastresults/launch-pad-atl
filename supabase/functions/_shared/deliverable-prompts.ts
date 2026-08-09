@@ -102,7 +102,7 @@ After the table, add:
 ## 6. Conversion & Trust
 - Lead capture strategy: where it lives on each page, fields collected, what happens after submit (thank-you screen copy + follow-up email subject line)
 - Social proof slots: where testimonials, logo bars, and stats appear, with 3 placeholder testimonials (name, role, company, quote) the founder can swap
-- 6–10 FAQ Q&A pairs written in the brand voice
+- 8–12 FAQ Q&A pairs written in the brand voice, each answer 60–110 words, answering the objection behind the question and ending with the next step. Cover price, timeline, what happens if it doesn't work, who it is not for, and how to start.
 - Trust badges / guarantees / certifications to display (and where)
 
 ## 7. Tech & Quality Bar
