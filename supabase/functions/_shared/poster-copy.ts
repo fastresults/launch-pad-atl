@@ -207,6 +207,8 @@ export async function buildPosterCopy(args: {
   let ai: { kicker?: string; headline?: string; ctaLine?: string; rationale?: string } = {};
   let issue: string | null = "no ai key";
   let soft = false;
+  let repeats: string | null = null;
+
 
   if (args.apiKey) {
     const sys = `You are an award-winning advertising copywriter writing the headline on a printed poster. The post below is your SOURCE MATERIAL, not your headline — never quote or truncate it.
