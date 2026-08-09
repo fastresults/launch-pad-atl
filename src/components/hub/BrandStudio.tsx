@@ -135,6 +135,25 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
 
 
       <BrandWizard snapshot={snapshot} open={open} onOpenChange={setOpen} />
+
+      <Dialog open={!!lightbox} onOpenChange={(v) => !v && setLightbox(null)}>
+        <DialogContent className="max-w-3xl border-white/10 bg-card p-3">
+          <DialogTitle className="sr-only">{lightbox?.caption ?? "Mood board reference"}</DialogTitle>
+          {lightbox && (
+            <figure className="space-y-2">
+              <img
+                src={lightbox.url}
+                alt={lightbox.caption ?? "Mood board reference"}
+                className="max-h-[75vh] w-full rounded-xl object-contain"
+              />
+              {lightbox.caption && (
+                <figcaption className="text-center text-xs text-muted-foreground">{lightbox.caption}</figcaption>
+              )}
+            </figure>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
