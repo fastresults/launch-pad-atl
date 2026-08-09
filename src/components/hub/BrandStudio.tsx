@@ -136,9 +136,51 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
             </>
           )}
 
-
+          {locked && (
+            <div
+              className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 ${
+                websitePrd.stale || !websitePrd.exists
+                  ? "border-status-warning/40 bg-status-warning/5"
+                  : "border-white/10 bg-background/40"
+              }`}
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium">
+                  {!websitePrd.exists
+                    ? "No Website PRD yet"
+                    : websitePrd.stale
+                      ? "Your Website PRD was written before this brand"
+                      : "Your Website PRD matches this brand"}
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  Rebuilding rewrites the PRD and its paste-ready builder prompt using your locked palette,
+                  typography and committed mark. No extra input needed.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                {websitePrd.exists && (
+                  <Button size="sm" variant="outline" onClick={() => setPrdOpen(true)} disabled={websitePrd.running}>
+                    <Eye className="mr-1 h-3 w-3" />Read PRD
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant={websitePrd.stale || !websitePrd.exists ? "default" : "outline"}
+                  onClick={() => websitePrd.regenerate.mutate(undefined)}
+                  disabled={websitePrd.running}
+                >
+                  {websitePrd.running ? (
+                    <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Rebuilding…</>
+                  ) : (
+                    <><RefreshCw className="mr-1 h-3 w-3" />{websitePrd.exists ? "Rebuild website PRD" : "Generate website PRD"}</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
 
           <BrandCollateral snapshot={snapshot} locked={locked} />
+
         </div>
       )}
 
