@@ -11,8 +11,13 @@ export type IdentityCheck = {
   nameMissing: boolean;
   logoMissing: boolean;
   imageryMissing: boolean;
+  /** PRD only: the imagery plan exists but is too thin to art-direct a site. */
+  imageryThin?: boolean;
+  /** PRD only: the locked art direction was never named in the document. */
+  artDirectionMissing?: boolean;
   ok: boolean;
 };
+
 
 /** Replace `{Company}` / `{COMPANY_NAME}` style placeholders with the real name. */
 export function substituteIdentity(raw: string, companyName?: string | null): string {
