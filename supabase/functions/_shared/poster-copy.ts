@@ -197,13 +197,16 @@ headline — this is the whole job:
 - No ellipsis, no trailing punctuation, no quotes, no emoji, no hashtags, no unbroken word over 18 characters.
 - Sentence case. Never shout. Do not repeat the kicker's words.
 
-kicker — 1-4 words naming the topic or audience, so the headline never has to.
-ctaLine — one short imperative the reader can act on today, MAX 42 characters. Start with a verb ("Book the session", "See the framework"). Never a label, never a sentence fragment, no URL unless the source CTA has one.
+kicker — 1-4 words naming the AUDIENCE or the moment they are in, so the headline never has to.
+ctaLine — obey the CTA rung given below exactly. It sets how hard this ad is allowed to ask; an early-funnel ad that asks for a booking is wrong, and so is a late-funnel ad that only says "see how it works". MAX 42 characters, starts with a verb, no URL unless the source CTA has one. If the rung is "none", return an empty string.
 rationale — one sentence on why this line lands.
 
 No prose outside the JSON.`;
     const siblings = (args.siblingHooks ?? []).filter(Boolean).slice(0, 6);
     const taxonomy = (args.kickerTaxonomy ?? []).filter(Boolean).slice(0, 6);
+    const used = (args.usedClaims ?? []).filter(Boolean).slice(0, 10);
+    const stage = args.stage ?? null;
+    const rung = args.ctaRung ?? null;
     const user = `Brand: ${args.brandName ?? "(unnamed)"}
 Value proposition: ${args.valueProp ?? ""}
 Pillar: ${post.pillar ?? ""}
@@ -211,12 +214,31 @@ Platform: ${post.platform ?? ""}
 Source hook: ${post.hook ?? ""}
 Source body: ${String(post.body ?? "").slice(0, 600)}
 Source CTA: ${post.cta ?? ""}${
-      taxonomy.length ? `\nCampaign kicker vocabulary (pick the closest fit, or a close variant): ${taxonomy.join(" | ")}` : ""
+      stage
+        ? `\n\nCAMPAIGN POSITION — this ad runs at the "${stage.label}" stage of a sequential funnel.
+- Job of this week: ${stage.job}
+- Audience (${stage.temperature ?? "warm"}): ${stage.audience || "the buyer described above"}`
+        : ""
+    }${
+      args.assignedAngle
+        ? `\n- The ONE claim this week owns — argue this and nothing else: ${args.assignedAngle}`
+        : ""
+    }${
+      rung
+        ? `\n- CTA rung "${rung.rung}": ${rung.brief}${rung.offer ? `\n- The offer, when you are allowed to name it: ${rung.offer}` : ""}`
+        : ""
+    }${
+      used.length
+        ? `\n\nALREADY SPENT by earlier weeks of this campaign. Repeating any of these — in any wording — is a failure:\n- ${used.join("\n- ")}`
+        : ""
+    }${
+      taxonomy.length ? `\n\nCampaign kicker vocabulary (pick the closest fit, or a close variant): ${taxonomy.join(" | ")}` : ""
     }${
       siblings.length
-        ? `\nOther posts running the same week — make a DIFFERENT argument from all of these:\n- ${siblings.join("\n- ")}`
+        ? `\n\nOther posts running the same week — make a DIFFERENT argument from all of these:\n- ${siblings.join("\n- ")}`
         : ""
     }`;
+
 
 
     const ask = async (note?: string) => {
