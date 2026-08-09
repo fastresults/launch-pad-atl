@@ -701,6 +701,19 @@ Deno.serve(async (req) => {
     (qa as any).copy_truncated = posterCopy.truncated;
     (qa as any).headline_source = posterCopy.source;
     (qa as any).headline_issue = posterCopy.headlineIssue ?? null;
+    (qa as any).campaign = arcWeek
+      ? {
+          week: weekNo,
+          stage: arcWeek.stage,
+          stage_label: arcWeek.stage_label,
+          audience: arcWeek.audience,
+          temperature: arcWeek.temperature,
+          claim: arcWeek.claim,
+          cta_rung: arcWeek.cta_rung,
+          repeats_claim: posterCopy.repeatsClaim ?? null,
+        }
+      : null;
+
     Object.assign(qa as any, poster.metrics);
     if (clipped(poster.metrics)) {
       qa.ok = false;
