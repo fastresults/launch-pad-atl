@@ -1,63 +1,108 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Check, Loader2, PenLine, RotateCcw, Sparkles, Upload, Wand2, X,
+  Check, ImagePlus, Loader2, PenLine, RotateCcw, Sparkles, Upload, Wand2, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { invokeEdge } from "@/lib/edge-invoke";
 
 /**
- * Logo Studio — an AI art director interviewing the founder while it draws.
+ * Logo Studio — a directed brief, not an interview.
  *
- * It opens with a written brief of about 100 words proposing one mark. Once the
- * founder approves the brief, exactly one mark is drawn and evolved question by
- * question. The rough they approve is the artwork that gets vectored.
+ * The founder describes the mark they want in their own words, shows the work
+ * they admire, and sets a few dials. The art director reads that alongside the
+ * brand guide and the Second Brain, commits to one creative direction, then
+ * draws three marks that share a single construction law.
  */
 
-type Rough = { id: string; title: string; brief: string; change_note?: string; url: string | null; provider: string };
-type Step = {
-  index: number;
-  question: string;
-  helper: string;
-  read_back: string | null;
-  choices: { label: string; description: string }[];
-  allow_free_text: boolean;
-  multi_select: boolean;
-  done: boolean;
-  roughs: Rough[];
-  render_error: string | null;
-  answer: string | null;
-  chosen_rough_id: string | null;
+type Mark = {
+  id: string;
+  concept_id: string;
+  title: string;
+  idea: string;
+  second_read: string;
+  reads_as: string;
+  brief: string;
+  change_note?: string;
+  url: string | null;
+  provider: string;
+  jury?: { pass: boolean; note: string; scores: Record<string, number> } | null;
 };
+
+type Round = { index: number; label: string; marks: Mark[]; error: string | null };
+
+type Concept = {
+  id: string;
+  title: string;
+  idea: string;
+  second_read: string;
+  reads_as: string;
+  logo_type: string;
+};
+
+type Direction = {
+  headline: string;
+  core_idea: string;
+  attributes: string[];
+  metaphor: string;
+  subject_presence: string;
+  colour_roles: { dominant: string; secondary: string; accent: string };
+  avoid: string[];
+  set_law: string;
+  rationale: string;
+  concepts: Concept[];
+};
+
+type Reference = { url: string; path?: string; reason: string; label?: string };
+
 type Session = {
   id: string;
-  status: "briefing" | "interviewing" | "approved" | "committed";
-  brief: {
-    summary?: string;
-    proposal?: string;
-    direction?: { title: string; render_brief: string };
-    requirements?: string[];
-  } | null;
-  steps: Step[];
-  approved_rough: Rough | null;
+  status: "intake" | "direction" | "concepts" | "approved" | "committed";
+  brief: { direction?: Direction; intake?: any } | null;
+  steps: Round[];
+  inspiration: Reference[];
+  approved_rough: Mark | null;
   vector_svg: string | null;
   traced: boolean | null;
   last_error: string | null;
-  brand?: { companyName: string; headingFont: string | null; primary: string | null } | null;
+  brand?: { companyName: string; headingFont: string | null; primary: string | null; palette?: string[] } | null;
 };
 
-/** True when the founder has asked for the company name to sit beside the symbol. */
-const LOCKUP_RE = /\b(wordmark|company name|text to the|type to the|lockup|name beside|letters beside|name to the right)\b/i;
+const MARK_TYPES: { value: string; label: string; hint: string }[] = [
+  { value: "open", label: "You decide", hint: "Let the director choose" },
+  { value: "symbol", label: "Symbol", hint: "A mark that stands alone" },
+  { value: "combination", label: "Symbol + name", hint: "Mark beside the name" },
+  { value: "lettermark", label: "Lettermark", hint: "Built from initials" },
+  { value: "wordmark", label: "Wordmark", hint: "The name, beautifully set" },
+];
 
+const DIALS: { key: string; label: string; low: string; high: string }[] = [
+  { key: "abstraction", label: "Abstraction", low: "Literal", high: "Abstract" },
+  { key: "weight", label: "Weight", low: "Light", high: "Heavy" },
+  { key: "geometry", label: "Construction", low: "Geometric", high: "Organic" },
+  { key: "warmth", label: "Temperature", low: "Cool", high: "Warm" },
+  { key: "era", label: "Era", low: "Classic", high: "Contemporary" },
+];
 
+const REASONS = ["shape", "colour", "typography", "feeling"];
 
 async function studio(payload: Record<string, unknown>): Promise<any> {
   const { data, error } = await invokeEdge("venture-logo-studio", { body: payload });
   if (error) throw new Error((data as any)?.error || error.message);
   if ((data as any)?.error) throw new Error((data as any).error);
   return data;
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      {children}
+    </div>
+  );
 }
 
 export default function LogoStudio({
@@ -69,13 +114,22 @@ export default function LogoStudio({
 }) {
   const qc = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
-  const [freeText, setFreeText] = useState("");
-  const [picked, setPicked] = useState<string[]>([]);
-  const [refineFor, setRefineFor] = useState<Rough | null>(null);
-  const [refineNote, setRefineNote] = useState("");
-  const [briefNote, setBriefNote] = useState("");
-  const bottom = useRef<HTMLDivElement>(null);
 
+  const [description, setDescription] = useState("");
+  const [markType, setMarkType] = useState("open");
+  const [dials, setDials] = useState<Record<string, number>>({
+    abstraction: 3, weight: 3, geometry: 3, warmth: 3, era: 3,
+  });
+  const [avoid, setAvoid] = useState<string[]>([]);
+  const [avoidDraft, setAvoidDraft] = useState("");
+  const [refReason, setRefReason] = useState("shape");
+
+  const [directionNote, setDirectionNote] = useState("");
+  const [refineFor, setRefineFor] = useState<Mark | null>(null);
+  const [refineNote, setRefineNote] = useState("");
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const ownRef = useRef<HTMLInputElement>(null);
 
   const existing = useQuery({
     queryKey: ["logoStudio", snapshotId],
@@ -83,79 +137,92 @@ export default function LogoStudio({
   });
 
   useEffect(() => {
-    if (existing.data?.session) setSession(existing.data.session);
+    if (existing.data?.session) {
+      const s = existing.data.session as Session;
+      setSession(s);
+      const intake = s.brief?.intake;
+      if (intake) {
+        setDescription((prev) => prev || intake.description || "");
+        if (intake.markType) setMarkType(intake.markType);
+        if (intake.dials && Object.keys(intake.dials).length) setDials((d) => ({ ...d, ...intake.dials }));
+        if (Array.isArray(intake.avoid) && intake.avoid.length) setAvoid(intake.avoid);
+      }
+    }
   }, [existing.data]);
 
-  const steps = session?.steps ?? [];
-  // A typography request is honoured as a typeset lockup beside the symbol,
-  // never as letters drawn inside the artwork.
-  const wantsLockup = (session?.brief?.requirements ?? []).some((r) => LOCKUP_RE.test(r));
+  const land = (data: any) => { if (data?.session) setSession(data.session); };
 
-  const current = steps[steps.length - 1] ?? null;
-
-  useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [steps.length, session?.status]);
-
-  const land = (data: any) => {
-    if (data?.session) setSession(data.session);
-    setFreeText("");
-    setPicked([]);
-  };
+  const direction = session?.brief?.direction ?? null;
+  const rounds = session?.steps ?? [];
+  const latest = rounds[rounds.length - 1] ?? null;
+  const earlier = useMemo(() => rounds.slice(0, -1).flatMap((r) => r.marks ?? []), [rounds]);
+  const references = session?.inspiration ?? [];
 
   const start = useMutation({
     mutationFn: () => studio({ action: "start", snapshotId }),
-    onSuccess: (data) => { land(data); toast.success("Your art director has written a brief"); },
+    onSuccess: land,
     onError: (e: any) => toast.error(e.message),
   });
 
-  const reviseBrief = useMutation({
+  const uploadReference = useMutation({
+    mutationFn: async (file: File) => {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      let binary = "";
+      for (const byte of buf) binary += String.fromCharCode(byte);
+      return studio({
+        action: "upload_reference",
+        snapshotId,
+        sessionId: session?.id,
+        data: btoa(binary),
+        mime: file.type,
+        filename: file.name,
+        reason: refReason,
+      });
+    },
+    onSuccess: (data) => { land(data); toast.success("Inspiration added"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const removeReference = useMutation({
+    mutationFn: (path: string) => studio({ action: "remove_reference", snapshotId, sessionId: session?.id, path }),
+    onSuccess: land,
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const getDirection = useMutation({
+    mutationFn: () =>
+      studio({
+        action: "direction",
+        snapshotId,
+        sessionId: session?.id,
+        intake: { description, markType, dials, avoid },
+      }),
+    onSuccess: (data) => { land(data); toast.success("Creative direction ready"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const reviseDirection = useMutation({
     mutationFn: (instruction: string) =>
-      studio({ action: "revise_brief", snapshotId, sessionId: session?.id, instruction }),
-    onSuccess: (data) => { land(data); setBriefNote(""); toast.success("Brief rewritten"); },
+      studio({ action: "revise_direction", snapshotId, sessionId: session?.id, instruction }),
+    onSuccess: (data) => { land(data); setDirectionNote(""); toast.success("Direction rewritten"); },
     onError: (e: any) => toast.error(e.message),
   });
 
-  // Approving carries any note still sitting in the box — a typed correction is
-  // never silently dropped on the way to the first drawing.
-  const approveBrief = useMutation({
-    mutationFn: (instruction?: string) =>
-      studio({ action: "approve_brief", snapshotId, sessionId: session?.id, instruction: instruction ?? "" }),
-    onSuccess: (data) => { land(data); setBriefNote(""); toast.success("Drawing your first mark"); },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const dropRequirement = useMutation({
-    mutationFn: (requirement: string) =>
-      studio({ action: "drop_requirement", snapshotId, sessionId: session?.id, requirement }),
-    onSuccess: land,
-    onError: (e: any) => toast.error(e.message),
-  });
-
-
-
-  const answer = useMutation({
-    mutationFn: (vars: { answer: string; chosenRoughId?: string | null }) =>
-      studio({ action: "answer", snapshotId, sessionId: session?.id, ...vars }),
-    onSuccess: land,
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const back = useMutation({
-    mutationFn: (toStep: number) => studio({ action: "back", snapshotId, sessionId: session?.id, toStep }),
-    onSuccess: land,
+  const drawConcepts = useMutation({
+    mutationFn: () => studio({ action: "concepts", snapshotId, sessionId: session?.id }),
+    onSuccess: (data) => { land(data); toast.success("Three marks drawn"); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const refine = useMutation({
-    mutationFn: (vars: { roughId: string; instruction: string }) =>
+    mutationFn: (vars: { markId: string; instruction: string }) =>
       studio({ action: "refine", snapshotId, sessionId: session?.id, ...vars }),
     onSuccess: (data) => { land(data); setRefineFor(null); setRefineNote(""); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const approve = useMutation({
-    mutationFn: (roughId: string) => studio({ action: "approve", snapshotId, sessionId: session?.id, roughId }),
+    mutationFn: (markId: string) => studio({ action: "approve", snapshotId, sessionId: session?.id, markId }),
     onSuccess: (data) => {
       land(data);
       toast[data?.traced ? "success" : "warning"](
@@ -181,13 +248,7 @@ export default function LogoStudio({
       const buf = new Uint8Array(await file.arrayBuffer());
       let binary = "";
       for (const byte of buf) binary += String.fromCharCode(byte);
-      return studio({
-        action: "upload_own",
-        snapshotId,
-        sessionId: session?.id,
-        mime: file.type,
-        data: btoa(binary),
-      });
+      return studio({ action: "upload_own", snapshotId, sessionId: session?.id, mime: file.type, data: btoa(binary) });
     },
     onSuccess: (data) => { land(data); toast.success("Your mark is vectored and ready to save"); },
     onError: (e: any) => toast.error(e.message),
@@ -200,20 +261,10 @@ export default function LogoStudio({
   });
 
   const busy =
-    start.isPending || answer.isPending || refine.isPending || back.isPending ||
-    approve.isPending || commit.isPending || uploadOwn.isPending ||
-    approveBrief.isPending || reviseBrief.isPending;
+    start.isPending || getDirection.isPending || reviseDirection.isPending || drawConcepts.isPending ||
+    refine.isPending || approve.isPending || commit.isPending || uploadOwn.isPending;
 
-  const submitAnswer = (chosenRoughId?: string | null) => {
-    const text = [...picked, freeText.trim()].filter(Boolean).join("; ");
-    if (!text && !chosenRoughId) {
-      toast.error("Pick an option or tell the designer what you want");
-      return;
-    }
-    answer.mutate({ answer: text, chosenRoughId: chosenRoughId ?? null });
-  };
-
-  /* ------------------------------ empty state ------------------------------ */
+  /* ------------------------------ loading / empty ------------------------------ */
 
   if (existing.isLoading) {
     return (
@@ -229,444 +280,399 @@ export default function LogoStudio({
         <div className="space-y-1">
           <h3 className="text-sm font-semibold">Logo Studio</h3>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            An art director who has already read your venture — your concept, customer, positioning and brand
-            personality. It opens with a short written brief proposing one mark. Approve the brief and it draws
-            that mark, then refines it with you one question at a time. Approve the mark and it's vectored on
-            the spot, in your colours.
+            Describe the mark you want in your own words, show the work you admire, and set a few dials. Your art
+            director reads that alongside your brand guide and Second Brain, commits to one creative direction, then
+            draws three marks that share a single construction law. Approve one and it's vectored on the spot, in
+            your colours.
           </p>
         </div>
         <Button onClick={() => start.mutate()} disabled={start.isPending} size="sm">
           {start.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Wand2 className="mr-1 h-4 w-4" />}
-          {start.isPending ? "Reading your venture…" : "Start the design session"}
+          Open the studio
         </Button>
       </section>
     );
   }
 
-  /* ------------------------------ the brief ------------------------------ */
+  /* ------------------------------ describe ------------------------------ */
 
-  if (session.status === "briefing") {
-    return (
-      <section className="space-y-4">
-        <div className="flex items-end justify-between gap-3">
-          <h3 className="text-sm font-semibold">Logo Studio — the brief</h3>
-          <Button variant="ghost" size="sm" onClick={() => reset.mutate()} disabled={busy || reset.isPending}>
-            <RotateCcw className="mr-1 h-4 w-4" /> Start over
+  const describePane = (
+    <section className="space-y-6 rounded-xl border border-white/10 bg-background/40 p-6">
+      <div className="space-y-1">
+        <h3 className="text-sm font-semibold">Describe the mark you want</h3>
+        <p className="text-xs text-muted-foreground">
+          Nothing here is required — but anything you write outranks the director's own taste.
+        </p>
+      </div>
+
+      <Field label="In your words">
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={5}
+          placeholder="What should someone feel when they see it? Is there an object, a place, a gesture that belongs in it? Anything you've pictured already?"
+          className="text-sm"
+        />
+      </Field>
+
+      <Field label="Mark type">
+        <div className="flex flex-wrap gap-2">
+          {MARK_TYPES.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setMarkType(t.value)}
+              className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
+                markType === t.value
+                  ? "border-primary/60 bg-primary/10 text-foreground"
+                  : "border-white/10 text-muted-foreground hover:border-white/25"
+              }`}
+            >
+              <span className="block font-medium">{t.label}</span>
+              <span className="block text-[10px] opacity-70">{t.hint}</span>
+            </button>
+          ))}
+        </div>
+      </Field>
+
+      <Field label="Direction dials">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {DIALS.map((d) => (
+            <div key={d.key} className="space-y-1">
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>{d.low}</span>
+                <span className="font-medium text-foreground">{d.label}</span>
+                <span>{d.high}</span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={5}
+                step={1}
+                value={dials[d.key] ?? 3}
+                onChange={(e) => setDials((prev) => ({ ...prev, [d.key]: Number(e.target.value) }))}
+                className="w-full accent-primary"
+              />
+            </div>
+          ))}
+        </div>
+      </Field>
+
+      <Field label="Never do this">
+        <div className="flex flex-wrap gap-2">
+          {avoid.map((a) => (
+            <span key={a} className="inline-flex items-center gap-1 rounded-full border border-white/15 px-2.5 py-1 text-[11px]">
+              {a}
+              <button type="button" onClick={() => setAvoid((prev) => prev.filter((x) => x !== a))}>
+                <X className="h-3 w-3 opacity-60" />
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Input
+            value={avoidDraft}
+            onChange={(e) => setAvoidDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && avoidDraft.trim()) {
+                e.preventDefault();
+                setAvoid((prev) => Array.from(new Set([...prev, avoidDraft.trim()])).slice(0, 12));
+                setAvoidDraft("");
+              }
+            }}
+            placeholder="e.g. no coffee cups, nothing circular, no green"
+            className="h-9 text-sm"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!avoidDraft.trim()) return;
+              setAvoid((prev) => Array.from(new Set([...prev, avoidDraft.trim()])).slice(0, 12));
+              setAvoidDraft("");
+            }}
+          >
+            Add
           </Button>
         </div>
+      </Field>
 
-        <div className="space-y-4 rounded-xl border border-primary/30 bg-primary/5 p-5">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-primary">
-            <PenLine className="h-3.5 w-3.5" /> Design brief
-          </div>
-          <p className="whitespace-pre-line text-sm leading-relaxed">{session.brief?.proposal}</p>
-          {session.brief?.direction?.title && (
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">The mark:</span> {session.brief.direction.title}
-            </p>
-          )}
-
-          <RequirementLedger
-            requirements={session.brief?.requirements ?? []}
-            busy={busy}
-            onDrop={(r) => dropRequirement.mutate(r)}
-          />
-
-          <div className="space-y-2 border-t border-white/10 pt-3">
-            <Textarea
-              value={briefNote}
-              onChange={(e) => setBriefNote(e.target.value)}
-              rows={2}
-              disabled={busy}
-              placeholder="Anything to correct before it draws? e.g. show both an elderly person and a caregiver, company name to the right."
-              className="text-sm"
-            />
-            <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" disabled={busy} onClick={() => approveBrief.mutate(briefNote.trim() || undefined)}>
-                {approveBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
-                {approveBrief.isPending
-                  ? "Drawing the first mark…"
-                  : briefNote.trim() ? "Apply my note & draw it" : "Approve the brief & draw it"}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={busy || !briefNote.trim()}
-                onClick={() => reviseBrief.mutate(briefNote.trim())}
+      <Field label="Inspiration (up to 5)">
+        <div className="flex flex-wrap gap-2">
+          {references.map((r) => (
+            <div key={r.path ?? r.url} className="relative">
+              <img src={r.url} alt={r.label ?? "Inspiration"} className="h-20 w-20 rounded-lg border border-white/10 object-cover" />
+              <span className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/60 px-1 py-0.5 text-center text-[9px] uppercase tracking-wide text-white">
+                {r.reason}
+              </span>
+              <button
+                type="button"
+                onClick={() => r.path && removeReference.mutate(r.path)}
+                className="absolute -right-1.5 -top-1.5 rounded-full bg-background p-0.5 shadow"
               >
-                {reviseBrief.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                Rewrite the brief first
-              </Button>
+                <X className="h-3 w-3" />
+              </button>
             </div>
-            {briefNote.trim() && (
-              <p className="text-[11px] text-primary/80">
-                Your note will be locked in as a requirement before anything is drawn.
-              </p>
-            )}
-          </div>
-        </div>
-
-      </section>
-    );
-  }
-
-  /* -------------------------------- session -------------------------------- */
-
-  return (
-    <section className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">Logo Studio</h3>
-          {session.brief?.summary && (
-            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-              <span className="font-medium text-foreground">Brief so far:</span> {session.brief.summary}
-            </p>
-          )}
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => reset.mutate()} disabled={busy || reset.isPending}>
-          <RotateCcw className="mr-1 h-4 w-4" /> Start over
-        </Button>
-      </div>
-
-      <RequirementLedger
-        requirements={session.brief?.requirements ?? []}
-        busy={busy}
-        onDrop={(r) => dropRequirement.mutate(r)}
-      />
-
-
-
-
-      {session.last_error && (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-[11px] text-amber-200">
-          {session.last_error}
-        </p>
-      )}
-
-      {/* Conversation */}
-      <div className="space-y-6">
-        {steps.map((step, i) => {
-          const isCurrent = i === steps.length - 1;
-          const answered = step.answer !== null;
-          return (
-            <div key={i} className="space-y-3">
-              <div className="flex items-start gap-2">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">
-                  {i + 1}
-                </span>
-                <div className="min-w-0 flex-1">
-                  {step.read_back && (
-                    <p className="mb-1 text-[11px] italic text-muted-foreground">{step.read_back}</p>
-                  )}
-                  <p className="text-sm font-medium">{step.question}</p>
-                  {step.helper && <p className="mt-0.5 text-xs text-muted-foreground">{step.helper}</p>}
-                </div>
-                {i > 0 && isCurrent && (
-                  <Button variant="ghost" size="sm" disabled={busy} onClick={() => back.mutate(i - 1)}>
-                    <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back
-                  </Button>
-                )}
-              </div>
-
-              {/* The mark drawn for this turn — one, always */}
-              {step.roughs.length > 0 && (
-                <div className="pl-8">
-                  {step.roughs.map((rough) => {
-                    const chosen = step.chosen_rough_id === rough.id;
-                    if (!isCurrent) {
-                      return (
-                        <div key={rough.id} className="flex items-center gap-3">
-                          {rough.url && (
-                            <img
-                              src={rough.url}
-                              alt={rough.title}
-                              className={`h-16 w-16 shrink-0 rounded border bg-white object-contain p-1 ${
-                                chosen ? "border-primary" : "border-white/10"
-                              }`}
-                            />
-                          )}
-                          <p className="text-[11px] text-muted-foreground">{rough.title}</p>
-                        </div>
-                      );
-                    }
-                    return (
-                      <div
-                        key={rough.id}
-                        className="max-w-sm overflow-hidden rounded-xl border border-primary/40 ring-1 ring-primary/20"
-                      >
-                        {rough.url ? (
-                          <img src={rough.url} alt={rough.title} className="aspect-square w-full bg-white object-contain" />
-                        ) : (
-                          <div className="flex aspect-square items-center justify-center bg-white/5 text-[11px] text-muted-foreground">
-                            Not drawn
-                          </div>
-                        )}
-                        {wantsLockup && (
-                          <LockupPreview
-                            markUrl={rough.url}
-                            name={session.brand?.companyName ?? ""}
-                            font={session.brand?.headingFont ?? null}
-                          />
-                        )}
-                        <div className="space-y-2 p-3">
-                          <div>
-                            <p className="text-sm font-semibold">{rough.title}</p>
-                            {rough.change_note && (
-                              <p className="mt-0.5 text-[11px] font-medium text-primary">{rough.change_note}</p>
-                            )}
-                            <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{rough.brief}</p>
-                          </div>
-
-                          {!answered && (
-                            <div className="flex flex-wrap gap-1.5">
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" disabled={busy}
-                                onClick={() => { setRefineFor(rough); setRefineNote(""); }}>
-                                <PenLine className="mr-1 h-3 w-3" /> Tweak this mark
-                              </Button>
-                              <Button size="sm" variant="secondary" className="h-7 px-2 text-[11px]" disabled={busy}
-                                onClick={() => approve.mutate(rough.id)}>
-                                <Check className="mr-1 h-3 w-3" /> Approve this mark
-                              </Button>
-                            </div>
-                          )}
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70">{rough.provider}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-
-              {step.render_error && isCurrent && (
-                <p className="pl-8 text-[11px] text-amber-300">{step.render_error}</p>
-              )}
-
-              {/* Answer controls */}
-              {isCurrent && !answered && session.status === "interviewing" && (
-                <div className="space-y-2 pl-8">
-                  {step.choices.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {step.choices.map((choice) => {
-                        const on = picked.includes(choice.label);
-                        return (
-                          <button
-                            key={choice.label}
-                            type="button"
-                            title={choice.description}
-                            disabled={busy}
-                            onClick={() =>
-                              setPicked((prev) =>
-                                step.multi_select
-                                  ? on ? prev.filter((p) => p !== choice.label) : [...prev, choice.label]
-                                  : on ? [] : [choice.label],
-                              )
-                            }
-                            className={`rounded-full border px-3 py-1 text-[11px] transition ${
-                              on ? "border-primary bg-primary/10 text-foreground" : "border-white/15 text-muted-foreground hover:border-white/35"
-                            }`}
-                          >
-                            {choice.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {step.allow_free_text && (
-                    <Textarea
-                      value={freeText}
-                      onChange={(e) => setFreeText(e.target.value)}
-                      rows={2}
-                      disabled={busy}
-                      placeholder="Or say it in your own words…"
-                      className="text-sm"
-                    />
-                  )}
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" disabled={busy} onClick={() => submitAnswer(null)}>
-                      {answer.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                      {answer.isPending ? "Redrawing…" : step.done ? "Draw the final pass" : "Answer & redraw"}
-                    </Button>
-                    {busy && <span className="text-[11px] text-muted-foreground">Redrawing the mark — about 15 seconds.</span>}
-
-                  </div>
-                </div>
-              )}
-
-              {answered && (
-                <p className="pl-8 text-[11px] text-muted-foreground">
-                  <span className="font-medium text-foreground">You said:</span> {step.answer}
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Approved + vectored */}
-      {session.status !== "interviewing" && session.approved_rough && (
-        <div className="space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            {session.vector_svg && (
-              <div
-                className="h-20 w-20 rounded bg-white p-1.5 [&>svg]:h-full [&>svg]:w-full"
-                dangerouslySetInnerHTML={{ __html: session.vector_svg }}
-              />
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">{session.approved_rough.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {session.traced
-                  ? "Traced to clean vector paths in your brand colours."
-                  : "Saved as vector, though tracing fell back to an embedded image."}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="ghost" disabled={busy} onClick={() => back.mutate(steps.length - 1)}>
-                <ArrowLeft className="mr-1 h-4 w-4" /> Keep exploring
-              </Button>
-              <Button size="sm" disabled={busy || session.status === "committed"} onClick={() => commit.mutate()}>
-                {commit.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
-                {session.status === "committed" ? "Saved to Live Brand" : "Save the logo family"}
-              </Button>
-            </div>
-          </div>
-          {session.status === "committed" && (
-            <p className="text-[11px] text-muted-foreground">
-              Primary mark, horizontal and stacked lockups, mono and knockout versions are all in your Live Brand.
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Bring your own */}
-      <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-white/20 px-3 py-2 text-xs hover:border-primary/60">
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/svg+xml"
-          className="hidden"
-          disabled={busy}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            e.target.value = "";
-            if (file) uploadOwn.mutate(file);
-          }}
-        />
-        {uploadOwn.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-        {uploadOwn.isPending ? "Vectoring…" : "I already have a logo — use mine"}
-      </label>
-
-      {/* Refine dialog */}
-      {refineFor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog">
-          <div className="w-full max-w-lg space-y-3 rounded-xl border border-white/10 bg-background p-5">
-            <div>
-              <h4 className="text-sm font-semibold">Tweak “{refineFor.title}”</h4>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Say what to change. The designer redraws three variations of this exact mark.
-              </p>
-            </div>
-            {refineFor.url && (
-              <img src={refineFor.url} alt={refineFor.title} className="h-24 w-24 rounded bg-white object-contain p-1" />
-            )}
-            <Textarea
-              value={refineNote}
-              onChange={(e) => setRefineNote(e.target.value)}
-              rows={3}
-              placeholder="e.g. Keep the arch, drop the leaf, make the stroke weight even throughout."
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" disabled={refine.isPending} onClick={() => setRefineFor(null)}>
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                disabled={refine.isPending || !refineNote.trim()}
-                onClick={() => refine.mutate({ roughId: refineFor.id, instruction: refineNote.trim() })}
-              >
-                {refine.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-                Redraw
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div ref={bottom} />
-    </section>
-  );
-}
-
-/**
- * The standing instructions the founder has given. Every one of these is
- * re-sent to the art director and the image model on every redraw, so they
- * stay visible and retractable.
- */
-function RequirementLedger({
-  requirements,
-  busy,
-  onDrop,
-}: {
-  requirements: string[];
-  busy: boolean;
-  onDrop: (requirement: string) => void;
-}) {
-  if (!requirements.length) return null;
-  return (
-    <div className="space-y-1.5 rounded-lg border border-white/10 bg-white/[0.03] p-3">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-        Locked in — carried into every redraw
-      </p>
-      <div className="flex flex-wrap gap-1.5">
-        {requirements.map((requirement) => (
-          <span
-            key={requirement}
-            className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] text-foreground"
-          >
-            {requirement}
+          ))}
+          {references.length < 5 && (
             <button
               type="button"
-              disabled={busy}
-              aria-label={`Remove requirement: ${requirement}`}
-              className="text-muted-foreground transition hover:text-foreground disabled:opacity-40"
-              onClick={() => onDrop(requirement)}
+              onClick={() => fileRef.current?.click()}
+              disabled={uploadReference.isPending}
+              className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-white/20 text-[10px] text-muted-foreground hover:border-white/40"
             >
-              <X className="h-3 w-3" />
+              {uploadReference.isPending
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <ImagePlus className="h-4 w-4" />}
+              Add
             </button>
-          </span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+          <span>Added for its</span>
+          {REASONS.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRefReason(r)}
+              className={`rounded-full border px-2 py-0.5 ${
+                refReason === r ? "border-primary/60 bg-primary/10 text-foreground" : "border-white/10"
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) uploadReference.mutate(file);
+            e.currentTarget.value = "";
+          }}
+        />
+      </Field>
+
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <Button onClick={() => getDirection.mutate()} disabled={busy} size="sm">
+          {getDirection.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+          {getDirection.isPending ? "Reading your brand…" : direction ? "Rebuild the direction" : "Get the creative direction"}
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => ownRef.current?.click()} disabled={busy}>
+          <Upload className="mr-1 h-4 w-4" /> I already have a logo
+        </Button>
+        <input
+          ref={ownRef}
+          type="file"
+          accept="image/*,.svg"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) uploadOwn.mutate(file);
+            e.currentTarget.value = "";
+          }}
+        />
+      </div>
+    </section>
+  );
+
+  /* ------------------------------ direction ------------------------------ */
+
+  const directionPane = direction && (
+    <section className="space-y-5 rounded-xl border border-white/10 bg-background/40 p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="text-sm font-semibold">{direction.headline}</h3>
+        <div className="flex gap-1.5">
+          {[direction.colour_roles.dominant, direction.colour_roles.secondary, direction.colour_roles.accent]
+            .filter(Boolean)
+            .map((hex, i) => (
+              <span
+                key={`${hex}-${i}`}
+                title={["dominant", "secondary", "accent"][i]}
+                className="h-5 w-5 rounded-full border border-white/20"
+                style={{ background: hex }}
+              />
+            ))}
+        </div>
+      </div>
+
+      <p className="text-sm leading-relaxed text-foreground/90">{direction.rationale}</p>
+
+      <dl className="grid gap-3 text-xs sm:grid-cols-2">
+        <div><dt className="text-muted-foreground">Core idea</dt><dd>{direction.core_idea}</dd></div>
+        <div><dt className="text-muted-foreground">Metaphor</dt><dd>{direction.metaphor}</dd></div>
+        <div><dt className="text-muted-foreground">Who appears in it</dt><dd>{direction.subject_presence}</dd></div>
+        <div><dt className="text-muted-foreground">Set law</dt><dd>{direction.set_law}</dd></div>
+      </dl>
+
+      {direction.attributes?.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {direction.attributes.map((a) => (
+            <span key={a} className="rounded-full border border-white/15 px-2.5 py-0.5 text-[11px]">{a}</span>
+          ))}
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {direction.concepts.map((c) => (
+          <div key={c.id} className="space-y-1 rounded-lg border border-white/10 p-3">
+            <p className="text-xs font-semibold">{c.title}</p>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">{c.idea}</p>
+            <p className="text-[11px] italic text-muted-foreground/80">Second read — {c.second_read}</p>
+          </div>
         ))}
       </div>
-    </div>
-  );
-}
 
-/**
- * A live horizontal lockup so a "company name to the right" request is answered
- * with real typesetting rather than letters hallucinated inside the symbol.
- */
-function LockupPreview({
-  markUrl,
-  name,
-  font,
-}: {
-  markUrl: string | null;
-  name: string;
-  font: string | null;
-}) {
-  if (!markUrl || !name) return null;
-  return (
-    <div className="border-t border-white/10 bg-white px-4 py-3">
-      <div className="flex items-center gap-3">
-        <img src={markUrl} alt="" className="h-10 w-10 shrink-0 object-contain" />
-        <span
-          className="truncate text-lg font-semibold leading-none tracking-tight text-neutral-900"
-          style={font ? { fontFamily: `${font}, sans-serif` } : undefined}
-        >
-          {name}
-        </span>
+      {direction.avoid?.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">Never: {direction.avoid.join(" · ")}</p>
+      )}
+
+      <div className="space-y-2 border-t border-white/10 pt-4">
+        <Textarea
+          value={directionNote}
+          onChange={(e) => setDirectionNote(e.target.value)}
+          rows={2}
+          placeholder="Change the direction — anything you type here becomes law."
+          className="text-sm"
+        />
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => drawConcepts.mutate()} disabled={busy} size="sm">
+            {drawConcepts.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Wand2 className="mr-1 h-4 w-4" />}
+            {drawConcepts.isPending ? "Drawing three marks…" : "Draw the three marks"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={busy || !directionNote.trim()}
+            onClick={() => reviseDirection.mutate(directionNote.trim())}
+          >
+            {reviseDirection.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <PenLine className="mr-1 h-4 w-4" />}
+            Revise the direction
+          </Button>
+        </div>
       </div>
-      <p className="mt-2 text-[10px] uppercase tracking-wider text-neutral-400">Horizontal lockup preview</p>
+    </section>
+  );
+
+  /* ------------------------------ marks ------------------------------ */
+
+  const markCard = (m: Mark, compact = false) => (
+    <div key={m.id} className="space-y-2 rounded-xl border border-white/10 bg-background/40 p-3">
+      {m.url
+        ? <img src={m.url} alt={m.title} className="aspect-square w-full rounded-lg bg-white object-contain" />
+        : <div className="aspect-square w-full rounded-lg bg-white/5" />}
+      <div className="space-y-1">
+        <p className="text-xs font-semibold">{m.title}</p>
+        {!compact && <p className="text-[11px] leading-relaxed text-muted-foreground">{m.idea}</p>}
+        {!compact && m.second_read && (
+          <p className="text-[11px] italic text-muted-foreground/80">Second read — {m.second_read}</p>
+        )}
+        {m.change_note && <p className="text-[11px] text-muted-foreground">Changed: {m.change_note}</p>}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        <Button size="sm" disabled={busy} onClick={() => approve.mutate(m.id)}>
+          <Check className="mr-1 h-3.5 w-3.5" /> Use this
+        </Button>
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => { setRefineFor(m); setRefineNote(""); }}>
+          <PenLine className="mr-1 h-3.5 w-3.5" /> Refine
+        </Button>
+      </div>
+      {refineFor?.id === m.id && (
+        <div className="space-y-2">
+          <Textarea
+            value={refineNote}
+            onChange={(e) => setRefineNote(e.target.value)}
+            rows={2}
+            placeholder="What should change? e.g. make the figures closer, drop the outer ring, heavier stroke."
+            className="text-sm"
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              disabled={busy || !refineNote.trim()}
+              onClick={() => refine.mutate({ markId: m.id, instruction: refineNote.trim() })}
+            >
+              {refine.isPending ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : null} Redraw
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setRefineFor(null)}>Cancel</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const marksPane = latest && (
+    <section className="space-y-4">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-sm font-semibold">{latest.label}</h3>
+        <Button variant="ghost" size="sm" disabled={busy} onClick={() => drawConcepts.mutate()}>
+          <RotateCcw className="mr-1 h-3.5 w-3.5" /> Draw another set
+        </Button>
+      </div>
+      {latest.error && <p className="text-[11px] text-amber-400">{latest.error}</p>}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {latest.marks.map((m) => markCard(m))}
+      </div>
+      {earlier.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Earlier marks</p>
+          <div className="grid gap-3 sm:grid-cols-4 lg:grid-cols-6">
+            {earlier.map((m) => markCard(m, true))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+
+  /* ------------------------------ approved ------------------------------ */
+
+  const approvedPane = session.status !== "intake" && session.vector_svg && (
+    <section className="space-y-4 rounded-xl border border-white/10 bg-background/40 p-6">
+      <h3 className="text-sm font-semibold">
+        {session.traced ? "Vectored in your brand colours" : "Saved — tracing fell back to a raster"}
+      </h3>
+      <div
+        className="mx-auto max-w-xs rounded-lg bg-white p-6 [&_svg]:h-auto [&_svg]:w-full"
+        dangerouslySetInnerHTML={{ __html: session.vector_svg }}
+      />
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" disabled={busy} onClick={() => commit.mutate()}>
+          {commit.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
+          Save the logo family to my brand
+        </Button>
+      </div>
+      {session.status === "committed" && (
+        <p className="text-[11px] text-muted-foreground">Saved. Your mark, lockups and knockouts are in your Live Brand.</p>
+      )}
+    </section>
+  );
+
+  return (
+    <div className="space-y-6">
+      {session.status === "intake" || !direction ? describePane : null}
+      {direction && session.status !== "intake" && (
+        <details className="rounded-xl border border-white/10 bg-background/20 p-4" open={false}>
+          <summary className="cursor-pointer text-xs font-semibold text-muted-foreground">Edit your description</summary>
+          <div className="pt-4">{describePane}</div>
+        </details>
+      )}
+      {directionPane}
+      {marksPane}
+      {approvedPane}
+
+      {session.last_error && (
+        <p className="text-[11px] text-amber-400">{session.last_error}</p>
+      )}
+
+      <div className="flex justify-end">
+        <Button variant="ghost" size="sm" disabled={busy} onClick={() => reset.mutate()}>
+          <RotateCcw className="mr-1 h-3.5 w-3.5" /> Start over
+        </Button>
+      </div>
     </div>
   );
 }
-
