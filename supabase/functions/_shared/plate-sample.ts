@@ -15,6 +15,14 @@ export type RegionStats = {
   variance: number;
 };
 
+export type RegionDetail = {
+  /** Mean local luma gradient, 0..1 — how much fine detail sits in the region. */
+  edge: number;
+  /** Share of sampled pixels that read as skin tone, 0..1. */
+  skinPct: number;
+};
+
+
 function toLin(c: number): number {
   const s = c / 255;
   return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
