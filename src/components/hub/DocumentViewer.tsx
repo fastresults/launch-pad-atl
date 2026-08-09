@@ -464,7 +464,9 @@ export function DocumentViewer({
     setContentOverride(null);
   }, [doc?.snapshot_id, doc?.document_type, doc?.deep_assessment, doc?.deep_assessment_status]);
 
-  const regenerateWebsitePrd = async () => {
+  // `repair` is only passed by the truncated-prompt banner; the header button
+  // is a plain rebuild against the current brand kit.
+  const regenerateWebsitePrd = async (repair = false) => {
     if (!doc?.snapshot_id) return;
     setPrdRepairing(true);
     try {
@@ -472,10 +474,16 @@ export function DocumentViewer({
         body: {
           snapshotId: doc.snapshot_id,
           documentType: "website_prd",
-          rewriteFeedback: "The paste-ready master prompt shown in the viewer is incomplete or truncated. Regenerate the entire Website PRD and make Section 8 complete, self-contained, delimiter-wrapped, 1,800-2,400 words, with numbered sections 1 through 11 and the exact closing instruction.",
-          rewriteTags: ["Fix incomplete Website PRD builder prompt", "Regenerate full sections 1-11"],
+          ...(repair
+            ? {
+              rewriteFeedback:
+                "The paste-ready master prompt shown in the viewer is incomplete or truncated. Regenerate the entire Website PRD and make Section 8 complete, self-contained, delimiter-wrapped, 1,800-2,400 words, with numbered sections 1 through 11 and the exact closing instruction.",
+              rewriteTags: ["Fix incomplete Website PRD builder prompt", "Regenerate full sections 1-11"],
+            }
+            : {}),
         },
       });
+
       if (error) throw new Error(error.message);
       if (data && data.ok === false) throw new Error(data.error ?? "Website PRD regeneration failed");
 
@@ -974,10 +982,26 @@ export function DocumentViewer({
                   : "Save to My Files"}
             </Button>
             {doc?.document_type === "website_prd" && (
-              <Button size="sm" onClick={onCopyPrdPrompt}>
-                Copy prompt only
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => regenerateWebsitePrd()}
+                  disabled={prdRepairing || !doc?.snapshot_id}
+                  title="Rebuild this PRD with your current locked brand"
+                >
+                  {prdRepairing ? (
+                    <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Rebuilding…</>
+                  ) : (
+                    <><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Regenerate</>
+                  )}
+                </Button>
+                <Button size="sm" onClick={onCopyPrdPrompt}>
+                  Copy prompt only
+                </Button>
+              </>
             )}
+
           </div>
         </div>
 
@@ -1155,7 +1179,7 @@ export function DocumentViewer({
                             </p>
                           </div>
                         </div>
-                        <Button size="sm" onClick={regenerateWebsitePrd} disabled={prdRepairing}>
+                        <Button size="sm" onClick={() => regenerateWebsitePrd(true)} disabled={prdRepairing}>
                           {prdRepairing ? (
                             <>
                               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
@@ -1213,7 +1237,7 @@ export function DocumentViewer({
                       </p>
                     </div>
                     </div>
-                    <Button size="sm" onClick={regenerateWebsitePrd} disabled={prdRepairing || !doc?.snapshot_id}>
+                    <Button size="sm" onClick={() => regenerateWebsitePrd(true)} disabled={prdRepairing || !doc?.snapshot_id}>
                       {prdRepairing ? (
                         <>
                           <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />

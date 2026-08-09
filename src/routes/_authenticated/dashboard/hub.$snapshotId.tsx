@@ -1601,7 +1601,23 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                         )}
                       </Button>
                     )}
+                    {isComplete && !brandGated && (
+                      <Button
+                        size="sm"
+                        variant={stale ? "default" : "outline"}
+                        onClick={() => genOne.mutate({ documentType: t.type })}
+                        disabled={jobRunning || generating}
+                        title="Rebuild this asset with your current brand — no notes needed"
+                      >
+                        {generating ? (
+                          <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Rebuilding…</>
+                        ) : (
+                          <><RefreshCw className="mr-1 h-3 w-3" />Regenerate</>
+                        )}
+                      </Button>
+                    )}
                     {isComplete && (
+
                       <Button
                         size="sm"
                         variant="ghost"
