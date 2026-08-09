@@ -621,12 +621,11 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     (d) => d.render_status && d.render_status !== "ready" && d.render_status !== "pending",
   );
 
-  // In-progress run concepts stay concepts: they carry no `primary` flag, so
-  // letting them stand in for the committed mark shadows the real logo.
-  const runConcepts = runDirections
-    .filter((d) => d.status === "ready" || d.status === "needs_review")
-    .map((d) => d.asset)
-    .filter((a) => a?.url);
+  // In-progress run concepts stay concepts (rendered from `runDirections`):
+  // they carry no `primary` flag, so they must never stand in for the
+  // committed mark on the brand kit.
+
+
 
   const processLogoRun = async (initialRun: any) => {
     let run = initialRun;
