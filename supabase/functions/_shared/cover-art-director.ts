@@ -330,7 +330,10 @@ export type SceneSignal = {
   pillar?: string | null;
   format?: string | null;
   assetNotes?: string | null;
+  /** Founder-authored scene description. Wins over everything else. */
+  override?: string | null;
 };
+
 
 function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   const brain = ctx?.brain ?? {};
