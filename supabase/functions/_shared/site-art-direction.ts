@@ -206,11 +206,12 @@ export const SITE_ARCHETYPES: SiteArchetype[] = [
       "A three-panel sequential offer presentation instead of a pricing card grid",
     ],
     imagery:
-      "Editorial still life and portraiture with controlled light, deep shadow and one focal object per frame.",
+      "Editorial still life and portraiture with controlled light, deep shadow and one focal object per frame. Deep shadow means shaped falloff around a correctly exposed subject — the focal object and any face stay legible at 45–60% luminance with catchlights intact; text contrast is a CSS scrim, never a darker render.",
     never: [
       "Feature grids",
       "Badges, ribbons or discount callouts",
       "More than one CTA style on a page",
+      "A hero or portrait so dark the subject is unreadable",
     ],
   },
   {
