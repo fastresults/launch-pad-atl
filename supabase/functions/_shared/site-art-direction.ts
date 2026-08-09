@@ -12,6 +12,7 @@
 // constraint. The model is never handed the menu again.
 
 import { imageCraftBlock } from "./image-craft.ts";
+import { copyCraftBlock } from "./copy-craft.ts";
 
 export type SiteArchetype = {
   key: string;
