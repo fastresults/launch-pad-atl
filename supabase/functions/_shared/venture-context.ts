@@ -230,8 +230,17 @@ export function brandLogoUrl(snapshotId: string, variant = "mark"): string {
     : `${base}/functions/v1/brand-logo/${snapshotId}/${variant}`;
 }
 
+/** Normalise a loosely-typed brand field into a clean string list. */
+function brandStrArr(v: any, max = 6): string[] {
+  return (Array.isArray(v) ? v : [])
+    .map((x) => String(x ?? "").trim())
+    .filter(Boolean)
+    .slice(0, max);
+}
+
 export function brandKitBlock(kit: BrandKitRow | null, snapshotId?: string): string {
   if (!isBrandKitUsable(kit) || !kit) return "";
+
   const lines: string[] = [];
   const track = kit.dna?.track;
   const sourceUrl = kit.dna?.source_url;
