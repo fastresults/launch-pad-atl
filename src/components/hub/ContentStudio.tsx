@@ -721,14 +721,15 @@ function Step4BuildAds({
     }
   };
 
-  const runWeek = async (week: number) => {
+  const runWeek = async (week: number, opts?: { force?: boolean }) => {
     setRunning(true);
     try {
       for (const t of tasks) {
-        if (t.post.week !== week || t.ad) continue;
+        if (t.post.week !== week) continue;
+        if (t.ad && !opts?.force) continue;
         await doGenerate(t);
       }
-      toast.success(`Week ${week} ads generated`);
+      toast.success(opts?.force ? `Week ${week} ads regenerated` : `Week ${week} ads generated`);
     } finally {
       setRunning(false);
     }
@@ -745,11 +746,11 @@ function Step4BuildAds({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRunWeek, tasks.length]);
 
-  const runAll = async () => {
+  const runAll = async (opts?: { force?: boolean }) => {
     setRunning(true);
     try {
-      for (const t of tasks) if (!t.ad) await doGenerate(t);
-      toast.success("All ads generated");
+      for (const t of tasks) if (!t.ad || opts?.force) await doGenerate(t);
+      toast.success(opts?.force ? "All ads regenerated" : "All ads generated");
     } finally {
       setRunning(false);
     }
@@ -805,11 +806,18 @@ function Step4BuildAds({
           </p>
 
         </div>
-        {tasks.some((t) => !t.ad) && (
-          <Button size="sm" onClick={runAll} disabled={running}>
-            {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-            Generate all ({tasks.filter((t) => !t.ad).length})
-          </Button>
+        {tasks.length > 0 && (
+          tasks.some((t) => !t.ad) ? (
+            <Button size="sm" onClick={() => runAll()} disabled={running}>
+              {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              Generate all ({tasks.filter((t) => !t.ad).length})
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => runAll({ force: true })} disabled={running}>
+              {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+              Regenerate all ({tasks.length})
+            </Button>
+          )
         )}
       </div>
 
@@ -863,19 +871,23 @@ function Step4BuildAds({
                         tabIndex={0}
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (isLoading) return;
                           if (isPending) onAddWeek?.(w);
                           else if (wPending > 0) runWeek(w);
+                          else if (wTotal > 0) runWeek(w, { force: true });
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.stopPropagation();
                             e.preventDefault();
+                            if (isLoading) return;
                             if (isPending) onAddWeek?.(w);
                             else if (wPending > 0) runWeek(w);
+                            else if (wTotal > 0) runWeek(w, { force: true });
                           }
                         }}
                         className={
-                          isPending || wPending > 0
+                          isPending || wTotal > 0
                             ? "inline-flex h-7 items-center gap-1 rounded-md border border-input bg-background px-2 text-[11px] hover:bg-accent hover:text-accent-foreground"
                             : "text-[10px] text-muted-foreground"
                         }
@@ -890,6 +902,11 @@ function Step4BuildAds({
                           <>
                             {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                             Generate week ({wPending})
+                          </>
+                        ) : wTotal > 0 ? (
+                          <>
+                            {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                            Regenerate week ({wTotal})
                           </>
                         ) : (
                           "Done"
