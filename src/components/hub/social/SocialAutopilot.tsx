@@ -511,7 +511,7 @@ function Step4Style({
   const previews: StylePreview[] = previewsQ.data ?? [];
   const byDirection = new Map(previews.map((p) => [p.direction, p]));
 
-  const runGenerate = async (dirId: string, opts?: { feedback?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg" }) => {
+  const runGenerate = async (dirId: string, opts?: { feedback?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg"; sceneOverride?: string; refreshScenes?: boolean }) => {
     if (!brandLocked) return;
     setBusy((b) => ({ ...b, [dirId]: true }));
     try {
@@ -542,7 +542,7 @@ function Step4Style({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandLocked, previewsQ.isLoading, previews.length]);
 
-  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg" }) => {
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg"; sceneOverride?: string; refreshScenes?: boolean }) => {
     await Promise.all(ART_DIRECTIONS.map((d) => runGenerate(d.id, opts)));
   };
 
@@ -691,12 +691,12 @@ function Step4Style({
           currentHeadline={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_headline ?? null : null}
           currentLogoSize={dialog.direction ? (byDirection.get(dialog.direction) as any)?.last_logo_size ?? null : null}
           focusSection={dialog.focusSection}
-          onSubmit={async ({ feedback, directionOverride, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride, logoSize }) => {
+          onSubmit={async (input) => {
+            const { directionOverride, ...rest } = input;
             if (dialog.scope === "all") {
-              await regenerateAll({ feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride, logoSize });
+              await regenerateAll(rest);
             } else {
-              const target = directionOverride || dialog.direction!;
-              await runGenerate(target, { feedback, signatureIntensity, signaturePlacement, paletteOverride, headlineOverride, logoSize });
+              await runGenerate(directionOverride || dialog.direction!, rest);
             }
           }}
         />
@@ -870,7 +870,7 @@ function Step5BuildKit({
 
   const regenerateSingle = async (
     t: any,
-    opts: { feedback: string; directionOverride?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg" },
+    opts: { feedback: string; directionOverride?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg"; sceneOverride?: string; refreshScenes?: boolean },
   ) => {
 
     const k = taskKey(t);
@@ -889,7 +889,7 @@ function Step5BuildKit({
     }
   };
 
-  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg" }) => {
+  const regenerateAll = async (opts: { feedback: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg"; sceneOverride?: string; refreshScenes?: boolean }) => {
     setRunning(true);
     try {
       for (const t of tasks) {
@@ -1320,6 +1320,8 @@ function Step5BuildKit({
                 paletteOverride: input.paletteOverride,
                 headlineOverride: input.headlineOverride,
                 logoSize: input.logoSize,
+                sceneOverride: input.sceneOverride,
+                refreshScenes: input.refreshScenes,
               });
             }
           }}
