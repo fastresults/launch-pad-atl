@@ -34,7 +34,37 @@ export type PrdVentureFacts = {
   logoUrl?: string | null;
 };
 
+/** Pull the concrete brand facts a PRD must restate out of a brand-kit row. */
+export function brandFactsFromKit(kit: Record<string, any> | null | undefined): {
+  hexes: string[];
+  fonts: { heading?: string | null; body?: string | null };
+  ctas: string[];
+  moodboard: string[];
+} {
+  const colors = kit?.palette?.colors;
+  const hexes = colors && typeof colors === "object"
+    ? Object.values(colors as Record<string, unknown>)
+      .filter((v): v is string => typeof v === "string" && /^#?[0-9a-f]{3,8}$/i.test(v))
+      .slice(0, 8)
+    : [];
+  const ctas = [
+    ...(Array.isArray(kit?.voice?.ctas) ? kit.voice.ctas : []),
+    ...(Array.isArray(kit?.dna?.ctas) ? kit.dna.ctas : []),
+  ].filter((c: unknown): c is string => typeof c === "string" && c.length <= 60).slice(0, 6);
+  const moodboard = (Array.isArray(kit?.moodboard) ? kit.moodboard : [])
+    .map((m: any) => (typeof m === "string" ? m : (m?.url ?? m?.publicUrl ?? m?.signedUrl)))
+    .filter((u: unknown): u is string => typeof u === "string")
+    .slice(0, 5);
+  return {
+    hexes,
+    fonts: { heading: kit?.typography?.heading?.family ?? null, body: kit?.typography?.body?.family ?? null },
+    ctas: Array.from(new Set(ctas)),
+    moodboard,
+  };
+}
+
 export function masterPromptStats(md: string) {
+
   const m = md.match(/<!--\s*BEGIN_MASTER_PROMPT\s*-->([\s\S]*?)<!--\s*END_MASTER_PROMPT\s*-->/i);
   const prompt = (m?.[1] ?? "").trim();
   const missingSections = Array.from({ length: 11 }, (_, i) => i + 1).filter(
