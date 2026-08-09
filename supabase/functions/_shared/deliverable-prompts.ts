@@ -56,11 +56,13 @@ Render a sitemap as an indented tree. SHIP ALL of these routes (rename to fit th
 - /legal/privacy and /legal/terms
 
 ## 3. Global Elements (fully specified, ready to build)
-- Header: logo placement rendered as the literal \`<img src="{primary logo URL from the Brand Kit}" alt="{Company} logo" />\` tag, its display height, nav items in order, primary CTA label + destination
-- Footer: column structure with full link lists, newsletter capture copy + field labels, social links, copyright line
-- Announcement bar: one-line copy + CTA (or "omit if not needed" with reason)
-- 404 page: H1, body, primary CTA
-- Cookie / consent banner: full copy + button labels
+### Surface system (write this before anything else in Section 3)
+Restate the SURFACE SYSTEM CONTRACT ladder as a markdown table the rest of the document references. Columns: Surface | Purpose | Light theme (background / foreground / muted-foreground / border tokens with hex values) | Dark theme (same four) | Contrast ratio (surface vs foreground). One row each for \`page\`, \`surface\`, \`surface-raised\`, \`surface-inverted\`, \`overlay\`. Below the table, state verbatim: "Foreground always travels with its surface — any element that changes its background also sets the paired foreground, muted-foreground and border. No component inherits text colour across a surface boundary." Then list every route from Section 2 with its declared page mode (light-dominant or dark-dominant) and name any inverted sections on that route plus the token pair each flips to. Every pair defined for light must have a dark counterpart; a section styled for one theme only is a failure.
+- Header: logo placement rendered as the literal \`<img src="{primary logo URL from the Brand Kit}" alt="{Company} logo" />\` tag, its display height, nav items in order, primary CTA label + destination — and the surface it sits on with its foreground pair
+- Footer: column structure with full link lists, newsletter capture copy + field labels, social links, copyright line, surface assignment + foreground pair
+- Announcement bar: one-line copy + CTA (or "omit if not needed" with reason), surface assignment
+- 404 page: H1, body, primary CTA, surface assignment
+- Cookie / consent banner: full copy + button labels, surface assignment
 
 ## 4. Page-by-Page Specs
 For EVERY route listed in Section 2, produce a subsection with:
