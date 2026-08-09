@@ -123,6 +123,8 @@ export default function LogoStudio({
   const [avoid, setAvoid] = useState<string[]>([]);
   const [avoidDraft, setAvoidDraft] = useState("");
   const [refReason, setRefReason] = useState("shape");
+  const [dragging, setDragging] = useState(false);
+  const [uploadQueue, setUploadQueue] = useState(0);
 
   const [directionNote, setDirectionNote] = useState("");
   const [refineFor, setRefineFor] = useState<Mark | null>(null);
@@ -205,6 +207,28 @@ export default function LogoStudio({
     onSuccess: land,
     onError: (e: any) => toast.error(e.message),
   });
+
+  const addFiles = async (list: FileList | File[] | null) => {
+    const files = Array.from(list ?? []).filter((f) => f.type.startsWith("image/"));
+    if (!files.length) return;
+    const room = Math.max(0, 5 - references.length);
+    if (room === 0) { toast.error("You can keep up to 5 inspiration images"); return; }
+    const batch = files.slice(0, room);
+    if (files.length > room) toast.message(`Only ${room} more image${room === 1 ? "" : "s"} fit — extras skipped`);
+    setUploadQueue(batch.length);
+    for (const file of batch) {
+      try {
+        await uploadReference.mutateAsync(file);
+      } catch {
+        /* toast handled in mutation */
+      } finally {
+        setUploadQueue((n) => Math.max(0, n - 1));
+      }
+    }
+    setUploadQueue(0);
+  };
+
+
 
   const getDirection = useMutation({
     mutationFn: () =>
@@ -416,35 +440,50 @@ export default function LogoStudio({
       </Field>
 
       <Field label="Inspiration (up to 5)">
-        <div className="flex flex-wrap gap-2">
-          {references.map((r) => (
-            <div key={r.path ?? r.url} className="relative">
-              <img src={r.url} alt={r.label ?? "Inspiration"} className="h-20 w-20 rounded-lg border border-white/10 object-cover" />
-              <span className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/60 px-1 py-0.5 text-center text-[9px] uppercase tracking-wide text-white">
-                {r.reason}
-              </span>
-              <button
-                type="button"
-                onClick={() => r.path && removeReference.mutate(r.path)}
-                className="absolute -right-1.5 -top-1.5 rounded-full bg-background p-0.5 shadow"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-          {references.length < 5 && (
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploadReference.isPending}
-              className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-white/20 text-[10px] text-muted-foreground hover:border-white/40"
-            >
-              {uploadReference.isPending
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <ImagePlus className="h-4 w-4" />}
-              Add
-            </button>
-          )}
+        <div
+          onDragOver={(e) => { e.preventDefault(); if (!dragging) setDragging(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDragging(false); }}
+          onDrop={(e) => { e.preventDefault(); setDragging(false); void addFiles(e.dataTransfer.files); }}
+          onClick={() => references.length < 5 && fileRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") fileRef.current?.click(); }}
+          className={`rounded-xl border border-dashed p-3 transition ${
+            dragging ? "border-primary/60 bg-primary/5" : "border-white/15 hover:border-white/30"
+          }`}
+        >
+          <div className="flex flex-wrap gap-2">
+            {references.map((r) => (
+              <div key={r.path ?? r.url} className="relative" onClick={(e) => e.stopPropagation()}>
+                <img src={r.url} alt={r.label ?? "Inspiration"} className="h-20 w-20 rounded-lg border border-white/10 object-cover" />
+                <span className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/60 px-1 py-0.5 text-center text-[9px] uppercase tracking-wide text-white">
+                  {r.reason}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => r.path && removeReference.mutate(r.path)}
+                  className="absolute -right-1.5 -top-1.5 rounded-full bg-background p-0.5 shadow"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {references.length < 5 && (
+              <div className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-white/20 text-[10px] text-muted-foreground">
+                {uploadReference.isPending
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <ImagePlus className="h-4 w-4" />}
+                Add
+              </div>
+            )}
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            {uploadQueue > 0
+              ? `Uploading ${uploadQueue} image${uploadQueue === 1 ? "" : "s"}…`
+              : references.length >= 5
+                ? "Maximum of 5 images — remove one to add another."
+                : "Drop images here or click to choose several at once."}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
           <span>Added for its</span>
@@ -465,11 +504,12 @@ export default function LogoStudio({
           ref={fileRef}
           type="file"
           accept="image/*"
+          multiple
           hidden
           onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) uploadReference.mutate(file);
+            void addFiles(e.target.files);
             e.currentTarget.value = "";
+
           }}
         />
       </Field>
