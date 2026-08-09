@@ -66,7 +66,8 @@ For EVERY route listed in Section 2, produce a subsection with:
 - **Primary CTA** / **Secondary CTA**: exact button labels + destinations
 - **Section list (in order)**: e.g. Hero → Logo bar → Feature grid → Proof → Pricing teaser → FAQ → CTA band
 - **Full copy per section**: H1/H2/H3, sub-headline, 1–2 body paragraphs, bullets, microcopy, button labels. Write the real words a visitor will read.
-- **Image / illustration prompts**: 1–3 short prompts that reuse brand_tokens colors and mood
+- **Visuals per section**: EVERY section listed above gets at least one visual — photograph, founder/creator portrait, product shot, UI screenshot/mock, diagram, data visual, or an on-brand texture/gradient band. Never allow two consecutive text-only sections. Name the slot, its aspect ratio, and its treatment (full-bleed, inset, portrait card, background wash).
+- **Image / illustration prompts**: one 30–60 word generation prompt per visual slot, written in the Brand Kit mood-board's visual language and reusing two exact brand hex values
 - **Forms** (when present): field labels, field types, validation, success state copy, where the submission goes
 - **Internal links**: 2–4 specific routes this page should link to
 
