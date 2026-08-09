@@ -13,6 +13,7 @@
 
 import { imageCraftBlock } from "./image-craft.ts";
 import { copyCraftBlock } from "./copy-craft.ts";
+import { surfaceSystemBlock } from "./surface-system.ts";
 
 export type SiteArchetype = {
   key: string;
