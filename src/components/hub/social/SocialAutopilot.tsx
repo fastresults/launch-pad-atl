@@ -524,6 +524,8 @@ function Step4Style({
         paletteOverride: opts?.paletteOverride,
         headlineOverride: opts?.headlineOverride,
         logoSize: opts?.logoSize,
+        sceneOverride: opts?.sceneOverride,
+        refreshScenes: opts?.refreshScenes,
       });
       await qc.invalidateQueries({ queryKey: ["style-previews", snapshotId] });
     } catch (e: any) {
