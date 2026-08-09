@@ -59,6 +59,12 @@ export type IdentityCheck = {
   copyGeneric?: boolean;
   /** PRD only: too few FAQ answers, or answers too short. */
   faqThin?: boolean;
+  /** PRD only: a social-proof section ships without a portrait row. */
+  testimonialPortraitsMissing?: boolean;
+  /** PRD only: card/overlay slots never name a foreground/background token pair. */
+  contrastTokensMissing?: boolean;
+  /** PRD only: the surface ladder is absent or components have no surface. */
+  surfaceSystemMissing?: boolean;
   ok: boolean;
 };
 
@@ -171,6 +177,27 @@ export function checkIdentity(
     faqThin = answers.length < 8 || mean < 50;
   }
 
+  // Social proof must ship with people, and surfaces must be named.
+  let testimonialPortraitsMissing = false;
+  let contrastTokensMissing = false;
+  let surfaceSystemMissing = false;
+  if (opts.requireImagery) {
+    const mentionsSocialProof = /\b(testimonial|social proof|review|client quote)\b/i.test(raw);
+    const portraitRows = raw.split("\n").filter((l) =>
+      l.trim().startsWith("|") && /\b(portrait|headshot|avatar)\b/i.test(l)
+    );
+    testimonialPortraitsMissing = mentionsSocialProof && portraitRows.length === 0;
+
+    contrastTokensMissing = !/\d(\.\d)?\s*:\s*1/.test(raw) ||
+      !/foreground/i.test(raw);
+
+    const ladder = ["surface-raised", "surface-inverted", "overlay", "page"];
+    const hasLadder = ladder.every((t) => raw.toLowerCase().includes(t));
+    const hasTravelRule = /foreground always travels with its surface/i.test(raw) ||
+      /inherits? (?:text )?colou?r across a surface boundary/i.test(raw);
+    surfaceSystemMissing = !hasLadder || !hasTravelRule;
+  }
+
   const archetype = (opts.archetypeName ?? "").trim();
   const artDirectionMissing = !!archetype &&
     !raw.toLowerCase().includes(archetype.toLowerCase());
@@ -187,7 +214,10 @@ export function checkIdentity(
     copyThin,
     copyGeneric,
     faqThin,
-    ok: !copyThin && !copyGeneric && !faqThin && !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
+    testimonialPortraitsMissing,
+    contrastTokensMissing,
+    surfaceSystemMissing,
+    ok: !testimonialPortraitsMissing && !contrastTokensMissing && !surfaceSystemMissing && !copyThin && !copyGeneric && !faqThin && !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
       !imageryCraftMissing && !portraitCraftMissing && !imageryTooDark &&
       !artDirectionMissing,
   };
@@ -261,6 +291,21 @@ export function correctionPrompt(
       `The copy is generic. Rewrite so no paragraph could be pasted onto a competitor's site unchanged: name the audience, the mechanism, the deliverable, the price, the timeframe and the outcome, with a concrete number, name, place or timeframe at least every 150 words. Delete every instance of these banned phrases: ${
         BANNED_COPY_PHRASES.join(", ")
       }. Every CTA label starts with a verb and names the artifact — "Learn more" and "Get started" are forbidden.`,
+    );
+  }
+  if (check.testimonialPortraitsMissing) {
+    fixes.push(
+      "A social-proof section ships without a single human being. Every testimonial, review, case-study quote, founder bio and team block gets its own portrait row in the Imagery Plan — one row per quote — with the avatar geometry stated, the portrait recipe in the prompt, and the card's surface plus foreground/muted-foreground token pair and measured contrast ratio. A text-only testimonial block is rejected.",
+    );
+  }
+  if (check.contrastTokensMissing) {
+    fixes.push(
+      "Contrast is assumed rather than specified. Every card, table, overlay and image-adjacent type slot must name its foreground and background tokens and state the measured contrast ratio (4.5:1 minimum for body text, 3:1 for large display type). No card may inherit body colour from the page background.",
+    );
+  }
+  if (check.surfaceSystemMissing) {
+    fixes.push(
+      "The document has no surface system, so light and dark keep mixing. Add the surface ladder to Section 3 as a table — `page`, `surface`, `surface-raised`, `surface-inverted`, `overlay`, each with background, foreground, muted-foreground and border tokens for BOTH light and dark themes plus the contrast ratio — state verbatim that \"foreground always travels with its surface\" and that no component inherits text colour across a surface boundary, declare one page mode per route with any inverted sections named, and give every component in the Section 8 inventory a surface assignment with its foreground pair (tables declare header, label column, value cells, borders and zebra rows separately).",
     );
   }
   if (check.faqThin) {

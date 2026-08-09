@@ -39,6 +39,7 @@ import { profileFor } from "../_shared/prompt-profiles.ts";
 import { checkIdentity, correctionPrompt, substituteIdentity } from "../_shared/identity-guard.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { archetypeForPrompt } from "../_shared/site-art-direction.ts";
+import { renderPrdPortraits } from "../_shared/prd-portraits.ts";
 import {
   brandFactsFromKit,
   enforceWebsitePrdDepth,
@@ -434,6 +435,18 @@ async function generateOne(
     };
     raw = await expandWebsitePrdMasterPrompt(raw, prdFacts, LOVABLE_API_KEY);
     raw = enforceWebsitePrdDepth(raw, prdFacts);
+    // Render the portrait rows ourselves so the builder inherits finished
+    // photographs instead of a paragraph of instructions.
+    try {
+      raw = await renderPrdPortraits(supabase, raw, {
+        apiKey: LOVABLE_API_KEY,
+        ownerId: snap.user_id,
+        snapshotId,
+        documentType,
+      });
+    } catch (e) {
+      console.warn("prd portrait pass failed", e);
+    }
     const stats = masterPromptStats(raw);
     if (stats.complete && stats.words >= 1800) truncated = false;
     console.log("website_prd metrics", JSON.stringify({
