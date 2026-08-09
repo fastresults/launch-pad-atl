@@ -46,6 +46,9 @@ type SvgArgs = {
   logoAspect?: number | null;
   logoSize?: LogoSize;
   logoCorner?: "top-left" | "bottom-right";
+  /** Share of canvas height reserved for the type band (campaign-level lock). */
+  bandRatio?: number | null;
+
 };
 
 export type PosterMetrics = {
