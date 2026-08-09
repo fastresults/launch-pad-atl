@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useWebsitePrd } from "@/components/hub/brand/use-website-prd";
+import { PrdExportActions } from "@/components/hub/brand/PrdExportActions";
 import { DocumentViewer } from "@/components/hub/DocumentViewer";
 
 
