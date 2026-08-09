@@ -119,7 +119,16 @@ export function BrandWizard({
               );
             })}
           </div>
+          <div className="mt-3 rounded-lg border border-white/10 bg-card/40 p-3">
+            <LogoSetPanel
+              snapshotId={snapshotId}
+              kit={kit}
+              companyName={snapshot.company_name}
+              compact
+            />
+          </div>
         </DialogHeader>
+
 
         <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[1fr_360px]">
           <div className="min-h-0 overflow-y-auto overscroll-contain px-6 pb-8 pt-5">
