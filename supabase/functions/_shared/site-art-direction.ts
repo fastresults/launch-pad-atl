@@ -99,11 +99,12 @@ export const SITE_ARCHETYPES: SiteArchetype[] = [
       "A chapter-numbered structure with full-bleed openers between every major section",
     ],
     imagery:
-      "Cinematic stills with strong directional lighting, shallow depth of field, and a consistent colour grade pulled from the brand palette.",
+      "Cinematic stills with strong directional lighting, shallow depth of field, and a consistent colour grade pulled from the brand palette. 'Near-black' describes the UI chrome, NOT the photographs: every subject stays properly exposed at 35–55% luminance with open shadows, and headline contrast comes from a CSS gradient scrim laid over a clean image — never from a darkened render.",
     never: [
       "Light-grey section backgrounds alternating with white",
       "Icon grids",
       "Screenshot-in-a-browser-frame hero",
+      "A hero image so dark the subject is unreadable, or darkness baked into the render instead of applied as a CSS scrim",
     ],
   },
   {
