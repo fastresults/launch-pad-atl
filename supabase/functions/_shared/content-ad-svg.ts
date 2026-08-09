@@ -280,6 +280,17 @@ function safeInsetFor(W: number, H: number): number {
   return Math.round(minDim * frac);
 }
 
+// ---------- type band ----------
+
+/**
+ * Share of canvas height reserved for the type lockup. Fixed per aspect so the
+ * photographic brief and the compositor agree on the same reserved zone.
+ */
+export const BAND_RATIO: Record<AdAspect, number> = { "1:1": 0.38, "4:5": 0.42, "9:16": 0.34 };
+
+/** Cap on the brand mark's height as a share of the short edge. */
+const LOGO_HEIGHT_CAP: Record<AdAspect, number> = { "1:1": 0.11, "4:5": 0.09, "9:16": 0.09 };
+
 // ---------- vertical rhythm ----------
 
 const RHYTHM = {
@@ -287,6 +298,7 @@ const RHYTHM = {
   headToRule: 0.6, // × headline size
   ruleToCta: 1.1, // × cta size
 };
+
 
 // ---------- logo ----------
 
