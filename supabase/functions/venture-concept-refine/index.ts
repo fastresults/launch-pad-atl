@@ -274,9 +274,10 @@ Deno.serve(async (req) => {
       result = await actionCritique(supabase, snap);
       await appendIteration(supabase, snapshot_id, { kind: "critique", output: result });
     } else if (action === "apply") {
-      const summary = String(payload?.summary ?? "").trim();
-      const value_proposition = String(payload?.value_proposition ?? "").trim();
+      const summary = String(payload?.summary ?? snap.concept_summary ?? "").trim();
+      const value_proposition = String(payload?.value_proposition ?? snap.value_proposition ?? "").trim();
       if (!summary || !value_proposition) throw new Error("summary and value_proposition required");
+
       await supabase.from("venture_snapshots").update({
         concept_summary: summary,
         value_proposition,
