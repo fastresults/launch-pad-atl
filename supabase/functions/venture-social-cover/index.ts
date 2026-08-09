@@ -12,7 +12,9 @@ import {
   type AssetKind,
   type AssetSpec,
 } from "../_shared/social-platform-specs.ts";
-import { buildCoverArtPrompt, buildAvatarPrompt } from "../_shared/cover-art-director.ts";
+import { buildCoverArtPrompt, buildAvatarPrompt, resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
+import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
+
 import { buildCanvasPlan, pickAvatarSurface, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
