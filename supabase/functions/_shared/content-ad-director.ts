@@ -135,8 +135,14 @@ export function buildContentAdPrompt(args: {
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
   serverRenderedHeadline?: boolean;
   posterLayout?: string;
+  /** Reserved type-band share of canvas height, locked by the campaign card. */
+  bandRatio?: number | null;
+  /** Week-level campaign look every poster in the set shares. */
+  campaign?: { grade: string; timeOfDay: string; lens: string; throughLine?: string } | null;
   /** Pre-resolved scene so the caller can QA against the same frame it briefed. */
   scene?: SceneDirective;
+
+
 }): string {
   const { aspect, post } = args;
   const asset = specForAspect(aspect);
@@ -154,9 +160,19 @@ export function buildContentAdPrompt(args: {
     post.body && `- Caption context (do NOT render on canvas — background context only): ${String(post.body).slice(0, 400)}`,
   ].filter(Boolean).join("\n");
 
+  const bandPct = Math.round((args.bandRatio ?? (args.aspect === "4:5" ? 0.42 : args.aspect === "9:16" ? 0.34 : 0.38)) * 100);
   const reserved = args.posterLayout === "centered-plate"
     ? "the CENTER third of the canvas"
-    : "the BOTTOM 45% of the canvas";
+    : `the BOTTOM ${bandPct}% of the canvas`;
+  const campaign = args.campaign
+    ? `
+## CAMPAIGN LOOK (every poster in this week shares it — do not reinterpret)
+- Colour grade: ${args.campaign.grade}
+- Light: ${args.campaign.timeOfDay}
+- Lens: ${args.campaign.lens}
+${args.campaign.throughLine ? `- The week's argument (mood only, never rendered as text): ${args.campaign.throughLine}` : ""}
+These are fixed for the set. Vary the subject and the composition, never the grade, the light or the lens.`
+    : "";
   const posterBrief = `
 ## EDITORIAL POSTER PHOTOGRAPHY (highest priority after brand palette)
 This image is the photographic plate of a magazine-quality poster. All typography is typeset
@@ -173,8 +189,10 @@ server-side afterwards — render ZERO letters, numerals, glyphs, signage, capti
   composited/collaged treatment. If it could not have come straight out of a camera, it is wrong.
 - The reserved type band must be genuinely calm: no faces, hands, text-bearing objects, hard edges
   or high-frequency texture (wood grain, foliage, brickwork) inside it.
-- Keep the far bottom-right corner quiet — a small vector mark is composited there. Do not paint any
-  box, plate, chip, badge or panel anywhere on the image.`;
+- Keep ALL FOUR corners of the frame quiet and free of faces — a small vector brand mark is
+  composited into whichever corner is emptiest. Do not paint any box, plate, chip, badge or panel
+  anywhere on the image.${campaign}`;
+
 
 
   const base = buildCoverArtPrompt({

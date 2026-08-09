@@ -138,8 +138,13 @@ export async function buildPosterCopy(args: {
   brandName?: string | null;
   valueProp?: string | null;
   headlineCap?: number;
+  /** Other hooks in the same week — the line must not repeat their claim. */
+  siblingHooks?: string[];
+  /** Campaign kicker vocabulary so eyebrows stay consistent across the set. */
+  kickerTaxonomy?: string[];
   post: { hook?: string | null; body?: string | null; cta?: string | null; pillar?: string | null; platform?: string | null };
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string } | null;
+
 }): Promise<PosterCopy> {
   const { post, headlineOverride } = args;
   const cap = Math.max(28, Math.min(72, args.headlineCap ?? 52));
@@ -184,17 +189,26 @@ headline — this is the whole job:
 - Sentence case. Never shout. Do not repeat the kicker's words.
 
 kicker — 1-4 words naming the topic or audience, so the headline never has to.
-ctaLine — one short imperative, MAX 42 characters. No URL unless the source CTA has one.
+ctaLine — one short imperative the reader can act on today, MAX 42 characters. Start with a verb ("Book the session", "See the framework"). Never a label, never a sentence fragment, no URL unless the source CTA has one.
 rationale — one sentence on why this line lands.
 
 No prose outside the JSON.`;
+    const siblings = (args.siblingHooks ?? []).filter(Boolean).slice(0, 6);
+    const taxonomy = (args.kickerTaxonomy ?? []).filter(Boolean).slice(0, 6);
     const user = `Brand: ${args.brandName ?? "(unnamed)"}
 Value proposition: ${args.valueProp ?? ""}
 Pillar: ${post.pillar ?? ""}
 Platform: ${post.platform ?? ""}
 Source hook: ${post.hook ?? ""}
 Source body: ${String(post.body ?? "").slice(0, 600)}
-Source CTA: ${post.cta ?? ""}`;
+Source CTA: ${post.cta ?? ""}${
+      taxonomy.length ? `\nCampaign kicker vocabulary (pick the closest fit, or a close variant): ${taxonomy.join(" | ")}` : ""
+    }${
+      siblings.length
+        ? `\nOther posts running the same week — make a DIFFERENT argument from all of these:\n- ${siblings.join("\n- ")}`
+        : ""
+    }`;
+
 
     const ask = async (note?: string) => {
       const res = await fetch(AI_CHAT, {

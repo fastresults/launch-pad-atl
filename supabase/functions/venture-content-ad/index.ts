@@ -18,6 +18,8 @@ import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
 import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
+import { ensureCampaignCard, deriveCampaignCard, layoutForIndex, type CampaignCard } from "../_shared/campaign-card.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -250,9 +252,10 @@ Deno.serve(async (req) => {
     const aspect = (["1:1", "4:5", "9:16"] as const).includes(body?.aspect) ? body.aspect as AdAspect : "1:1";
     const direction = String(body?.direction || "editorial") as ArtDirectionId;
     if (!ART_DIRECTIONS.some((d) => d.id === direction)) return json({ error: `Unknown direction: ${direction}` }, 400);
-    const posterLayout: PosterLayout = (["bottom-scrim", "centered-plate", "edge-rule"] as const).includes(body?.posterLayout)
+    const requestedPosterLayout: PosterLayout | null = (["bottom-scrim", "centered-plate", "edge-rule"] as const).includes(body?.posterLayout)
       ? body.posterLayout
-      : "bottom-scrim";
+      : null;
+
 
     const { data: post } = await admin
       .from("venture_content_calendar_posts")
@@ -315,6 +318,58 @@ Deno.serve(async (req) => {
     }
     if (sceneBrief) (ctx as any).sceneBrief = sceneBrief;
     step("scene brief ready", { scenes: sceneBrief?.scenes?.length ?? 0, override: !!sceneOverride });
+
+    // --- Week-level campaign art direction -------------------------------
+    // One grade / light / lens / type scale for the whole week, so a set of
+    // posts reads as one campaign instead of seven unrelated images.
+    const weekNo = Number(post.week ?? 1);
+    let weekPosts: any[] = [];
+    try {
+      const { data } = await admin
+        .from("venture_content_calendar_posts")
+        .select("id, week, day, pillar, format, hook")
+        .eq("snapshot_id", snapshotId)
+        .eq("week", weekNo)
+        .order("id", { ascending: true });
+      weekPosts = data ?? [];
+    } catch (e) {
+      console.warn("[content-ad] week posts unavailable", e);
+    }
+    let campaignCard: CampaignCard | null = null;
+    try {
+      campaignCard = await ensureCampaignCard(
+        admin,
+        snapshotId,
+        weekNo,
+        () => deriveCampaignCard({
+          week: weekNo,
+          posts: weekPosts.length ? weekPosts : [{ pillar: post.pillar, format: post.format, hook: post.hook }],
+          businessLine: sceneBrief?.business_line ?? null,
+          brandName: ctx?.company_name ?? kit?.company_name ?? null,
+          palette: { surface: kit?.palette?.surface, ink: kit?.palette?.ink, accent: kit?.palette?.accent },
+        }),
+        { force: body?.refreshCampaign === true },
+      );
+    } catch (e) {
+      console.warn("[content-ad] campaign card unavailable", e);
+    }
+    const postIndex = Math.max(0, weekPosts.findIndex((p: any) => p.id === post.id));
+    const posterLayout: PosterLayout = (requestedPosterLayout
+      ?? (layoutForIndex(campaignCard, postIndex, "bottom-scrim") as PosterLayout));
+    const bandRatio = campaignCard?.band_ratio ?? null;
+    // Sibling headlines so the copywriter doesn't repeat a claim inside a week.
+    const siblingHooks = weekPosts
+      .filter((p: any) => p.id !== post.id)
+      .map((p: any) => String(p.hook ?? "").trim())
+      .filter(Boolean)
+      .slice(0, 6);
+    step("campaign card ready", {
+      week: weekNo,
+      grade: campaignCard?.grade ?? null,
+      layout: posterLayout,
+      band: bandRatio,
+    });
+
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
     step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText });
 
@@ -363,6 +418,16 @@ Deno.serve(async (req) => {
       // model must leave the top band as unmarked negative space.
       serverRenderedHeadline: true,
       posterLayout,
+      bandRatio,
+      campaign: campaignCard
+        ? {
+            grade: campaignCard.grade,
+            timeOfDay: campaignCard.time_of_day,
+            lens: campaignCard.lens,
+            throughLine: campaignCard.through_line,
+          }
+        : null,
+
       scene,
     });
 
@@ -521,8 +586,13 @@ Deno.serve(async (req) => {
       brandName: ctx?.company_name ?? kit?.company_name ?? null,
       valueProp: ctx?.value_proposition ?? null,
       headlineCap,
+      // Sibling hooks from the same week so the claim isn't repeated in-set,
+      // and the campaign kicker taxonomy so labels stay consistent.
+      siblingHooks,
+      kickerTaxonomy: campaignCard?.kicker_taxonomy ?? [],
       // The hook/body are source material — the copy pass writes the headline.
       post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
+
       headlineOverride: resolvedHeadline.mode === "none"
         ? { mode: "none" }
         : resolvedHeadline.mode === "custom"
@@ -550,6 +620,8 @@ Deno.serve(async (req) => {
       plan,
       aspect,
       layout: posterLayout,
+      bandRatio,
+
       kicker: posterCopy.kicker,
       headline,
       ctaLine: posterCopy.ctaLine,
