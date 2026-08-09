@@ -162,7 +162,7 @@ function ventureBlock(ctx: any, _headlineOverride?: HeadlineOverride) {
 // Deterministic scene resolver — NEVER reads the brand name. Picks a subject
 // from track/industry/customer so the model gets a fully-decided scene BEFORE
 // it ever encounters tokens like "Workshops" / "Lab" / "Garage".
-type SceneDirective = {
+export type SceneDirective = {
   depict: string;
   subjects: string[];
   setting: string;
@@ -335,7 +335,7 @@ export type SceneSignal = {
 };
 
 
-function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
+export function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   const brain = ctx?.brain ?? {};
   const snap = ctx?.snap ?? {};
   const name = brain?.identity?.company_name ?? snap?.company_name ?? "";
