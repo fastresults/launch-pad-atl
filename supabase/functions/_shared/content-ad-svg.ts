@@ -302,7 +302,15 @@ const RHYTHM = {
 
 // ---------- logo ----------
 
-function logoBox(W: number, H: number, logoAspect: number, size: LogoSize, corner: Corner, inset: number) {
+function logoBox(
+  W: number,
+  H: number,
+  logoAspect: number,
+  size: LogoSize,
+  corner: Corner,
+  inset: number,
+  heightCapFrac = 0.11,
+) {
   const tiers = { sm: { h: 0.085, w: 0.24, maxW: 0.38 }, md: { h: 0.12, w: 0.32, maxW: 0.48 }, lg: { h: 0.17, w: 0.42, maxW: 0.60 } } as const;
   const t = tiers[size || "sm"] ?? tiers.sm;
   const short = Math.min(W, H);
@@ -316,10 +324,17 @@ function logoBox(W: number, H: number, logoAspect: number, size: LogoSize, corne
     boxH = Math.round(short * t.h);
     boxW = Math.round(boxH * a);
   }
+  // A poster has one hero. The mark is a signature, never a second headline —
+  // clamp it to a fixed share of the short edge regardless of the size tier.
+  const capH = Math.round(short * heightCapFrac);
+  const capW = Math.round(W * 0.30);
+  if (boxH > capH) { boxH = capH; boxW = Math.max(1, Math.round(capH * a)); }
+  if (boxW > capW) { boxW = capW; boxH = Math.max(1, Math.round(capW / a)); }
   const x = corner.endsWith("right") ? W - boxW - inset : inset;
   const y = corner.startsWith("bottom") ? H - boxH - inset : inset;
   return { x, y, boxW, boxH };
 }
+
 
 type Rect = { x: number; y: number; w: number; h: number };
 
