@@ -414,8 +414,10 @@ function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   const chosen = picked.v;
   rememberRecent(snapshotKey, picked.i);
 
-  // Compose the depict string with a fresh camera+composition per post so
-  // even repeat variant picks vary framing.
+  // Framing must stay COHERENT with the subject: each scene carries the camera
+  // and composition that suit it. Randomising them independently is what
+  // produced briefs like "wide establishing shot" on a macro of business cards.
+  // Only fall back to the rotating pools when a scene omits them.
   const compositionIdx = hash32(rotorSeed + "|comp") % COMPOSITIONS.length;
   const cameraIdx = hash32(rotorSeed + "|cam") % CAMERAS.length;
 
@@ -428,8 +430,9 @@ function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
     subjects: chosen.subjects,
     setting: chosen.setting,
     mood: chosen.mood,
-    camera: CAMERAS[cameraIdx],
-    composition: COMPOSITIONS[compositionIdx],
+    camera: chosen.camera || CAMERAS[cameraIdx],
+    composition: chosen.composition || COMPOSITIONS[compositionIdx],
+
     avoid: [...avoidBase],
   };
 }
