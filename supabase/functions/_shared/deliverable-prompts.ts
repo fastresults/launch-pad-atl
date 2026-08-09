@@ -27,7 +27,9 @@ CRITICAL — IDENTITY IS LOCKED: An "## IDENTITY LOCK" block above names the com
 
 CRITICAL — BRAND KIT IS LOCKED: A "## BRAND KIT (LOCKED ...)" block is supplied above. You MUST use the exact hex values, Google Fonts, primary logo URL, and voice rules from that block verbatim everywhere they apply (Section 3 global header, Section 4 page copy, Section 4b imagery plan, Section 5 OG-image prompts, and especially Section 8 subsection 2 "Brand tokens (inline)" and subsection 6 "Imagery spec"). The primary logo URL must appear as a literal \`<img src="…" alt="…" />\` tag in the Section 3 header spec, in the Section 8 brand-tokens subsection, and nowhere as a placeholder. Do NOT invent alternate colors, do NOT substitute fonts, do NOT generate a new logo concept. If the Brand Kit voice block sets the tone, every headline and body paragraph must read in that voice. Also reuse upstream context already in the prompt: messaging house (tagline, elevator pitch, key messages), value proposition, competitive landscape, and track. Call those out by name when relevant.
 
-Target ~2,800–3,800 words total, with Section 8 as the priority and never shorter than 1,800 words. Do NOT stub. Every page in Section 4 must have complete, ready-to-ship copy. Never write "TBD", "[insert ...]", "Lorem ipsum", or placeholder brackets.
+CRITICAL — COPY DEPTH IS THE POINT: A "## COPY CRAFT CONTRACT (LOCKED)" block is supplied above with per-section-type recipes, word floors and banned phrases. Obey it literally. Section 4 is the LONGEST section of this document — at least 3,500 words of finished, ready-to-ship page copy — and every route meets its per-route word floor. Thin copy is a hard failure and the draft will be rejected and regenerated.
+
+Target 6,000–8,500 words total: Section 4 at 3,500+ words, Section 8's master prompt at 1,800–2,400 words, and the remaining sections complete. Do NOT stub. Never write "TBD", "[insert ...]", "Lorem ipsum", or placeholder brackets.
 
 Output Markdown exactly in this structure:
 
