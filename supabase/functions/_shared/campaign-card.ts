@@ -90,7 +90,10 @@ export async function deriveCampaignCard(args: {
   businessLine?: string | null;
   brandName?: string | null;
   palette?: { surface?: string; ink?: string; accent?: string } | null;
+  /** Funnel stage from the campaign arc — the look should follow the stage. */
+  stage?: { label: string; job: string; temperature?: string } | null;
 }): Promise<CampaignCard | null> {
+
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return null;
 
