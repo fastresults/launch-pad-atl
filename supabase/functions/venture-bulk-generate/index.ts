@@ -13,6 +13,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   BRAND_KIT_REQUIRED_TYPES,
   brandKitBlock,
+  brandLogoUrl,
   compactPreamble,
   distillDeps,
   isBrandKitUsable,
@@ -34,6 +35,8 @@ import {
   stripCitations,
 } from "../_shared/deliverable-prompts.ts";
 import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
+import { profileFor } from "../_shared/prompt-profiles.ts";
+import { checkIdentity, correctionPrompt, substituteIdentity } from "../_shared/identity-guard.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { LAUNCH_14DAY_PLAN } from "../_shared/launch-14day-plan.ts";
 
@@ -230,11 +233,12 @@ async function generateOne(
   // System prompt: specialized first, fallback to base; layer track tone on top.
   const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
   const tone = trackTone(snap.track);
-  const systemPrompt = tone ? `${baseSystemPrompt}\n\n${tone}` : baseSystemPrompt;
+  const profile = profileFor(documentType);
+  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra].filter(Boolean).join("\n\n");
 
   // User prompt: compact preamble + brain slice (or raw fallback) + distilled deps.
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
-  const preamble = compactPreamble(ctx);
+  const preamble = compactPreamble(ctx, { hasBrandKit: !!brandKit });
 
   const brandBlock = brandKitBlock(brandKit, snapshotId);
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
