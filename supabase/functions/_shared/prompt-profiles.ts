@@ -78,7 +78,10 @@ const PROFILES: Record<string, PromptProfile> = {
       "Use the founder's actual brand names, offers, prices, locations and proof from the context. Never invent facts the context does not support; if something is genuinely unknown, state the assumption explicitly and mark it as an assumption.",
       "Use markdown tables for sitemaps, token tables, event tables and acceptance criteria.",
       "The 'Brand and design tokens' section MUST reproduce the brand kit exactly: a markdown table of every color token with its hex, the heading and body font families with their Google Fonts <link> import line, the type scale, and the permanent logo URL rendered as a literal <img src=\"...\"> tag plus any lockup variant URLs. Copy the URLs character for character — never shorten, rewrite, or substitute a placeholder logo.",
-      "The final appendix section must contain one long, paste-ready build prompt inside a fenced code block, and that prompt must itself inline the exact hex values, the font import line, and the <img src=\"...\"> logo tag so a builder produces an on-brand site on the first pass.",
+      "The company name in the identity block is locked: use it verbatim everywhere and never invent, shorten or replace it.",
+      "Include a full Imagery Plan table — one row per section of every route, with slot name, visual type, aspect ratio, treatment, alt text and a 30–60 word generation prompt in the mood board's visual language. Every section gets at least one visual and no page may run two consecutive text-only sections.",
+      "The final appendix section must contain one long, paste-ready build prompt inside a fenced code block, and that prompt must itself inline the exact hex values, the font import line, the <img src=\"...\"> logo tag, and the imagery plan so a builder produces an on-brand, image-rich site on the first pass.",
+
     ].join(" "),
   },
   website_4pg: {
