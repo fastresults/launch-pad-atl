@@ -101,6 +101,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
             <BrandIdentityHeader
               kit={kit}
               companyName={snapshot?.company_name}
+              onEditMark={() => setOpen(true)}
               onChangeColor={async (key, hex) => {
                 const nextColors = { ...(kit.palette?.colors ?? {}), [key]: hex };
                 await upsertBrandKit(snapshot.id, {
@@ -117,11 +118,13 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
               <BrandBoardSections
                 board={kitToBrandBoard(kit)}
                 blocks={["mood", "dna", "voice", "ctas"]}
+                onImageClick={(url, caption) => setLightbox({ url, caption })}
                 emptyHint="Mood board, brand DNA, voice and calls to action appear here once you complete steps 3–5 of the brand wizard."
               />
               <div className="border-t border-white/10" />
             </>
           )}
+
 
 
           <BrandCollateral snapshot={snapshot} locked={locked} />
