@@ -844,8 +844,30 @@ function Step4BuildAds({
         )}
       </div>
 
+      {allWeeks.length > 1 && (
+        <div className="rounded-xl border border-white/10 bg-background/30 p-3">
+          <p className="text-[11px] font-medium">Campaign arc — the flight builds one argument, week by week</p>
+          <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+            {allWeeks.map((w) => {
+              const s = stageFor(w);
+              return (
+                <div
+                  key={`flight-${w}`}
+                  className={`min-w-[104px] flex-1 rounded-lg border px-2 py-1.5 ${TEMP_CLASS[s.temp]} bg-background/40`}
+                >
+                  <div className="text-[9px] uppercase tracking-wide opacity-70">Wk {w} · {s.temp}</div>
+                  <div className="text-[11px] font-medium leading-tight">{s.stage}</div>
+                  <div className="text-[9px] opacity-70">Ask: {s.ask}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {(() => {
         // Compute a sensible default open item once weeks are known.
+
         const activeWeeks = Array.from(byWeek.keys()).sort((a, b) => a - b);
         let defaultOpen: string[] = [];
         const firstIncomplete = activeWeeks.find((w) => (byWeek.get(w) ?? []).some((t) => !t.ad));
