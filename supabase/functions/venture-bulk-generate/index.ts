@@ -38,6 +38,15 @@ import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
 import { profileFor } from "../_shared/prompt-profiles.ts";
 import { checkIdentity, correctionPrompt, substituteIdentity } from "../_shared/identity-guard.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
+import { archetypeForPrompt } from "../_shared/site-art-direction.ts";
+import {
+  brandFactsFromKit,
+  enforceWebsitePrdDepth,
+  expandWebsitePrdMasterPrompt,
+  masterPromptStats,
+  prdQualityMetrics,
+  type PrdVentureFacts,
+} from "../_shared/website-prd.ts";
 import { LAUNCH_14DAY_PLAN } from "../_shared/launch-14day-plan.ts";
 
 const MAX_USER_PROMPT_CHARS = 120_000;
