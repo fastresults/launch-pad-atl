@@ -1362,16 +1362,33 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, selected: directionId, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Founder uploads their own mark and it becomes the selected primary logo.
+    // Founder uploads their own mark. Each upload targets one slot of the logo
+    // set (primary / reversed / icon / wordmark) and replaces only that slot.
     if (kind === "logo_upload_own") {
+      const VARIANTS = ["primary", "reversed", "icon", "wordmark"];
+      const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
       const dataUrl = typeof body?.dataUrl === "string" ? body.dataUrl : "";
       const filename = typeof body?.filename === "string" ? body.filename : "logo.png";
       const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-      if (!match) throw new Error("Upload a PNG, JPG or SVG file.");
+      if (!match) throw new Error("Upload a PNG, JPG, WebP or SVG file.");
       const contentType = match[1];
-      const bytes = decodeBase64(match[2]);
+      if (!/^image\/(png|jpe?g|webp|svg\+xml)$/i.test(contentType)) {
+        throw new Error("Only PNG, JPG, WebP or SVG files are supported.");
+      }
+      let bytes = decodeBase64(match[2]);
+      if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("That file is over 5 MB — please upload a smaller logo.");
+      // Uploaded SVG is user-authored markup rendered inline elsewhere, so strip
+      // scripts and inline event handlers before it ever reaches storage.
+      if (contentType.includes("svg")) {
+        const cleaned = new TextDecoder().decode(bytes)
+          .replace(/<script[\s\S]*?<\/script>/gi, "")
+          .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
+          .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
+          .replace(/javascript:/gi, "");
+        bytes = new TextEncoder().encode(cleaned);
+      }
       const ext = contentType.includes("svg") ? "svg" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : contentType.includes("webp") ? "webp" : "png";
-      const path = `${userId}/brand/${snapshotId}/logo-upload-${Date.now()}.${ext}`;
+      const path = `${userId}/brand/${snapshotId}/logo-${variant}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("user-media").upload(path, bytes, { contentType, upsert: true });
       if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
       const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(path, 60 * 60 * 24 * 7);
@@ -1380,7 +1397,8 @@ Deno.serve(async (req) => {
         ok: true,
         kind: "upload",
         source: "upload",
-        primary: true,
+        variant,
+        primary: variant === "primary",
         url: signed?.signedUrl ?? null,
         preview_url: signed?.signedUrl ?? null,
         path,
@@ -1390,17 +1408,62 @@ Deno.serve(async (req) => {
 
       const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos, dna").eq("snapshot_id", snapshotId).maybeSingle();
       const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
-      const nextLogos = [uploaded, ...existing.filter((l: any) => l?.source !== "upload").map((l: any) => ({ ...l, primary: false }))];
+      // Legacy uploads carry no variant — treat them as the primary slot.
+      const slotOf = (l: any) => (l?.variant ?? "primary");
+      const kept = existing.filter((l: any) => !(l?.source === "upload" && slotOf(l) === variant));
+      const nextLogos =
+        variant === "primary"
+          ? [uploaded, ...kept.map((l: any) => ({ ...l, primary: false }))]
+          : [...kept, uploaded];
+      const dnaPatch = variant === "primary" ? { selected_logo_direction_id: null } : {};
       const { error: kitErr } = await supabase
         .from("venture_brand_kits")
-        .update({ logos: nextLogos, dna: { ...(kitRow?.dna ?? {}), selected_logo_direction_id: null } })
+        .update({ logos: nextLogos, dna: { ...(kitRow?.dna ?? {}), ...dnaPatch } })
         .eq("snapshot_id", snapshotId);
       if (kitErr) throw new Error(`Could not save your logo: ${kitErr.message}`);
 
-      if (runId) await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
+      if (runId && variant === "primary") await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
 
       return new Response(JSON.stringify({ ok: true, logo: uploaded, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Clear one slot of the uploaded logo set.
+    if (kind === "logo_remove_upload") {
+      const VARIANTS = ["primary", "reversed", "icon", "wordmark"];
+      const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
+      const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos").eq("snapshot_id", snapshotId).maybeSingle();
+      const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
+      const slotOf = (l: any) => (l?.variant ?? "primary");
+      const removed = existing.filter((l: any) => l?.source === "upload" && slotOf(l) === variant);
+      const nextLogos = existing.filter((l: any) => !(l?.source === "upload" && slotOf(l) === variant));
+      // Promote whatever remains so the venture is never left without a primary.
+      if (variant === "primary" && nextLogos.length && !nextLogos.some((l: any) => l?.primary)) {
+        nextLogos[0] = { ...nextLogos[0], primary: true };
+      }
+      const { error: kitErr } = await supabase.from("venture_brand_kits").update({ logos: nextLogos }).eq("snapshot_id", snapshotId);
+      if (kitErr) throw new Error(`Could not remove that logo: ${kitErr.message}`);
+      for (const r of removed) {
+        if (r?.path) await supabase.storage.from("user-media").remove([r.path]).catch(() => null);
+      }
+      return new Response(JSON.stringify({ ok: true, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Signed URLs for uploaded marks expire; re-sign every stored logo path so
+    // the panel and downstream compositing never render a dead link.
+    if (kind === "logo_refresh_urls") {
+      const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos").eq("snapshot_id", snapshotId).maybeSingle();
+      const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
+      const nextLogos = await Promise.all(
+        existing.map(async (l: any) => {
+          if (!l?.path) return l;
+          const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(l.path, 60 * 60 * 24 * 7);
+          return signed?.signedUrl ? { ...l, url: signed.signedUrl, preview_url: signed.signedUrl } : l;
+        }),
+      );
+      await supabase.from("venture_brand_kits").update({ logos: nextLogos }).eq("snapshot_id", snapshotId);
+      return new Response(JSON.stringify({ ok: true, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
 
     // Founder-written refinement: archive the current render, then re-render the
     // SAME brief with their note as the correction line so it stays in family.
