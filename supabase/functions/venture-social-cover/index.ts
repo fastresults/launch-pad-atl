@@ -426,6 +426,16 @@ Deno.serve(async (req) => {
         ? (headlineOverride.text ?? "").trim()
         : "";
 
+    // Resolve the scene ONCE so the prompt, the QA pass and the UI all agree
+    // on which scene was commissioned.
+    const scene: SceneDirective | undefined = isAvatar
+      ? undefined
+      : resolveSceneDirective(ctx, {
+          discriminator: `${asset.kind}|${platform.id ?? platform.label}|${variationSeed}`,
+          assetNotes: userFeedback || null,
+          override: sceneOverride || null,
+        });
+
     const buildPrompt = (retryNote?: string) =>
       isAvatar
         ? buildAvatarPrompt({
@@ -449,8 +459,10 @@ Deno.serve(async (req) => {
             variationSeed,
             headlineOverride,
             logoZone: logoZoneHint,
+            scene,
             serverRenderedHeadline: true,
           });
+
 
     // The text-only fallback never sees the palette tile or the logo, so spell
     // the palette out inline for that path.
