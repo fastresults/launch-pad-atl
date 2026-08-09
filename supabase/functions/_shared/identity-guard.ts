@@ -88,7 +88,12 @@ export function checkIdentity(
 /** Corrective instruction appended to a second gateway pass when a check fails. */
 export function correctionPrompt(
   check: IdentityCheck,
-  opts: { companyName?: string | null; logoUrl?: string | null },
+  opts: {
+    companyName?: string | null;
+    logoUrl?: string | null;
+    archetypeName?: string | null;
+    minImageryRows?: number;
+  },
 ): string {
   const fixes: string[] = [];
   if (check.nameMissing) {
@@ -106,6 +111,19 @@ export function correctionPrompt(
       "The document is text-only. Add the full Imagery Plan table (route, section, slot, visual type, aspect ratio, treatment, alt text, generation prompt) covering every section of every route, and restate it inside the master prompt's imagery spec. No page may have two consecutive text-only sections.",
     );
   }
+  if (check.imageryThin) {
+    fixes.push(
+      `The Imagery Plan is too thin to art-direct a site. Expand it to at least ${
+        opts.minImageryRows ?? 12
+      } rows — every section of every route gets its own row — and give each row a 30–60 word generation prompt naming subject, lens/composition, lighting, colour grade and mood in the brand's visual language. Generic prompts like "hero image of team" are rejected.`,
+    );
+  }
+  if (check.artDirectionMissing) {
+    fixes.push(
+      `You ignored the committed art direction. This site is built in the **${opts.archetypeName}** archetype. Name it explicitly, and make the grid, type scale, section rhythm, motion and imagery treatment obey its rules throughout — including inside the paste-ready master prompt. Do not fall back to a generic hero → three-column features → pricing stack.`,
+    );
+  }
+
   return [
     "Your previous draft failed brand validation. Reproduce the ENTIRE document from the top with the same structure, depth and word count, fixing exactly these problems:",
     ...fixes.map((f, i) => `${i + 1}. ${f}`),
