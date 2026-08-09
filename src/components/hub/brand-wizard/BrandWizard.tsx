@@ -1017,6 +1017,9 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       <LogoStudio
         snapshotId={snapshot.id}
         onCommitted={() => {
+          // Drop any optimistic list so the freshly committed mark from the
+          // kit wins immediately — chip, preview and PRD button all update.
+          setLogoOverride(null);
           qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
         }}
       />
