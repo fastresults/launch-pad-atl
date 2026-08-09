@@ -32,6 +32,10 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
   const kit = kitQ.data;
   const locked = kit?.status === "locked";
   const [expanded, setExpanded] = useState(!locked);
+  const [prdOpen, setPrdOpen] = useState(false);
+  const websitePrd = useWebsitePrd(snapshot.id, kit?.locked_at ?? null);
+
+
 
   const reset = useMutation({
     mutationFn: () => resetBrandKit(snapshot.id),
