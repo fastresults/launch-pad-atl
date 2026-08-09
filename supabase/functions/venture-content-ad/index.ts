@@ -318,6 +318,58 @@ Deno.serve(async (req) => {
     }
     if (sceneBrief) (ctx as any).sceneBrief = sceneBrief;
     step("scene brief ready", { scenes: sceneBrief?.scenes?.length ?? 0, override: !!sceneOverride });
+
+    // --- Week-level campaign art direction -------------------------------
+    // One grade / light / lens / type scale for the whole week, so a set of
+    // posts reads as one campaign instead of seven unrelated images.
+    const weekNo = Number(post.week ?? 1);
+    let weekPosts: any[] = [];
+    try {
+      const { data } = await admin
+        .from("venture_content_calendar_posts")
+        .select("id, week, day, pillar, format, hook")
+        .eq("snapshot_id", snapshotId)
+        .eq("week", weekNo)
+        .order("id", { ascending: true });
+      weekPosts = data ?? [];
+    } catch (e) {
+      console.warn("[content-ad] week posts unavailable", e);
+    }
+    let campaignCard: CampaignCard | null = null;
+    try {
+      campaignCard = await ensureCampaignCard(
+        admin,
+        snapshotId,
+        weekNo,
+        () => deriveCampaignCard({
+          week: weekNo,
+          posts: weekPosts.length ? weekPosts : [{ pillar: post.pillar, format: post.format, hook: post.hook }],
+          businessLine: sceneBrief?.business_line ?? null,
+          brandName: ctx?.company_name ?? kit?.company_name ?? null,
+          palette: { surface: kit?.palette?.surface, ink: kit?.palette?.ink, accent: kit?.palette?.accent },
+        }),
+        { force: body?.refreshCampaign === true },
+      );
+    } catch (e) {
+      console.warn("[content-ad] campaign card unavailable", e);
+    }
+    const postIndex = Math.max(0, weekPosts.findIndex((p: any) => p.id === post.id));
+    const posterLayout: PosterLayout = (requestedPosterLayout
+      ?? (layoutForIndex(campaignCard, postIndex, "bottom-scrim") as PosterLayout));
+    const bandRatio = campaignCard?.band_ratio ?? null;
+    // Sibling headlines so the copywriter doesn't repeat a claim inside a week.
+    const siblingHooks = weekPosts
+      .filter((p: any) => p.id !== post.id)
+      .map((p: any) => String(p.hook ?? "").trim())
+      .filter(Boolean)
+      .slice(0, 6);
+    step("campaign card ready", {
+      week: weekNo,
+      grade: campaignCard?.grade ?? null,
+      layout: posterLayout,
+      band: bandRatio,
+    });
+
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
     step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText });
 
