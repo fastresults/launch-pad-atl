@@ -7,6 +7,41 @@
  * gateway returns, before the document is persisted.
  */
 
+import { BANNED_COPY_PHRASES, SECTION4_WORD_FLOOR } from "./copy-craft.ts";
+
+/** Pull the body of a top-level numbered section (e.g. `## 4. Page-by-Page`). */
+function extractSection(raw: string, n: number): string {
+  const re = new RegExp(String.raw`(?:^|\n)##\s*${n}[.)]?\s[^\n]*\n([\s\S]*?)(?=\n##\s*\d|$)`, "i");
+  return raw.match(re)?.[1] ?? "";
+}
+
+/** Rough word counts of FAQ answers, wherever they appear in the document. */
+function extractFaqAnswers(raw: string): number[] {
+  const lines = raw.split("\n");
+  const out: number[] = [];
+  let current: string[] | null = null;
+  const isQuestion = (l: string) =>
+    /\?\s*(\*\*)?\s*$/.test(l.trim()) &&
+    /^(#{3,6}\s|\*\*|-\s\*\*|\d+\.\s|\*\*Q|Q\d*[:.]))?/.test(l.trim()) === true;
+  for (const l of lines) {
+    const t = l.trim();
+    const q = /\?\s*(\*\*)?$/.test(t) && t.length > 12 && t.length < 200;
+    if (q) {
+      if (current) out.push(current.join(" ").split(/\s+/).filter(Boolean).length);
+      current = [];
+      continue;
+    }
+    if (current) {
+      if (/^#{2,3}\s/.test(t)) {
+        out.push(current.join(" ").split(/\s+/).filter(Boolean).length);
+        current = null;
+      } else if (t) current.push(t.replace(/^[-*]\s*/, ""));
+    }
+  }
+  if (current) out.push(current.join(" ").split(/\s+/).filter(Boolean).length);
+  return out.filter((n) => n > 0);
+}
+
 export type IdentityCheck = {
   nameMissing: boolean;
   logoMissing: boolean;
@@ -21,6 +56,12 @@ export type IdentityCheck = {
   imageryTooDark?: boolean;
   /** PRD only: the locked art direction was never named in the document. */
   artDirectionMissing?: boolean;
+  /** PRD only: Section 4 page copy is below its word floor. */
+  copyThin?: boolean;
+  /** PRD only: copy is generic filler rather than venture-specific. */
+  copyGeneric?: boolean;
+  /** PRD only: too few FAQ answers, or answers too short. */
+  faqThin?: boolean;
   ok: boolean;
 };
 
@@ -53,6 +94,10 @@ export function checkIdentity(
     minImageryRows?: number;
     /** PRD only: the archetype name the document must commit to. */
     archetypeName?: string | null;
+    /** PRD only: run the copy-depth checks. */
+    requireCopyDepth?: boolean;
+    /** PRD only: minimum words of Section 4 page copy. */
+    minSection4Words?: number;
   },
 ): IdentityCheck {
   const nameMissing = !mentionsCompany(raw, opts.companyName);
@@ -93,6 +138,42 @@ export function checkIdentity(
     imageryTooDark = darkTalk && !(hasExposure && hasOverlay);
   }
 
+  let copyThin = false;
+  let copyGeneric = false;
+  let faqThin = false;
+  if (opts.requireCopyDepth) {
+    const floor = opts.minSection4Words ?? SECTION4_WORD_FLOOR;
+    const section4 = extractSection(raw, 4);
+    const prose = section4
+      .split("\n")
+      .filter((l) => !l.trim().startsWith("|"))
+      .join(" ");
+    const words = prose.split(/\s+/).filter(Boolean).length;
+    copyThin = words < floor;
+
+    if (!copyThin) {
+      // Each route subsection under Section 4 must carry real copy.
+      const routeBlocks = section4.split(/\n(?=###\s)/).slice(1);
+      copyThin = routeBlocks.length > 0 &&
+        routeBlocks.some((b) =>
+          b.split("\n").filter((l) => !l.trim().startsWith("|")).join(" ")
+            .split(/\s+/).filter(Boolean).length < 250
+        );
+    }
+
+    const lower = raw.toLowerCase();
+    const bannedHits = BANNED_COPY_PHRASES.filter((p) => lower.includes(p)).length;
+    const concrete = (raw.match(/\b\d[\d,.]*\s*(%|hours?|days?|weeks?|months?|minutes?|customers?|clients?|x)\b/gi) ?? [])
+      .length + (raw.match(/[$£€]\s?\d/g) ?? []).length;
+    copyGeneric = bannedHits >= 3 || concrete < 12;
+
+    const answers = extractFaqAnswers(raw);
+    const mean = answers.length
+      ? answers.reduce((a, b) => a + b, 0) / answers.length
+      : 0;
+    faqThin = answers.length < 8 || mean < 50;
+  }
+
   const archetype = (opts.archetypeName ?? "").trim();
   const artDirectionMissing = !!archetype &&
     !raw.toLowerCase().includes(archetype.toLowerCase());
@@ -106,7 +187,10 @@ export function checkIdentity(
     portraitCraftMissing,
     imageryTooDark,
     artDirectionMissing,
-    ok: !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
+    copyThin,
+    copyGeneric,
+    faqThin,
+    ok: !copyThin && !copyGeneric && !faqThin && !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
       !imageryCraftMissing && !portraitCraftMissing && !imageryTooDark &&
       !artDirectionMissing,
   };
@@ -121,6 +205,7 @@ export function correctionPrompt(
     logoUrl?: string | null;
     archetypeName?: string | null;
     minImageryRows?: number;
+    minSection4Words?: number;
   },
 ): string {
   const fixes: string[] = [];
@@ -164,6 +249,26 @@ export function correctionPrompt(
   if (check.artDirectionMissing) {
     fixes.push(
       `You ignored the committed art direction. This site is built in the **${opts.archetypeName}** archetype. Name it explicitly, and make the grid, type scale, section rhythm, motion and imagery treatment obey its rules throughout — including inside the paste-ready master prompt. Do not fall back to a generic hero → three-column features → pricing stack.`,
+    );
+  }
+
+  if (check.copyThin) {
+    fixes.push(
+      `Section 4 is too thin. Rewrite it to at least ${
+        opts.minSection4Words ?? SECTION4_WORD_FLOOR
+      } words of finished page copy, with every route meeting its floor (Home 900+, /about 600+, service or product detail 550+, /pricing 600+, case study 400+, launch post 700+, /faq 700+, utility routes 300+). Every section carries the real words a visitor reads: hero H1 of ten words or fewer plus a 20–35 word sub-headline and a 40–70 word body; each offer or feature card 45–80 words of body copy; each process step naming what happens, what the customer does, what they get and how long it takes; each pricing tier naming who it is for with full-sentence inclusions, explicit exclusions and a guarantee. Section 4 must be the longest section of the document.`,
+    );
+  }
+  if (check.copyGeneric) {
+    fixes.push(
+      `The copy is generic. Rewrite so no paragraph could be pasted onto a competitor's site unchanged: name the audience, the mechanism, the deliverable, the price, the timeframe and the outcome, with a concrete number, name, place or timeframe at least every 150 words. Delete every instance of these banned phrases: ${
+        BANNED_COPY_PHRASES.join(", ")
+      }. Every CTA label starts with a verb and names the artifact — "Learn more" and "Get started" are forbidden.`,
+    );
+  }
+  if (check.faqThin) {
+    fixes.push(
+      "The FAQ is too thin. Write at least 8 questions phrased the way a real buyer would type them, each answered in 60–110 words that address the objection behind the question and end with the next step. Cover price, timeline, what happens if it doesn't work, who it is not for, and how to start.",
     );
   }
 
