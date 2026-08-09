@@ -62,11 +62,35 @@ So the brand kit *was* injected; the model simply wasn't bound to it.
 - Keep the "provisional" wording for `auto` kits, but still mark palette, fonts and
   logo as must-use-verbatim.
 
-### 4. Catch it instead of shipping it
+### 4. Imagery on every section, not just the hero
+The site the PRD produced is text-on-dark from top to bottom: one hero photo, then
+five consecutive sections of headline + body + bordered cards with no photography at
+all. The PRD never specifies imagery outside the hero and the OG image, so the builder
+has nothing to place.
+
+- Add an **Imagery plan** requirement to the PRD spine: a markdown table with one row
+  per page section — slot name, aspect ratio, treatment (full-bleed, inset, portrait
+  card, background wash), alt text, and a concrete generation/sourcing prompt written
+  in the mood board's visual language.
+- Set a floor: every major section must carry at least one visual — photograph,
+  portrait, product shot, screenshot/UI mock, diagram, or an on-brand texture/gradient
+  band — and no more than two consecutive text-only sections are permitted.
+- Name the specific slots the current output missed: proof/logo bar (real logo lockups),
+  process steps (numbered visuals per phase), advantage grid (icon or photo per card),
+  results/stats (a chart or data visual), testimonials (creator portraits), and a
+  closing full-bleed CTA band.
+- Tie imagery direction to the brand kit's mood board URLs already in the prompt, so
+  the look is consistent instead of generic stock.
+- Require the paste-ready master prompt to carry the same imagery table inline, so a
+  builder receives the slots and prompts, not just the copy.
+
+### 5. Catch it instead of shipping it
 - After generation, run a cheap validation on `website_prd` / `presell_landing_prd`:
-  the output must contain the exact company name and the permanent logo URL. If it
-  doesn't, retry once with a corrective instruction naming the omission, then record
-  the failure rather than silently saving a PRD with a hallucinated brand.
+  the output must contain the exact company name, the permanent logo URL, and an
+  imagery table with a row for every page section. If it doesn't, retry once with a
+  corrective instruction naming the omission, then record the failure rather than
+  silently saving a PRD with a hallucinated brand or no imagery.
+
 
 ## Files touched
 
