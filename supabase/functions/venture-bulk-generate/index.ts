@@ -38,6 +38,15 @@ import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
 import { profileFor } from "../_shared/prompt-profiles.ts";
 import { checkIdentity, correctionPrompt, substituteIdentity } from "../_shared/identity-guard.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
+import { archetypeForPrompt } from "../_shared/site-art-direction.ts";
+import {
+  brandFactsFromKit,
+  enforceWebsitePrdDepth,
+  expandWebsitePrdMasterPrompt,
+  masterPromptStats,
+  prdQualityMetrics,
+  type PrdVentureFacts,
+} from "../_shared/website-prd.ts";
 import { LAUNCH_14DAY_PLAN } from "../_shared/launch-14day-plan.ts";
 
 const MAX_USER_PROMPT_CHARS = 120_000;
@@ -52,74 +61,6 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
-function masterPromptStats(md: string) {
-  const m = md.match(/<!--\s*BEGIN_MASTER_PROMPT\s*-->([\s\S]*?)<!--\s*END_MASTER_PROMPT\s*-->/i);
-  const prompt = (m?.[1] ?? "").trim();
-  const missingSections = Array.from({ length: 11 }, (_, i) => i + 1).filter(
-    (n) => !new RegExp(String.raw`(?:^|\n)\s*${n}\)\s+`, "i").test(prompt),
-  );
-  return {
-    prompt,
-    words: prompt.split(/\s+/).filter(Boolean).length,
-    complete: Boolean(m) && missingSections.length === 0 && /Begin scaffolding now\.\s*Generate all images on first run\.\s*Do not ask clarifying questions\./i.test(prompt),
-  };
-}
-
-function enforceWebsitePrdDepth(raw: string) {
-  const stats = masterPromptStats(raw);
-  if (!stats.complete || stats.words >= 1800) return raw;
-  const depthAddendum = `
-
-Additional implementation depth requirements: Treat this as a production build, not a starter mockup. Every page must include final, founder-ready copy, visible conversion strategy, accessibility-first UI decisions, and premium imagery direction. Use layout rhythm that alternates editorial storytelling, proof panels, interactive cards, CTA bands, founder education modules, and trust-building operational detail. Avoid generic SaaS filler. The site should feel like Atlanta's most practical startup accelerator: confident, local, fast, specific, and useful for first-time founders who need clarity more than jargon.
-
-For the design system, create reusable primitives before pages: AppShell, SiteHeader, MobileNav, MegaMenu, AnnouncementBar, Hero, SectionHeader, ProofStrip, MetricCard, ProcessTimeline, DeliverableGrid, PricingCard, FAQAccordion, TestimonialCard, CaseStudyCard, FounderStoryPanel, CTASection, NewsletterSignup, Footer, SEOHead, and RouteTransition. Define hover, focus, loading, empty, error, and mobile states. Use shadcn/ui for buttons, cards, dialogs, accordions, tabs, badges, sheets, forms, and toast messages. Ensure all interactive components have keyboard behavior, ARIA labels where useful, visible focus rings, and motion that respects prefers-reduced-motion.
-
-For visual execution, generate or specify every image on first run. Use cinematic workshop photography, founder desk still life, Atlanta skyline textures, whiteboard strategy moments, document close-ups, small-business storefront details, and abstract AI workflow illustrations. Each image should have a clear prompt, alt text, aspect ratio, and placement. Mix full-bleed hero imagery, masked portraits, bento-grid screenshots, soft gradient panels, and subtle background patterns. Do not leave image slots blank. If using generated assets, make them feel original and premium rather than stock-photo generic.
-
-For page-level copy, write every headline, subhead, body paragraph, microcopy label, CTA, form helper line, FAQ answer, testimonial placeholder, and empty-state message. The home page must quickly explain the promise, who it is for, why the three-hour format works, what the user leaves with, how the AI-assisted deliverables are produced, and what to do next. Service pages must explain scope, outcomes, prerequisites, timelines, and proof. Pricing must make the $197 workshop easy to understand, with a clear distinction between the workshop and any later build/support layer. Blog and case-study pages must include realistic starter content rather than placeholders.
-
-For conversion, include primary CTAs above the fold, after proof, after process, after pricing, and in the footer. Use low-friction language such as “Reserve my seat,” “Start with the workshop,” “See what you leave with,” and “Ask a question.” Add trust indicators: cohort size, founder-friendly pacing, executive-summary deliverables, Main Street and tech-startup fit, Atlanta positioning, privacy expectations, and practical outcomes. Build forms with validation, success states, and friendly error states. Include analytics event names for major CTAs, pricing views, form submissions, FAQ opens, and scroll-depth milestones.
-
-For engineering quality, structure files clearly: routes, components, data, lib, assets, and styles. Use typed arrays for nav, FAQs, pricing, services, testimonials, deliverables, and case studies. Avoid hardcoded repeated markup where mapped components are better. Make the site responsive across 360px mobile, tablet, laptop, and wide desktop. Maintain color contrast on light backgrounds. Keep performance high by lazy-loading non-critical imagery, using semantic headings, optimizing image sizes, and avoiding unnecessary animation re-renders. The delivered app should run without missing imports, undefined variables, console errors, or dead routes.
-
-For polish, include scroll-triggered reveal choreography, tasteful page transitions, sticky contextual CTAs, rich card shadows, crisp iconography, premium empty states, and mobile-first navigation that never overflows the viewport. Add realistic operational details throughout: workshop seat count, founder preparation checklist, what happens before/during/after the session, how executive-summary documents are created, how users review or rewrite outputs, and how the Founder Hub supports future iterations.
-
-For content credibility, make the language specific enough that a founder can make a decision without calling sales. Include objections and answers: “Is this only for tech startups?”, “What if I only have an idea?”, “What if I already have documents?”, “Can Main Street businesses use this?”, “What happens after the workshop?”, and “How private is my information?” Every answer should reduce confusion and move the user toward a clear next action.
-
-For final QA, verify that every route has a unique meta title, meta description, canonical path, H1, meaningful above-the-fold CTA, responsive layout, accessible image alt text, no placeholder copy, no broken links, and a strong footer CTA. The result should feel complete enough to ship to paying workshop prospects immediately.`;
-  const closing = /Begin scaffolding now\.\s*Generate all images on first run\.\s*Do not ask clarifying questions\./i;
-  const nextPrompt = closing.test(stats.prompt)
-    ? stats.prompt.replace(closing, `${depthAddendum}\n\nBegin scaffolding now. Generate all images on first run. Do not ask clarifying questions.`)
-    : `${stats.prompt}${depthAddendum}\n\nBegin scaffolding now. Generate all images on first run. Do not ask clarifying questions.`;
-  return raw.replace(/<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i, `<!-- BEGIN_MASTER_PROMPT -->\n${nextPrompt.trim()}\n<!-- END_MASTER_PROMPT -->`);
-}
-
-async function expandWebsitePrdMasterPrompt(raw: string) {
-  const stats = masterPromptStats(raw);
-  if (!stats.prompt || (stats.complete && stats.words >= 1800)) return raw;
-  try {
-    const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: modelForTier("flash"),
-        max_tokens: 12000,
-        messages: [
-          { role: "system", content: "You expand an AI website-builder master prompt. Return ONLY the delimiter-wrapped master prompt. No commentary, no code fences." },
-          { role: "user", content: `Expand the master prompt below to 1,800-2,400 words while preserving all facts, exact numbered sections 1) through 11), and the exact closing line. Each numbered section must be substantive and implementation-ready.\n\n${stats.prompt}` },
-        ],
-      }),
-    }, { timeoutMs: 180_000, retries: 0 });
-    if (!res.ok) return raw;
-    const json = await res.json();
-    const expanded = String(json.choices?.[0]?.message?.content ?? "").trim();
-    const expandedStats = masterPromptStats(expanded);
-    if (!expandedStats.prompt || !expandedStats.complete || expandedStats.words <= stats.words) return raw;
-    return enforceWebsitePrdDepth(raw.replace(/<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i, `<!-- BEGIN_MASTER_PROMPT -->\n${expandedStats.prompt}\n<!-- END_MASTER_PROMPT -->`));
-  } catch {
-    return enforceWebsitePrdDepth(raw);
-  }
-}
 
 // How hard the generator tries. Each retry round escalates the mode so we stop
 // repeating the exact call that just failed:
@@ -234,7 +175,21 @@ async function generateOne(
   const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
   const tone = trackTone(snap.track);
   const profile = profileFor(documentType);
-  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra].filter(Boolean).join("\n\n");
+
+  // One committed art direction per venture for the Website PRD.
+  const isPrd = documentType === "website_prd";
+  const art = isPrd
+    ? archetypeForPrompt({
+      snapshotId,
+      track: snap.track,
+      brandKit: brandKit as Record<string, any> | null,
+      freeText: [snap.concept_summary, snap.value_proposition].filter(Boolean).join(" "),
+    })
+    : null;
+
+  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra, art?.block]
+    .filter(Boolean).join("\n\n");
+
 
   // User prompt: compact preamble + brain slice (or raw fallback) + distilled deps.
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
@@ -296,14 +251,14 @@ async function generateOne(
 
   ].filter(Boolean).join("\n\n").slice(0, promptCap);
 
-  // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'), except website_prd.
-  // Website PRDs need a larger output budget, but must remain fast enough for
-  // the edge runtime; Flash with max_tokens is more reliable than slow Pro.
-  const isPrd = documentType === "website_prd";
+  // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'). website_prd runs on
+  // Pro (it is the most design-sensitive document we produce); only the last
+  // resort "minimal" retry mode drops to Flash for speed.
   const modelId = mode === "minimal"
     ? modelForTier("flash")
-    : isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
-  const maxTokens = isPrd ? 16000 : 16000;
+    : isPrd ? modelForTier("pro") : modelForTier(type.model_tier);
+  const maxTokens = isPrd ? 24000 : 16000;
+
 
   // Count the attempt before we make the call, so a hard crash still shows it.
   {
@@ -414,6 +369,8 @@ async function generateOne(
       companyName: lockedName,
       logoUrl: lockedLogo,
       requireImagery: isPrd,
+    minImageryRows: 12,
+    archetypeName: art?.archetype.name ?? null,
     });
     if (!identity.ok) {
       console.warn("identity guard failed", documentType, identity);
@@ -421,7 +378,7 @@ async function generateOne(
         const fixRes = await callGateway([
           ...baseMessages,
           { role: "assistant", content: raw.slice(0, 40_000) },
-          { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo }) },
+          { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo, archetypeName: art?.archetype.name ?? null, minImageryRows: 12 }) },
         ]);
         if (fixRes.ok) {
           const fixJson = await fixRes.json();
@@ -433,6 +390,8 @@ async function generateOne(
             companyName: lockedName,
             logoUrl: lockedLogo,
             requireImagery: isPrd,
+    minImageryRows: 12,
+    archetypeName: art?.archetype.name ?? null,
           });
           if (fixed.length > raw.length * 0.6 && (recheck.ok || (!recheck.nameMissing && identity.nameMissing))) {
             raw = fixed;
@@ -450,11 +409,31 @@ async function generateOne(
 
 
   if (isPrd) {
-    raw = await expandWebsitePrdMasterPrompt(raw);
-    raw = enforceWebsitePrdDepth(raw);
+    const bf = brandFactsFromKit(brandKit as Record<string, any> | null);
+    const prdFacts: PrdVentureFacts = {
+      companyName: (snap.company_name ?? "").trim() || null,
+      archetype: art?.archetype ?? null,
+      hexes: bf.hexes,
+      fonts: bf.fonts,
+      ctas: bf.ctas,
+      moodboard: bf.moodboard,
+      offer: snap.value_proposition ?? snap.concept_summary ?? null,
+      logoUrl: brandKit && Array.isArray(brandKit.logos) && brandKit.logos.length
+        ? brandLogoUrl(snapshotId)
+        : null,
+    };
+    raw = await expandWebsitePrdMasterPrompt(raw, prdFacts, LOVABLE_API_KEY);
+    raw = enforceWebsitePrdDepth(raw, prdFacts);
     const stats = masterPromptStats(raw);
     if (stats.complete && stats.words >= 1800) truncated = false;
+    console.log("website_prd metrics", JSON.stringify({
+      snapshotId,
+      model: modelId,
+      truncated,
+      ...prdQualityMetrics(raw, prdFacts),
+    }));
   }
+
   if (truncated) {
     // Still short after a continuation pass — fail it so the retry sweep
     // picks it up rather than saving a half-written asset.
