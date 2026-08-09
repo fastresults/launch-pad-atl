@@ -67,7 +67,8 @@ For EVERY route listed in Section 2, produce a subsection with:
 - **Purpose**: 1 sentence
 - **Primary CTA** / **Secondary CTA**: exact button labels + destinations
 - **Section list (in order)**: e.g. Hero → Logo bar → Feature grid → Proof → Pricing teaser → FAQ → CTA band
-- **Full copy per section**: H1/H2/H3, sub-headline, 1–2 body paragraphs, bullets, microcopy, button labels. Write the real words a visitor will read.
+- **Full copy per section**: write the finished words a visitor will read, to the COPY CRAFT CONTRACT recipe for that section type (hero, problem/stakes, offer/feature card, process step, proof/results, pricing tier, FAQ, case study, blog, about). Every section carries H1/H2/H3, sub-headline, body paragraphs at or above the recipe's word floor, bullets written as full sentences, microcopy, form labels, success/error states and exact button labels. A section that only names what the copy should cover is a failure — write the copy.
+- **Word floor for this route**: state the route's floor from the copy contract and meet it. Home 900+, /about 600+, service or product detail 550+, /pricing 600+, case study 400+, launch post 700+, /faq 700+, index and utility routes 300+.
 - **Visuals per section**: EVERY section listed above gets at least one visual — photograph, founder/creator portrait, product shot, UI screenshot/mock, diagram, data visual, or an on-brand texture/gradient band. Never allow two consecutive text-only sections. Name the slot, its aspect ratio, and its treatment (full-bleed, inset, portrait card, background wash).
 - **Image / illustration prompts**: one 55–90 word generation prompt per visual slot that OPENS with the IMAGE CRAFT CONTRACT recipe for that visual type (exposure target, technique, composition), then describes the venture-specific subject in the Brand Kit mood-board's visual language, reusing two exact brand hex values
 
