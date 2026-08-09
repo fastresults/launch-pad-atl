@@ -530,7 +530,13 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
 /* ---------- STEP 4: Moodboard & Logo ---------- */
 function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const qc = useQueryClient();
-  const [logos, setLogos] = useState<any[]>(kit?.logos ?? []);
+  // Committed marks live on the brand kit — never in local state, or a commit
+  // made in Logo Studio leaves this step (and the PRD button) looking empty.
+  // `logoOverride` is only an optimistic echo until the kit query refetches.
+  const [logoOverride, setLogoOverride] = useState<any[] | null>(null);
+  const kitLogos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
+  const logos = logoOverride ?? kitLogos;
+  useEffect(() => { setLogoOverride(null); }, [kit?.logos]);
   const [moodboard, setMoodboard] = useState<any[]>(kit?.moodboard ?? []);
   const [refs, setRefs] = useState<string[]>(kit?.dna?._logoReferences ?? []);
 
