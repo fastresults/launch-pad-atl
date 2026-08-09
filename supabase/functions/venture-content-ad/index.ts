@@ -332,6 +332,16 @@ Deno.serve(async (req) => {
 
     const variationSeed = `${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
 
+    // Resolve the scene ONCE so the prompt, the QA pass and the saved metadata
+    // all reference the same commissioned frame.
+    const scene: SceneDirective = resolveSceneDirective(ctx, {
+      discriminator: `${post.id ?? "post"}|${aspect}|${variationSeed}`,
+      pillar: post.pillar,
+      format: post.format,
+      assetNotes: post.asset_notes,
+      override: sceneOverride || null,
+    });
+
     const buildPrompt = (retryNote?: string) => buildContentAdPrompt({
       aspect,
       direction,
@@ -353,6 +363,7 @@ Deno.serve(async (req) => {
       // model must leave the top band as unmarked negative space.
       serverRenderedHeadline: true,
       posterLayout,
+      scene,
     });
 
 
