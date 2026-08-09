@@ -1309,6 +1309,8 @@ function Step5BuildKit({
           canvasPlan={regenTarget.task?.canvas_plan ?? null}
           currentHeadline={regenTarget.task?.last_headline ?? null}
           currentLogoSize={(regenTarget.task as any)?.last_logo_size ?? null}
+          currentScene={(regenTarget.task as any)?.qa_notes?.scene?.depict ?? null}
+
           initialIntensity={regenTarget.scope === "single" && signatureFailed(regenTarget.task) ? "bold" : "balanced"}
           focusSection={regenTarget.focusSection}
           onSubmit={async (input) => {
