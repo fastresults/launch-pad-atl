@@ -175,7 +175,21 @@ async function generateOne(
   const baseSystemPrompt = specializedPrompt(documentType) ?? BASE_SYSTEM_PROMPT;
   const tone = trackTone(snap.track);
   const profile = profileFor(documentType);
-  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra].filter(Boolean).join("\n\n");
+
+  // One committed art direction per venture for the Website PRD.
+  const isPrd = documentType === "website_prd";
+  const art = isPrd
+    ? archetypeForPrompt({
+      snapshotId,
+      track: snap.track,
+      brandKit: brandKit as Record<string, any> | null,
+      freeText: [snap.concept_summary, snap.value_proposition].filter(Boolean).join(" "),
+    })
+    : null;
+
+  const systemPrompt = [baseSystemPrompt, tone, profile.systemExtra, art?.block]
+    .filter(Boolean).join("\n\n");
+
 
   // User prompt: compact preamble + brain slice (or raw fallback) + distilled deps.
   const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
