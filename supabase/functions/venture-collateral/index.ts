@@ -82,7 +82,7 @@ async function loadKit(admin: any, snapshotId: string) {
   const { data: kit } = await admin
     .from("venture_brand_kits")
     .select(
-      "palette, typography, logos, voice, dna, status, contact_details, contact_verified_at, art_direction, contact_details_suggested, contact_suggested_at",
+      "palette, typography, logos, voice, dna, moodboard, status, contact_details, contact_verified_at, art_direction, contact_details_suggested, contact_suggested_at",
     )
     .eq("snapshot_id", snapshotId)
     .maybeSingle();
