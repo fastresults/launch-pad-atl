@@ -115,9 +115,18 @@ async function gatewayRender(prompt: string, references: string[], model: string
     });
     if (!res.ok) throw new Error(`image gateway ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const body = await res.json();
-    const b64 = body?.data?.[0]?.b64_json;
+    const first = body?.data?.[0] ?? {};
+    let b64: string | undefined = first.b64_json;
+    if (!b64 && typeof first.url === "string") {
+      if (first.url.startsWith("data:")) b64 = first.url.split(",")[1];
+      else return new Uint8Array(await (await fetch(first.url)).arrayBuffer());
+    }
     if (!b64) throw new Error("image gateway returned no image");
-    return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    // decodeBase64 allocates a single sized buffer; atob + Uint8Array.from over a
+    // multi-MB string spikes memory hard enough to trip the worker's limit.
+    const bytes = decodeBase64(b64);
+    b64 = undefined;
+    return bytes;
   } finally {
     clearTimeout(timer);
   }
