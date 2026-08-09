@@ -251,14 +251,14 @@ async function generateOne(
 
   ].filter(Boolean).join("\n\n").slice(0, promptCap);
 
-  // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'), except website_prd.
-  // Website PRDs need a larger output budget, but must remain fast enough for
-  // the edge runtime; Flash with max_tokens is more reliable than slow Pro.
-  const isPrd = documentType === "website_prd";
+  // S5 — Honor type.model_tier ('pro' | 'flash' | 'lite'). website_prd runs on
+  // Pro (it is the most design-sensitive document we produce); only the last
+  // resort "minimal" retry mode drops to Flash for speed.
   const modelId = mode === "minimal"
     ? modelForTier("flash")
-    : isPrd ? modelForTier("flash") : modelForTier(type.model_tier);
-  const maxTokens = isPrd ? 16000 : 16000;
+    : isPrd ? modelForTier("pro") : modelForTier(type.model_tier);
+  const maxTokens = isPrd ? 24000 : 16000;
+
 
   // Count the attempt before we make the call, so a hard crash still shows it.
   {
