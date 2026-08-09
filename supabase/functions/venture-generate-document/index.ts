@@ -41,6 +41,7 @@ import {
   brandFactsFromKit,
   enforceWebsitePrdDepth,
   expandWebsitePrdMasterPrompt,
+  expandWebsitePrdPageCopy,
   masterPromptStats,
   prdQualityMetrics,
   type PrdVentureFacts,
@@ -402,11 +403,22 @@ export async function generateOne(
     : null;
   raw = substituteIdentity(raw, lockedName);
 
+  // Page copy depth: deepen Section 4 before the guard so a thin-but-fixable
+  // draft is expanded rather than fully regenerated.
+  if (isPrd) {
+    raw = await expandWebsitePrdPageCopy(
+      raw,
+      { companyName: lockedName, archetype: art?.archetype ?? null },
+      LOVABLE_API_KEY,
+    );
+  }
+
   const identity = checkIdentity(raw, {
     companyName: lockedName,
     logoUrl: lockedLogo,
     requireImagery: isPrd,
     minImageryRows: 12,
+    requireCopyDepth: isPrd,
     archetypeName: art?.archetype.name ?? null,
   });
   if (!identity.ok) {
@@ -435,6 +447,7 @@ export async function generateOne(
           logoUrl: lockedLogo,
           requireImagery: isPrd,
     minImageryRows: 12,
+    requireCopyDepth: isPrd,
     archetypeName: art?.archetype.name ?? null,
         });
         // Only accept the repair when it is both substantial and better.

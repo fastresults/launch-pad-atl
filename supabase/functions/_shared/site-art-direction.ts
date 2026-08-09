@@ -12,6 +12,7 @@
 // constraint. The model is never handed the menu again.
 
 import { imageCraftBlock } from "./image-craft.ts";
+import { copyCraftBlock } from "./copy-craft.ts";
 
 export type SiteArchetype = {
   key: string;
@@ -432,5 +433,9 @@ export function artDirectionBlock(a: SiteArchetype): string {
 
 export function archetypeForPrompt(input: ArchetypeInput): { archetype: SiteArchetype; block: string } {
   const archetype = selectArchetype(input);
-  return { archetype, block: `${artDirectionBlock(archetype)}\n\n${imageCraftBlock()}` };
+  return {
+    archetype,
+    block: `${artDirectionBlock(archetype)}\n\n${imageCraftBlock()}\n\n${copyCraftBlock()}`,
+  };
 }
+

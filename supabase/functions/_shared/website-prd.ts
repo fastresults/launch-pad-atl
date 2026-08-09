@@ -11,6 +11,7 @@
 import { aiFetch } from "./ai-fetch.ts";
 import { modelForTier } from "./deliverable-prompts.ts";
 import type { SiteArchetype } from "./site-art-direction.ts";
+import { copyCraftBlock, SECTION4_WORD_FLOOR } from "./copy-craft.ts";
 
 const MASTER_RE = /<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i;
 const CLOSING_RE =
@@ -205,8 +206,84 @@ export function prdQualityMetrics(raw: string, facts: PrdVentureFacts) {
     masterPromptComplete: stats.complete,
     imageryRows,
     brandHexesUsed: `${hexHits}/${hexes.length}`,
+    section4Words: section4Words(raw),
     archetype: facts.archetype?.name ?? null,
     archetypeNamed: facts.archetype ? raw.includes(facts.archetype.name) : null,
     imgTags: (raw.match(/<img\s/gi) ?? []).length,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Page-copy depth
+// ---------------------------------------------------------------------------
+
+const SECTION4_RE = /(\n##\s*4[.)]?\s[^\n]*\n)([\s\S]*?)(?=\n##\s*4b|\n##\s*5|$)/i;
+
+/** Words of prose (tables excluded) inside Section 4. */
+export function section4Words(raw: string): number {
+  const body = raw.match(SECTION4_RE)?.[2] ?? "";
+  return body
+    .split("\n")
+    .filter((l) => !l.trim().startsWith("|"))
+    .join(" ")
+    .split(/\s+/)
+    .filter(Boolean).length;
+}
+
+/**
+ * When Section 4 lands under its floor, regenerate that section alone on the
+ * Pro model with the copy contract and splice it back in. Runs at most once.
+ */
+export async function expandWebsitePrdPageCopy(
+  raw: string,
+  facts: PrdVentureFacts,
+  apiKey: string,
+  minWords = SECTION4_WORD_FLOOR,
+): Promise<string> {
+  const match = raw.match(SECTION4_RE);
+  if (!match) return raw;
+  const current = section4Words(raw);
+  if (current >= minWords) return raw;
+
+  const name = (facts.companyName ?? "").trim() || "the company";
+  try {
+    const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: modelForTier("pro"),
+        max_tokens: 16000,
+        messages: [
+          {
+            role: "system",
+            content:
+              `You rewrite Section 4 ("Page-by-Page Specs") of a Website PRD so it carries finished, ready-to-ship page copy. Return ONLY the section body — no "## 4" heading, no commentary, no code fences.\n\n${copyCraftBlock()}`,
+          },
+          {
+            role: "user",
+            content:
+              `This is Section 4 of the Website PRD for ${name}. It is ${current} words; it must be at least ${minWords}. Keep every route, every section order and every existing headline, then write the missing copy to the contract above — real body paragraphs, full-sentence bullets, microcopy, form labels, success and error states, and exact CTA labels. Keep the imagery bullets and any tables intact.${
+                facts.archetype ? ` The locked art direction is "${facts.archetype.name}" — keep the copy in its voice.` : ""
+              }\n\n${match[2]}`,
+          },
+        ],
+      }),
+    }, { timeoutMs: 180_000, retries: 0 });
+    if (!res.ok) {
+      await res.text();
+      return raw;
+    }
+    const json = await res.json();
+    const expanded = String(json.choices?.[0]?.message?.content ?? "").trim();
+    const expandedWords = expanded
+      .split("\n")
+      .filter((l) => !l.trim().startsWith("|"))
+      .join(" ")
+      .split(/\s+/)
+      .filter(Boolean).length;
+    if (!expanded || expandedWords <= current) return raw;
+    return raw.replace(SECTION4_RE, `${match[1]}${expanded}\n\n`);
+  } catch {
+    return raw;
+  }
 }
