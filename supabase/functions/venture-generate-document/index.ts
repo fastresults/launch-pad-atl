@@ -447,11 +447,29 @@ export async function generateOne(
   }
 
   if (isPrd) {
-    raw = await expandWebsitePrdMasterPrompt(raw);
-    raw = enforceWebsitePrdDepth(raw);
+    const bf = brandFactsFromKit(brandKit as Record<string, any> | null);
+    const prdFacts: PrdVentureFacts = {
+      companyName: lockedName,
+      archetype: art?.archetype ?? null,
+      hexes: bf.hexes,
+      fonts: bf.fonts,
+      ctas: bf.ctas,
+      moodboard: bf.moodboard,
+      offer: snap.value_proposition ?? snap.concept_summary ?? null,
+      logoUrl: lockedLogo,
+    };
+    raw = await expandWebsitePrdMasterPrompt(raw, prdFacts, LOVABLE_API_KEY);
+    raw = enforceWebsitePrdDepth(raw, prdFacts);
     const stats = masterPromptStats(raw);
     if (stats.complete && stats.words >= 1800) truncated = false;
+    console.log("website_prd metrics", JSON.stringify({
+      snapshotId,
+      model: modelId,
+      truncated,
+      ...prdQualityMetrics(raw, prdFacts),
+    }));
   }
+
 
 
   if (truncated) {
