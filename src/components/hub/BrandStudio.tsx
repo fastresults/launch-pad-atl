@@ -204,7 +204,14 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
           )}
         </DialogContent>
       </Dialog>
+
+      <DocumentViewer
+        doc={prdOpen ? websitePrd.prd : null}
+        open={prdOpen && !!websitePrd.prd}
+        onOpenChange={(o) => !o && setPrdOpen(false)}
+      />
     </div>
+
 
   );
 }
