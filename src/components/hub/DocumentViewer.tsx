@@ -464,7 +464,9 @@ export function DocumentViewer({
     setContentOverride(null);
   }, [doc?.snapshot_id, doc?.document_type, doc?.deep_assessment, doc?.deep_assessment_status]);
 
-  const regenerateWebsitePrd = async () => {
+  // `repair` is only passed by the truncated-prompt banner; the header button
+  // is a plain rebuild against the current brand kit.
+  const regenerateWebsitePrd = async (repair = false) => {
     if (!doc?.snapshot_id) return;
     setPrdRepairing(true);
     try {
@@ -472,10 +474,16 @@ export function DocumentViewer({
         body: {
           snapshotId: doc.snapshot_id,
           documentType: "website_prd",
-          rewriteFeedback: "The paste-ready master prompt shown in the viewer is incomplete or truncated. Regenerate the entire Website PRD and make Section 8 complete, self-contained, delimiter-wrapped, 1,800-2,400 words, with numbered sections 1 through 11 and the exact closing instruction.",
-          rewriteTags: ["Fix incomplete Website PRD builder prompt", "Regenerate full sections 1-11"],
+          ...(repair
+            ? {
+              rewriteFeedback:
+                "The paste-ready master prompt shown in the viewer is incomplete or truncated. Regenerate the entire Website PRD and make Section 8 complete, self-contained, delimiter-wrapped, 1,800-2,400 words, with numbered sections 1 through 11 and the exact closing instruction.",
+              rewriteTags: ["Fix incomplete Website PRD builder prompt", "Regenerate full sections 1-11"],
+            }
+            : {}),
         },
       });
+
       if (error) throw new Error(error.message);
       if (data && data.ok === false) throw new Error(data.error ?? "Website PRD regeneration failed");
 
