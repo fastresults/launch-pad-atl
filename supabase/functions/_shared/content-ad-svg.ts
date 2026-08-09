@@ -370,12 +370,18 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
     // Single-line elements shrink to the column rather than run past it.
     const kickerSize = fitSingleLine(kickerText.toUpperCase(), Math.round(minDim * 0.026), textW, 0.22);
     const ctaSize = fitSingleLine(ctaText, Math.round(minDim * 0.030), textW, 0.02);
-    const maxBlockH = Math.round(H * 0.52);
+
+    // The type band is a FIXED share of the canvas, matching the reserved zone
+    // the photographic brief asked for. Sizing the band to the copy is what
+    // produced a hard slab edge cutting through the subject.
+    const bandRatio = args.bandRatio ?? BAND_RATIO[args.aspect] ?? 0.38;
+    const bandH = Math.round(H * bandRatio);
+    const maxBlockH = centered ? Math.round(H * 0.52) : Math.max(Math.round(minDim * 0.2), bandH - Math.round(inset * 1.4));
 
     // Budget the headline against the fixed-height elements around it.
     const fixedH =
       (kickerText ? Math.round(kickerSize * (1 + RHYTHM.kickerToHead)) : 0) +
-      (ctaText ? Math.round(ctaSize * (1 + RHYTHM.ruleToCta)) + Math.max(2, Math.round(minDim * 0.0025)) : 0);
+      (ctaText ? Math.round(ctaSize * (1 + RHYTHM.ruleToCta)) + Math.round(ctaSize * 1.9) : 0);
     const head = headlineText
       ? fitDisplay(headlineText, textW, minDim, maxHeadlineLines(args.aspect), Math.max(minDim * 0.12, maxBlockH - fixedH))
       : null;
@@ -389,12 +395,11 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
 
     const headH = head ? head.lines.length * head.lineHeight : 0;
     const gapKicker = kickerText ? Math.round(kickerSize * RHYTHM.kickerToHead) : 0;
-    const gapHeadRule = ctaText && head ? Math.round(head.size * RHYTHM.headToRule) : 0;
-    const ruleH = ctaText && !centered ? Math.max(2, Math.round(minDim * 0.0025)) : 0;
-    const gapRuleCta = ctaText ? Math.round(ctaSize * RHYTHM.ruleToCta) : 0;
+    const gapHeadCta = ctaText && head ? Math.round(head.size * RHYTHM.headToRule) : 0;
     const kickerH = kickerText ? kickerSize : 0;
-    const ctaH = ctaText ? Math.round(ctaSize * 1.2) : 0;
-    const blockH = kickerH + gapKicker + headH + gapHeadRule + ruleH + gapRuleCta + ctaH;
+    // The CTA is now a real affordance (outlined pill + chevron), not a caption.
+    const ctaPillH = ctaText ? Math.round(ctaSize * 2.3) : 0;
+    const blockH = kickerH + gapKicker + headH + gapHeadCta + ctaPillH;
 
     const blockTop = centered
       ? Math.round((H - blockH) / 2)
@@ -427,12 +432,38 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
     metrics.ink = ink;
     metrics.scrim_alpha = Number(chosenAlpha.toFixed(2));
 
-    // Kicker stays gold only when the gold itself is legible.
-    const kickerRatio = contrastOf(lum(signature), bgLum);
-    const kickerColor = kickerRatio >= 3 ? signature : ink;
-    metrics.kicker_contrast = Number((kickerRatio >= 3 ? kickerRatio : contrastOf(lum(ink), bgLum)).toFixed(2));
-
     // --- scrim / plate ---
+    // Feathered ramp: the veil reaches full strength only at the very bottom
+    // and dies to zero well above the type, so there is no perceptible edge.
+    const scrimH = centered ? 0 : Math.min(H, Math.round(bandH * 1.55));
+    const scrimStops: [number, number][] = [];
+    if (!centered) {
+      const k = chosenAlpha / 0.62;
+      scrimStops.push(
+        [0.00, Math.min(0.97, 0.94 * k)],
+        [0.28, Math.min(0.95, 0.86 * k)],
+        [0.52, Math.min(0.88, 0.62 * k)],
+        [0.72, Math.min(0.66, 0.34 * k)],
+        [0.88, Math.min(0.34, 0.13 * k)],
+        [1.00, 0],
+      );
+    }
+    /** Veil opacity at a canvas y, following the ramp above (0 outside it). */
+    const alphaAtY = (yy: number): number => {
+      if (centered) return chosenAlpha;
+      if (!scrimH) return 0;
+      const t = Math.max(0, Math.min(1, (H - yy) / scrimH));
+      for (let i = 1; i < scrimStops.length; i++) {
+        const [o0, a0] = scrimStops[i - 1];
+        const [o1, a1] = scrimStops[i];
+        if (t <= o1) {
+          const f = o1 === o0 ? 0 : (t - o0) / (o1 - o0);
+          return a0 + (a1 - a0) * f;
+        }
+      }
+      return 0;
+    };
+
     if (centered) {
       const plateW = Math.min(W - inset * 2, Math.round(W * 0.86));
       const plateH = Math.min(H - inset * 2, blockH + inset * 2);
@@ -442,24 +473,49 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
         `<rect x="${plateX}" y="${plateY}" width="${plateW}" height="${plateH}" rx="${Math.round(minDim * 0.012)}" fill="${surface}" opacity="${chosenAlpha.toFixed(2)}"/>`,
       );
     } else {
-      const k = chosenAlpha / 0.62;
-      const s0 = Math.min(0.97, 0.92 * k);
-      const s1 = Math.min(0.94, 0.62 * k);
-      const s2 = Math.min(0.72, 0.16 * k);
       defs.push(
         `<linearGradient id="scrim" x1="0" y1="1" x2="0" y2="0">` +
-        `<stop offset="0" stop-color="${surface}" stop-opacity="${s0.toFixed(3)}"/>` +
-        `<stop offset="0.42" stop-color="${surface}" stop-opacity="${s1.toFixed(3)}"/>` +
-        `<stop offset="0.78" stop-color="${surface}" stop-opacity="${s2.toFixed(3)}"/>` +
-        `<stop offset="1" stop-color="${surface}" stop-opacity="0"/>` +
+        scrimStops
+          .map(([o, a]) => `<stop offset="${o}" stop-color="${surface}" stop-opacity="${a.toFixed(3)}"/>`)
+          .join("") +
         `</linearGradient>`,
       );
-      const scrimH = Math.min(Math.round(H * 0.82), blockH + inset * 3);
       parts.push(`<rect x="0" y="${H - scrimH}" width="${W}" height="${scrimH}" fill="url(#scrim)"/>`);
       if (layout === "edge-rule") {
         const ruleW = Math.max(3, Math.round(minDim * 0.006));
         parts.push(`<rect x="${inset}" y="${blockTop}" width="${ruleW}" height="${blockH}" fill="${accent}" opacity="0.95"/>`);
       }
+    }
+
+    // --- per-line legibility: the kicker sits at the TOP of the block, where
+    // the ramp is weakest, so judge it on its own pixels, not the block mean.
+    let kickerColor = signature;
+    if (kickerText) {
+      const kRect = { x: typeRect.x, y: blockTop, w: textW, h: Math.round(kickerSize * 1.3) };
+      const kSample = sampler.sample(kRect.x, kRect.y, kRect.w, kRect.h, W, H);
+      const kBase: [number, number, number] = kSample ? kSample.rgb : baseRgb;
+      const kAlpha = alphaAtY(blockTop + kickerSize * 0.5);
+      let kLum = blendLum(kBase, surface, kAlpha);
+      let kRatio = contrastOf(lum(signature), kLum);
+      if (kRatio < 3) {
+        // Lift the ramp locally rather than abandoning the brand gold.
+        const lift = Math.min(0.9, Math.max(0.25, 0.72 - kAlpha));
+        defs.push(
+          `<linearGradient id="kickerLift" x1="0" y1="1" x2="0" y2="0">` +
+          `<stop offset="0" stop-color="${surface}" stop-opacity="${lift.toFixed(3)}"/>` +
+          `<stop offset="0.55" stop-color="${surface}" stop-opacity="${(lift * 0.6).toFixed(3)}"/>` +
+          `<stop offset="1" stop-color="${surface}" stop-opacity="0"/>` +
+          `</linearGradient>`,
+        );
+        const liftH = Math.round(kickerSize * 3.2);
+        parts.push(`<rect x="0" y="${blockTop - Math.round(kickerSize * 1.6)}" width="${W}" height="${liftH}" fill="url(#kickerLift)"/>`);
+        kLum = blendLum(kBase, surface, Math.min(0.95, kAlpha + lift));
+        kRatio = contrastOf(lum(signature), kLum);
+      }
+      kickerColor = kRatio >= 3 ? signature : ink;
+      metrics.kicker_contrast = Number((kRatio >= 3 ? kRatio : contrastOf(lum(ink), kLum)).toFixed(2));
+    } else {
+      metrics.kicker_contrast = Number(contrastOf(lum(signature), bgLum).toFixed(2));
     }
 
     const anchorX = centered ? Math.round(W / 2) : textLeft;
@@ -486,19 +542,40 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
     }
 
     if (ctaText) {
-      let cursor = y + gapHeadRule;
-      if (ruleH) {
-        parts.push(
-          `<rect x="${anchorX}" y="${cursor}" width="${Math.round(minDim * 0.075)}" height="${ruleH}" fill="${accent}" opacity="0.9"/>`,
-        );
-        cursor += ruleH;
-      }
-      cursor += gapRuleCta + ctaSize;
+      // Outlined pill + chevron: reads as an action, not a caption.
+      const label = ctaText.toUpperCase();
+      const padX = Math.round(ctaSize * 0.95);
+      const padY = Math.round(ctaSize * 0.62);
+      const track = ctaSize * 0.1;
+      const labelW = Math.round(estWidth(label, ctaSize) + label.length * track);
+      const chevW = Math.round(ctaSize * 0.9);
+      const pillH = Math.round(ctaSize + padY * 2);
+      const pillW = Math.min(textW, labelW + chevW + padX * 2 + Math.round(ctaSize * 0.4));
+      const pillY = y + gapHeadCta;
+      const pillX = centered ? Math.round((W - pillW) / 2) : textLeft;
+      const cLum = blendLum(baseRgb, surface, alphaAtY(pillY + pillH / 2));
+      const accentRatio = contrastOf(lum(accent), cLum);
+      const ctaInk = accentRatio >= 3 ? accent : ink;
       parts.push(
-        `<text x="${anchorX}" y="${cursor}"${anchorAttr} fill="${ink}" font-family="${fonts!.sansFamily}" font-size="${ctaSize}" font-weight="500" opacity="0.94" letter-spacing="${(ctaSize * 0.02).toFixed(2)}">${escapeXml(ctaText)}</text>`,
+        `<rect x="${pillX}" y="${pillY}" width="${pillW}" height="${pillH}" rx="${Math.round(pillH / 2)}" fill="none" stroke="${ctaInk}" stroke-width="${Math.max(1.5, ctaSize * 0.055).toFixed(1)}" opacity="0.92"/>`,
       );
+      const baselineY = pillY + Math.round(pillH / 2 + ctaSize * 0.36);
+      parts.push(
+        `<text x="${pillX + padX}" y="${baselineY}" fill="${ctaInk}" font-family="${fonts!.sansBoldFamily}" font-size="${Math.round(ctaSize * 0.86)}" font-weight="700" letter-spacing="${track.toFixed(2)}">${escapeXml(label)}</text>`,
+      );
+      const cx = pillX + pillW - padX - Math.round(chevW * 0.4);
+      const cy = pillY + pillH / 2;
+      const ch = Math.round(ctaSize * 0.3);
+      parts.push(
+        `<path d="M ${cx - ch} ${cy - ch} L ${cx} ${cy} L ${cx - ch} ${cy + ch}" fill="none" stroke="${ctaInk}" stroke-width="${Math.max(1.5, ctaSize * 0.075).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>`,
+      );
+      metrics.cta_contrast = Number(Math.max(accentRatio, contrastOf(lum(ink), cLum)).toFixed(2));
     }
+
+    metrics.band_ratio = centered ? null : Number(bandRatio.toFixed(3));
   }
+
+
 
   // ---------- logo: vector ink in the quietest legal corner ----------
   if (args.logoSvgText || args.logoBytes || args.logoDataUrl) {
