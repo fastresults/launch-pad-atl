@@ -67,20 +67,24 @@ For EVERY route listed in Section 2, produce a subsection with:
 - **Section list (in order)**: e.g. Hero → Logo bar → Feature grid → Proof → Pricing teaser → FAQ → CTA band
 - **Full copy per section**: H1/H2/H3, sub-headline, 1–2 body paragraphs, bullets, microcopy, button labels. Write the real words a visitor will read.
 - **Visuals per section**: EVERY section listed above gets at least one visual — photograph, founder/creator portrait, product shot, UI screenshot/mock, diagram, data visual, or an on-brand texture/gradient band. Never allow two consecutive text-only sections. Name the slot, its aspect ratio, and its treatment (full-bleed, inset, portrait card, background wash).
-- **Image / illustration prompts**: one 30–60 word generation prompt per visual slot, written in the Brand Kit mood-board's visual language and reusing two exact brand hex values
-- **Forms** (when present): field labels, field types, validation, success state copy, where the submission goes
-- **Internal links**: 2–4 specific routes this page should link to
+- **Image / illustration prompts**: one 55–90 word generation prompt per visual slot that OPENS with the IMAGE CRAFT CONTRACT recipe for that visual type (exposure target, technique, composition), then describes the venture-specific subject in the Brand Kit mood-board's visual language, reusing two exact brand hex values
 
 ## 4b. Imagery Plan & Art Direction
-A text-only site is a failed PRD. Render ONE markdown table covering every section of every route. Columns:
-Route | Section | Slot name | Visual type (photo / portrait / product shot / UI mock / diagram / data visual / texture band) | Aspect ratio | Treatment (full-bleed, inset, portrait card, background wash) | Alt text | Generation prompt (30–60 words, mood-board language, two exact brand hex values)
+A text-only site is a failed PRD, and so is a dark, muddy or generic one. Render ONE markdown table covering every section of every route. Columns:
+Route | Section | Slot name | Visual type (hero / portrait / spot call-out / product-UI / diagram / data visual / texture band) | Aspect ratio | Treatment (full-bleed, inset, portrait card, background wash) | Exposure & contrast target | Text-overlay plan (scrim direction + which side of the frame stays clean, or "no type on image") | Alt text | Generation prompt (55–90 words, opens with the craft recipe, mood-board language, two exact brand hex values)
 
 Rules for the table:
 - Every route in Section 2 appears, and every section named in Section 4 has at least one row. No section may be omitted.
+- Every row's **Exposure & contrast target** is a real number range from the IMAGE CRAFT CONTRACT (e.g. "subject at 35–55% luminance, open shadows"), never an adjective like "moody" or "dark".
+- Hero rows must state that darkening for text contrast is applied in CSS as a gradient scrim and is NEVER baked into the render, and must name the clean side of the frame.
+- Every row whose subject includes a person uses the portrait recipe verbatim: 85mm equivalent, ~f/2, soft key at 45 degrees with fill and rim separation, catchlights in both eyes, real skin texture, real environment softly out of focus. Plastic CGI skin, uncanny symmetry, and burned-in text or hex codes are hard failures.
+- Spot / call-out rows must name one unmistakable subject filling 60–75% of the frame and must pass the 480px legibility test. A lone arrow or icon pile on a flat colour field is rejected.
 - Never more than two consecutive text-only sections on any page — if a run of sections has no natural photography, specify diagrams, numbered step visuals, data visuals, portraits, or an on-brand texture/gradient band instead.
 - Cover the slots founders always miss: proof/logo bar (real partner or client lockups), each step of any process or timeline, every card in a feature/advantage grid, the results/stats block (a chart or data visual), testimonials (real portraits), and a closing full-bleed CTA band.
 - Anchor the look to the Brand Kit mood board URLs supplied above — same lighting, subject matter and palette. Generic stock is a failure.
+- No generated image may contain text, words, numbers, hex codes, logos or watermarks. All type is real HTML.
 - Below the table, add 3–5 bullets of art direction: lighting, colour grade, composition, subject rules, and what to never show.
+
 
 ## 5. SEO & Metadata
 Render a markdown table with one row per route. Columns:
