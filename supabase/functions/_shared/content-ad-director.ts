@@ -138,7 +138,12 @@ export function buildContentAdPrompt(args: {
   /** Reserved type-band share of canvas height, locked by the campaign card. */
   bandRatio?: number | null;
   /** Week-level campaign look every poster in the set shares. */
-  campaign?: { grade: string; timeOfDay: string; lens: string; throughLine?: string } | null;
+  campaign?: {
+    grade: string; timeOfDay: string; lens: string; throughLine?: string;
+    /** Funnel stage this week occupies, so a cold ad and an offer ad differ. */
+    stage?: string | null; stageJob?: string | null; audience?: string | null;
+  } | null;
+
   /** Pre-resolved scene so the caller can QA against the same frame it briefed. */
   scene?: SceneDirective;
 

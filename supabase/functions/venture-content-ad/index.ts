@@ -465,6 +465,10 @@ Deno.serve(async (req) => {
             timeOfDay: campaignCard.time_of_day,
             lens: campaignCard.lens,
             throughLine: campaignCard.through_line,
+            stage: arcWeek?.stage_label ?? null,
+            stageJob: arcWeek?.job ?? null,
+            audience: arcWeek?.audience ?? null,
+
           }
         : null,
 
