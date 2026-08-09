@@ -536,7 +536,7 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
       // smudge. Below 4.5:1 we lay a quiet brand plate and re-pick the ink.
       const MIN_LOGO_CONTRAST = 4.5;
       let plated = false;
-      let plateBox: ReturnType<typeof logoBox> | null = null;
+      let plateColor = surface;
       if (ratio < MIN_LOGO_CONTRAST) {
         const plateFill = chosen.lumBehind < 0.5 ? surface : "#FFFFFF";
         const plateLum = lum(plateFill);
@@ -545,11 +545,7 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
         inkHex = wOnPlate >= dOnPlate ? "#FFFFFF" : darkInk;
         ratio = Math.max(wOnPlate, dOnPlate);
         plated = true;
-        plateBox = chosen.box;
-        const pad = Math.round(inset * 0.4);
-        parts.push(
-          `<rect x="${plateBox.x - pad}" y="${plateBox.y - pad}" width="${plateBox.boxW + pad * 2}" height="${plateBox.boxH + pad * 2}" rx="${Math.round(minDim * 0.008)}" fill="${plateFill}" opacity="0.88"/>`,
-        );
+        plateColor = plateFill;
       }
 
       const built = await buildVectorInkLogoPng({
@@ -562,6 +558,12 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
       if (href) {
         // Re-derive the box from the trimmed mark so the inset stays optical.
         const finalBox = logoBox(W, H, built?.aspect ?? aspect, size, chosen.corner, inset);
+        if (plated) {
+          const pad = Math.round(inset * 0.4);
+          parts.push(
+            `<rect x="${finalBox.x - pad}" y="${finalBox.y - pad}" width="${finalBox.boxW + pad * 2}" height="${finalBox.boxH + pad * 2}" rx="${Math.round(minDim * 0.008)}" fill="${plateColor}" opacity="0.88"/>`,
+          );
+        }
         parts.push(
           `<image href="${escapeXml(href)}" x="${finalBox.x}" y="${finalBox.y}" width="${finalBox.boxW}" height="${finalBox.boxH}" preserveAspectRatio="xMidYMid meet"/>`,
         );
