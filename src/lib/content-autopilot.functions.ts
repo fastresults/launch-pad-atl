@@ -107,6 +107,10 @@ export async function generateContentAd(
     headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
     logoSize?: "sm" | "md" | "lg";
     posterLayout?: string;
+    /** Founder-authored scene description — wins over the derived scene brief. */
+    sceneOverride?: string;
+    /** Re-derive the venture scene brief before generating. */
+    refreshScenes?: boolean;
   },
 ) {
   return invoke("venture-content-ad", {
