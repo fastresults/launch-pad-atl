@@ -615,6 +615,8 @@ Deno.serve(async (req) => {
       plan,
       aspect,
       layout: posterLayout,
+      bandRatio,
+
       kicker: posterCopy.kicker,
       headline,
       ctaLine: posterCopy.ctaLine,
