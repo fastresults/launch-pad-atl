@@ -901,6 +901,10 @@ function Step4BuildAds({
                     <div className="flex flex-1 items-center justify-between gap-2 pr-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
+                        <Badge variant="outline" className={`text-[10px] ${TEMP_CLASS[stageFor(w).temp]}`}>
+                          {stageFor(w).stage}
+                        </Badge>
+
                         {isPending ? (
                           <span className="text-[10px] text-muted-foreground">
                             {wPosts.length} planned post{wPosts.length === 1 ? "" : "s"} · not started
