@@ -1,0 +1,2 @@
+ALTER TABLE public.venture_content_progress ADD COLUMN IF NOT EXISTS campaign_arc jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE public.venture_content_calendar_posts ADD COLUMN IF NOT EXISTS stage text;

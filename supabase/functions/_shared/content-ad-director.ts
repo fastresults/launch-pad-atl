@@ -138,7 +138,12 @@ export function buildContentAdPrompt(args: {
   /** Reserved type-band share of canvas height, locked by the campaign card. */
   bandRatio?: number | null;
   /** Week-level campaign look every poster in the set shares. */
-  campaign?: { grade: string; timeOfDay: string; lens: string; throughLine?: string } | null;
+  campaign?: {
+    grade: string; timeOfDay: string; lens: string; throughLine?: string;
+    /** Funnel stage this week occupies, so a cold ad and an offer ad differ. */
+    stage?: string | null; stageJob?: string | null; audience?: string | null;
+  } | null;
+
   /** Pre-resolved scene so the caller can QA against the same frame it briefed. */
   scene?: SceneDirective;
 
@@ -171,7 +176,10 @@ export function buildContentAdPrompt(args: {
 - Light: ${args.campaign.timeOfDay}
 - Lens: ${args.campaign.lens}
 ${args.campaign.throughLine ? `- The week's argument (mood only, never rendered as text): ${args.campaign.throughLine}` : ""}
+${args.campaign.stage ? `- Funnel stage: ${args.campaign.stage}${args.campaign.stageJob ? ` — ${args.campaign.stageJob}` : ""}. Early stages (Disrupt, Reframe) want a colder, starker, more observational frame; proof and offer stages want warmer, closer, more human frames with a visible person or result.` : ""}
+${args.campaign.audience ? `- Who is in frame / who is being spoken to: ${args.campaign.audience}` : ""}
 These are fixed for the set. Vary the subject and the composition, never the grade, the light or the lens.`
+
     : "";
   const posterBrief = `
 ## EDITORIAL POSTER PHOTOGRAPHY (highest priority after brand palette)

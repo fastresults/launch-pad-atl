@@ -90,7 +90,10 @@ export async function deriveCampaignCard(args: {
   businessLine?: string | null;
   brandName?: string | null;
   palette?: { surface?: string; ink?: string; accent?: string } | null;
+  /** Funnel stage from the campaign arc — the look should follow the stage. */
+  stage?: { label: string; job: string; temperature?: string } | null;
 }): Promise<CampaignCard | null> {
+
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return null;
 
@@ -113,11 +116,15 @@ Rules: layouts only from bottom-scrim, centered-plate, edge-rule; lead with bott
     args.brandName ? `Brand: ${args.brandName}` : "",
     args.businessLine ? `Line of work: ${args.businessLine}` : "",
     args.palette ? `Brand palette: surface ${args.palette.surface}, ink ${args.palette.ink}, accent ${args.palette.accent}` : "",
+    args.stage
+      ? `Funnel stage: ${args.stage.label} (${args.stage.temperature ?? "warm"} audience) — ${args.stage.job}. Let the look follow the stage: cold, stark and observational early; warmer, closer and more human at proof and offer.`
+      : "",
     `Week ${args.week} posts:`,
     ...args.posts.slice(0, 10).map((p, i) =>
       `${i + 1}. [${tidy(p.pillar) || "post"} / ${tidy(p.format) || "single"}] ${tidy(p.hook).slice(0, 160)}`
     ),
   ].filter(Boolean).join("\n");
+
 
   try {
     const res = await aiFetch(CHAT_URL, {

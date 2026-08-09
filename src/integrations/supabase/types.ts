@@ -2966,6 +2966,7 @@ export type Database = {
           platform: string | null
           snapshot_id: string
           source_doc_id: string | null
+          stage: string | null
           updated_at: string
           user_id: string
           week: number
@@ -2987,6 +2988,7 @@ export type Database = {
           platform?: string | null
           snapshot_id: string
           source_doc_id?: string | null
+          stage?: string | null
           updated_at?: string
           user_id: string
           week: number
@@ -3008,6 +3010,7 @@ export type Database = {
           platform?: string | null
           snapshot_id?: string
           source_doc_id?: string | null
+          stage?: string | null
           updated_at?: string
           user_id?: string
           week?: number
@@ -3025,6 +3028,7 @@ export type Database = {
       venture_content_progress: {
         Row: {
           art_direction: string | null
+          campaign_arc: Json
           campaign_cards: Json
           created_at: string
           current_step: number
@@ -3038,6 +3042,7 @@ export type Database = {
         }
         Insert: {
           art_direction?: string | null
+          campaign_arc?: Json
           campaign_cards?: Json
           created_at?: string
           current_step?: number
@@ -3051,6 +3056,7 @@ export type Database = {
         }
         Update: {
           art_direction?: string | null
+          campaign_arc?: Json
           campaign_cards?: Json
           created_at?: string
           current_step?: number

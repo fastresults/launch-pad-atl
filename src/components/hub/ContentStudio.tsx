@@ -790,6 +790,29 @@ function Step4BuildAds({
     postsByWeek.get(p.week)!.push(p);
   }
 
+  // Funnel arc: what each week argues, and how warm its audience is. Mirrors
+  // the server-side campaign arc so the founder can see the sequence, not a
+  // pile of interchangeable weeks.
+  const FLIGHT: { stage: string; ask: string; temp: "Cold" | "Warm" | "Hot" }[] = [
+    { stage: "Disrupt", ask: "No ask", temp: "Cold" },
+    { stage: "Reframe", ask: "Follow", temp: "Cold" },
+    { stage: "Proof", ask: "Learn", temp: "Warm" },
+    { stage: "Differentiate", ask: "Compare", temp: "Warm" },
+    { stage: "Objection", ask: "Ask us", temp: "Warm" },
+    { stage: "Offer", ask: "Book", temp: "Hot" },
+    { stage: "Proof at scale", ask: "Book", temp: "Hot" },
+    { stage: "Urgency", ask: "Book now", temp: "Hot" },
+  ];
+  const stageFor = (w: number) => {
+    const idx = allWeeks.indexOf(w);
+    return FLIGHT[(idx >= 0 ? idx : w - 1) % FLIGHT.length];
+  };
+  const TEMP_CLASS: Record<string, string> = {
+    Cold: "border-status-info/40 text-status-info",
+    Warm: "border-primary/40 text-primary",
+    Hot: "border-status-warning/50 text-status-warning",
+  };
+
 
   return (
     <div className="space-y-4">
@@ -821,8 +844,30 @@ function Step4BuildAds({
         )}
       </div>
 
+      {allWeeks.length > 1 && (
+        <div className="rounded-xl border border-white/10 bg-background/30 p-3">
+          <p className="text-[11px] font-medium">Campaign arc — the flight builds one argument, week by week</p>
+          <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+            {allWeeks.map((w) => {
+              const s = stageFor(w);
+              return (
+                <div
+                  key={`flight-${w}`}
+                  className={`min-w-[104px] flex-1 rounded-lg border px-2 py-1.5 ${TEMP_CLASS[s.temp]} bg-background/40`}
+                >
+                  <div className="text-[9px] uppercase tracking-wide opacity-70">Wk {w} · {s.temp}</div>
+                  <div className="text-[11px] font-medium leading-tight">{s.stage}</div>
+                  <div className="text-[9px] opacity-70">Ask: {s.ask}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {(() => {
         // Compute a sensible default open item once weeks are known.
+
         const activeWeeks = Array.from(byWeek.keys()).sort((a, b) => a - b);
         let defaultOpen: string[] = [];
         const firstIncomplete = activeWeeks.find((w) => (byWeek.get(w) ?? []).some((t) => !t.ad));
@@ -856,6 +901,10 @@ function Step4BuildAds({
                     <div className="flex flex-1 items-center justify-between gap-2 pr-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
+                        <Badge variant="outline" className={`text-[10px] ${TEMP_CLASS[stageFor(w).temp]}`}>
+                          {stageFor(w).stage}
+                        </Badge>
+
                         {isPending ? (
                           <span className="text-[10px] text-muted-foreground">
                             {wPosts.length} planned post{wPosts.length === 1 ? "" : "s"} · not started

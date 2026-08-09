@@ -19,6 +19,11 @@ import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
 import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
 import { ensureCampaignCard, deriveCampaignCard, layoutForIndex, type CampaignCard } from "../_shared/campaign-card.ts";
+import {
+  ensureCampaignArc, deriveCampaignArc, weekCard, claimsBefore, CTA_RUNG_BRIEF,
+  type CampaignArc,
+} from "../_shared/campaign-arc.ts";
+
 
 
 const corsHeaders = {
@@ -335,6 +340,39 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.warn("[content-ad] week posts unavailable", e);
     }
+    // --- Flight-level campaign architecture ------------------------------
+    // The arc says what each week ARGUES and which rung of the CTA ladder it
+    // may ask for. It is derived first so the week's LOOK can follow its stage.
+    let arc: CampaignArc | null = null;
+    try {
+      const { data: allPosts } = await admin
+        .from("venture_content_calendar_posts")
+        .select("week, pillar, format, platform, hook")
+        .eq("snapshot_id", snapshotId)
+        .order("week", { ascending: true });
+      const weekNumbers = Array.from(
+        new Set([...(allPosts ?? []).map((p: any) => Number(p.week)).filter(Number.isFinite), weekNo]),
+      ).sort((a, b) => a - b);
+      arc = await ensureCampaignArc(
+        admin,
+        snapshotId,
+        weekNumbers,
+        () => deriveCampaignArc({
+          weekNumbers,
+          posts: allPosts ?? [],
+          businessLine: sceneBrief?.business_line ?? null,
+          brandName: ctx?.company_name ?? kit?.company_name ?? null,
+          valueProp: ctx?.value_proposition ?? null,
+          customer: ctx?.customer ?? null,
+        }),
+        { force: body?.refreshArc === true },
+      );
+    } catch (e) {
+      console.warn("[content-ad] campaign arc unavailable", e);
+    }
+    const arcWeek = weekCard(arc, weekNo);
+    const usedClaims = claimsBefore(arc, weekNo);
+
     let campaignCard: CampaignCard | null = null;
     try {
       campaignCard = await ensureCampaignCard(
@@ -347,8 +385,11 @@ Deno.serve(async (req) => {
           businessLine: sceneBrief?.business_line ?? null,
           brandName: ctx?.company_name ?? kit?.company_name ?? null,
           palette: { surface: kit?.palette?.surface, ink: kit?.palette?.ink, accent: kit?.palette?.accent },
+          stage: arcWeek
+            ? { label: arcWeek.stage_label, job: arcWeek.job, temperature: arcWeek.temperature }
+            : null,
         }),
-        { force: body?.refreshCampaign === true },
+        { force: body?.refreshCampaign === true || body?.refreshArc === true },
       );
     } catch (e) {
       console.warn("[content-ad] campaign card unavailable", e);
@@ -363,12 +404,16 @@ Deno.serve(async (req) => {
       .map((p: any) => String(p.hook ?? "").trim())
       .filter(Boolean)
       .slice(0, 6);
+
     step("campaign card ready", {
       week: weekNo,
       grade: campaignCard?.grade ?? null,
       layout: posterLayout,
       band: bandRatio,
+      stage: arcWeek?.stage ?? null,
+      cta_rung: arcWeek?.cta_rung ?? null,
     });
+
 
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
     step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText });
@@ -425,6 +470,10 @@ Deno.serve(async (req) => {
             timeOfDay: campaignCard.time_of_day,
             lens: campaignCard.lens,
             throughLine: campaignCard.through_line,
+            stage: arcWeek?.stage_label ?? null,
+            stageJob: arcWeek?.job ?? null,
+            audience: arcWeek?.audience ?? null,
+
           }
         : null,
 
@@ -589,9 +638,27 @@ Deno.serve(async (req) => {
       // Sibling hooks from the same week so the claim isn't repeated in-set,
       // and the campaign kicker taxonomy so labels stay consistent.
       siblingHooks,
-      kickerTaxonomy: campaignCard?.kicker_taxonomy ?? [],
+      // Audience-shaped kickers from the arc win over topic labels.
+      kickerTaxonomy: (arcWeek?.kicker_taxonomy?.length ? arcWeek.kicker_taxonomy : campaignCard?.kicker_taxonomy) ?? [],
+      // Where this week sits in the funnel, the claim it owns, what earlier
+      // weeks already spent, and how hard it is allowed to ask.
+      stage: arcWeek
+        ? { label: arcWeek.stage_label, job: arcWeek.job, audience: arcWeek.audience, temperature: arcWeek.temperature }
+        : null,
+      assignedAngle: arcWeek?.claim || null,
+      usedClaims,
+      ctaRung: arcWeek
+        ? {
+            rung: arcWeek.cta_rung,
+            brief: CTA_RUNG_BRIEF[arcWeek.cta_rung],
+            offer: arc?.offer?.name
+              ? [arc.offer.name, arc.offer.terms, arc.offer.ask].filter(Boolean).join(" — ")
+              : null,
+          }
+        : null,
       // The hook/body are source material — the copy pass writes the headline.
       post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
+
 
       headlineOverride: resolvedHeadline.mode === "none"
         ? { mode: "none" }
@@ -661,6 +728,19 @@ Deno.serve(async (req) => {
     (qa as any).copy_truncated = posterCopy.truncated;
     (qa as any).headline_source = posterCopy.source;
     (qa as any).headline_issue = posterCopy.headlineIssue ?? null;
+    (qa as any).campaign = arcWeek
+      ? {
+          week: weekNo,
+          stage: arcWeek.stage,
+          stage_label: arcWeek.stage_label,
+          audience: arcWeek.audience,
+          temperature: arcWeek.temperature,
+          claim: arcWeek.claim,
+          cta_rung: arcWeek.cta_rung,
+          repeats_claim: posterCopy.repeatsClaim ?? null,
+        }
+      : null;
+
     Object.assign(qa as any, poster.metrics);
     if (clipped(poster.metrics)) {
       qa.ok = false;

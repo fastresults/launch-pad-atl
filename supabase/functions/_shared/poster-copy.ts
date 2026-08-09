@@ -27,7 +27,34 @@ export type PosterCopy = {
   rationale?: string | null;
   /** true when source copy had to be shortened rather than written */
   truncated: boolean;
+  /** set when the line still echoes a claim an earlier week already spent */
+  repeatsClaim?: string | null;
 };
+
+const STOP = new Set([
+  "the", "a", "an", "and", "or", "to", "of", "in", "on", "for", "with", "your", "you", "our",
+  "that", "this", "it", "is", "are", "be", "make", "makes", "into", "every", "more", "than",
+]);
+
+/** Content-word overlap: catches "polished ads drain margin" vs "trade polished ads for trust". */
+export function usedClaimEcho(headline: string, claims: string[]): { claim: string; index: number } | null {
+  const words = (s: string) =>
+    new Set(
+      s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
+        .filter((w) => w.length > 2 && !STOP.has(w)),
+    );
+  const h = words(headline);
+  if (h.size < 2) return null;
+  for (let i = 0; i < claims.length; i++) {
+    const c = words(claims[i]);
+    if (c.size < 2) continue;
+    let hit = 0;
+    for (const w of h) if (c.has(w)) hit++;
+    if (hit / Math.min(h.size, c.size) >= 0.6) return { claim: claims[i], index: i };
+  }
+  return null;
+}
+
 
 const MAX_WORDS = 9;
 const MIN_WORDS = 3;
@@ -142,10 +169,19 @@ export async function buildPosterCopy(args: {
   siblingHooks?: string[];
   /** Campaign kicker vocabulary so eyebrows stay consistent across the set. */
   kickerTaxonomy?: string[];
+  /** Funnel stage this week occupies, from the campaign arc. */
+  stage?: { label: string; job: string; audience?: string; temperature?: string } | null;
+  /** The single claim this week owns. Nothing else may be argued. */
+  assignedAngle?: string | null;
+  /** Claims spent by earlier weeks — hard negative context. */
+  usedClaims?: string[];
+  /** How hard this week is allowed to ask, plus the brief for that rung. */
+  ctaRung?: { rung: string; brief: string; offer?: string | null } | null;
   post: { hook?: string | null; body?: string | null; cta?: string | null; pillar?: string | null; platform?: string | null };
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string } | null;
 
 }): Promise<PosterCopy> {
+
   const { post, headlineOverride } = args;
   const cap = Math.max(28, Math.min(72, args.headlineCap ?? 52));
 
@@ -171,6 +207,8 @@ export async function buildPosterCopy(args: {
   let ai: { kicker?: string; headline?: string; ctaLine?: string; rationale?: string } = {};
   let issue: string | null = "no ai key";
   let soft = false;
+  let repeats: string | null = null;
+
 
   if (args.apiKey) {
     const sys = `You are an award-winning advertising copywriter writing the headline on a printed poster. The post below is your SOURCE MATERIAL, not your headline — never quote or truncate it.
@@ -188,13 +226,16 @@ headline — this is the whole job:
 - No ellipsis, no trailing punctuation, no quotes, no emoji, no hashtags, no unbroken word over 18 characters.
 - Sentence case. Never shout. Do not repeat the kicker's words.
 
-kicker — 1-4 words naming the topic or audience, so the headline never has to.
-ctaLine — one short imperative the reader can act on today, MAX 42 characters. Start with a verb ("Book the session", "See the framework"). Never a label, never a sentence fragment, no URL unless the source CTA has one.
+kicker — 1-4 words naming the AUDIENCE or the moment they are in, so the headline never has to.
+ctaLine — obey the CTA rung given below exactly. It sets how hard this ad is allowed to ask; an early-funnel ad that asks for a booking is wrong, and so is a late-funnel ad that only says "see how it works". MAX 42 characters, starts with a verb, no URL unless the source CTA has one. If the rung is "none", return an empty string.
 rationale — one sentence on why this line lands.
 
 No prose outside the JSON.`;
     const siblings = (args.siblingHooks ?? []).filter(Boolean).slice(0, 6);
     const taxonomy = (args.kickerTaxonomy ?? []).filter(Boolean).slice(0, 6);
+    const used = (args.usedClaims ?? []).filter(Boolean).slice(0, 10);
+    const stage = args.stage ?? null;
+    const rung = args.ctaRung ?? null;
     const user = `Brand: ${args.brandName ?? "(unnamed)"}
 Value proposition: ${args.valueProp ?? ""}
 Pillar: ${post.pillar ?? ""}
@@ -202,12 +243,31 @@ Platform: ${post.platform ?? ""}
 Source hook: ${post.hook ?? ""}
 Source body: ${String(post.body ?? "").slice(0, 600)}
 Source CTA: ${post.cta ?? ""}${
-      taxonomy.length ? `\nCampaign kicker vocabulary (pick the closest fit, or a close variant): ${taxonomy.join(" | ")}` : ""
+      stage
+        ? `\n\nCAMPAIGN POSITION — this ad runs at the "${stage.label}" stage of a sequential funnel.
+- Job of this week: ${stage.job}
+- Audience (${stage.temperature ?? "warm"}): ${stage.audience || "the buyer described above"}`
+        : ""
+    }${
+      args.assignedAngle
+        ? `\n- The ONE claim this week owns — argue this and nothing else: ${args.assignedAngle}`
+        : ""
+    }${
+      rung
+        ? `\n- CTA rung "${rung.rung}": ${rung.brief}${rung.offer ? `\n- The offer, when you are allowed to name it: ${rung.offer}` : ""}`
+        : ""
+    }${
+      used.length
+        ? `\n\nALREADY SPENT by earlier weeks of this campaign. Repeating any of these — in any wording — is a failure:\n- ${used.join("\n- ")}`
+        : ""
+    }${
+      taxonomy.length ? `\n\nCampaign kicker vocabulary (pick the closest fit, or a close variant): ${taxonomy.join(" | ")}` : ""
     }${
       siblings.length
-        ? `\nOther posts running the same week — make a DIFFERENT argument from all of these:\n- ${siblings.join("\n- ")}`
+        ? `\n\nOther posts running the same week — make a DIFFERENT argument from all of these:\n- ${siblings.join("\n- ")}`
         : ""
     }`;
+
 
 
     const ask = async (note?: string) => {
@@ -256,6 +316,21 @@ Source CTA: ${post.cta ?? ""}${
           console.warn("[poster-copy] headline rejected twice", { first: ai.headline, second: retry.headline, issue, retryIssue: retryDetail.issue });
         }
       }
+      // Cross-week repetition: a line that restates a claim an earlier week
+      // already spent teaches a returning viewer nothing.
+      const echoed = usedClaimEcho(ai.headline ?? "", used);
+      if (echoed) {
+        const retry = await ask(
+          `Your headline restates a claim week ${echoed.index + 1} of this campaign already made ("${echoed.claim}"). Make a different argument entirely — the one this week owns${args.assignedAngle ? `: ${args.assignedAngle}` : ""}.`,
+        );
+        const retryDetail = headlineIssueDetail(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
+        if (retry.headline && !usedClaimEcho(retry.headline, used) && (!retryDetail.issue || retryDetail.soft)) {
+          ai = { ...ai, ...retry }; issue = retryDetail.issue; soft = retryDetail.soft;
+        } else {
+          repeats = echoed.claim;
+          console.warn("[poster-copy] headline repeats an earlier week's claim", { headline: ai.headline, claim: echoed.claim });
+        }
+      }
     } catch (e) {
       console.warn("poster copy failed", e);
       issue = "copy pass failed";
@@ -264,10 +339,14 @@ Source CTA: ${post.cta ?? ""}${
 
   // A soft flag (verb lexicon miss) still counts as a written headline.
   const wrote = !!ai.headline && (!issue || soft);
+  // A "none" rung deliberately ships without an ask.
+  const suppressCta = args.ctaRung?.rung === "none";
   return {
     kicker: ai.kicker || fb.kicker,
     headline: wrote ? ai.headline! : (ai.headline ? firstClause(ai.headline, cap) : fb.headline),
-    ctaLine: ai.ctaLine || fb.ctaLine,
+    ctaLine: suppressCta ? "" : (ai.ctaLine || fb.ctaLine),
+    repeatsClaim: repeats,
+
     source: wrote ? "written" : "fallback",
     headlineIssue: issue,
     rationale: ai.rationale ?? null,
