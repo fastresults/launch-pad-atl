@@ -790,6 +790,29 @@ function Step4BuildAds({
     postsByWeek.get(p.week)!.push(p);
   }
 
+  // Funnel arc: what each week argues, and how warm its audience is. Mirrors
+  // the server-side campaign arc so the founder can see the sequence, not a
+  // pile of interchangeable weeks.
+  const FLIGHT: { stage: string; ask: string; temp: "Cold" | "Warm" | "Hot" }[] = [
+    { stage: "Disrupt", ask: "No ask", temp: "Cold" },
+    { stage: "Reframe", ask: "Follow", temp: "Cold" },
+    { stage: "Proof", ask: "Learn", temp: "Warm" },
+    { stage: "Differentiate", ask: "Compare", temp: "Warm" },
+    { stage: "Objection", ask: "Ask us", temp: "Warm" },
+    { stage: "Offer", ask: "Book", temp: "Hot" },
+    { stage: "Proof at scale", ask: "Book", temp: "Hot" },
+    { stage: "Urgency", ask: "Book now", temp: "Hot" },
+  ];
+  const stageFor = (w: number) => {
+    const idx = allWeeks.indexOf(w);
+    return FLIGHT[(idx >= 0 ? idx : w - 1) % FLIGHT.length];
+  };
+  const TEMP_CLASS: Record<string, string> = {
+    Cold: "border-status-info/40 text-status-info",
+    Warm: "border-primary/40 text-primary",
+    Hot: "border-status-warning/50 text-status-warning",
+  };
+
 
   return (
     <div className="space-y-4">
