@@ -13,6 +13,8 @@ import { kitToBrandBoard } from "@/lib/brand-board";
 import { SectionHeader } from "@/components/hub/SectionHeader";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+
 
 export function BrandStudio({ snapshot }: { snapshot: any }) {
   const [open, setOpen] = useState(false);
