@@ -600,7 +600,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     abortToken.current += 1;
     try {
       const out = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_force_reset" } });
-      setLogos([]);
+      setLogoOverride(null);
       setLogoPhase("idle");
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["brandLogoRun", snapshot.id] }),
@@ -621,10 +621,12 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     (d) => d.render_status && d.render_status !== "ready" && d.render_status !== "pending",
   );
 
-  useEffect(() => {
-    const ready = runDirections.filter((d) => d.status === "ready" || d.status === "needs_review").map((d) => d.asset).filter((a) => a?.url);
-    if (ready.length) setLogos(ready);
-  }, [runDirections]);
+  // In-progress run concepts stay concepts: they carry no `primary` flag, so
+  // letting them stand in for the committed mark shadows the real logo.
+  const runConcepts = runDirections
+    .filter((d) => d.status === "ready" || d.status === "needs_review")
+    .map((d) => d.asset)
+    .filter((a) => a?.url);
 
   const processLogoRun = async (initialRun: any) => {
     let run = initialRun;
@@ -714,7 +716,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
     mutationFn: async () => {
       if (refs.length < 1) throw new Error("Upload at least one logo you admire first — it sets the craft standard for this run.");
       const created = await generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_create_run", count: 3, referenceImages: refs } });
-      setLogos([]);
+      setLogoOverride(null);
       await processLogoRun(created.run);
       return created;
     },
@@ -749,7 +751,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const selectDirection = useMutation({
     mutationFn: (item: any) => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "logo_select_direction", runId: item.run_id, directionId: item.id } }),
     onSuccess: (out: any) => {
-      if (Array.isArray(out?.logos)) setLogos(out.logos);
+      if (Array.isArray(out?.logos)) setLogoOverride(out.logos);
       qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
       logoRunQ.refetch();
       toast.success("Mark selected — it's now your primary logo in the Live Brand");
@@ -771,7 +773,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       });
     },
     onSuccess: (out: any) => {
-      if (Array.isArray(out?.logos)) setLogos(out.logos);
+      if (Array.isArray(out?.logos)) setLogoOverride(out.logos);
       qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
       logoRunQ.refetch();
       toast.success("Your logo is selected and saved to the Live Brand");
