@@ -13,9 +13,13 @@ import { kitToBrandBoard } from "@/lib/brand-board";
 import { SectionHeader } from "@/components/hub/SectionHeader";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+
 
 export function BrandStudio({ snapshot }: { snapshot: any }) {
   const [open, setOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<{ url: string; caption?: string | null } | null>(null);
+
   const qc = useQueryClient();
   const confirm = useConfirm();
   const kitQ = useQuery({
@@ -101,6 +105,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
             <BrandIdentityHeader
               kit={kit}
               companyName={snapshot?.company_name}
+              onEditMark={() => setOpen(true)}
               onChangeColor={async (key, hex) => {
                 const nextColors = { ...(kit.palette?.colors ?? {}), [key]: hex };
                 await upsertBrandKit(snapshot.id, {
@@ -117,11 +122,13 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
               <BrandBoardSections
                 board={kitToBrandBoard(kit)}
                 blocks={["mood", "dna", "voice", "ctas"]}
+                onImageClick={(url, caption) => setLightbox({ url, caption })}
                 emptyHint="Mood board, brand DNA, voice and calls to action appear here once you complete steps 3–5 of the brand wizard."
               />
               <div className="border-t border-white/10" />
             </>
           )}
+
 
 
           <BrandCollateral snapshot={snapshot} locked={locked} />
@@ -130,6 +137,25 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
 
 
       <BrandWizard snapshot={snapshot} open={open} onOpenChange={setOpen} />
+
+      <Dialog open={!!lightbox} onOpenChange={(v) => !v && setLightbox(null)}>
+        <DialogContent className="max-w-3xl border-white/10 bg-card p-3">
+          <DialogTitle className="sr-only">{lightbox?.caption ?? "Mood board reference"}</DialogTitle>
+          {lightbox && (
+            <figure className="space-y-2">
+              <img
+                src={lightbox.url}
+                alt={lightbox.caption ?? "Mood board reference"}
+                className="max-h-[75vh] w-full rounded-xl object-contain"
+              />
+              {lightbox.caption && (
+                <figcaption className="text-center text-xs text-muted-foreground">{lightbox.caption}</figcaption>
+              )}
+            </figure>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
