@@ -418,6 +418,16 @@ Deno.serve(async (req) => {
       // model must leave the top band as unmarked negative space.
       serverRenderedHeadline: true,
       posterLayout,
+      bandRatio,
+      campaign: campaignCard
+        ? {
+            grade: campaignCard.grade,
+            timeOfDay: campaignCard.time_of_day,
+            lens: campaignCard.lens,
+            throughLine: campaignCard.through_line,
+          }
+        : null,
+
       scene,
     });
 
