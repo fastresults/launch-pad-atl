@@ -93,7 +93,10 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
 
   return (
     <div className={`brand-guide-preview rounded-xl border border-border bg-card p-3 ${className}`}>
-      <article className="mx-auto max-w-4xl overflow-hidden rounded-lg shadow-xl" style={pageStyle}>
+      {/* The guide renders as printed paper. It can sit inside a force-dark shell
+          (the Brand Wizard dialog), so it opts its whole subtree back into the
+          light token set — otherwise token-coloured text lands white-on-white. */}
+      <article className="theme-light-scope mx-auto max-w-4xl overflow-hidden rounded-lg shadow-xl" style={pageStyle}>
         <section className="px-8 py-10 sm:px-12" style={{ borderBottom: `8px solid ${primary}` }}>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
@@ -109,7 +112,7 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
               <AssetImage
                 asset={primaryLogo}
                 alt={`${company} selected logo`}
-                className="flex h-32 w-32 shrink-0 items-center justify-center rounded-lg border bg-white p-3"
+                className="flex h-32 w-32 shrink-0 items-center justify-center rounded-lg border border-border bg-white p-3"
                 imgClassName="max-h-full max-w-full object-contain"
               />
             )}
@@ -125,7 +128,7 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
           )}
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {colorEntries.map(([key, value]) => (
-              <div key={key} className="overflow-hidden rounded-lg border bg-white/80" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
+              <div key={key} className="overflow-hidden rounded-lg border border-border bg-card text-card-foreground">
                 <div className="relative h-24" style={{ background: value }}>
                   {onColorChange && (
                     <EditablePaletteSwatch
@@ -154,10 +157,10 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
           </div>
         </section>
 
-        <section className="px-8 py-8 sm:px-12" style={{ background: "rgba(255,255,255,0.62)" }}>
+        <section className="bg-background/60 px-8 py-8 sm:px-12">
           <SectionTitle label="Typography" style={headingStyle} color={primary} />
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-lg border bg-white p-5" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
+            <div className="rounded-lg border border-border bg-card p-5 text-card-foreground">
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Heading Typeface</div>
               <div className="mt-2 text-4xl leading-none" style={{ fontFamily: heading ? `'${heading}', system-ui` : undefined, fontWeight: headingWeight, color: primary }}>
                 {heading || "Heading font"}
@@ -168,7 +171,7 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
               <div className="mt-3 font-mono text-xs text-muted-foreground">Weight {headingWeight}</div>
               <div className="mt-1 font-mono text-[11px] text-muted-foreground">Fallback: {fontFallbacks(heading)}</div>
             </div>
-            <div className="rounded-lg border bg-white p-5" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
+            <div className="rounded-lg border border-border bg-card p-5 text-card-foreground">
               <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Body Typeface</div>
               <div className="mt-2 text-3xl leading-none" style={{ fontFamily: body ? `'${body}', system-ui` : undefined, fontWeight: bodyWeight, color: primary }}>
                 {body || "Body font"}
@@ -187,8 +190,9 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
           {logos.length ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {logos.slice(0, 4).map((logo: any, i: number) => (
-                <div key={`${logo.path || logo.url}-${i}`} className="rounded-lg border bg-white p-3" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
-                  <AssetImage asset={logo} alt={logo.direction_name || `Logo concept ${i + 1}`} className="flex aspect-square items-center justify-center bg-white" imgClassName="max-h-full max-w-full object-contain" />
+                <div key={`${logo.path || logo.url}-${i}`} className="rounded-lg border border-border bg-card p-3 text-card-foreground">
+                  {/* artwork plates stay literally white — printed logos sit on white */}
+                  <AssetImage asset={logo} alt={logo.direction_name || `Logo concept ${i + 1}`} className="flex aspect-square items-center justify-center rounded bg-white" imgClassName="max-h-full max-w-full object-contain" />
                   <div className="mt-3 text-sm font-semibold">{logo.direction_name || `Concept ${i + 1}`}</div>
                   {logo.logo_type && <div className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">{logo.logo_type}</div>}
                 </div>
@@ -200,33 +204,33 @@ export function VisualBrandGuide({ kit, snapshot, className = "", onColorChange,
           {moodboard.length > 0 && (
             <div className="mt-6 grid gap-3 sm:grid-cols-4">
               {moodboard.slice(0, 4).map((asset: any, i: number) => (
-                <AssetImage key={`${asset.path || asset.url}-${i}`} asset={asset} alt={`Moodboard tile ${i + 1}`} className="aspect-square overflow-hidden rounded-lg border bg-white" imgClassName="h-full w-full object-cover" />
+                <AssetImage key={`${asset.path || asset.url}-${i}`} asset={asset} alt={`Moodboard tile ${i + 1}`} className="aspect-square overflow-hidden rounded-lg border border-border bg-white" imgClassName="h-full w-full object-cover" />
               ))}
             </div>
           )}
         </section>
 
-        <section className="px-8 py-8 sm:px-12" style={{ background: "rgba(255,255,255,0.62)" }}>
+        <section className="bg-background/60 px-8 py-8 sm:px-12">
           <SectionTitle label="Voice" style={headingStyle} color={primary} />
           <div className="grid gap-3 sm:grid-cols-2">
             {Object.entries(voiceAttrs).map(([key, value]: any) => (
-              <div key={key} className="rounded-lg border bg-white p-3" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
+              <div key={key} className="rounded-lg border border-border bg-card p-3 text-card-foreground">
                 <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide">
                   <span>{key}</span><span>{value}%</span>
                 </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
                   <div className="h-full" style={{ width: `${value}%`, background: primary }} />
                 </div>
               </div>
             ))}
           </div>
-          {kit?.voice?.rules && <p className="mt-4 rounded-lg border bg-white p-4 text-sm leading-6" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>{kit.voice.rules}</p>}
+          {kit?.voice?.rules && <p className="mt-4 rounded-lg border border-border bg-card p-4 text-sm leading-6 text-card-foreground">{kit.voice.rules}</p>}
         </section>
 
         {kit?.guide_markdown && (
           <section className="px-8 py-8 sm:px-12">
             <SectionTitle label="Brand Narrative" style={headingStyle} color={primary} />
-            <div className="prose-brand rounded-lg border bg-white p-5" style={{ borderColor: "rgba(0,0,0,0.12)", color: "#111827" }}>
+            <div className="prose-brand rounded-lg border border-border bg-card p-5 text-card-foreground">
               <RichMarkdown variant="document">{sanitizeGuideMarkdown(kit.guide_markdown)}</RichMarkdown>
             </div>
             <div className="mt-4 flex items-center gap-2 text-xs opacity-70">
@@ -254,5 +258,5 @@ function SectionTitle({ label, style, color }: any) {
 }
 
 function EmptyState({ children }: any) {
-  return <div className="rounded-lg border border-dashed bg-white/70 p-6 text-center text-sm opacity-70">{children}</div>;
+  return <div className="rounded-lg border border-dashed border-border bg-card/70 p-6 text-center text-sm opacity-70">{children}</div>;
 }
