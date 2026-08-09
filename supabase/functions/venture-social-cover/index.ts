@@ -12,7 +12,9 @@ import {
   type AssetKind,
   type AssetSpec,
 } from "../_shared/social-platform-specs.ts";
-import { buildCoverArtPrompt, buildAvatarPrompt } from "../_shared/cover-art-director.ts";
+import { buildCoverArtPrompt, buildAvatarPrompt, resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
+import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
+
 import { buildCanvasPlan, pickAvatarSurface, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
@@ -338,7 +340,21 @@ Deno.serve(async (req) => {
     }
 
     const ctx = await loadVentureContext(admin, snapshotId);
+
+    // Venture-specific scene brief: what THIS business actually looks like at
+    // work. Derived once from the venture brain and cached on the snapshot.
+    const sceneOverride = typeof body?.sceneOverride === "string" ? body.sceneOverride.slice(0, 400) : "";
+    const refreshScenes = body?.refreshScenes === true;
+    let sceneBrief: any = null;
+    try {
+      sceneBrief = await ensureSceneBrief(admin, snapshotId, ctx, { force: refreshScenes });
+    } catch (e) {
+      console.warn("[social-cover] scene brief unavailable", e);
+    }
+    if (sceneBrief) (ctx as any).sceneBrief = sceneBrief;
+
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText, skipReason: logoSkipReason } = await fetchPrimaryLogo(admin, kit);
+
 
     const isAvatar = asset.kind === "avatar";
 
@@ -410,6 +426,16 @@ Deno.serve(async (req) => {
         ? (headlineOverride.text ?? "").trim()
         : "";
 
+    // Resolve the scene ONCE so the prompt, the QA pass and the UI all agree
+    // on which scene was commissioned.
+    const scene: SceneDirective | undefined = isAvatar
+      ? undefined
+      : resolveSceneDirective(ctx, {
+          discriminator: `${asset.kind}|${platform.id ?? platform.label}|${variationSeed}`,
+          assetNotes: userFeedback || null,
+          override: sceneOverride || null,
+        });
+
     const buildPrompt = (retryNote?: string) =>
       isAvatar
         ? buildAvatarPrompt({
@@ -433,8 +459,10 @@ Deno.serve(async (req) => {
             variationSeed,
             headlineOverride,
             logoZone: logoZoneHint,
+            scene,
             serverRenderedHeadline: true,
           });
+
 
     // The text-only fallback never sees the palette tile or the logo, so spell
     // the palette out inline for that path.
@@ -558,6 +586,71 @@ Deno.serve(async (req) => {
         (qa as any).signature_composited = false;
       }
     }
+
+    // --- Relevance QA: does the frame actually depict the commissioned scene
+    // for this line of work? One corrective retry, then ship the better of the two.
+    if (scene) {
+      (qa as any).scene = {
+        depict: scene.depict,
+        setting: scene.setting,
+        camera: scene.camera,
+        composition: scene.composition,
+        source: sceneOverride ? "founder_override" : (sceneBrief ? "venture_brief" : "library_fallback"),
+      };
+      const businessLine = sceneBrief?.business_line
+        || [ctx?.snap?.sub_industry, ctx?.snap?.industry].filter(Boolean).join(" / ")
+        || "this venture";
+      try {
+        const rel = await checkSceneRelevance({
+          pngB64: bytesToB64(bytes),
+          depict: scene.depict,
+          businessLine,
+        });
+        (qa as any).scene_relevant = rel.ok;
+        if (!rel.ok) {
+          console.warn("[social-cover] scene relevance failed:", rel.note);
+          const retry = await generate(
+            `${rel.note} Rebuild the frame around the SCENE DIRECTIVE exactly: ${scene.depict} Setting: ${scene.setting}. It must be unmistakably about ${businessLine}.`,
+          );
+          const retryBytes = b64ToBytes(retry.b64);
+          const retryRel = await checkSceneRelevance({
+            pngB64: retry.b64,
+            depict: scene.depict,
+            businessLine,
+          });
+          const retryQa = runContrastQa(retryBytes, plan);
+          if (retryRel.ok && retryQa.observed.ratio >= qa.observed.ratio * 0.8) {
+            bytes = retryBytes;
+            result = retry;
+            qa = retryQa;
+            if (!isAvatar) {
+              const minPct2 = (plan.signatureMinCoveragePct ?? 12) * 0.75;
+              if (qa.observed.signatureVisible === false || (qa.observed.signatureCoveragePct ?? 0) < minPct2) {
+                bytes = compositeSignatureSplash(bytes, plan);
+                qa = runContrastQa(bytes, plan);
+                (qa as any).signature_composited = true;
+              }
+            }
+            (qa as any).scene = {
+              depict: scene.depict,
+              setting: scene.setting,
+              camera: scene.camera,
+              composition: scene.composition,
+              source: sceneOverride ? "founder_override" : (sceneBrief ? "venture_brief" : "library_fallback"),
+            };
+            (qa as any).scene_relevant = true;
+            (qa as any).scene_retried = true;
+          } else {
+            (qa as any).scene_retried = true;
+            (qa as any).scene_note = rel.note;
+          }
+        }
+      } catch (e) {
+        console.warn("[social-cover] relevance QA skipped", e);
+      }
+    }
+
+
 
     // --- Guaranteed logo placement: composite the user's actual brand mark
     // into the reserved zone (or center, for avatars). The model only paints

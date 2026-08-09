@@ -162,7 +162,7 @@ function ventureBlock(ctx: any, _headlineOverride?: HeadlineOverride) {
 // Deterministic scene resolver — NEVER reads the brand name. Picks a subject
 // from track/industry/customer so the model gets a fully-decided scene BEFORE
 // it ever encounters tokens like "Workshops" / "Lab" / "Garage".
-type SceneDirective = {
+export type SceneDirective = {
   depict: string;
   subjects: string[];
   setting: string;
@@ -330,9 +330,12 @@ export type SceneSignal = {
   pillar?: string | null;
   format?: string | null;
   assetNotes?: string | null;
+  /** Founder-authored scene description. Wins over everything else. */
+  override?: string | null;
 };
 
-function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
+
+export function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   const brain = ctx?.brain ?? {};
   const snap = ctx?.snap ?? {};
   const name = brain?.identity?.company_name ?? snap?.company_name ?? "";
@@ -357,10 +360,35 @@ function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   if (guards.some((g) => /hub/i.test(g))) addAvoid("airport terminals", "planes", "hubcaps");
   if (guards.some((g) => /garden/i.test(g))) addAvoid("soil", "gardeners", "plant nursery");
 
-  const lib = pickLibrary(track, ind);
+
+  // Venture-specific scene brief (derived from this business's own concept)
+  // takes priority over the static industry libraries. The libraries are the
+  // cold-start fallback only.
+  const brief = ctx?.sceneBrief;
+  const briefScenes: SceneVariant[] = Array.isArray(brief?.scenes) && brief.scenes.length >= 4
+    ? brief.scenes as SceneVariant[]
+    : [];
+  if (Array.isArray(brief?.avoid)) addAvoid(...brief.avoid.filter((a: any) => typeof a === "string").slice(0, 14));
+
+  // Founder override wins outright.
+  const override = (signal?.override ?? "").trim();
+  if (override.length > 10) {
+    return {
+      depict: customer ? `${override} Audience implied: ${customer}.` : override,
+      subjects: ["as described in the DEPICT line"],
+      setting: "as described in the DEPICT line",
+      mood: "confident, real, on-brand",
+      camera: CAMERAS[hash32(override + "|cam") % CAMERAS.length],
+      composition: COMPOSITIONS[hash32(override + "|comp") % COMPOSITIONS.length],
+      avoid: [...avoidBase],
+    };
+  }
+
+  const lib = briefScenes.length ? briefScenes : pickLibrary(track, ind);
 
   // Score every variant by tag match against post signals; hash-rotate ties.
   const signalStr = [signal?.pillar, signal?.format, signal?.assetNotes].filter(Boolean).join(" ").toLowerCase();
+
   const scored = lib.map((v, i) => {
     let score = 0;
     if (v.tags?.length && signalStr) {
@@ -386,8 +414,10 @@ function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
   const chosen = picked.v;
   rememberRecent(snapshotKey, picked.i);
 
-  // Compose the depict string with a fresh camera+composition per post so
-  // even repeat variant picks vary framing.
+  // Framing must stay COHERENT with the subject: each scene carries the camera
+  // and composition that suit it. Randomising them independently is what
+  // produced briefs like "wide establishing shot" on a macro of business cards.
+  // Only fall back to the rotating pools when a scene omits them.
   const compositionIdx = hash32(rotorSeed + "|comp") % COMPOSITIONS.length;
   const cameraIdx = hash32(rotorSeed + "|cam") % CAMERAS.length;
 
@@ -400,8 +430,9 @@ function resolveSceneDirective(ctx: any, signal?: SceneSignal): SceneDirective {
     subjects: chosen.subjects,
     setting: chosen.setting,
     mood: chosen.mood,
-    camera: CAMERAS[cameraIdx],
-    composition: COMPOSITIONS[compositionIdx],
+    camera: chosen.camera || CAMERAS[cameraIdx],
+    composition: chosen.composition || COMPOSITIONS[compositionIdx],
+
     avoid: [...avoidBase],
   };
 }
@@ -613,11 +644,14 @@ export function buildCoverArtPrompt(args: {
   headlineOverride?: HeadlineOverride;
   logoZone?: { widthPct: number; heightPct: number; corner: "top-left" | "bottom-right" | "center" };
   sceneSignal?: SceneSignal;
+  /** Pre-resolved scene (so the caller can QA against the same scene). */
+  scene?: SceneDirective;
+
   // When true, we render the headline server-side after generation. The prompt
   // suppresses all glyphs and reserves the top band as unmarked negative space.
   serverRenderedHeadline?: boolean;
 }): string {
-  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone, sceneSignal, serverRenderedHeadline } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone, sceneSignal, scene: sceneArg, serverRenderedHeadline } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
@@ -634,7 +668,7 @@ export function buildCoverArtPrompt(args: {
   const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, effectiveOverride);
   const isCustomHeadline = effectiveOverride?.mode === "custom" && !!headline;
   const venture = ventureBlock(ctx, effectiveOverride);
-  const scene = resolveSceneDirective(ctx, sceneSignal);
+  const scene = sceneArg ?? resolveSceneDirective(ctx, sceneSignal);
   const sceneBlock = sceneDirectiveBlock(scene);
   const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline, logoZone);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;

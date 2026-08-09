@@ -139,6 +139,8 @@ export async function generateOneKitTask(
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
     headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
     logoSize?: "sm" | "md" | "lg";
+    sceneOverride?: string;
+    refreshScenes?: boolean;
   },
 ): Promise<void> {
   await generateSocialCover({
@@ -153,5 +155,7 @@ export async function generateOneKitTask(
     paletteOverride: opts?.paletteOverride,
     headlineOverride: opts?.headlineOverride,
     logoSize: opts?.logoSize,
+    sceneOverride: opts?.sceneOverride,
+    refreshScenes: opts?.refreshScenes,
   });
 }

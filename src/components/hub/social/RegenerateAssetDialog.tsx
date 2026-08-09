@@ -180,6 +180,7 @@ export function RegenerateAssetDialog({
   suggestedHeadline,
   currentHeadline,
   currentLogoSize,
+  currentScene,
   focusSection,
   onSubmit,
 }: {
@@ -198,6 +199,8 @@ export function RegenerateAssetDialog({
   currentHeadline?: string | null;
   /** The logo size the current asset was rendered with, if any. */
   currentLogoSize?: "sm" | "md" | "lg" | null;
+  /** The scene the current asset was generated from, if recorded. */
+  currentScene?: string | null;
   /** When set, scroll+highlight the matching section and pre-focus its primary input. */
   focusSection?: "headline" | "palette" | "feedback" | "logo";
   onSubmit: (input: {
@@ -208,6 +211,8 @@ export function RegenerateAssetDialog({
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
     headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
     logoSize?: "sm" | "md" | "lg";
+    sceneOverride?: string;
+    refreshScenes?: boolean;
   }) => Promise<void>;
 }) {
   const [feedback, setFeedback] = useState("");
@@ -215,6 +220,8 @@ export function RegenerateAssetDialog({
   const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">(initialIntensity);
   const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
   const [logoSize, setLogoSize] = useState<"sm" | "md" | "lg">(currentLogoSize || "md");
+  const [sceneText, setSceneText] = useState("");
+  const [refreshScenes, setRefreshScenes] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // Headline override: when opened via "Edit headline", default to Custom so the
@@ -310,6 +317,8 @@ export function RegenerateAssetDialog({
       paletteOverride: Object.keys(paletteOverride).length ? paletteOverride : undefined,
       headlineOverride,
       logoSize,
+      sceneOverride: sceneText.trim() || undefined,
+      refreshScenes: refreshScenes || undefined,
     };
     // Fire-and-forget so the user can close the modal and let the task run in the background.
     Promise.resolve()
@@ -317,6 +326,7 @@ export function RegenerateAssetDialog({
       .catch(() => { /* parent surfaces errors via toast */ })
       .finally(() => setBusy(false));
     setFeedback("");
+    setRefreshScenes(false);
     onOpenChange(false);
   };
 
@@ -494,7 +504,38 @@ export function RegenerateAssetDialog({
           </div>
 
 
-
+          {/* Scene — what the image actually depicts, derived from this venture */}
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="block text-xs font-medium">Scene</label>
+              <button
+                type="button"
+                onClick={() => { setSceneText(""); setRefreshScenes(true); }}
+                disabled={busy}
+                className="text-[11px] text-muted-foreground hover:text-foreground"
+                title="Re-derive fresh scene ideas from your venture"
+              >
+                <RotateCcw className="mr-0.5 -mt-0.5 inline h-3 w-3" /> Shuffle scenes
+              </button>
+            </div>
+            {currentScene && !sceneText && (
+              <div className="mb-1.5 rounded-md border border-border bg-muted/40 p-2 text-[11px] text-muted-foreground">
+                Last used: {currentScene}
+              </div>
+            )}
+            <Textarea
+              rows={2}
+              placeholder="Leave blank to let us choose a scene from your venture (e.g. a creator ring-light setup mid-shoot, product boxes staged for a UGC unboxing)"
+              value={sceneText}
+              onChange={(e) => setSceneText(e.target.value.slice(0, 400))}
+              disabled={busy}
+            />
+            <div className="mt-1 text-[10px] text-muted-foreground">
+              {refreshScenes
+                ? "Fresh scene ideas will be derived from your venture before generating."
+                : "Scenes are derived from what your business actually does — override here to direct the shot yourself."}
+            </div>
+          </div>
 
 
           {mode === "regenerate" && (

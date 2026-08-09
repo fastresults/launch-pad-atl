@@ -3479,6 +3479,8 @@ export type Database = {
           roadmap_structure_version: number | null
           roadmap_word_count: number | null
           saved_enhancements: Json
+          scene_brief: Json | null
+          scene_brief_at: string | null
           scraped_content: string | null
           snapshot_brain: Json | null
           snapshot_brain_dirty: boolean
@@ -3535,6 +3537,8 @@ export type Database = {
           roadmap_structure_version?: number | null
           roadmap_word_count?: number | null
           saved_enhancements?: Json
+          scene_brief?: Json | null
+          scene_brief_at?: string | null
           scraped_content?: string | null
           snapshot_brain?: Json | null
           snapshot_brain_dirty?: boolean
@@ -3591,6 +3595,8 @@ export type Database = {
           roadmap_structure_version?: number | null
           roadmap_word_count?: number | null
           saved_enhancements?: Json
+          scene_brief?: Json | null
+          scene_brief_at?: string | null
           scraped_content?: string | null
           snapshot_brain?: Json | null
           snapshot_brain_dirty?: boolean
