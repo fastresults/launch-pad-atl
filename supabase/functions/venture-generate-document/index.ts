@@ -567,7 +567,7 @@ Deno.serve(async (req) => {
     if (!own.snapshot || own.snapshot.concept_status !== "locked") {
       return jsonResponse({ error: "Lock your concept summary before generating documents." }, 409, corsHeaders);
     }
-    const result = await generateOne(
+    const work = generateOne(
       supabase,
       snapshotId,
       documentType,
@@ -575,7 +575,48 @@ Deno.serve(async (req) => {
       Array.isArray(rewriteTags) ? rewriteTags : undefined,
       intakeAnswers && typeof intakeAnswers === "object" ? intakeAnswers : undefined,
     );
-    return new Response(JSON.stringify({ ok: true, ...result }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // Long deliverables (Website PRD, with its copy-expansion and repair
+    // passes) routinely run past the platform's 150s request idle timeout.
+    // Race a soft deadline: if the work is still running, hand it to the
+    // background and answer 202 — the client already polls venture_documents.
+    const DEADLINE_MS = 100_000;
+    const PENDING = Symbol("pending");
+    let settled = false;
+    const guarded = work
+      .then((r) => { settled = true; return r; })
+      .catch(async (err) => {
+        settled = true;
+        try {
+          await supabase.from("venture_documents")
+            .update({
+              status: "failed",
+              last_error: (err instanceof Error ? err.message : String(err)).slice(0, 500),
+            })
+            .eq("snapshot_id", snapshotId)
+            .eq("document_type", documentType);
+        } catch { /* ignore */ }
+        throw err;
+      });
+    // Prevent an unhandled rejection when we hand off to the background.
+    guarded.catch(() => {});
+
+    const raced = await Promise.race([
+      guarded.then((r) => r).catch((e) => { throw e; }),
+      new Promise<typeof PENDING>((resolve) => setTimeout(() => resolve(PENDING), DEADLINE_MS)),
+    ]).catch((e) => { if (settled) throw e; return PENDING; });
+
+    if (raced === PENDING) {
+      try {
+        (globalThis as any).EdgeRuntime?.waitUntil?.(guarded.catch(() => {}));
+      } catch { /* ignore */ }
+      return new Response(
+        JSON.stringify({ ok: true, pending: true, status: "generating" }),
+        { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    return new Response(JSON.stringify({ ok: true, ...(raced as Record<string, unknown>) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if ((e as any)?.code === "brand_kit_required") {
