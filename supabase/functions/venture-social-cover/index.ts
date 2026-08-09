@@ -623,6 +623,14 @@ Deno.serve(async (req) => {
             bytes = retryBytes;
             result = retry;
             qa = retryQa;
+            if (!isAvatar) {
+              const minPct2 = (plan.signatureMinCoveragePct ?? 12) * 0.75;
+              if (qa.observed.signatureVisible === false || (qa.observed.signatureCoveragePct ?? 0) < minPct2) {
+                bytes = compositeSignatureSplash(bytes, plan);
+                qa = runContrastQa(bytes, plan);
+                (qa as any).signature_composited = true;
+              }
+            }
             (qa as any).scene = {
               depict: scene.depict,
               setting: scene.setting,
