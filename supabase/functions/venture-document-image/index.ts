@@ -4,6 +4,7 @@
 // venture-doc-images bucket (private; user-scoped via storage RLS).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -267,7 +268,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const candidate = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const candidate = decodeBase64(b64);
       const problem = qc(candidate);
       if (problem) {
         lastError = problem;
