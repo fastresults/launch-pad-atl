@@ -71,6 +71,17 @@ For EVERY route listed in Section 2, produce a subsection with:
 - **Forms** (when present): field labels, field types, validation, success state copy, where the submission goes
 - **Internal links**: 2–4 specific routes this page should link to
 
+## 4b. Imagery Plan & Art Direction
+A text-only site is a failed PRD. Render ONE markdown table covering every section of every route. Columns:
+Route | Section | Slot name | Visual type (photo / portrait / product shot / UI mock / diagram / data visual / texture band) | Aspect ratio | Treatment (full-bleed, inset, portrait card, background wash) | Alt text | Generation prompt (30–60 words, mood-board language, two exact brand hex values)
+
+Rules for the table:
+- Every route in Section 2 appears, and every section named in Section 4 has at least one row. No section may be omitted.
+- Never more than two consecutive text-only sections on any page — if a run of sections has no natural photography, specify diagrams, numbered step visuals, data visuals, portraits, or an on-brand texture/gradient band instead.
+- Cover the slots founders always miss: proof/logo bar (real partner or client lockups), each step of any process or timeline, every card in a feature/advantage grid, the results/stats block (a chart or data visual), testimonials (real portraits), and a closing full-bleed CTA band.
+- Anchor the look to the Brand Kit mood board URLs supplied above — same lighting, subject matter and palette. Generic stock is a failure.
+- Below the table, add 3–5 bullets of art direction: lighting, colour grade, composition, subject rules, and what to never show.
+
 ## 5. SEO & Metadata
 Render a markdown table with one row per route. Columns:
 Route | <title> (<60ch) | meta description (<160ch) | Primary keyword | Secondary keywords (3–5) | OG image prompt | JSON-LD schema type
