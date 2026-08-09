@@ -58,6 +58,7 @@ import { toast } from "sonner";
 import { useCanonicalContext } from "@/hooks/use-canonical-context";
 import { invokeEdge } from "@/lib/edge-invoke";
 import { StepShell, StepStrip, StepNav, type StepState } from "@/components/hub/VentureWizard";
+import { getSessionUser } from "@/lib/effective-user";
 
 
 type DroppedFile = {
@@ -1686,8 +1687,7 @@ function Inner() {
                   if (path !== "manual") setWebsiteUrl(data.url);
                   setBusinessConcept(data.concept);
                   if (path === "competitor" && data.diff) setDiff(data.diff);
-                  const { data: userData } = await supabase.auth.getUser();
-                  const u = userData.user;
+                  const u = await getSessionUser();
                   const meta: any = u?.user_metadata ?? {};
                   const ts = Date.now();
                   if (!founderName.trim())

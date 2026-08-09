@@ -71,8 +71,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    // Both `getSession()` and the INITIAL_SESSION event fire on boot. Without a
+    // guard the account/roles/profile reads run two or three times per load.
+    let loadedKey: string | null = null;
+    let inFlight: Promise<void> | null = null;
 
-    const loadAccount = async (u: User | null) => {
+    const loadAccount = async (u: User | null, force = false) => {
+      const key = u?.id ?? "anon";
+      if (!force && key === loadedKey) return inFlight ?? Promise.resolve();
+      loadedKey = key;
+      inFlight = runLoad(u);
+      return inFlight;
+    };
+
+    const runLoad = async (u: User | null) => {
       if (!u) {
         if (active) {
           setRoles([]);
@@ -105,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             continue;
           }
           console.error("Failed to load account", e);
+          loadedKey = null;
           if (active) {
             setRoles([]);
             setMemberStatus("pending");
@@ -122,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // that's what made "viewing as" feel unstable on long sessions.
       const isRefresh = event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION";
       setTimeout(() => {
-        loadAccount(s?.user ?? null);
+        loadAccount(s?.user ?? null, event === "USER_UPDATED");
         if (!isRefresh) queryClient.invalidateQueries();
       }, 0);
     });
@@ -135,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (active) setLoading(false);
       });
     });
+
 
     return () => {
       active = false;

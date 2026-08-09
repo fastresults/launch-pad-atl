@@ -83,13 +83,27 @@ async function isActorAdmin(actorId: string): Promise<boolean> {
 }
 
 /**
+ * Reads the signed-in user from the local session instead of calling
+ * `supabase.auth.getUser()`, which is a network round trip to the auth server.
+ * Polling queries (3–8s) used to fire one auth request per tick through this
+ * path; `getSession()` reads the cached session and refreshes only when the
+ * token is actually expiring.
+ *
+ * This is not a trust boundary: RLS validates the JWT server-side on every
+ * request. The client only needs the id/email to shape its own queries.
+ */
+export async function getSessionUser(): Promise<import("@supabase/supabase-js").User | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user ?? null;
+}
+
+/**
  * Returns the effective user id for client-side data reads/writes:
  * the impersonation target when an admin is impersonating, otherwise the
  * real signed-in user's id. Throws if not signed in.
  */
 export async function getEffectiveUserId(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
-  const actor = data?.user;
+  const actor = await getSessionUser();
   if (!actor) throw new Error("Not signed in");
   const impersonation = readStoredImpersonation();
   if (impersonation && (await isActorAdmin(actor.id))) {
@@ -102,11 +116,11 @@ export async function getEffectiveUserId(): Promise<string> {
  * audit fields ("set_by", "created_by_actor") and admin-only routes that
  * must always resolve to the actor. */
 export async function getActorUserId(): Promise<string> {
-  const { data } = await supabase.auth.getUser();
-  const actor = data?.user;
+  const actor = await getSessionUser();
   if (!actor) throw new Error("Not signed in");
   return actor.id;
 }
+
 
 /** Synchronous check for whether the current session is impersonating. */
 export function isImpersonating(): boolean {

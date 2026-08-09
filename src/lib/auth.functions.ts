@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getImpersonationTarget } from "@/lib/effective-user";
+import { getImpersonationTarget, getSessionUser } from "@/lib/effective-user";
 
 export type AppRole = "super_admin" | "admin" | "user";
 export type MemberStatus = "pending" | "approved" | "rejected" | "paused";
@@ -13,7 +13,7 @@ export async function getMyAccount(): Promise<{
   targetMemberStatus: MemberStatus | null;
   targetFoundersHubAccess: boolean | null;
 }> {
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) {
     return {
       roles: [],

@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { enqueueTransactionalEmail } from "@/lib/email/enqueue";
+import { getSessionUser } from "@/lib/effective-user";
 
 async function assertAdmin(userId: string) {
   const { data } = await supabase
@@ -19,7 +20,7 @@ const Schema = z.object({
 });
 
 export const sendTestApplicationReceivedEmail = async (data: any) => {
-    await assertAdmin((await supabase.auth.getUser()).data.user!.id);
+    await assertAdmin((await getSessionUser())!.id);
     const result = await enqueueTransactionalEmail({
       templateName: "application-received",
       recipientEmail: data.recipientEmail,

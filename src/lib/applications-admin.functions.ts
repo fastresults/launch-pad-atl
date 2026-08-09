@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from "@/lib/effective-user";
 
 const STATUSES = [
   "applied",
@@ -104,7 +105,7 @@ export async function addApplicationNote(input: any) {
   const body = args.body ?? args.note ?? "";
   if (!application_id || !body.trim()) throw new Error("Missing application id or note body");
 
-  const { data: userRes } = await supabase.auth.getUser();
+  const userRes = { user: await getSessionUser() };
   const author_id = userRes.user?.id ?? null;
 
   let author_name: string | null = null;
