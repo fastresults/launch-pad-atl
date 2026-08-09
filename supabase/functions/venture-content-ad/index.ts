@@ -18,6 +18,8 @@ import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
 import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
+import { ensureCampaignCard, deriveCampaignCard, layoutForIndex, type CampaignCard } from "../_shared/campaign-card.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
