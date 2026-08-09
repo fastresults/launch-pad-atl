@@ -790,25 +790,12 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       ? "Choose your palette and typography first."
       : null;
 
-  // Website PRD — regenerate with the locked brand + selected mark, then copy
-  // or download it without leaving the wizard.
-  const prdQ = useQuery({
-    queryKey: ["brandWizardPrd", snapshot.id],
-    queryFn: async () => {
-      const docs = await listSnapshotDocuments({ data: { snapshotId: snapshot.id } });
-      return docs.find((d: any) => d.document_type === "website_prd") ?? null;
-    },
-  });
-  const prd = prdQ.data;
+  // Website PRD — one shared regenerate path with the Brand Studio panel and
+  // the deliverable card, so all three share a mutation and an in-flight flag.
+  const websitePrd = useWebsitePrd(snapshot.id, kit?.locked_at ?? null);
+  const prd = websitePrd.prd;
+  const regeneratePrd = { mutate: () => websitePrd.regenerate.mutate(undefined), isPending: websitePrd.running };
 
-  const regeneratePrd = useMutation({
-    mutationFn: async () => {
-      await generateDocument({ data: { snapshotId: snapshot.id, documentType: "website_prd" } });
-      return prdQ.refetch();
-    },
-    onSuccess: () => toast.success("Website PRD regenerated with your brand"),
-    onError: (e: any) => toast.error(e?.message ?? "Could not regenerate the PRD"),
-  });
 
   const copyPrd = async () => {
     if (!prd?.content) return;
