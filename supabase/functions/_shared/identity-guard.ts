@@ -13,6 +13,12 @@ export type IdentityCheck = {
   imageryMissing: boolean;
   /** PRD only: the imagery plan exists but is too thin to art-direct a site. */
   imageryThin?: boolean;
+  /** PRD only: rows lack exposure / overlay craft columns. */
+  imageryCraftMissing?: boolean;
+  /** PRD only: people are specified without the studio portrait recipe. */
+  portraitCraftMissing?: boolean;
+  /** PRD only: darkness is baked into image prompts instead of a CSS scrim. */
+  imageryTooDark?: boolean;
   /** PRD only: the locked art direction was never named in the document. */
   artDirectionMissing?: boolean;
   ok: boolean;
