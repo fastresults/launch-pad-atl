@@ -8,7 +8,7 @@
 
 import { aiFetch } from "./ai-fetch.ts";
 import { sanitizePaletteOption } from "./palette-rules.ts";
-import { loadBrandKit, type BrandKitRow } from "./venture-context.ts";
+import { BRAND_KIT_SELECT, isBrandKitUsable, loadBrandKit, type BrandKitRow } from "./venture-context.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
@@ -87,7 +87,8 @@ export async function deriveBrandKitFromAssets(
 {
   "palette": { "name": "string", "rationale": "1 sentence", "source": "derived", "colors": { "bg": "#RRGGBB", "fg": "#RRGGBB", "muted": "#RRGGBB", "accent": "#RRGGBB", "primary": "#RRGGBB", "secondary": "#RRGGBB" } },
   "typography": { "name": "string", "rationale": "1 sentence", "source": "derived", "heading": { "family": "Google Font name", "weight": 700 }, "body": { "family": "Google Font name", "weight": 400 } },
-  "voice": { "source": "derived", "attributes": { "formal": 0, "warm": 0, "witty": 0, "expert": 0 }, "bullets": ["3-5 one-sentence voice principles"], "tone_words": ["3-6 adjectives"], "dos": ["2-3 on-brand copy examples"], "donts": ["2-3 off-brand copy examples"], "rules": "freeform style rules paragraph" }
+  "voice": { "source": "derived", "attributes": { "formal": 0, "warm": 0, "witty": 0, "expert": 0 }, "bullets": ["3-5 one-sentence voice principles"], "principles": ["3-5 one-sentence voice principles"], "tone_words": ["3-6 adjectives"], "dos": ["2-3 on-brand copy examples"], "donts": ["2-3 off-brand copy examples"], "ctas": ["3-4 call-to-action button labels, max 40 chars each"], "summary": "1-2 sentence description of how this brand sounds", "rules": "freeform style rules paragraph" },
+  "dna": { "positioning": "1 sentence positioning / brand promise", "traits": ["3-5 personality adjectives"] }
 }
 Use real Google Font families. Ensure WCAG AA contrast between fg and bg.`;
 
@@ -117,6 +118,8 @@ ${picked.join("\n\n")}`;
     track: "derived",
     derived_at: new Date().toISOString(),
     derived_from: picked.length,
+    positioning: parsed?.dna?.positioning ?? existing?.dna?.positioning ?? null,
+    traits: Array.isArray(parsed?.dna?.traits) ? parsed.dna.traits : (existing?.dna?.traits ?? []),
   };
 
   const { data: saved, error } = await supabase.from("venture_brand_kits")
@@ -130,7 +133,7 @@ ${picked.join("\n\n")}`;
       step: 3,
       status: "auto",
     }, { onConflict: "snapshot_id" })
-    .select("status, locked_at, palette, typography, voice, logos, guide_markdown, dna")
+    .select(BRAND_KIT_SELECT)
     .maybeSingle();
   if (error) {
     console.warn("brand derive save failed", error.message);
@@ -153,4 +156,26 @@ ${picked.join("\n\n")}`;
   }
 
   return (saved ?? null) as BrandKitRow | null;
+}
+
+/**
+ * Brand context for EVERY generated asset — not just the two deliverables that
+ * hard-gate on it. Prefers the founder's locked kit, falls back to a derived
+ * ("auto") kit, and returns null only when there is nothing to infer from.
+ * Never throws: brand context is additive for most assets.
+ */
+export async function ensureBrandKit(
+  supabase: any,
+  snapshotId: string,
+  userId: string,
+  snap: any,
+): Promise<BrandKitRow | null> {
+  try {
+    const kit = await loadBrandKit(supabase, snapshotId);
+    if (isBrandKitUsable(kit)) return kit;
+    return await deriveBrandKitFromAssets(supabase, snapshotId, userId, snap);
+  } catch (e) {
+    console.warn("ensureBrandKit failed", e);
+    return null;
+  }
 }
