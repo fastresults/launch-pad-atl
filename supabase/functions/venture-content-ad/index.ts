@@ -451,6 +451,65 @@ Deno.serve(async (req) => {
       step("signature splash composited");
     }
 
+    // --- Relevance QA: does the plate actually depict the commissioned scene
+    // for this line of work? One corrective retry, then keep the better frame.
+    const sceneSource = sceneOverride ? "founder_override" : (sceneBrief ? "venture_brief" : "library_fallback");
+    const sceneMeta = {
+      depict: scene.depict,
+      setting: scene.setting,
+      camera: scene.camera,
+      composition: scene.composition,
+      source: sceneSource,
+    };
+    (qa as any).scene = sceneMeta;
+    const businessLine = sceneBrief?.business_line
+      || [ctx?.snap?.sub_industry, ctx?.snap?.industry].filter(Boolean).join(" / ")
+      || "this venture";
+    if ((Date.now() - requestStartedAt) < 60_000) {
+      try {
+        const rel = await checkSceneRelevance({
+          pngB64: bytesToB64(bytes),
+          depict: scene.depict,
+          businessLine,
+        });
+        (qa as any).scene_relevant = rel.ok;
+        if (!rel.ok) {
+          console.warn(`[content-ad ${reqId}] scene relevance failed:`, rel.note);
+          const retry = await generate(
+            `${rel.note} Rebuild the frame around the SCENE DIRECTIVE exactly: ${scene.depict} Setting: ${scene.setting}. It must be unmistakably about ${businessLine}. One continuous photograph only — no torn paper, no collage, no composited layers.`,
+          );
+          const retryBytes = b64ToBytes(retry.b64);
+          const retryRel = await checkSceneRelevance({
+            pngB64: retry.b64,
+            depict: scene.depict,
+            businessLine,
+          });
+          const retryQa = runContrastQa(retryBytes, plan);
+          if (retryRel.ok && retryQa.observed.ratio >= qa.observed.ratio * 0.8) {
+            bytes = retryBytes;
+            result = retry;
+            qa = retryQa;
+            const minPct2 = (plan.signatureMinCoveragePct ?? 12) * 0.75;
+            if (qa.observed.signatureVisible === false || (qa.observed.signatureCoveragePct ?? 0) < minPct2) {
+              bytes = compositeSignatureSplash(bytes, plan);
+              qa = runContrastQa(bytes, plan);
+              (qa as any).signature_composited = true;
+            }
+            (qa as any).scene = sceneMeta;
+            (qa as any).scene_relevant = true;
+          } else {
+            (qa as any).scene_note = rel.note;
+          }
+          (qa as any).scene_retried = true;
+          step("scene relevance retry done", { used: (qa as any).scene_relevant === true });
+        }
+      } catch (e) {
+        console.warn(`[content-ad ${reqId}] relevance QA skipped`, e);
+      }
+    }
+
+
+
 
     // ---- Editorial poster typography (server-side SVG overlay) ----
     // The model paints only the photographic plate; the kicker / display
