@@ -369,6 +369,8 @@ async function generateOne(
       companyName: lockedName,
       logoUrl: lockedLogo,
       requireImagery: isPrd,
+    minImageryRows: 12,
+    archetypeName: art?.archetype.name ?? null,
     });
     if (!identity.ok) {
       console.warn("identity guard failed", documentType, identity);
@@ -376,7 +378,7 @@ async function generateOne(
         const fixRes = await callGateway([
           ...baseMessages,
           { role: "assistant", content: raw.slice(0, 40_000) },
-          { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo }) },
+          { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo, archetypeName: art?.archetype.name ?? null, minImageryRows: 12 }) },
         ]);
         if (fixRes.ok) {
           const fixJson = await fixRes.json();
@@ -388,6 +390,8 @@ async function generateOne(
             companyName: lockedName,
             logoUrl: lockedLogo,
             requireImagery: isPrd,
+    minImageryRows: 12,
+    archetypeName: art?.archetype.name ?? null,
           });
           if (fixed.length > raw.length * 0.6 && (recheck.ok || (!recheck.nameMissing && identity.nameMissing))) {
             raw = fixed;
