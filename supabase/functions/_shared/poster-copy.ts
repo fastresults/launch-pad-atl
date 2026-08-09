@@ -27,7 +27,34 @@ export type PosterCopy = {
   rationale?: string | null;
   /** true when source copy had to be shortened rather than written */
   truncated: boolean;
+  /** set when the line still echoes a claim an earlier week already spent */
+  repeatsClaim?: string | null;
 };
+
+const STOP = new Set([
+  "the", "a", "an", "and", "or", "to", "of", "in", "on", "for", "with", "your", "you", "our",
+  "that", "this", "it", "is", "are", "be", "make", "makes", "into", "every", "more", "than",
+]);
+
+/** Content-word overlap: catches "polished ads drain margin" vs "trade polished ads for trust". */
+export function usedClaimEcho(headline: string, claims: string[]): { claim: string; index: number } | null {
+  const words = (s: string) =>
+    new Set(
+      s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
+        .filter((w) => w.length > 2 && !STOP.has(w)),
+    );
+  const h = words(headline);
+  if (h.size < 2) return null;
+  for (let i = 0; i < claims.length; i++) {
+    const c = words(claims[i]);
+    if (c.size < 2) continue;
+    let hit = 0;
+    for (const w of h) if (c.has(w)) hit++;
+    if (hit / Math.min(h.size, c.size) >= 0.6) return { claim: claims[i], index: i };
+  }
+  return null;
+}
+
 
 const MAX_WORDS = 9;
 const MIN_WORDS = 3;
