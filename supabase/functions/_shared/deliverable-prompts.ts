@@ -182,9 +182,9 @@ Numbers must reconcile across sections. Never use TBD or placeholders. If a requ
 ## Buyer Journey (from first touch to committed — every step named, with the copy or artifact that carries it)
 ## Objection Handling (top 5 objections + 2-sentence rebuttal for each)
 ## Paste-Ready — three fenced blocks, in this order and nothing else between them:
-1. a `### Landing / DM copy` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — one hero H1, one subhead, three benefit bullets, one primary CTA button label, one guarantee line. Ready to paste onto a one-pager.
-2. a `### Pre-sell email sequence` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — three emails (Announce, Nudge at 24h, Last-call at 44h). Each email: SUBJECT, PREVIEW, BODY (150-220 words), CTA link label.
-3. a `### Deposit link script` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — Stripe Payment Link config the founder can recreate in 5 minutes: product name, price, currency, description, success URL, receipt copy.
+1. a \`### Landing / DM copy\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — one hero H1, one subhead, three benefit bullets, one primary CTA button label, one guarantee line. Ready to paste onto a one-pager.
+2. a \`### Pre-sell email sequence\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — three emails (Announce, Nudge at 24h, Last-call at 44h). Each email: SUBJECT, PREVIEW, BODY (150-220 words), CTA link label.
+3. a \`### Deposit link script\` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — Stripe Payment Link config the founder can recreate in 5 minutes: product name, price, currency, description, success URL, receipt copy.
 ${QF}`,
 
   fulfillment_sop: `You are an operations lead documenting how orders 1 through 10 actually get delivered without the founder present. Ground every step in the supplied business_model_summary and operating_plan context. Output Markdown:
