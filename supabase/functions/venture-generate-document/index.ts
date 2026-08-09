@@ -21,7 +21,7 @@ import {
   loadVentureContext,
   pickBrainSlice,
 } from "../_shared/venture-context.ts";
-import { deriveBrandKitFromAssets } from "../_shared/brand-derive.ts";
+import { ensureBrandKit } from "../_shared/brand-derive.ts";
 
 import { ensureSnapshotBrain, markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
@@ -227,17 +227,12 @@ export async function generateOne(
 
   // Brand-kit gate: these deliverables need a brand. Prefer the founder's
   // locked kit; otherwise infer a provisional one from finished assets.
-  let brandKit: Awaited<ReturnType<typeof loadBrandKit>> = null;
+  // Brand context is loaded for EVERY asset (palette, typography, mood board,
+  // voice, CTAs). Only BRAND_KIT_REQUIRED_TYPES hard-block when it's missing.
+  let brandKit: Awaited<ReturnType<typeof loadBrandKit>> =
+    await ensureBrandKit(supabase, snapshotId, ctx.userId ?? snap.user_id, snap);
+  if (!isBrandKitUsable(brandKit)) brandKit = null;
   if (BRAND_KIT_REQUIRED_TYPES.has(documentType)) {
-    brandKit = await loadBrandKit(supabase, snapshotId);
-    if (!isBrandKitUsable(brandKit)) {
-      try {
-        brandKit = await deriveBrandKitFromAssets(supabase, snapshotId, ctx.userId ?? snap.user_id, snap);
-      } catch (e) {
-        console.warn("brand derive threw", e);
-        brandKit = null;
-      }
-    }
     if (!isBrandKitUsable(brandKit)) {
       // Reset to pending so the UI shows the gate, not a "Needs another try" state.
       await supabase.from("venture_documents").upsert({

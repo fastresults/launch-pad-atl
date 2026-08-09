@@ -182,9 +182,9 @@ Numbers must reconcile across sections. Never use TBD or placeholders. If a requ
 ## Buyer Journey (from first touch to committed — every step named, with the copy or artifact that carries it)
 ## Objection Handling (top 5 objections + 2-sentence rebuttal for each)
 ## Paste-Ready — three fenced blocks, in this order and nothing else between them:
-1. a `### Landing / DM copy` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — one hero H1, one subhead, three benefit bullets, one primary CTA button label, one guarantee line. Ready to paste onto a one-pager.
-2. a `### Pre-sell email sequence` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — three emails (Announce, Nudge at 24h, Last-call at 44h). Each email: SUBJECT, PREVIEW, BODY (150-220 words), CTA link label.
-3. a `### Deposit link script` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — Stripe Payment Link config the founder can recreate in 5 minutes: product name, price, currency, description, success URL, receipt copy.
+1. a \`### Landing / DM copy\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — one hero H1, one subhead, three benefit bullets, one primary CTA button label, one guarantee line. Ready to paste onto a one-pager.
+2. a \`### Pre-sell email sequence\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — three emails (Announce, Nudge at 24h, Last-call at 44h). Each email: SUBJECT, PREVIEW, BODY (150-220 words), CTA link label.
+3. a \`### Deposit link script\` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — Stripe Payment Link config the founder can recreate in 5 minutes: product name, price, currency, description, success URL, receipt copy.
 ${QF}`,
 
   fulfillment_sop: `You are an operations lead documenting how orders 1 through 10 actually get delivered without the founder present. Ground every step in the supplied business_model_summary and operating_plan context. Output Markdown:
@@ -204,8 +204,8 @@ ${QF}`,
 ## Escalation Ladder (who gets pinged when, and the exact message template used)
 ## Weekly Support Review (metrics reviewed, decisions made, what the founder does with themes)
 ## Paste-Ready — two fenced blocks:
-1. a `### Canned replies` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — 8 reply templates covering: order confirmation, delivery delay, refund request approved, refund request declined, "how do I use this?", "can I customize?", angry customer de-escalation, testimonial request. Each template: SUBJECT, BODY (80-160 words), signature block with {{operator_name}} + {{company}} tokens.
-2. a `### Refund decision tree` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — indented ASCII decision tree the support operator follows verbatim.
+1. a \`### Canned replies\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — 8 reply templates covering: order confirmation, delivery delay, refund request approved, refund request declined, "how do I use this?", "can I customize?", angry customer de-escalation, testimonial request. Each template: SUBJECT, BODY (80-160 words), signature block with {{operator_name}} + {{company}} tokens.
+2. a \`### Refund decision tree\` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — indented ASCII decision tree the support operator follows verbatim.
 ${QF}`,
 
   payments_checkout_setup: `You are a payments engineer wiring Stripe (or Square when track demands POS) so the founder can accept money by Day 14. Ground every recommendation in business_model_summary and pricing_offer_sheet context. Output Markdown:
@@ -217,9 +217,9 @@ ${QF}`,
 ## Checkout Surface (where the buy button lives on the site, what the success page says, what email fires)
 ## Post-Purchase Automations (receipt, fulfillment webhook, CRM sync, refund flow)
 ## Paste-Ready — three fenced blocks:
-1. a `### Stripe products payload` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — a valid JSON array of Product/Price objects the founder pastes into a Stripe CLI or dashboard import. Use realistic keys: \`name\`, \`description\`, \`default_price_data.currency\`, \`default_price_data.unit_amount\`, \`default_price_data.recurring\` (when applicable), \`metadata\`.
-2. a `### Payment Link config` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — one Payment Link per SKU with URL slug, success URL, confirmation copy, receipt subject, quantity limits.
-3. a `### Checkout CTA copy` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — button label, sub-label, guarantee microcopy, post-purchase thank-you H1 + body (60-100 words).
+1. a \`### Stripe products payload\` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — a valid JSON array of Product/Price objects the founder pastes into a Stripe CLI or dashboard import. Use realistic keys: \`name\`, \`description\`, \`default_price_data.currency\`, \`default_price_data.unit_amount\`, \`default_price_data.recurring\` (when applicable), \`metadata\`.
+2. a \`### Payment Link config\` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — one Payment Link per SKU with URL slug, success URL, confirmation copy, receipt subject, quantity limits.
+3. a \`### Checkout CTA copy\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — button label, sub-label, guarantee microcopy, post-purchase thank-you H1 + body (60-100 words).
 ${QF}`,
 
   business_bank_books_starter: `You are a fractional CFO setting up the banking and books stack for a first-time founder. Ground recommendations in legal_structure_brief and financial_model context. Output Markdown:
@@ -230,8 +230,8 @@ ${QF}`,
 ## Owner Compensation Rule (plain-English: draw vs salary, cadence, tax reserve %)
 ## Monthly Close Rhythm (5-step process the founder or bookkeeper runs on the 3rd of every month)
 ## Paste-Ready — two fenced blocks:
-1. a `### Chart of Accounts` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`account_number,account_name,type,detail_type,description\` and 30-45 rows covering Assets, Liabilities, Equity, Income, COGS, Expenses tuned to this venture's business model. Number accounts on the standard 1000/2000/3000/4000/5000/6000 scheme.
-2. a `### Weekly Money Ritual` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a 20-minute checklist the founder runs every Friday (reconcile, categorize, review AR, review AP, project cash).
+1. a \`### Chart of Accounts\` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`account_number,account_name,type,detail_type,description\` and 30-45 rows covering Assets, Liabilities, Equity, Income, COGS, Expenses tuned to this venture's business model. Number accounts on the standard 1000/2000/3000/4000/5000/6000 scheme.
+2. a \`### Weekly Money Ritual\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a 20-minute checklist the founder runs every Friday (reconcile, categorize, review AR, review AP, project cash).
 ${QF}`,
 
   pricing_offer_sheet: `You are a pricing strategist packaging this venture's offer for a checkout page and a sales conversation. Ground the tiers in unit_economics and value_proposition context; every price must be defensible against the CAC/LTV math implied by the intake. Output Markdown:
@@ -242,17 +242,17 @@ ${QF}`,
 ## Terms Summary (payment, cancellation, refund, contract length — plain English, links to the legal pack for the binding version)
 ## Objection→Response Script (top 6 pricing objections + 2-3 sentence founder response for each, in the brand voice)
 ## Paste-Ready — two fenced blocks:
-1. a `### Pricing page copy` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — H1, sub-H1, the 3-tier table restated as markdown, FAQ (5 Q&A), guarantee block, final CTA. Ready to drop into /pricing.
-2. a `### One-page offer sheet` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — company name, offer name, price, what's included (bulleted), success outcomes, guarantee, next-step CTA, contact block. Formatted so it prints cleanly on a single page.
+1. a \`### Pricing page copy\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — H1, sub-H1, the 3-tier table restated as markdown, FAQ (5 Q&A), guarantee block, final CTA. Ready to drop into /pricing.
+2. a \`### One-page offer sheet\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — company name, offer name, price, what's included (bulleted), success outcomes, guarantee, next-step CTA, contact block. Formatted so it prints cleanly on a single page.
 ${QF}`,
 
   terms_privacy_refund_pack: `You are a startup lawyer producing the customer-facing legal set. Tune every clause to the entity type and jurisdiction implied by legal_structure_brief and the offer described in business_model_summary. State once at the top that these are founder-ready templates, not a substitute for local counsel, and that jurisdiction and effective date must be reviewed. Output Markdown:
 # {Company} — Terms, Privacy & Refund Pack
 ## Fit Notes (2-3 sentences on what these templates assume — entity, jurisdiction, offer type, data collected — and what to change if any assumption is wrong)
 ## Paste-Ready — THREE fenced blocks, in this exact order, nothing between them except a single blank line:
-1. a `### Terms of Service` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — complete ToS in numbered sections: Acceptance, Services, Accounts, Acceptable Use, Payment & Billing, Refunds (cross-reference the Refund Policy), Intellectual Property, User Content License, Third-Party Services, Disclaimers, Limitation of Liability, Indemnification, Governing Law & Venue, Dispute Resolution, Changes, Contact. Include the effective date placeholder \`{{EFFECTIVE_DATE}}\` at the top and the company legal name \`{{LEGAL_ENTITY}}\` throughout.
-2. a `### Privacy Policy` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — complete privacy policy: What we collect, How we use it, Legal bases, Sharing & third parties (name the actual categories: payments, analytics, email, hosting), Cookies & tracking, Data retention, Your rights (with GDPR + CCPA sub-sections), Children, Security, International transfers, Changes, Contact + DPO email.
-3. a `### Refund Policy` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — complete refund policy tuned to the offer: eligibility window, method of refund, non-refundable items, defective-goods rule, subscription cancellation, how to request, response SLA, dispute escalation.
+1. a \`### Terms of Service\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — complete ToS in numbered sections: Acceptance, Services, Accounts, Acceptable Use, Payment & Billing, Refunds (cross-reference the Refund Policy), Intellectual Property, User Content License, Third-Party Services, Disclaimers, Limitation of Liability, Indemnification, Governing Law & Venue, Dispute Resolution, Changes, Contact. Include the effective date placeholder \`{{EFFECTIVE_DATE}}\` at the top and the company legal name \`{{LEGAL_ENTITY}}\` throughout.
+2. a \`### Privacy Policy\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — complete privacy policy: What we collect, How we use it, Legal bases, Sharing & third parties (name the actual categories: payments, analytics, email, hosting), Cookies & tracking, Data retention, Your rights (with GDPR + CCPA sub-sections), Children, Security, International transfers, Changes, Contact + DPO email.
+3. a \`### Refund Policy\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — complete refund policy tuned to the offer: eligibility window, method of refund, non-refundable items, defective-goods rule, subscription cancellation, how to request, response SLA, dispute escalation.
 No prose outside the three fenced blocks.${QF}`,
 
   insurance_starter: `You are a small-business insurance broker briefing a first-time founder. Ground recommendations in the venture's operating_plan and risk_register context — physical vs digital, client-facing vs internal, employees vs solo, premises vs remote. Output Markdown:
@@ -263,8 +263,8 @@ No prose outside the three fenced blocks.${QF}`,
 ## COI Playbook (when a customer, landlord, or venue asks for a Certificate of Insurance: what they want, what to send, typical additional-insured requests)
 ## Timeline (Day-14-ready path: quote → bind → COI in hand)
 ## Paste-Ready — two fenced blocks:
-1. a `### Broker outreach email` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — SUBJECT, BODY (150-200 words) requesting quotes on the Must-have coverages, with the venture facts a broker actually needs (entity, state, revenue est, headcount, offer summary, prior claims).
-2. a `### COI request response` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a template reply when a customer requests a COI: what you'll send, timeline, questions back to them (Additional Insured name, mailing address, coverage minimums).
+1. a \`### Broker outreach email\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — SUBJECT, BODY (150-200 words) requesting quotes on the Must-have coverages, with the venture facts a broker actually needs (entity, state, revenue est, headcount, offer summary, prior claims).
+2. a \`### COI request response\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a template reply when a customer requests a COI: what you'll send, timeline, questions back to them (Additional Insured name, mailing address, coverage minimums).
 ${QF}`,
 
   contractor_1099_kit: `You are a startup lawyer + ops lead producing the paperwork a founder sends before the first contractor touches the work. Tune to the entity type in legal_structure_brief. State once at the top that these are founder-ready templates, not a substitute for counsel on high-stakes engagements. Output Markdown:
@@ -273,10 +273,10 @@ ${QF}`,
 ## Classification Guardrails (5-7 bullets on 1099 vs W-2 — the tests that actually get audited)
 ## Onboarding Checklist (MSA signed, SOW signed, W-9 collected, COI collected if applicable, access provisioned, kickoff scheduled, first invoice cadence set)
 ## Paste-Ready — FOUR fenced blocks, in this order:
-1. a `### Master Services Agreement` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — MSA covering: Services, Independent Contractor status, Compensation & Invoicing, Expenses, Term & Termination, Confidentiality, IP Assignment (work-for-hire + assignment fallback), Non-Solicit, Warranties, Indemnification, Limitation of Liability, Governing Law, Notices, Entire Agreement. Use \`{{CONTRACTOR_NAME}}\`, \`{{CLIENT_LEGAL_ENTITY}}\`, \`{{EFFECTIVE_DATE}}\`, \`{{GOVERNING_STATE}}\` placeholders.
-2. a `### Statement of Work` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — SOW template: Scope, Deliverables, Milestones, Timeline, Fees & payment schedule, Acceptance criteria, Change control, Assumptions, Out of scope.
-3. a `### W-9 request email` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — SUBJECT, BODY (100-150 words) explaining what a W-9 is, why it's needed before first payment, secure upload instruction, and 1099 timing.
-4. a `### IP Assignment Clause (drop-in)` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — self-contained clause a founder can paste into any short contractor agreement that doesn't already have MSA-grade IP language.
+1. a \`### Master Services Agreement\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — MSA covering: Services, Independent Contractor status, Compensation & Invoicing, Expenses, Term & Termination, Confidentiality, IP Assignment (work-for-hire + assignment fallback), Non-Solicit, Warranties, Indemnification, Limitation of Liability, Governing Law, Notices, Entire Agreement. Use \`{{CONTRACTOR_NAME}}\`, \`{{CLIENT_LEGAL_ENTITY}}\`, \`{{EFFECTIVE_DATE}}\`, \`{{GOVERNING_STATE}}\` placeholders.
+2. a \`### Statement of Work\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — SOW template: Scope, Deliverables, Milestones, Timeline, Fees & payment schedule, Acceptance criteria, Change control, Assumptions, Out of scope.
+3. a \`### W-9 request email\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — SUBJECT, BODY (100-150 words) explaining what a W-9 is, why it's needed before first payment, secure upload instruction, and 1099 timing.
+4. a \`### IP Assignment Clause (drop-in)\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — self-contained clause a founder can paste into any short contractor agreement that doesn't already have MSA-grade IP language.
 ${QF}`,
 
   domain_email_dns_checklist: `You are a technical operator standing up the domain, business email, and DNS records so outreach doesn't land in spam. Ground the choice of business email provider in operating_plan context. Output Markdown:
@@ -298,9 +298,9 @@ ${QF}`,
 ## Dashboards to Build (3 GA4 exploration reports the founder checks weekly, with the dimensions/metrics for each)
 ## QA Checklist (Chrome DevTools + GA4 DebugView steps to confirm every event fires exactly once)
 ## Paste-Ready — three fenced blocks:
-1. a `### <head> tags` heading followed by a plain \`\`\`html fence containing only the content (never put a label on the fence line) — GA4 gtag snippet + Meta Pixel base code + one placeholder for a third pixel (TikTok/LinkedIn/Google Ads), with clear \`{{GA4_ID}}\`, \`{{META_PIXEL_ID}}\`, \`{{OTHER_ID}}\` placeholders and comments explaining consent gating.
-2. a `### Event helpers` heading followed by a plain \`\`\`javascript fence containing only the content (never put a label on the fence line) — a small \`track(eventName, params)\` helper that fans out to GA4, Meta, and the third pixel, plus one worked call per event from the Event Map above.
-3. a `### UTM builder cheat sheet` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — the URL template and 5 filled examples the founder pastes into ads, emails, and social bios.
+1. a \`### <head> tags\` heading followed by a plain \`\`\`html fence containing only the content (never put a label on the fence line) — GA4 gtag snippet + Meta Pixel base code + one placeholder for a third pixel (TikTok/LinkedIn/Google Ads), with clear \`{{GA4_ID}}\`, \`{{META_PIXEL_ID}}\`, \`{{OTHER_ID}}\` placeholders and comments explaining consent gating.
+2. a \`### Event helpers\` heading followed by a plain \`\`\`javascript fence containing only the content (never put a label on the fence line) — a small \`track(eventName, params)\` helper that fans out to GA4, Meta, and the third pixel, plus one worked call per event from the Event Map above.
+3. a \`### UTM builder cheat sheet\` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — the URL template and 5 filled examples the founder pastes into ads, emails, and social bios.
 ${QF}`,
 
   landing_page_waitlist_test: `You are a conversion copywriter shipping a one-page landing test that goes live by Day 4 — before the full site — so paid traffic and warm outreach have a destination. Ground copy in value_proposition, customer, and pre_sell_offer_test context. Output Markdown:
@@ -310,9 +310,9 @@ ${QF}`,
 ## Traffic Plan (where the first 500 visitors come from and the UTM they carry)
 ## Success Metrics (visitor→lead conversion floor, cost per lead ceiling, kill threshold)
 ## Paste-Ready — three fenced blocks:
-1. a `### Landing page copy` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — full page in section order above. For every section include the exact H1/H2, sub-copy, bullets, CTA button label, image direction (as an alt-text-style prompt in italics), and microcopy. No Lorem ipsum. 700-1100 words total.
-2. a `### Form spec` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — the waitlist form: field-by-field (Label, Type, Placeholder, Required, Validation), post-submit redirect URL, success-state H1 + body (80-120 words), error-state copy.
-3. a `### Confirmation email sequence` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — two emails: (1) Instant confirmation — SUBJECT, PREVIEW, BODY (120-180 words), CTA to book / pay. (2) Day-2 nudge — SUBJECT, PREVIEW, BODY (140-200 words), CTA. Include \`{{FIRST_NAME}}\` and \`{{OFFER_LINK}}\` tokens.
+1. a \`### Landing page copy\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — full page in section order above. For every section include the exact H1/H2, sub-copy, bullets, CTA button label, image direction (as an alt-text-style prompt in italics), and microcopy. No Lorem ipsum. 700-1100 words total.
+2. a \`### Form spec\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — the waitlist form: field-by-field (Label, Type, Placeholder, Required, Validation), post-submit redirect URL, success-state H1 + body (80-120 words), error-state copy.
+3. a \`### Confirmation email sequence\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — two emails: (1) Instant confirmation — SUBJECT, PREVIEW, BODY (120-180 words), CTA to book / pay. (2) Day-2 nudge — SUBJECT, PREVIEW, BODY (140-200 words), CTA. Include \`{{FIRST_NAME}}\` and \`{{OFFER_LINK}}\` tokens.
 ${QF}`,
 
   presell_landing_prd: `You are a senior product writer + conversion strategist producing a SINGLE-PAGE PRD that doubles as a paste-ready brief for an AI website builder (Lovable, v0, Bolt, Cursor). The output, when pasted, must scaffold the Day-4 pre-sell / waitlist landing page — one page, one primary conversion — at Awwwards-level visual quality, motion-tasteful, accessible, and Lighthouse ≥ 95.
@@ -377,10 +377,10 @@ ${QF}`,
 ## Response Rules (how the founder replies to 5-star, 3-star, and 1-star reviews — with a decision tree)
 ## Wall-of-Love Placement (where testimonials go on the site — homepage, pricing, case-study page — with rules for rotation)
 ## Paste-Ready — four fenced blocks:
-1. a `### Email ask templates` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — 3 written-review email templates (post-purchase, post-value-moment, gentle nudge), each SUBJECT + BODY (100-140 words) + review link placeholder.
-2. a `### SMS + DM ask templates` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — 3 short templates (SMS ≤160 chars, Instagram DM, LinkedIn DM), each with the {{FIRST_NAME}} + {{LINK}} tokens.
-3. a `### Video-ask script` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — a 45-second script the founder or a support rep reads on a Loom / voice memo request: hook (5s), specific ask (10s), the three questions (25s), thank-you + how it'll be used (5s).
-4. a `### Wall-of-Love embed` heading followed by a plain \`\`\`html fence containing only the content (never put a label on the fence line) — a semantic \`<section>\` with 6 placeholder \`<blockquote>\` testimonials (name, role, quote, star rating), accessible markup, and CSS class hooks (no inline styles). Ready to drop into /reviews or the homepage.
+1. a \`### Email ask templates\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — 3 written-review email templates (post-purchase, post-value-moment, gentle nudge), each SUBJECT + BODY (100-140 words) + review link placeholder.
+2. a \`### SMS + DM ask templates\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — 3 short templates (SMS ≤160 chars, Instagram DM, LinkedIn DM), each with the {{FIRST_NAME}} + {{LINK}} tokens.
+3. a \`### Video-ask script\` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — a 45-second script the founder or a support rep reads on a Loom / voice memo request: hook (5s), specific ask (10s), the three questions (25s), thank-you + how it'll be used (5s).
+4. a \`### Wall-of-Love embed\` heading followed by a plain \`\`\`html fence containing only the content (never put a label on the fence line) — a semantic \`<section>\` with 6 placeholder \`<blockquote>\` testimonials (name, role, quote, star rating), accessible markup, and CSS class hooks (no inline styles). Ready to drop into /reviews or the homepage.
 ${QF}`,
 
   outbound_dm_email_scripts: `You are a founder-led outbound sales writer. The founder will send these — the voice must feel human, specific, and traceable to the first_50_warm_list segments and brand_voice_tone_guide. No mass-mail energy, no fake personalization tokens, no "just following up" filler. Output Markdown:
@@ -390,9 +390,9 @@ ${QF}`,
 ## Reply Handling (how to respond to Interested / Not now / Wrong person / No answer)
 ## Metrics & Kill Criteria (reply rate floor per touch, meeting-booked target per 100 sends, when to swap a subject line)
 ## Paste-Ready — three fenced blocks:
-1. a `### Cold email sequence (3-touch)` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — Touch 1 (Day 0), Touch 2 (Day 3), Touch 4 (Day 7 breakup). Each touch: SUBJECT, PREVIEW, BODY (60-110 words), single CTA. Include \`{{FIRST_NAME}}\`, \`{{COMPANY}}\`, \`{{TRIGGER}}\`, \`{{ASK}}\` tokens and one line under each touch explaining what "good" personalization looks like for THIS venture's segments.
-2. a `### LinkedIn DM sequence (3-touch)` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — Connection note (≤300 chars), Day-2 opener, Day-6 value drop. Each with the same token set.
-3. a `### SMS follow-up (1-touch, opt-in only)` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a single SMS ≤160 chars sent only after a warm reply or event, with the compliance line (STOP to opt out) included.
+1. a \`### Cold email sequence (3-touch)\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — Touch 1 (Day 0), Touch 2 (Day 3), Touch 4 (Day 7 breakup). Each touch: SUBJECT, PREVIEW, BODY (60-110 words), single CTA. Include \`{{FIRST_NAME}}\`, \`{{COMPANY}}\`, \`{{TRIGGER}}\`, \`{{ASK}}\` tokens and one line under each touch explaining what "good" personalization looks like for THIS venture's segments.
+2. a \`### LinkedIn DM sequence (3-touch)\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — Connection note (≤300 chars), Day-2 opener, Day-6 value drop. Each with the same token set.
+3. a \`### SMS follow-up (1-touch, opt-in only)\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a single SMS ≤160 chars sent only after a warm reply or event, with the compliance line (STOP to opt out) included.
 ${QF}`,
 
   ai_tool_stack_recommendation: `You are a fractional CTO picking the actual AI-first tool stack this founder will install this week. Ground every pick in identity, solution, customer, business_model_summary, and differentiators. Every recommendation must be a named product with a working URL — no "a good CRM" placeholders, no invented tools. Prefer free-tier or generous-trial tools where quality allows. Output Markdown:
@@ -433,8 +433,8 @@ Every prompt must reference at least one venture-specific detail (persona name, 
 ## Saved Views (3 named views: "Today's Priorities", "Stalled >7 days", "Warm — Ready to Close")
 ## Weekly Pipeline Ritual (Monday review, Friday retro — what to look at, decisions to make)
 ## Paste-Ready — two fenced blocks, in this order:
-1. a `### crm_schema.json` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — full JSON of stages, custom fields, and views the founder can hand to the CRM's import/API or recreate manually.
-2. a `### first_50_import.csv` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header row \`name,company,email,phone,segment,stage,buying_trigger,deal_size,priority,next_action,next_action_date,source,notes\` and 25 pre-populated rows derived from the venture's segments (label the rest "Add name" so the founder fills them in). Every row's Stage must be a valid stage from the schema.
+1. a \`### crm_schema.json\` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — full JSON of stages, custom fields, and views the founder can hand to the CRM's import/API or recreate manually.
+2. a \`### first_50_import.csv\` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header row \`name,company,email,phone,segment,stage,buying_trigger,deal_size,priority,next_action,next_action_date,source,notes\` and 25 pre-populated rows derived from the venture's segments (label the rest "Add name" so the founder fills them in). Every row's Stage must be a valid stage from the schema.
 ${QF}`,
 
   booking_calendar_setup: `You are a sales-ops lead wiring the booking calendar on Day 6 so warm outreach has a real link to send. Default to Cal.com; recommend Calendly only if the customer profile demands it. Ground event types in sales_playbook. Output Markdown:
@@ -445,8 +445,8 @@ ${QF}`,
 ## Reminders (email + SMS cadence: T-24h, T-1h, T+5min no-show)
 ## Confirmation & Reschedule Copy (voice notes: warm, specific, one CTA)
 ## Paste-Ready — two fenced blocks:
-1. a `### calcom_event_types.json` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — array of event-type objects (slug, title, length, description, locations[], requiresConfirmation, minimumBookingNotice, bufferBefore/After, hidden). Slugs kebab-case. Ready to paste into Cal.com API or import.
-2. a `### booking_email_copy.md` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — three email copies: Confirmation, T-24h reminder, No-show follow-up. Each: SUBJECT, BODY (60-120 words), CTA link label.
+1. a \`### calcom_event_types.json\` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — array of event-type objects (slug, title, length, description, locations[], requiresConfirmation, minimumBookingNotice, bufferBefore/After, hidden). Slugs kebab-case. Ready to paste into Cal.com API or import.
+2. a \`### booking_email_copy.md\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — three email copies: Confirmation, T-24h reminder, No-show follow-up. Each: SUBJECT, BODY (60-120 words), CTA link label.
 ${QF}`,
 
   sales_call_recording_stack: `You are a sales-ops lead installing an AI call-recording + insight pipeline so every sales/customer conversation feeds the content and product roadmap. Default to Fathom (free, unlimited); recommend Grain or Fireflies only when the customer or team warrants it. Output Markdown:
@@ -466,9 +466,9 @@ ${QF}`,
 ## Deliverability Warm-Up Plan (Week 1 daily sends starting at ≤50, ramp to 500 by Week 4, subject-line variety, engagement tracking)
 ## Governance (who can send broadcasts, review checklist, unsubscribe promise, GDPR/CAN-SPAM footer)
 ## Paste-Ready — three fenced blocks in this order:
-1. a `### dns_records.txt` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — the exact SPF, DKIM, DMARC records to paste (with placeholders for the DKIM public key + selector the provider issues).
-2. a `### welcome_sequence.md` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a 5-email welcome sequence (Day 0 Welcome, Day 1 Origin/Why, Day 3 Best Content, Day 5 Soft Offer, Day 7 Ask). Each email: SUBJECT, PREVIEW, BODY (150-220 words), CTA. Voice matches the brand_voice_tone_guide.
-3. a `### first_broadcast.md` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — one launch-week broadcast with SUBJECT, PREVIEW, BODY, CTA, and a 3-line "Why we're emailing you" opener suitable for a first send.
+1. a \`### dns_records.txt\` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — the exact SPF, DKIM, DMARC records to paste (with placeholders for the DKIM public key + selector the provider issues).
+2. a \`### welcome_sequence.md\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a 5-email welcome sequence (Day 0 Welcome, Day 1 Origin/Why, Day 3 Best Content, Day 5 Soft Offer, Day 7 Ask). Each email: SUBJECT, PREVIEW, BODY (150-220 words), CTA. Voice matches the brand_voice_tone_guide.
+3. a \`### first_broadcast.md\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — one launch-week broadcast with SUBJECT, PREVIEW, BODY, CTA, and a 3-line "Why we're emailing you" opener suitable for a first send.
 ${QF}`,
 
   logo_brand_asset_pack: `You are a brand designer briefing an AI image generator (Midjourney / Ideogram / Nano Banana) to produce the venture's launch-week visual assets on Day 11. Ground every prompt in visual_identity_brief and brand_strategy_framework. Never invent asset dimensions — use the standards below. Output Markdown:
@@ -510,9 +510,9 @@ Every prompt must reference at least two specific palette or type cues from the 
 ## Escalation Rules (which intents route to human, how the ticket lands in the support inbox, on-call rotation, SLAs)
 ## Weekly Bot Health Review (KPIs: deflection rate, escalation rate, top-5 unanswered intents, what to add to training)
 ## Paste-Ready — three fenced blocks:
-1. a `### system_prompt.txt` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — the full system prompt for the bot: role, voice (match brand_voice_tone_guide), guardrails, refusal template, escalation trigger phrases. Use \`{{COMPANY}}\`, \`{{SUPPORT_EMAIL}}\` tokens.
-2. a `### training_sources.json` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — array of source docs \`[{ "title": "…", "type": "asset_key", "url_or_key": "customer_support_starter" }, …]\`.
-3. a `### widget_snippet.html` heading followed by a plain \`\`\`html fence containing only the content (never put a label on the fence line) — the drop-in \`<script>\` snippet (with \`{{BOT_ID}}\` token) plus the CSS variables to theme it to the brand.
+1. a \`### system_prompt.txt\` heading followed by a plain \`\`\`text fence containing only the content (never put a label on the fence line) — the full system prompt for the bot: role, voice (match brand_voice_tone_guide), guardrails, refusal template, escalation trigger phrases. Use \`{{COMPANY}}\`, \`{{SUPPORT_EMAIL}}\` tokens.
+2. a \`### training_sources.json\` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — array of source docs \`[{ "title": "…", "type": "asset_key", "url_or_key": "customer_support_starter" }, …]\`.
+3. a \`### widget_snippet.html\` heading followed by a plain \`\`\`html fence containing only the content (never put a label on the fence line) — the drop-in \`<script>\` snippet (with \`{{BOT_ID}}\` token) plus the CSS variables to theme it to the brand.
 ${QF}`,
 
   automation_recipes_starter: `You are a workflow automation lead installing 5 workflows on Day 12 that remove the founder from repetitive work. Default to n8n (self-host or Cloud) when the founder is technical; Zapier or Make for non-technical. Every recipe must wire real named tools from the ai_tool_stack_recommendation (CRM, Stripe, calendar, email, Slack). Output Markdown:
@@ -535,8 +535,8 @@ ${QF}`,
 ## Decision Rules (what triggers a pivot, what triggers a hire, what triggers cutting a channel — thresholds in numbers)
 ## Tooling (which of the recommended AI tools the founder opens for each ritual — Notion/Linear for plan, Fathom for standup transcript, CRM for pipeline review)
 ## Paste-Ready — two fenced blocks:
-1. a `### operating_cadence.md` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a Notion/Linear-friendly template with headings for each ritual, a fill-in-the-blank agenda, and a "Definition of done" line under each.
-2. a `### kpi_dashboard.json` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — array of KPI objects \`{ "metric", "definition", "source", "target_month_1", "target_month_3", "owner", "cadence" }\` ready to seed a dashboard tool.
+1. a \`### operating_cadence.md\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a Notion/Linear-friendly template with headings for each ritual, a fill-in-the-blank agenda, and a "Definition of done" line under each.
+2. a \`### kpi_dashboard.json\` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — array of KPI objects \`{ "metric", "definition", "source", "target_month_1", "target_month_3", "owner", "cadence" }\` ready to seed a dashboard tool.
 ${QF}`,
 
   ad_creative_pack: `You are a performance-creative lead producing 12 ready-to-run ad units on Day 14, mapped to Meta, Google, TikTok, and LinkedIn. Ground every unit in pricing_offer_sheet, brand_messaging, and paid_ads_starter_pack. Every image prompt must be pasteable into Midjourney/Ideogram; every script pasteable into a TikTok/Reels caption; every headline pair pasteable into Ads Manager. Output Markdown:
@@ -577,9 +577,9 @@ Every unit must reference at least one specific persona pain and one specific pr
 ## Advocate Identification (how to find the first 10 advocates — from customers with 5-star reviews, high-NPS respondents, repeat buyers, or logo-worthy partners)
 ## Weekly Ritual (how the founder reviews new referrals, thanks the advocate, and turns wins into social proof)
 ## Paste-Ready — three fenced blocks:
-1. a `### referral_terms.md` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — the founder-facing Terms & Conditions the founder pastes onto \`/referral-terms\`, tuned to entity + jurisdiction.
-2. a `### invite_email.md` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — the invite email to send to a happy customer or partner: SUBJECT, BODY (140-200 words), CTA link label, PS line. Use \`{{FIRST_NAME}}\`, \`{{REFERRAL_LINK}}\` tokens.
-3. a `### first_10_advocates.csv` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`name,company,relationship,why_theyd_refer,ask,channel,status\` with 10 pre-populated rows (labeled by segment — the founder fills in the names).
+1. a \`### referral_terms.md\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — the founder-facing Terms & Conditions the founder pastes onto \`/referral-terms\`, tuned to entity + jurisdiction.
+2. a \`### invite_email.md\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — the invite email to send to a happy customer or partner: SUBJECT, BODY (140-200 words), CTA link label, PS line. Use \`{{FIRST_NAME}}\`, \`{{REFERRAL_LINK}}\` tokens.
+3. a \`### first_10_advocates.csv\` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`name,company,relationship,why_theyd_refer,ask,channel,status\` with 10 pre-populated rows (labeled by segment — the founder fills in the names).
 ${QF}`,
 
   supplier_shortlist: `You are a sourcing lead building a 5-10 supplier shortlist for a first-time founder launching a physical product. Ground every recommendation in the supplied "## Sourcing context" block (product_form, sourcing_mode, regulatory_flags) and in any supplier hits or benchmarks that appear in the research brief. Never invent supplier names — if the research corpus lists candidates, name them; otherwise recommend named marketplaces / directories the founder can search (Alibaba, Made-in-China, IndiaMART, ThomasNet, Faire, Maker's Row, Printful, Printify, Gelato) and label the row as "search on {surface}". Output Markdown:
@@ -590,8 +590,8 @@ ${QF}`,
 ## Sample & PO Playbook (numbered steps from first outreach to first paid PO: qualification questions, sample order, quality inspection, escrow terms, PO template, freight decision)
 ## Red Flags (5-7 signals that mean walk away — no BIS/ISO paperwork, no phone number, no reference customers, insists on wire before sample, quotes that dodge MOQ, etc.)
 ## Paste-Ready — two fenced blocks, in this order:
-1. a `### First-outreach email` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — SUBJECT and BODY (140-220 words) the founder pastes into a supplier's contact form or email. Use \`{{SUPPLIER_NAME}}\`, \`{{PRODUCT}}\`, \`{{TARGET_MOQ}}\`, \`{{TARGET_UNIT_COST}}\`, \`{{TARGET_LEAD_TIME}}\` tokens. Ask the six qualification questions inline.
-2. a `### supplier_shortlist.csv` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`num,supplier_or_directory,country,moq,unit_cost_range,lead_time_days,strengths,risks,contact_url,fit_score,status\` and one row per shortlist entry above. Comma-escape any values with commas.
+1. a \`### First-outreach email\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — SUBJECT and BODY (140-220 words) the founder pastes into a supplier's contact form or email. Use \`{{SUPPLIER_NAME}}\`, \`{{PRODUCT}}\`, \`{{TARGET_MOQ}}\`, \`{{TARGET_UNIT_COST}}\`, \`{{TARGET_LEAD_TIME}}\` tokens. Ask the six qualification questions inline.
+2. a \`### supplier_shortlist.csv\` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`num,supplier_or_directory,country,moq,unit_cost_range,lead_time_days,strengths,risks,contact_url,fit_score,status\` and one row per shortlist entry above. Comma-escape any values with commas.
 ${QF}`,
 
   bom_and_landed_cost: `You are a sourcing analyst modeling the true cost of getting one unit into a US customer's hands for a first-time founder. Ground every line item in the supplied "## Sourcing context" block and in supplier_shortlist context when present. Never leave a line blank — if a number is unknown, use a clearly labeled reasonable assumption and note the source ("assumed", "supplier quote", "benchmark").
@@ -604,8 +604,8 @@ Output Markdown:
 ## Sensitivity Table — Base / Downside / Upside on the two most sensitive levers (unit cost ±20%, freight ±30%). Show landed cost per unit and contribution margin for each cell.
 ## Reorder Rule (in one paragraph: reorder point in units, safety stock rule, cycle stock rule, lead-time buffer)
 ## Paste-Ready — two fenced blocks in this order:
-1. a `### bill_of_materials.csv` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`line,component,spec,supplier_or_type,unit,qty_per_unit,unit_price_usd,extended_cost_usd,notes\` and one row per BOM line plus a final \`TOTAL\` row.
-2. a `### landed_cost_stack.csv` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`bucket,value_per_unit_usd,pct_of_landed\` and one row per landed-cost bucket plus a final \`LANDED_COST_PER_UNIT\` row.
+1. a \`### bill_of_materials.csv\` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`line,component,spec,supplier_or_type,unit,qty_per_unit,unit_price_usd,extended_cost_usd,notes\` and one row per BOM line plus a final \`TOTAL\` row.
+2. a \`### landed_cost_stack.csv\` heading followed by a plain \`\`\`csv fence containing only the content (never put a label on the fence line) — header \`bucket,value_per_unit_usd,pct_of_landed\` and one row per landed-cost bucket plus a final \`LANDED_COST_PER_UNIT\` row.
 ${QF}`,
 };
 
