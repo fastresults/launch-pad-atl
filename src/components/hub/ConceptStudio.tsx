@@ -75,13 +75,22 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
   };
 
   const applyDraft = async (s: string, v: string) => {
-    setSummary(s); setVp(v);
+    // AI responses occasionally omit one field — fall back to what's on screen
+    // (or already saved) so "Use this" never fails with a 400.
+    const nextSummary = (s ?? "").trim() || summary.trim() || (snapshot.concept_summary ?? "").trim();
+    const nextVp = (v ?? "").trim() || vp.trim() || (snapshot.value_proposition ?? "").trim();
+    if (!nextSummary || !nextVp) {
+      toast.error("Add a concept summary and value proposition before applying.");
+      return;
+    }
+    setSummary(nextSummary); setVp(nextVp);
     try {
-      await run.mutateAsync({ action: "apply", payload: { summary: s, value_proposition: v } });
+      await run.mutateAsync({ action: "apply", payload: { summary: nextSummary, value_proposition: nextVp } });
       toast.success("Applied");
       onChanged();
     } catch (e: any) { toast.error(e.message); }
   };
+
 
   const lock = async () => {
     try {
