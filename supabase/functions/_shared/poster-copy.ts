@@ -142,10 +142,19 @@ export async function buildPosterCopy(args: {
   siblingHooks?: string[];
   /** Campaign kicker vocabulary so eyebrows stay consistent across the set. */
   kickerTaxonomy?: string[];
+  /** Funnel stage this week occupies, from the campaign arc. */
+  stage?: { label: string; job: string; audience?: string; temperature?: string } | null;
+  /** The single claim this week owns. Nothing else may be argued. */
+  assignedAngle?: string | null;
+  /** Claims spent by earlier weeks — hard negative context. */
+  usedClaims?: string[];
+  /** How hard this week is allowed to ask, plus the brief for that rung. */
+  ctaRung?: { rung: string; brief: string; offer?: string | null } | null;
   post: { hook?: string | null; body?: string | null; cta?: string | null; pillar?: string | null; platform?: string | null };
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string } | null;
 
 }): Promise<PosterCopy> {
+
   const { post, headlineOverride } = args;
   const cap = Math.max(28, Math.min(72, args.headlineCap ?? 52));
 
