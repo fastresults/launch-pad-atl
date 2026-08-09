@@ -16,6 +16,7 @@
 // looking at. The mark is never redrawn between approval and delivery.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { resolveOwner } from "../_shared/impersonation.ts";
 import {
