@@ -36,7 +36,7 @@ export const DEFAULT_PROFILE: PromptProfile = {
   corpusLimitPerQuery: 10,
 };
 
-const PROFILES: Record<string, PromptProfile> = {
+const PROFILES: Record<string, Partial<PromptProfile>> = {
   // website_prd deliberately carries NO spine, section counts or systemExtra.
   // Its full structure lives in SPECIALIZED_PROMPTS.website_prd, and its art
   // direction is injected per-venture from _shared/site-art-direction.ts.
