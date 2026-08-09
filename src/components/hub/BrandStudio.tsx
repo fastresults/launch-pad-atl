@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Palette, Sparkles, Lock, RotateCcw } from "lucide-react";
+import { Palette, Sparkles, Lock, RotateCcw, RefreshCw, Loader2, Eye } from "lucide-react";
 import { getBrandKit, resetBrandKit, upsertBrandKit } from "@/lib/brandKit.functions";
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
 import { BrandIdentityHeader } from "@/components/hub/brand/BrandIdentityHeader";
