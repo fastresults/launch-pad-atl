@@ -340,37 +340,9 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.warn("[content-ad] week posts unavailable", e);
     }
-    let campaignCard: CampaignCard | null = null;
-    try {
-      campaignCard = await ensureCampaignCard(
-        admin,
-        snapshotId,
-        weekNo,
-        () => deriveCampaignCard({
-          week: weekNo,
-          posts: weekPosts.length ? weekPosts : [{ pillar: post.pillar, format: post.format, hook: post.hook }],
-          businessLine: sceneBrief?.business_line ?? null,
-          brandName: ctx?.company_name ?? kit?.company_name ?? null,
-          palette: { surface: kit?.palette?.surface, ink: kit?.palette?.ink, accent: kit?.palette?.accent },
-        }),
-        { force: body?.refreshCampaign === true },
-      );
-    } catch (e) {
-      console.warn("[content-ad] campaign card unavailable", e);
-    }
-    const postIndex = Math.max(0, weekPosts.findIndex((p: any) => p.id === post.id));
-    const posterLayout: PosterLayout = (requestedPosterLayout
-      ?? (layoutForIndex(campaignCard, postIndex, "bottom-scrim") as PosterLayout));
-    const bandRatio = campaignCard?.band_ratio ?? null;
-    // Sibling headlines so the copywriter doesn't repeat a claim inside a week.
-    const siblingHooks = weekPosts
-      .filter((p: any) => p.id !== post.id)
-      .map((p: any) => String(p.hook ?? "").trim())
-      .filter(Boolean)
-      .slice(0, 6);
     // --- Flight-level campaign architecture ------------------------------
-    // The card says how the week LOOKS; the arc says what it ARGUES, and which
-    // rung of the CTA ladder it is allowed to ask for.
+    // The arc says what each week ARGUES and which rung of the CTA ladder it
+    // may ask for. It is derived first so the week's LOOK can follow its stage.
     let arc: CampaignArc | null = null;
     try {
       const { data: allPosts } = await admin
@@ -400,6 +372,39 @@ Deno.serve(async (req) => {
     }
     const arcWeek = weekCard(arc, weekNo);
     const usedClaims = claimsBefore(arc, weekNo);
+
+    let campaignCard: CampaignCard | null = null;
+    try {
+      campaignCard = await ensureCampaignCard(
+        admin,
+        snapshotId,
+        weekNo,
+        () => deriveCampaignCard({
+          week: weekNo,
+          posts: weekPosts.length ? weekPosts : [{ pillar: post.pillar, format: post.format, hook: post.hook }],
+          businessLine: sceneBrief?.business_line ?? null,
+          brandName: ctx?.company_name ?? kit?.company_name ?? null,
+          palette: { surface: kit?.palette?.surface, ink: kit?.palette?.ink, accent: kit?.palette?.accent },
+          stage: arcWeek
+            ? { label: arcWeek.stage_label, job: arcWeek.job, temperature: arcWeek.temperature }
+            : null,
+        }),
+        { force: body?.refreshCampaign === true || body?.refreshArc === true },
+      );
+    } catch (e) {
+      console.warn("[content-ad] campaign card unavailable", e);
+    }
+    const postIndex = Math.max(0, weekPosts.findIndex((p: any) => p.id === post.id));
+    const posterLayout: PosterLayout = (requestedPosterLayout
+      ?? (layoutForIndex(campaignCard, postIndex, "bottom-scrim") as PosterLayout));
+    const bandRatio = campaignCard?.band_ratio ?? null;
+    // Sibling headlines so the copywriter doesn't repeat a claim inside a week.
+    const siblingHooks = weekPosts
+      .filter((p: any) => p.id !== post.id)
+      .map((p: any) => String(p.hook ?? "").trim())
+      .filter(Boolean)
+      .slice(0, 6);
+
     step("campaign card ready", {
       week: weekNo,
       grade: campaignCard?.grade ?? null,
