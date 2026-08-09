@@ -83,11 +83,18 @@ export async function loadVentureContext(
  * includes verbatim. Replaces the 8-12KB of duplicated founder + brand +
  * extracted_data JSON every function was previously injecting.
  */
-export function compactPreamble(ctx: VentureContext): string {
+export function compactPreamble(ctx: VentureContext, opts?: { hasBrandKit?: boolean }): string {
   const s = ctx.snap;
   const lines: string[] = [];
+  const name = (s.company_name ?? "").trim();
+  if (name) {
+    lines.push("## IDENTITY LOCK (highest priority — read before anything else)");
+    lines.push(`The company is called **${name}**. That exact string is the ONLY name that may appear in this asset.`);
+    lines.push("Never invent, shorten, translate, rebrand, or 'improve' the name. Never substitute a placeholder, an agency-sounding alternative, or a name you have seen elsewhere. Every headline, meta title, footer, email address and code sample must use this name verbatim.");
+    lines.push("");
+  }
   lines.push("## Venture preamble (authoritative — every section must reflect these facts)");
-  lines.push(`- Company: ${s.company_name ?? "[not provided]"}`);
+  lines.push(`- Company: ${name || "[not provided]"}`);
   lines.push(`- Founder: ${s.founder_name ?? "[not provided]"}${s.founder_email ? ` <${s.founder_email}>` : ""}`);
   lines.push(`- Industry: ${s.industry ?? "[not provided]"}${s.sub_industry ? ` / ${s.sub_industry}` : ""}`);
   lines.push(`- Track: ${s.track ?? "lifestyle"}`);
@@ -95,9 +102,13 @@ export function compactPreamble(ctx: VentureContext): string {
   if (s.concept_summary) lines.push(`- North-star concept: ${s.concept_summary}`);
   if (s.value_proposition) lines.push(`- Value proposition: ${s.value_proposition}`);
   if (s.differentiation_statement) lines.push(`- Differentiation: ${s.differentiation_statement}`);
-  if (s.brand_tokens) {
+  // When a usable Brand Kit is in the prompt it is the ONLY source of colors and
+  // fonts. Emitting the snapshot's brand_tokens alongside it gives the model two
+  // conflicting palettes and teaches it the brand facts are negotiable.
+  if (s.brand_tokens && !opts?.hasBrandKit) {
     lines.push(`- Brand tokens: ${JSON.stringify(s.brand_tokens)}`);
   }
+
   // Numbers the founder has already confirmed
   const numbers: Record<string, any> = {};
   for (const k of ["current_revenue", "monthly_burn", "runway_months", "funding_raised"]) {
