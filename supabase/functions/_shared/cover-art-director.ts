@@ -651,7 +651,7 @@ export function buildCoverArtPrompt(args: {
   // suppresses all glyphs and reserves the top band as unmarked negative space.
   serverRenderedHeadline?: boolean;
 }): string {
-  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone, sceneSignal, serverRenderedHeadline } = args;
+  const { platform, asset, direction, kit, ctx, plan, hasLogoImage = true, retryNote, userFeedback, variationSeed, headlineOverride, logoZone, sceneSignal, scene: sceneArg, serverRenderedHeadline } = args;
   const brief = DIRECTION_BRIEF[direction];
   const palette = paletteBlock(kit);
   const typo = typoBlock(kit);
@@ -668,7 +668,7 @@ export function buildCoverArtPrompt(args: {
   const { text: headline, suppress: suppressHeadline } = resolveHeadline(ctx, effectiveOverride);
   const isCustomHeadline = effectiveOverride?.mode === "custom" && !!headline;
   const venture = ventureBlock(ctx, effectiveOverride);
-  const scene = resolveSceneDirective(ctx, sceneSignal);
+  const scene = sceneArg ?? resolveSceneDirective(ctx, sceneSignal);
   const sceneBlock = sceneDirectiveBlock(scene);
   const system = assetSystem(asset, hasLogoImage, headline, suppressHeadline, isCustomHeadline, logoZone);
   const dims = `${asset.width}x${asset.height} (${asset.guidance})`;
