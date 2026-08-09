@@ -19,6 +19,11 @@ import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
 import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
 import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
 import { ensureCampaignCard, deriveCampaignCard, layoutForIndex, type CampaignCard } from "../_shared/campaign-card.ts";
+import {
+  ensureCampaignArc, deriveCampaignArc, weekCard, claimsBefore, CTA_RUNG_BRIEF,
+  type CampaignArc,
+} from "../_shared/campaign-arc.ts";
+
 
 
 const corsHeaders = {
