@@ -280,13 +280,65 @@ export function brandKitBlock(kit: BrandKitRow | null, snapshotId?: string): str
   if (kit.typography) {
     lines.push(`- Typography (use these exact Google Fonts for heading + body — do not substitute):\n\`\`\`json\n${JSON.stringify(kit.typography, null, 2)}\n\`\`\``);
   }
-  if (kit.voice) {
-    lines.push(`- Voice & tone (apply to every page of copy):\n\`\`\`json\n${JSON.stringify(kit.voice, null, 2)}\n\`\`\``);
+  // ---- Brand DNA ------------------------------------------------------
+  const positioning = kit.dna?.positioning ?? kit.dna?.promise ?? null;
+  const traits = brandStrArr(kit.dna?.traits ?? kit.dna?.mood ?? kit.dna?.personality);
+  const toneWords = brandStrArr(kit.voice?.tone_words ?? kit.voice?.toneWords);
+  if (positioning || traits.length || toneWords.length) {
+    lines.push("\n### Brand DNA");
+    if (positioning) lines.push(`- Positioning / promise: ${positioning}`);
+    if (traits.length) lines.push(`- Personality traits: ${traits.join(" · ")}`);
+    if (toneWords.length) lines.push(`- Tone words: ${toneWords.join(" · ")}`);
   }
+
+  // ---- Mood board -----------------------------------------------------
+  const mood = (Array.isArray(kit.moodboard) ? kit.moodboard : [])
+    .map((m: any) => {
+      const url = typeof m === "string" ? m : (m?.url ?? m?.publicUrl ?? m?.signedUrl);
+      if (!url) return null;
+      const caption = typeof m === "object" ? (m?.caption ?? m?.source ?? null) : null;
+      return { url: String(url), caption: caption ? String(caption) : null };
+    })
+    .filter(Boolean)
+    .slice(0, 8) as { url: string; caption: string | null }[];
+  if (mood.length) {
+    lines.push("\n### Mood board (the approved visual reference — match this look, lighting and subject matter for any imagery, photography direction, or descriptive language)");
+    for (const m of mood) lines.push(`- ${m.url}${m.caption ? ` — ${m.caption}` : ""}`);
+  }
+  if (kit.art_direction) {
+    lines.push(`- Art direction:\n\`\`\`json\n${JSON.stringify(kit.art_direction).slice(0, 1800)}\n\`\`\``);
+  }
+
+  // ---- Voice ----------------------------------------------------------
+  if (kit.voice) {
+    const summary = kit.voice?.summary ?? kit.voice?.rules ?? null;
+    const attrs = kit.voice?.attributes ?? {};
+    const principles = brandStrArr(kit.voice?.principles).length
+      ? brandStrArr(kit.voice?.principles)
+      : Object.entries(attrs).map(([k, v]) => `${k[0].toUpperCase()}${k.slice(1)} — ${v}/100`).slice(0, 6);
+    const dos = brandStrArr(kit.voice?.dos, 8);
+    const donts = brandStrArr(kit.voice?.donts, 8);
+    lines.push("\n### Voice & tone (apply to EVERY sentence of copy in this asset)");
+    if (summary) lines.push(`- Summary: ${summary}`);
+    for (const p of principles) lines.push(`- Principle: ${p}`);
+    for (const d of dos) lines.push(`- DO: ${d}`);
+    for (const d of donts) lines.push(`- DON'T: ${d}`);
+  }
+
+  // ---- Approved CTAs --------------------------------------------------
+  const ctas = Array.from(
+    new Set([...brandStrArr(kit.voice?.ctas, 6), ...brandStrArr(kit.dna?.ctas, 6)].filter((s) => s.length <= 60)),
+  ).slice(0, 6);
+  if (ctas.length) {
+    lines.push("\n### Approved calls to action (use these VERBATIM — do not invent new CTA wording)");
+    for (const c of ctas) lines.push(`- "${c}"`);
+  }
+
   if (kit.guide_markdown) {
     const excerpt = String(kit.guide_markdown).slice(0, 1600);
-    lines.push(`- Style-guide excerpt (treat as ground truth):\n${excerpt}`);
+    lines.push(`\n- Style-guide excerpt (treat as ground truth):\n${excerpt}`);
   }
-  lines.push("\nHARD RULES for this generation: every color, font name, and logo reference MUST come from the block above. Do not propose alternates, do not 'modernize' the palette, do not pick a different Google Font. If a section needs more colors than the palette provides, derive tints/shades from the existing hex values rather than introducing new hues.");
+  lines.push("\nHARD RULES for this generation: every color, font name, logo reference, voice choice and call to action MUST come from the block above. Do not propose alternates, do not 'modernize' the palette, do not pick a different Google Font, do not write new CTA wording when approved CTAs exist. If a section needs more colors than the palette provides, derive tints/shades from the existing hex values rather than introducing new hues.");
   return lines.join("\n");
+
 }
