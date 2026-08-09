@@ -435,7 +435,8 @@ export function archetypeForPrompt(input: ArchetypeInput): { archetype: SiteArch
   const archetype = selectArchetype(input);
   return {
     archetype,
-    block: `${artDirectionBlock(archetype)}\n\n${imageCraftBlock()}\n\n${copyCraftBlock()}`,
+    block:
+      `${artDirectionBlock(archetype)}\n\n${imageCraftBlock()}\n\n${copyCraftBlock()}\n\n${surfaceSystemBlock()}`,
   };
 }
 
