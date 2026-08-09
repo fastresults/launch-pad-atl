@@ -164,6 +164,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
                     <Eye className="mr-1 h-3 w-3" />Read PRD
                   </Button>
                 )}
+                {websitePrd.exists && !websitePrd.running && <PrdExportActions doc={websitePrd.prd} />}
                 <Button
                   size="sm"
                   variant={websitePrd.stale || !websitePrd.exists ? "default" : "outline"}
