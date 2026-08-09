@@ -700,7 +700,7 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
       const href = built?.dataUrl ?? args.logoDataUrl ?? null;
       if (href) {
         // Re-derive the box from the trimmed mark so the inset stays optical.
-        const finalBox = logoBox(W, H, built?.aspect ?? aspect, size, chosen.corner, inset);
+        const finalBox = logoBox(W, H, built?.aspect ?? aspect, size, chosen.corner, inset, capFrac);
         if (plated) {
           const pad = Math.round(inset * 0.4);
           parts.push(
