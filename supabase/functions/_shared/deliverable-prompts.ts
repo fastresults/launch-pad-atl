@@ -39,6 +39,7 @@ Output Markdown exactly in this structure:
 - Primary audience + Job-To-Be-Done (2–3 sentences)
 - Top 3 conversion goals (ranked) and the success metric for each
 - Brand voice recap (3–5 bullets pulled from messaging house / brand_tokens)
+- **Voice calibration**: three sentences written IN the brand voice — one headline, one body sentence, one CTA sentence — that the rest of the document must match. Follow them with a short "we never say" list drawn from the brand kit's voice don'ts plus the banned phrases in the copy contract.
 - Global components inventory: header, primary nav, announcement bar, footer, cookie banner, 404, search (if applicable)
 
 ## 2. Information Architecture
