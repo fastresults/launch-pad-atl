@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import { Wand2 } from "lucide-react";
 import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
+import { LogoSetPanel } from "@/components/hub/brand/LogoSetPanel";
 import { cn } from "@/lib/utils";
 
 /**
@@ -185,11 +186,13 @@ function Swatch({
 
 export function BrandIdentityHeader({
   kit,
+  snapshotId,
   companyName,
   onChangeColor,
   onEditMark,
 }: {
   kit: any;
+  snapshotId: string;
   companyName?: string;
   onChangeColor: (key: string, hex: string) => void;
   onEditMark?: () => void;
@@ -209,12 +212,20 @@ export function BrandIdentityHeader({
     return logos.find((l: any) => l.primary) ?? logos[0] ?? null;
   }, [kit?.logos]);
 
-  const hasAnything = logo || core.length || surface.length || headingFamily;
+  // The mark panel is always shown so a founder can upload one even before any
+  // brand generation has run.
+  const hasAnything = true;
   if (!hasAnything) return null;
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
-      <MarkPanel logo={logo} companyName={companyName} primary={colors.primary} onEditMark={onEditMark} />
+      <LogoSetPanel
+        snapshotId={snapshotId}
+        kit={kit}
+        companyName={companyName}
+        onEditMark={onEditMark}
+      />
+
 
       {/* Colour */}
       <section className="min-w-0 space-y-3">

@@ -111,6 +111,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
           {kit && (
             <BrandIdentityHeader
               kit={kit}
+              snapshotId={snapshot.id}
               companyName={snapshot?.company_name}
               onEditMark={() => setOpen(true)}
               onChangeColor={async (key, hex) => {
