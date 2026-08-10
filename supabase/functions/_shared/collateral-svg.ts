@@ -1090,7 +1090,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
       surface(W, H, paper, ad.material.grain),
       `<rect x="0" y="0" width="${r(ad.ink.ruleWeight * 6)}" height="${H}" fill="${accent}"/>`,
       art[1]
-        ? imageWell(ctx, art[1], W * 0.6, 0, W * 0.4, H, {
+        ? imageWell(ctx, art[1], W * 0.6, 0, W * 0.4, H * 0.8, {
           radius: 0, accent, primary, paper, ruleWeight: 0,
         })
         : "",
