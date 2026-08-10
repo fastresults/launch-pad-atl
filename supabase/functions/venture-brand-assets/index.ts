@@ -88,7 +88,13 @@ const MOODBOARD_ANGLES = [
   "Tile 2 — Hero environment: a wide cinematic scene of a person or place that represents the customer's world. Natural light, editorial photography.",
   "Tile 3 — Object still life: an art-directed still life of 2–3 props that evoke the brand's category and personality. Studio lighting, clean composition.",
   "Tile 4 — Color & motion: an abstract painterly composition built from the brand's primary, secondary and accent colors. Smooth gradients, organic shapes.",
+  "Tile 5 — Human moment: a candid editorial portrait of the kind of person this brand serves, in their real context. Shallow depth of field, honest expression, no eye contact with camera. No text.",
+  "Tile 6 — Space & structure: architecture or an interior whose geometry carries the brand's structural feeling (open and airy, or tight and engineered). Strong light direction, no people.",
+  "Tile 7 — Typography in the wild: a real-world surface where type lives — signage, printed collateral, packaging, a painted wall. Type must be abstract or blurred so no words are readable. Shows the brand's type mood, not its name.",
+  "Tile 8 — Craft in progress: a tight detail crop of hands, tools or process from this brand's category — the work actually being done. Warm natural light, documentary feel.",
+  "Tile 9 — Palette-forward hero frame: a wide, sparse composition dominated by the brand's colours with generous negative space on one side, as if a headline could sit over it. No text.",
 ];
+
 
 /* ----------------------- LOGO STUDIO ----------------------- */
 
@@ -821,11 +827,11 @@ Deno.serve(async (req) => {
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     const body = await req.json();
-    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
+    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId, defer, angleOffset = 0, tiles, replace } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // Durable logo stages share the logo preset.
     const logoKinds = ["logo_create_run", "logo_read_context", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_jury", "logo_vectorize", "logo_render_status", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_force_reset", "logo_remove_direction", "logo_select_direction", "logo_upload_own", "logo_remove_upload", "logo_refresh_urls", "logo_refine_direction", "logo_restore_render"];
-    const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
+    const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : (kind === "moodboard_commit" ? KIND_PRESETS.moodboard : undefined));
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
 
@@ -862,6 +868,45 @@ Deno.serve(async (req) => {
 
     const n = Math.max(1, Math.min(4, count ?? preset.defaultCount));
     const results: any[] = [];
+
+    // Commit a batched mood board run. Regenerate means replace: the previous
+    // board's storage objects and media rows are only deleted once the fresh
+    // tiles are safely written.
+    if (kind === "moodboard_commit") {
+      const nextTiles = (Array.isArray(tiles) ? tiles : [])
+        .filter((t: any) => t?.url && t?.path)
+        .map((t: any) => ({ url: t.url, path: t.path }))
+        .slice(0, 9);
+      if (!nextTiles.length) throw new Error("No mood board tiles to commit");
+
+      const existing = Array.isArray((kit as any)?.moodboard) ? (kit as any).moodboard : [];
+      const keep = new Set(nextTiles.map((t: any) => t.path));
+      const board = replace ? nextTiles : [...nextTiles, ...existing].slice(0, 9);
+
+      const { error: updErr } = await supabase
+        .from("venture_brand_kits")
+        .update({ moodboard: board })
+        .eq("snapshot_id", snapshotId);
+      if (updErr) throw updErr;
+
+      let removed = 0;
+      if (replace) {
+        const stalePaths = existing
+          .map((t: any) => t?.path)
+          .filter((p: any) => typeof p === "string" && p && !keep.has(p));
+        if (stalePaths.length) {
+          try { await supabase.storage.from("user-media").remove(stalePaths); } catch { /* non-fatal */ }
+          try { await supabase.from("media_assets").delete().in("storage_path", stalePaths); } catch { /* non-fatal */ }
+          removed = stalePaths.length;
+        }
+      }
+
+      return new Response(JSON.stringify({ ok: true, kind, moodboard: board, removed }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
 
     const getRun = async (id?: string) => {
       let query = supabase.from("brand_logo_runs").select("*").eq("snapshot_id", snapshotId);
@@ -1677,7 +1722,9 @@ Deno.serve(async (req) => {
       async function worker() {
         while (i < n) {
           const myIdx = i++;
-          const angle = kind === "moodboard" ? MOODBOARD_ANGLES[myIdx % MOODBOARD_ANGLES.length] : undefined;
+          const angle = kind === "moodboard"
+            ? MOODBOARD_ANGLES[(myIdx + angleOffset) % MOODBOARD_ANGLES.length]
+            : undefined;
           const prompt = buildPromptGeneric(kind, ctx, tokens, extra, angle);
           try {
             const b64 = await generateOne(prompt, preset.size);
@@ -1692,14 +1739,17 @@ Deno.serve(async (req) => {
     }
 
     // Persist into the brand kit so the live preview & guide pick them up.
+    // Batched 9-tile runs pass `defer: true` and commit once via moodboard_commit,
+    // so a half-finished run never overwrites the founder's existing board.
     try {
       const fresh = results.filter((r) => r?.ok).map((r) => ({ url: r.url, path: r.path }));
-      if (fresh.length && kind === "moodboard" && kit) {
+      if (fresh.length && kind === "moodboard" && kit && !defer) {
         const existing = Array.isArray((kit as any).moodboard) ? (kit as any).moodboard : [];
-        const next = [...fresh, ...existing].slice(0, 8);
+        const next = [...fresh, ...existing].slice(0, 9);
         await supabase.from("venture_brand_kits").update({ moodboard: next }).eq("snapshot_id", snapshotId);
       }
     } catch { /* non-fatal */ }
+
 
 
     return new Response(JSON.stringify({ ok: true, kind, assets: results }), {

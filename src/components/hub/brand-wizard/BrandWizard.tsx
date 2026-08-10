@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useWebsitePrd } from "@/components/hub/brand/use-website-prd";
+import { useMoodboard } from "@/components/hub/brand/use-moodboard";
 import { PrdExportActions } from "@/components/hub/brand/PrdExportActions";
 import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy, AlertTriangle, CircleCheck, ExternalLink, Trash2, Upload, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
@@ -552,17 +553,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const [moodboard, setMoodboard] = useState<any[]>(kit?.moodboard ?? []);
   const [refs, setRefs] = useState<string[]>(kit?.dna?._logoReferences ?? []);
 
-  const genMood = useMutation({
-    mutationFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "moodboard", count: 4 } }),
-    onSuccess: (out) => {
-      const fresh = (out.assets ?? []).filter((a: any) => a.ok);
-      const next = [...fresh, ...moodboard].slice(0, 8);
-      setMoodboard(next);
-      onSave({ moodboard: next });
-      toast.success(`${fresh.length} moodboard tiles generated`);
-    },
-    onError: (e: any) => toast.error(e.message),
+  const mood = useMoodboard(snapshot.id, {
+    onCommitted: (board) => { setMoodboard(board); },
   });
+
 
   const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "rendering" | "reviewing" | "drawing">("idle");
   const logoRunQ = useQuery({
@@ -930,16 +924,18 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       <section className="space-y-3">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold">Moodboard</h3>
-            <p className="text-xs text-muted-foreground">Four curated tiles — texture, hero scene, still life, and color motion — grounded in your locked palette and personality.</p>
+            <h3 className="text-sm font-semibold">Mood board</h3>
+            <p className="text-xs text-muted-foreground">Nine art-directed tiles — texture, hero scene, still life, colour motion, a human moment, space, type in the wild, craft in progress and a headline frame — grounded in your palette and personality.</p>
           </div>
-          <Button onClick={() => genMood.mutate()} disabled={genMood.isPending} size="sm">
-            {genMood.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-            {moodboard.length ? "Regenerate moodboard" : "Generate moodboard"}
+          <Button onClick={() => mood.regenerate.mutate()} disabled={mood.running} size="sm">
+            {mood.running ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            {mood.running
+              ? mood.label
+              : moodboard.length ? "Regenerate mood board (9 tiles)" : "Generate mood board (9 tiles)"}
           </Button>
         </div>
         {moodboard.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             {moodboard.map((a, i) => (
               <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-white/10 bg-background/40">
                 {a.url && <img src={a.url} className="aspect-square w-full object-cover" />}
@@ -947,8 +943,9 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-white/10 p-6 text-center text-xs text-muted-foreground">No moodboard yet. Generate to see four art-directed tiles here.</div>
+          <div className="rounded-lg border border-dashed border-white/10 p-6 text-center text-xs text-muted-foreground">No mood board yet. Generate to see nine art-directed tiles here.</div>
         )}
+
       </section>
 
       {/* REFERENCE LOGOS — required gateway */}
@@ -1127,6 +1124,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
   const qc = useQueryClient();
   const websitePrd = useWebsitePrd(snapshot.id, kit?.locked_at ?? null);
+  const reviewMood = useMoodboard(snapshot.id);
   const [voice, setVoice] = useState<any>(kit?.voice ?? {
     attributes: { formal: 50, warm: 50, witty: 50, expert: 50 },
     rules: "",
@@ -1338,6 +1336,12 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
               : websitePrd.exists
                 ? "Regenerate Website PRD"
                 : "Generate Website PRD"}
+          </Button>
+          <Button variant="outline" onClick={() => reviewMood.regenerate.mutate()} disabled={reviewMood.running} className="shrink-0">
+            {reviewMood.running ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
+            {reviewMood.running
+              ? reviewMood.label
+              : (Array.isArray(kit?.moodboard) && kit.moodboard.length ? "Regenerate Mood Board" : "Generate Mood Board")}
           </Button>
           <Button variant="outline" onClick={() => lock.mutate()} disabled={lock.isPending || !kit?.palette || !kit?.typography}>
             {lock.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
