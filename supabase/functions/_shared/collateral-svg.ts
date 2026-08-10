@@ -980,30 +980,46 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     ].join("")),
   });
 
-  const cardW = g.span(Math.floor(ad.grid.columns / 3) - (ad.grid.columns >= 12 ? 0 : 0));
   const cardGap = g.gutter * 2;
   const cardWidth = (g.content - cardGap * 2) / 3;
+  const cardPad = step(ad, 1.4);
+  const cardTop = H * 0.3;
+  const cardMaxH = H - g.M - slideBox.h - step(ad, 1.6) - cardTop;
+  // Each card is typeset first, then all three are drawn at the tallest
+  // measured height. Nothing is placed at a guessed offset, so the number,
+  // the headline and the body can no longer land on top of one another, and
+  // three short points no longer leave two-thirds of the card empty.
+  const cardStacks = [0, 1, 2].map((i) => {
+    const x = g.M + i * (cardWidth + cardGap);
+    const p = points[i];
+    const inner = cardWidth - cardPad * 2;
+    const f = T.flow(x + cardPad, cardTop + cardPad * 0.4, inner);
+    f.line(`0${i + 1}`, step(ad, -0.6), accent, { tracking: step(ad, -0.6) * ad.type.labelTracking, weight: 500 });
+    f.block(p?.title || "Point headline", step(ad, 1.2), fg, {
+      family: "head", weight: 700, leading: 1.15, maxLines: 3, gap: step(ad, 0.5),
+    });
+    f.block(
+      p?.body || "Supporting detail, kept short so the slide stays readable from the back of the room.",
+      step(ad, -0.2), muted, { leading: 1.5, maxLines: 6, gap: step(ad, 0.4) },
+    );
+    return { x, svg: f.svg(), height: f.bottom - cardTop + cardPad };
+  });
+  const cardH = Math.min(cardMaxH, Math.max(...cardStacks.map((c) => c.height), H * 0.22));
+
   pages.push({
     name: "slide-3-content", width: W, height: H,
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       T.line(deck.section ? `${deck.section}` : "Content slide", g.M, H * 0.17, step(ad, 2.4), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
       `<rect x="${g.M}" y="${r(H * 0.2)}" width="${r(g.span(1))}" height="${r(ad.ink.ruleWeight * 2)}" fill="${accent}"/>`,
-      ...[0, 1, 2].map((i) => {
-        const x = g.M + i * (cardWidth + cardGap);
-        const p = points[i];
-        const top = H * 0.3;
-        return [
-          `<rect x="${r(x)}" y="${r(top)}" width="${r(cardWidth)}" height="${r(H * 0.42)}" fill="${primary}" opacity="0.05" rx="${ad.material.radius}"/>`,
-          label(T, ctx, `0${i + 1}`, x + step(ad, 1.4), top + step(ad, 2.2), step(ad, 0.2), accent),
-          T.line(p?.title || "Point headline", x + step(ad, 1.4), top + step(ad, 4.2), step(ad, 1.2), fg, { family: "head", weight: 700, maxWidth: cardWidth - step(ad, 2.8) }),
-          T.block(p?.body || "Supporting detail, kept short so the slide stays readable from the back of the room.", x + step(ad, 1.4), top + step(ad, 5.9), step(ad, -0.2), cardWidth - step(ad, 2.8), muted, { leading: 1.5, maxLines: 5 }).svg,
-        ].join("");
-      }),
+      ...cardStacks.map((c) =>
+        `<rect x="${r(c.x)}" y="${r(cardTop)}" width="${r(cardWidth)}" height="${r(cardH)}" fill="${primary}" opacity="0.05" rx="${ad.material.radius}"/>${c.svg}`,
+      ),
       T.line(ctx.company, g.M, H - g.M, step(ad, -0.6), muted, { maxWidth: g.span(5) }),
       markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, mix(primary, paper, 0.3), paper),
     ].join("")),
   });
+
 
   pages.push({
     name: "slide-4-closing", width: W, height: H,
