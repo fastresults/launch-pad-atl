@@ -284,6 +284,9 @@ export type PageMetrics = {
   markArt?: string;
   /** The surface the mark landed on, so QC can catch a light mark on a dark ground. */
   markBg?: string;
+  /** Every mark drawn on the page, with the ink and surface it actually used. */
+  marks?: Array<{ h: number; art: string; bg: string; ink: string }>;
+
   safe: number;
   bleed: number;
   minType: number;
