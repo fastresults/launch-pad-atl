@@ -114,8 +114,11 @@ export default function UsersPage() {
                           </Button>
                         )}
                         <Button size="sm" variant="outline" asChild>
-                          <Link to={`/admin/members/${u.user_id}/view`}>
-                            <Eye className="mr-1 h-3.5 w-3.5" /> Peek
+                          <Link
+                            to={`/admin/members/${u.user_id}/view`}
+                            state={{ from: "/admin/users" }}
+                          >
+                            <Eye className="mr-1 h-3.5 w-3.5" /> Open as member
                           </Link>
                         </Button>
                         {isSuper || isSelf ? null : isRowAdmin ? (
