@@ -776,7 +776,7 @@ async function sprintSweep(
   ctx: VentureContext,
   jobId: string,
   types: any[],
-  state: { done: number; total: number; fails: number; canceled: boolean },
+  state: RunState,
   onlyDays?: number[] | null,
 ): Promise<{ dayGaps: { day: number; theme: string; missing: string[] }[] }> {
   const snapshotId = ctx.snapshotId;
