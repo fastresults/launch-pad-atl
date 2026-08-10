@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Eye, Loader2, Package, RotateCcw, ShieldCheck, Sparkles } from "lucide-react";
+import { Download, Eye, Loader2, Package, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   COLLATERAL_TIERS,
@@ -186,8 +186,8 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
           <div className="flex flex-wrap items-center gap-2">
             {items.length > 0 && (
               <>
-                <Button size="sm" variant="ghost" onClick={onClearAll} disabled={wipe.isPending}>
-                  <RotateCcw className="mr-1 h-3 w-3" />Clear
+                <Button size="sm" variant="outline" onClick={onClearAll} disabled={wipe.isPending} className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                  <Trash2 className="mr-1 h-3 w-3" />Delete all
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => downloadCollateralZip(items, snapshot?.company_name)}>
                   <Download className="mr-1 h-3 w-3" />Download ZIP
