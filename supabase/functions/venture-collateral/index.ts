@@ -32,7 +32,7 @@ import {
 import { suggestDetails } from "../_shared/collateral-suggest.ts";
 
 import { type ArtDirection, directArt, hydrate } from "../_shared/brand-art-direction.ts";
-import { writeCollateralCopy } from "../_shared/collateral-copy.ts";
+import { copyIsUsable, writeCollateralCopy } from "../_shared/collateral-copy.ts";
 import { resolveSpec } from "../_shared/collateral-specs.ts";
 import { qcPage, type QcVerdict } from "../_shared/collateral-qc.ts";
 
@@ -437,6 +437,17 @@ async function generateKind(
     return { kind, files: 2, qc: [] };
   }
 
+
+  // Copy gate. Every template falls back to canned lines ("Point headline",
+  // "Add your figure") when the copy pass fails, and a fully generic deck used
+  // to sail through QC. Kinds that carry written copy refuse to publish
+  // without it — the founder gets a retry, not a template.
+  const COPY_KINDS: CollateralKind[] = ["presentation", "proposal", "invoice", "notecard", "guidelines"];
+  if (COPY_KINDS.includes(kind) && !copyIsUsable(ctx.copy)) {
+    throw new Error(
+      "QUALITY_GATE_FAILED — we could not write your copy for this piece, so it would have published with placeholder text. Try again.",
+    );
+  }
 
   const { pages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx);
   // Fail loudly. Without a real TTF the rasteriser silently drops every line of
