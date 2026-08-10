@@ -101,6 +101,31 @@ const EXTRA_KIT_ASSETS: Record<string, string[]> = {
   Pinterest: ["vertical_pin"],
 };
 
+/**
+ * The single canonical hero/cover asset kind for a platform, using the same
+ * priority the generator uses. Platforms with no wide banner (Instagram,
+ * TikTok, Threads) resolve to their real hero tile instead of showing nothing.
+ */
+export function coverKindFor(
+  platform: string,
+  specs: Record<string, { assets: { kind: string }[] }>,
+): string | null {
+  const spec = specs[platform];
+  if (!spec) return null;
+  const kinds = new Set(spec.assets.map((a) => a.kind));
+  return COVER_PRIORITY.find((k) => kinds.has(k)) ?? null;
+}
+
+export function coverLabelFor(
+  platform: string,
+  specs: Record<string, { assets: { kind: string; label?: string }[] }>,
+): string {
+  const kind = coverKindFor(platform, specs as any);
+  const spec = specs[platform];
+  const asset = spec?.assets.find((a) => a.kind === kind);
+  return asset?.label ?? "cover";
+}
+
 export function buildKitTasks(
   platforms: string[],
   direction: string,

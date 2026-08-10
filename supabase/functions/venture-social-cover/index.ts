@@ -18,6 +18,8 @@ import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts
 
 import { buildCanvasPlan, pickAvatarSurface, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
+import { finishToSpec } from "../_shared/image-fit.ts";
+
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
@@ -659,6 +661,40 @@ Deno.serve(async (req) => {
       }
     }
 
+    // --- Deterministic finishing: trim any flat white band the model painted,
+    // then cover-fit to the EXACT platform pixel size. Output is never
+    // letterboxed or padded. One corrective regeneration if an edge is still a
+    // flat white margin after the fit.
+    {
+      let fin = finishToSpec(bytes, asset.width, asset.height);
+      bytes = fin.bytes;
+      if (!isAvatar && !fin.edges.ok) {
+        console.warn("[social-cover] flat edge bands after fit:", fin.edges.badEdges.join(", "));
+        try {
+          const retry = await generate(
+            `Your previous attempt left flat white margins on the ${fin.edges.badEdges.join(" and ")} edge(s). ` +
+            `The artwork must be FULL BLEED: imagery and color run edge to edge with zero white margin, ` +
+            `no framed border, no padding, no letterbox bars, no mat around the composition. ` +
+            `Fill the entire canvas with the scene and the brand surface ${plan.surface}.`,
+          );
+          const retryFin = finishToSpec(b64ToBytes(retry.b64), asset.width, asset.height);
+          if (retryFin.edges.badEdges.length < fin.edges.badEdges.length) {
+            bytes = retryFin.bytes;
+            result = retry;
+            fin = retryFin;
+            qa = runContrastQa(bytes, plan);
+          }
+        } catch (e) {
+          console.warn("[social-cover] full-bleed retry failed", e);
+        }
+      }
+      (qa as any).fit = {
+        target: `${asset.width}x${asset.height}`,
+        trimmed: fin.trimmed,
+        edges_ok: fin.edges.ok,
+        bad_edges: fin.edges.badEdges,
+      };
+    }
 
 
     // --- Guaranteed logo placement: composite the user's actual brand mark
