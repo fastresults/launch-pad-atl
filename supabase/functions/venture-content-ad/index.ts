@@ -21,8 +21,10 @@ import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art
 import { ensureCampaignCard, deriveCampaignCard, layoutForIndex, type CampaignCard } from "../_shared/campaign-card.ts";
 import {
   ensureCampaignArc, deriveCampaignArc, weekCard, claimsBefore, CTA_RUNG_BRIEF,
+  approachForIndex, APPROACH_BRIEF,
   type CampaignArc,
 } from "../_shared/campaign-arc.ts";
+
 
 
 
