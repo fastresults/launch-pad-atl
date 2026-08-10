@@ -256,6 +256,8 @@ export async function buildPosterCopy(args: {
   let issue: string | null = "no ai key";
   let soft = false;
   let repeats: string | null = null;
+  let vague: string | null = null;
+
 
 
   if (args.apiKey) {
