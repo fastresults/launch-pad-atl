@@ -81,12 +81,19 @@ export interface ShareItem {
 
 
 export interface SharePayload {
+  /** True when the signed-in viewer owns this venture (or is an admin). */
+  canManage?: boolean;
+  /** Only returned to a manager — powers regenerate / delete from the showcase. */
+  snapshotId?: string | null;
   venture: {
     name: string;
     oneLiner: string | null;
     location: string | null;
     industry: string | null;
     logoUrl: string | null;
+    /** Contrast-checked marks: the endpoint picks a variant that stays legible. */
+    logoUrlOnDark?: string | null;
+    logoUrlOnLight?: string | null;
     founderName: string | null;
     /** Bare domain (no scheme) confirmed by the founder, when they have one. */
     website?: string | null;
