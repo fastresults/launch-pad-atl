@@ -13,6 +13,7 @@ import { filterShowcaseContent } from "@/lib/share-content-filter";
 
 
 import { ImagePreviewDialog } from "@/components/share/ImagePreviewDialog";
+import { useIsDarkSurface } from "@/hooks/use-surface-logo";
 
 
 /**
@@ -63,6 +64,10 @@ export function ShareSection({
   exportSlot?: ReactNode;
 }) {
   const [lightbox, setLightbox] = useState<ShareImage | null>(null);
+  // A logo hero ships in both contrasts; the card follows the reader's theme.
+  const darkSurface = useIsDarkSurface();
+  const heroUrl =
+    (darkSurface ? item.heroImageOnDark : item.heroImageOnLight) ?? item.heroImageUrl ?? null;
 
 
   return (

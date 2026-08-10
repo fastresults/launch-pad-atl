@@ -165,7 +165,9 @@ function brandBoardMarkdown(item: ShareItem): string {
 
 async function blockFromItem(item: ShareItem, eyebrow?: string | null): Promise<ExportBlock> {
   const urls: { url: string; label?: string | null }[] = [];
-  if (item.heroImageUrl) urls.push({ url: item.heroImageUrl, label: item.title });
+  // Export pages are white paper — take the light-surface mark when there is one.
+  const hero = item.heroImageOnLight ?? item.heroImageUrl;
+  if (hero) urls.push({ url: hero, label: item.title });
   (item.images ?? []).forEach((i) => urls.push({ url: i.url, label: i.label }));
   (item.brandBoard?.logos ?? []).forEach((l) => urls.push({ url: l.url, label: l.label }));
   (item.brandBoard?.moodboard ?? []).forEach((m) => urls.push({ url: m.url, label: m.caption }));
