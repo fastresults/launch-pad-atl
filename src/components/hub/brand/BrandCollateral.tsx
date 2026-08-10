@@ -236,6 +236,11 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
                   disabled={!locked || gen.isPending}
                   onPreview={() => setOpenKind(k.kind)}
                   onGenerate={() => requestGen([k.kind])}
+                  onDelete={async () => {
+                    if (await confirm({ title: `Delete ${k.label}?`, description: "The generated files for this piece are removed. You can regenerate at any time.", destructive: true, confirmText: "Delete" })) {
+                      wipe.mutate(k.kind);
+                    }
+                  }}
                 />
               ))}
             </div>
