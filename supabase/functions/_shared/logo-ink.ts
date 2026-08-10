@@ -85,11 +85,15 @@ export function stripBackgroundShapes(svg: string): string {
   const h = vb ? Number(vb[4]) : Number(/\bheight\s*=\s*["']([\d.]+)/i.exec(svg)?.[1] ?? 0);
   if (!(w > 0 && h > 0)) return svg;
   return svg.replace(/<rect\b[^>]*\/?>/gi, (tag) => {
-    const num = (attr: string) => Number(/\s(?:width|height)\s*=/.test("") ? 0 : (new RegExp(`\\b${attr}\\s*=\\s*["']([-\\d.%]+)["']`, "i").exec(tag)?.[1] ?? "").replace("%", "") || NaN);
-    const rw = num("width");
-    const rh = num("height");
+    const attrNum = (attr: string) => {
+      const raw = new RegExp(`\\b${attr}\\s*=\\s*["']([-\\d.]+)`, "i").exec(tag)?.[1];
+      return raw === undefined ? NaN : Number(raw);
+    };
+    const rw = attrNum("width");
+    const rh = attrNum("height");
     const pct = /width\s*=\s*["']\s*100%/i.test(tag) && /height\s*=\s*["']\s*100%/i.test(tag);
     const covers = pct || (rw >= w * 0.98 && rh >= h * 0.98);
+
     return covers ? "" : tag;
   });
 }
