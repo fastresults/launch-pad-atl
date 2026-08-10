@@ -409,7 +409,7 @@ export async function generateOne(
           rewriteTags && rewriteTags.length ? `Tags: ${rewriteTags.join(", ")}\n\n` : ""
         }${rewriteFeedback?.trim() ?? ""}`
       : "",
-  ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
+  ].filter(Boolean).join("\n\n").slice(0, isPrd ? 220_000 : MAX_USER_PROMPT_CHARS);
 
   // S5 — Per-deliverable model tier ('pro' | 'flash' | 'lite').
   // website_prd runs on Pro: it is the longest and most design-sensitive
@@ -417,65 +417,114 @@ export async function generateOne(
   const modelId = isPrd ? modelForTier("pro") : modelForTier(type.model_tier);
   const maxTokens = isPrd ? 24000 : 16000;
 
-
-  let aiRes: Response;
-  try {
-    aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: modelId,
-        max_tokens: maxTokens,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: isPrd ? 0 : 2 });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    await supabase.from("venture_documents").update({ status: "failed" })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
-    await supabase.from("venture_generation_failures").insert({
-      snapshot_id: snapshotId, document_type: documentType, error: `Gateway request failed: ${msg.slice(0, 300)}`,
-    });
-    throw e;
-  }
-
-
-
-  if (!aiRes.ok) {
-    const txt = await aiRes.text();
-    await supabase.from("venture_documents").update({ status: "failed" })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
-    await supabase.from("venture_generation_failures").insert({
-      snapshot_id: snapshotId, document_type: documentType, error: `Gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
-    });
-    throw new GatewayError(aiRes.status, txt);
-  }
-
-  const aiJson = await aiRes.json();
-  let raw = aiJson.choices?.[0]?.message?.content ?? "";
-  const finishReason = aiJson.choices?.[0]?.finish_reason ?? aiJson.choices?.[0]?.finishReason ?? "";
-  let truncated = String(finishReason).toLowerCase() === "length";
-
-  // Extract quality score line
-  let quality = 75;
-  const qm = raw.match(/QUALITY_SCORE:\s*(\d{1,3})/i);
-  if (qm) {
-    quality = Math.max(0, Math.min(100, parseInt(qm[1], 10)));
-    raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
-  }
-
-  // Strip any citation residue the model may have produced despite instructions.
-  raw = stripCitations(raw);
-
-  // ---- Identity guard: the company name and the committed logo are not optional.
   const lockedName = (snap.company_name ?? "").trim() || null;
   const lockedLogo = brandKit && Array.isArray(brandKit.logos) && brandKit.logos.length
     ? brandLogoUrl(snapshotId)
     : null;
-  raw = substituteIdentity(raw, lockedName);
+
+  let raw = "";
+  let quality = 75;
+  let truncated = false;
+
+  // ---- Refine phase: pick the checkpointed draft back up. -------------
+  if (phase === "refine") {
+    const { data: checkpoint } = await supabase
+      .from("venture_documents")
+      .select("content, quality_score")
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", documentType)
+      .maybeSingle();
+    raw = checkpoint?.content ?? "";
+    quality = checkpoint?.quality_score ?? 75;
+    if (!raw) {
+      // Nothing to refine (checkpoint lost) — fall back to a full run.
+      phase = "full";
+    }
+  }
+
+  if (!raw) {
+    let aiRes: Response;
+    try {
+      aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: modelId,
+          max_tokens: maxTokens,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: visionUserContent(userPrompt, visionImages) },
+          ],
+        }),
+      }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: isPrd ? 0 : 2 });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      await supabase.from("venture_documents").update({
+        status: "failed",
+        last_error: `Gateway request failed: ${msg.slice(0, 300)}`,
+      }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      await supabase.from("venture_generation_failures").insert({
+        snapshot_id: snapshotId, document_type: documentType, error: `Gateway request failed: ${msg.slice(0, 300)}`,
+      });
+      throw e;
+    }
+
+    if (!aiRes.ok) {
+      const txt = await aiRes.text();
+      await supabase.from("venture_documents").update({
+        status: "failed",
+        last_error: `Gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
+      }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      await supabase.from("venture_generation_failures").insert({
+        snapshot_id: snapshotId, document_type: documentType, error: `Gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
+      });
+      throw new GatewayError(aiRes.status, txt);
+    }
+
+    const aiJson = await aiRes.json();
+    raw = aiJson.choices?.[0]?.message?.content ?? "";
+    const finishReason = aiJson.choices?.[0]?.finish_reason ?? aiJson.choices?.[0]?.finishReason ?? "";
+    truncated = String(finishReason).toLowerCase() === "length";
+
+    // Extract quality score line
+    const qm = raw.match(/QUALITY_SCORE:\s*(\d{1,3})/i);
+    if (qm) {
+      quality = Math.max(0, Math.min(100, parseInt(qm[1], 10)));
+      raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
+    }
+
+    // Strip any citation residue the model may have produced despite instructions.
+    raw = stripCitations(raw);
+    raw = substituteIdentity(raw, lockedName);
+
+    // ---- Checkpoint: a real new-engine draft is on the row BEFORE any of
+    // the long enrichment passes run, so a killed worker can never leave the
+    // founder looking at a months-old document.
+    if (isPrd && phase === "draft") {
+      await supabase.from("venture_documents").update({
+        content: raw,
+        word_count: raw.split(/\s+/).filter(Boolean).length,
+        quality_score: quality,
+        status: "generating",
+        last_error: null,
+        metadata: { phase: "draft", checkpointed_at: new Date().toISOString() },
+      }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+
+      // Hand the enrichment to a fresh worker with its own wall clock.
+      await fetch(`${SUPABASE_URL}/functions/v1/venture-generate-document`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-key": SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+        },
+        body: JSON.stringify({ snapshotId, documentType, phase: "refine" }),
+      }).catch((e) => console.warn("refine handoff failed", e));
+
+      return { wordCount: raw.split(/\s+/).filter(Boolean).length, quality, phase: "draft" };
+    }
+  }
+
 
   // Page copy depth: deepen Section 4 before the guard so a thin-but-fixable
   // draft is expanded rather than fully regenerated.
