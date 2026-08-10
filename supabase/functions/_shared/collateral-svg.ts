@@ -1075,33 +1075,137 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
 
   T.setFloor(Math.min(rsPage.minType, rsLogo.minType), rsPage.measureMax);
 
+  // ── 01 Logo: the full variant system, not three tiles and a lot of air ────
   const hLogo = head("Logo", "01");
   const top = hLogo.bottom;
-  const specimenGap = g.gutter * 2;
-  const boxW = (g.content - specimenGap) * 0.62;
-  const sideW = g.content - boxW - specimenGap;
-  const captionBand = step(ad, 2);
-  const boxH = Math.min(H * 0.43, H - g.M - top - step(ad, 7));
-  const sideH = (boxH - captionBand) / 2;
+  const charcoal = "#161719";
+  const tiles: Array<{ label: string; note: string; bg: string; ink: string | null }> = [
+    { label: "Primary", note: "Full colour on light", bg: paper, ink: null },
+    { label: "On brand", note: `Reversed on ${primary}`, bg: primary, ink: inkOn(primary) },
+    { label: "On accent", note: "Reversed on accent", bg: accent, ink: inkOn(accent) },
+    { label: "Mono black", note: "One ink on paper", bg: paper, ink: "#121212" },
+    { label: "Mono white", note: "One ink on charcoal", bg: charcoal, ink: "#FFFFFF" },
+    { label: "One colour", note: "Brand ink only", bg: paper, ink: primary },
+  ];
+  const cols = 3, rowsL = 2;
+  const tGap = g.gutter * 2;
+  const tileW = (g.content - tGap * (cols - 1)) / cols;
+  const footNote = step(ad, 3.2);
+  const gridH = H - g.M - top - footNote;
+  const tileH = (gridH - tGap * (rowsL - 1)) / rowsL;
+  const capBand = step(ad, 2.6);
+  const artH = tileH - capBand;
   pages.push({
     name: "guidelines-2-logo", width: W, height: H,
     svg: page(W, H, defs, [
       hLogo.svg,
-      `<rect x="${g.M}" y="${r(top)}" width="${r(boxW)}" height="${r(boxH)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
-      markAt(ctx, g.M + boxW * 0.14, top + boxH * 0.18, boxW * 0.72, boxH * 0.64, null, paper),
-      label(T, ctx, "Primary — full colour", g.M, top + boxH + step(ad, 1.4), step(ad, -1.2), muted, "start", boxW),
-      `<rect x="${r(g.M + boxW + specimenGap)}" y="${r(top)}" width="${r(sideW)}" height="${r(sideH)}" fill="${fg}"/>`,
-      markAt(ctx, g.M + boxW + specimenGap + sideW * 0.12, top + sideH * 0.18, sideW * 0.76, sideH * 0.64, inkOn(fg), fg),
-      label(T, ctx, "Knockout", g.M + boxW + specimenGap, top + sideH + captionBand * 0.62, step(ad, -1.3), muted, "start", sideW),
-      `<rect x="${r(g.M + boxW + specimenGap)}" y="${r(top + sideH + captionBand)}" width="${r(sideW)}" height="${r(sideH)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
-      markAt(ctx, g.M + boxW + specimenGap + sideW * 0.12, top + sideH + captionBand + sideH * 0.18, sideW * 0.76, sideH * 0.64, "#121212", paper),
-      label(T, ctx, "Mono", g.M + boxW + specimenGap, top + boxH + step(ad, 1.4), step(ad, -1.3), muted, "start", sideW),
+      ...tiles.map((t, i) => {
+        const x = g.M + (i % cols) * (tileW + tGap);
+        const y = top + Math.floor(i / cols) * (tileH + tGap);
+        const onDark = isDarkSurface(t.bg);
+        const f = T.flow(x, y + artH + step(ad, 0.4), tileW);
+        f.line(t.label, step(ad, -1.1), fg, { family: "head", weight: 700 })
+          .line(t.note, step(ad, -1.4), muted, { gap: step(ad, 0.2) });
+        return [
+          `<rect x="${r(x)}" y="${r(y)}" width="${r(tileW)}" height="${r(artH)}" fill="${t.bg}" rx="${ad.material.radius}"${onDark ? "" : ` stroke="${mix(fg, paper, 0.82)}" stroke-width="${r(ad.ink.hairline)}"`}/>`,
+          markAt(ctx, x + tileW * 0.14, y + artH * 0.18, tileW * 0.72, artH * 0.64, t.ink, t.bg),
+          f.svg(),
+        ].join("");
+      }),
       T.block(
-        "Keep clear space of at least the mark's cap height on every side. Never stretch, recolour outside these variants, add effects, or place the mark on a busy photograph without a scrim.",
-        g.M, H - g.M - step(ad, 2.4), step(ad, -0.4), g.span(Math.round(ad.grid.columns * 0.7)), fg, { leading: ad.type.bodyLeading, maxLines: 3 },
+        "Use the variant whose ground it was built for. Never redraw, restack or re-space the lockup.",
+        g.M, H - g.M - step(ad, 0.6), step(ad, -0.6), g.span(Math.round(ad.grid.columns * 0.7)), muted, { leading: ad.type.bodyLeading, maxLines: 2 },
       ).svg,
     ].join("")),
   });
+
+  // ── 02 Clear space and minimum size ───────────────────────────────────────
+  const hClear = head("Clear space & minimum size", "02");
+  const csTop = hClear.bottom;
+  const csFoot = step(ad, 9);
+  const csH = Math.min(H * 0.44, H - g.M - csTop - csFoot);
+  const csW = g.content * 0.56;
+  const unit = csH * 0.14;
+  const markX = g.M + unit * 2, markY = csTop + unit * 2;
+  const markW = csW - unit * 4, markH = csH - unit * 4;
+  const tick = (x1: number, y1: number, x2: number, y2: number) =>
+    `<line x1="${r(x1)}" y1="${r(y1)}" x2="${r(x2)}" y2="${r(y2)}" stroke="${accent}" stroke-width="${r(ad.ink.hairline * 1.4)}" stroke-dasharray="6 5"/>`;
+  const sizeRow = [
+    { w: g.content * 0.16, cap: "Print — 0.75 in wide" },
+    { w: g.content * 0.11, cap: "Screen — 120 px wide" },
+    { w: g.content * 0.07, cap: "Minimum — 72 px wide" },
+  ];
+  const srTop = csTop + csH + step(ad, 4);
+  const srArtH = Math.max(step(ad, 3), H - g.M - srTop - step(ad, 3.4));
+  pages.push({
+    name: "guidelines-2b-clearspace", width: W, height: H,
+    svg: page(W, H, defs, [
+      hClear.svg,
+      `<rect x="${g.M}" y="${r(csTop)}" width="${r(csW)}" height="${r(csH)}" fill="${paper}" stroke="${mix(fg, paper, 0.82)}" stroke-width="${r(ad.ink.hairline)}" rx="${ad.material.radius}"/>`,
+      `<rect x="${r(markX)}" y="${r(markY)}" width="${r(markW)}" height="${r(markH)}" fill="none" stroke="${accent}" stroke-width="${r(ad.ink.hairline)}" stroke-dasharray="4 6" opacity="0.7"/>`,
+      tick(markX - unit, csTop, markX - unit, csTop + csH),
+      tick(markX + markW + unit, csTop, markX + markW + unit, csTop + csH),
+      tick(g.M, markY - unit, g.M + csW, markY - unit),
+      tick(g.M, markY + markH + unit, g.M + csW, markY + markH + unit),
+      markAt(ctx, markX, markY, markW, markH, null, paper),
+      (() => {
+        const f = T.flow(g.M + csW + g.gutter * 2, csTop, g.content - csW - g.gutter * 2);
+        f.line("X = the mark's cap height", step(ad, 0.2), accent, { weight: 500, tracking: step(ad, 0.2) * ad.type.labelTracking })
+          .block(
+            "Hold clear space of at least one X on every side of the mark. Nothing — type, rules, photography, another logo — enters that field. On crowded layouts, increase it rather than shrink it.",
+            step(ad, -0.3), fg, { gap: step(ad, 1.2), leading: ad.type.bodyLeading, maxLines: 6 },
+          );
+        return f.svg();
+      })(),
+      ...sizeRow.map((s, i) => {
+        const x = g.M + i * (g.content / 3);
+        const h = Math.min(srArtH, s.w * 0.5);
+        return [
+          markAt(ctx, x, srTop, s.w, h, null, paper),
+          label(T, ctx, s.cap, x, srTop + srArtH + step(ad, 1), step(ad, -1.3), muted, "start", g.content / 3 - g.gutter),
+        ].join("");
+      }),
+    ].join("")),
+  });
+
+  // ── 03 Misuse ─────────────────────────────────────────────────────────────
+  const hMis = head("Misuse", "03");
+  const mTop = hMis.bottom;
+  const mCols = 4;
+  const mGap = g.gutter * 2;
+  const mW = (g.content - mGap * (mCols - 1)) / mCols;
+  const mCap = step(ad, 2.6);
+  const mH = Math.min(H * 0.42, H - g.M - mTop - step(ad, 3.2));
+  const mArt = mH - mCap;
+  const misuse: Array<{ cap: string; wrap: (art: string) => string; ink?: string | null }> = [
+    { cap: "Do not stretch or condense", wrap: (a) => `<g transform="translate(${r(W * 0)} 0)"><g transform="scale(1.18 0.82)" transform-origin="center">${a}</g></g>` },
+    { cap: "Do not rotate", wrap: (a) => `<g transform="rotate(-11 ${r(0)} ${r(0)})" transform-origin="center">${a}</g>` },
+    { cap: "Do not recolour off-palette", wrap: (a) => a, ink: "#C2410C" },
+    { cap: "Do not add effects", wrap: (a) => `<g opacity="0.85" filter="url(#misuseBlur)">${a}</g>` },
+  ];
+  pages.push({
+    name: "guidelines-3b-misuse", width: W, height: H,
+    svg: page(W, H, `${defs}<filter id="misuseBlur"><feGaussianBlur stdDeviation="2.2"/></filter>`, [
+      hMis.svg,
+      ...misuse.map((m, i) => {
+        const x = g.M + i * (mW + mGap);
+        const art = markAt(ctx, x + mW * 0.16, mTop + mArt * 0.2, mW * 0.68, mArt * 0.6, m.ink ?? null, paper);
+        const f = T.flow(x, mTop + mArt + step(ad, 0.4), mW);
+        f.line(m.cap, step(ad, -1.2), fg, { family: "head", weight: 700 });
+        return [
+          `<rect x="${r(x)}" y="${r(mTop)}" width="${r(mW)}" height="${r(mArt)}" fill="${paper}" stroke="${mix(fg, paper, 0.82)}" stroke-width="${r(ad.ink.hairline)}" rx="${ad.material.radius}"/>`,
+          m.wrap(art),
+          `<line x1="${r(x)}" y1="${r(mTop + mArt)}" x2="${r(x + mW)}" y2="${r(mTop)}" stroke="#C2410C" stroke-width="${r(ad.ink.hairline * 1.6)}" opacity="0.5"/>`,
+          f.svg(),
+        ].join("");
+      }),
+      T.block(
+        "These are the failures we see most. When in doubt, use an approved variant at an approved size and leave the clear space alone.",
+        g.M, H - g.M - step(ad, 0.6), step(ad, -0.6), g.span(Math.round(ad.grid.columns * 0.7)), muted, { leading: ad.type.bodyLeading, maxLines: 2 },
+      ).svg,
+    ].join("")),
+  });
+
 
   const hColour = head("Colour", "02");
   const cTop = hColour.bottom;
