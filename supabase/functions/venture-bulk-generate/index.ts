@@ -1195,9 +1195,16 @@ Deno.serve(async (req) => {
     const reconciliation = await reconcilePersistedArtifacts(supabase, snapshotId);
     if (reconciliation.allDone && !dayOnlyArg) {
       const completedAt = new Date().toISOString();
-      const { data: completedJobs } = await supabase
+      const { data: activeJob } = await supabase
         .from("venture_generation_jobs")
-        .update({
+        .select("id")
+        .eq("snapshot_id", snapshotId)
+        .in("status", ["queued", "running", "paused", "completed_with_blockers"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (activeJob?.id) {
+        await supabase.from("venture_generation_jobs").update({
           status: "completed",
           completed_at: completedAt,
           heartbeat_at: completedAt,
@@ -1208,16 +1215,12 @@ Deno.serve(async (req) => {
           retry_remaining: 0,
           error: null,
           cancel_requested: true,
-        })
-        .eq("snapshot_id", snapshotId)
-        .in("status", ["queued", "running", "paused", "completed_with_blockers"])
-        .select("id")
-        .order("created_at", { ascending: false })
-        .limit(1);
+        }).eq("id", activeJob.id);
+      }
       await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
       return new Response(JSON.stringify({
         ok: true,
-        jobId: completedJobs?.[0]?.id ?? null,
+        jobId: activeJob?.id ?? null,
         reconciled: reconciliation.recovered,
         completed: true,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
