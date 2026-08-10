@@ -537,11 +537,20 @@ export default function VentureSharePage() {
                       scenarioOverride={timelineActive ? readerScenario : null}
                       onScenarioChange={onScenarioChange}
                       exportSlot={
-                        <SectionExportMenu
-                          variant="pill"
-                          label="Download"
-                          build={() => buildSectionDoc(payload, activeItem)}
-                        />
+                        <div className="flex items-center gap-1">
+                          <SectionExportMenu
+                            variant="pill"
+                            label="Download"
+                            build={() => buildSectionDoc(payload, activeItem)}
+                          />
+                          {canManage && (
+                            <OwnerAssetActions
+                              itemKey={activeItem.key}
+                              snapshotId={payload.snapshotId!}
+                              onChanged={() => void q.refetch()}
+                            />
+                          )}
+                        </div>
                       }
                     />
                   )}
