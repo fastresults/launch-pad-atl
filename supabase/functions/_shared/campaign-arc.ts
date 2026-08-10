@@ -131,15 +131,17 @@ function normalize(raw: any, weekNumbers: number[]): CampaignArc {
   const weeks = base.weeks.map((fallback) => {
     const w = byWeek.get(fallback.week);
     if (!w) return fallback;
-    const stage = (STAGE_ORDER.find((s) => s.stage === tidy(w.stage, 24).toLowerCase()) ?? null);
+    // The stage is assigned POSITIONALLY (see defaultCampaignArc). The model
+    // used to choose it and would happily return three "urgency" weeks in a
+    // row, which is nagging, not a funnel. We keep its audience/claim/proof.
+    const stage = STAGE_ORDER.find((s) => s.stage === fallback.stage) ?? null;
     return {
       week: fallback.week,
-      stage: stage?.stage ?? fallback.stage,
-      stage_label: stage?.label ?? fallback.stage_label,
+      stage: fallback.stage,
+      stage_label: fallback.stage_label,
       audience: tidy(w.audience, 90),
-      temperature: (["cold", "warm", "hot"].includes(tidy(w.temperature, 8))
-        ? tidy(w.temperature, 8)
-        : (stage?.temp ?? fallback.temperature)) as ArcWeek["temperature"],
+      temperature: (stage?.temp ?? fallback.temperature) as ArcWeek["temperature"],
+
       job: tidy(w.job, 200) || fallback.job,
       claim: tidy(w.claim, 200),
       proof: tidy(w.proof, 200),
