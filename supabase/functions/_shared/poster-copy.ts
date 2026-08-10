@@ -397,6 +397,46 @@ Source CTA: ${post.cta ?? ""}${
           console.warn("[poster-copy] headline repeats an earlier week's claim", { headline: ai.headline, claim: echoed.claim });
         }
       }
+
+      // Within-week paraphrase: three ads must argue three ways.
+      const twin = usedClaimEcho(ai.headline ?? "", written);
+      if (twin) {
+        const retry = await ask(
+          `Your headline paraphrases another ad already running this week ("${twin.claim}"). Take this ad's assigned angle instead${args.approach ? ` — "${args.approach.name}": ${args.approach.brief}` : ""}.`,
+        );
+        const retryDetail = headlineIssueDetail(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
+        if (retry.headline && !usedClaimEcho(retry.headline, written) && !usedClaimEcho(retry.headline, used) && (!retryDetail.issue || retryDetail.soft)) {
+          ai = { ...ai, ...retry }; issue = retryDetail.issue; soft = retryDetail.soft;
+        } else {
+          console.warn("[poster-copy] headline paraphrases a sibling ad", { headline: ai.headline, sibling: twin.claim });
+        }
+      }
+
+      // Ogilvy's specificity test. A generic line ships only if a rewrite
+      // can't beat it — but it is always flagged so the founder can see it.
+      vague = specificityIssue(ai.headline ?? "");
+      const generic = vague || (args.proof && !hasParticular(ai.headline ?? ""));
+      if (generic) {
+        const why = vague
+          ? `it leans on ${vague}`
+          : "it carries no concrete particular — no number, timeframe, or named thing";
+        const retry = await ask(
+          `Your headline "${ai.headline ?? ""}" is too general: ${why}. Rewrite it around the specific${args.proof ? `: ${args.proof}` : " detail in the source material"}. Print the number or the named thing in the line itself.`,
+        );
+        const retryDetail = headlineIssueDetail(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
+        const retryVague = specificityIssue(retry.headline ?? "");
+        const better = !!retry.headline
+          && (!retryDetail.issue || retryDetail.soft)
+          && !retryVague
+          && !usedClaimEcho(retry.headline, used)
+          && (!args.proof || hasParticular(retry.headline));
+        if (better) {
+          ai = { ...ai, ...retry }; issue = retryDetail.issue; soft = retryDetail.soft; vague = null;
+        } else {
+          console.warn("[poster-copy] headline stayed generic", { headline: ai.headline, why });
+        }
+      }
+
     } catch (e) {
       console.warn("poster copy failed", e);
       issue = "copy pass failed";
