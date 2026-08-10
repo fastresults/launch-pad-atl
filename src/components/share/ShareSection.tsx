@@ -104,10 +104,10 @@ export function ShareSection({
           />
         </TimelineBoundary>
 
-      ) : item.heroImageUrl ? (
+      ) : heroUrl ? (
         <div className="mb-10 flex justify-center rounded-2xl border border-border/60 bg-muted/10 p-3">
           <img
-            src={item.heroImageUrl}
+            src={heroUrl}
             alt={item.title}
             loading="lazy"
             className="max-h-[420px] w-auto max-w-full rounded-xl object-contain"
