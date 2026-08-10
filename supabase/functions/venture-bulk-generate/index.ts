@@ -310,9 +310,16 @@ async function generateOne(
   // Record a failure once, replacing any earlier row for this doc so the UI
   // count reflects reality across retry rounds.
   const recordFailure = async (error: string) => {
-    await supabase.from("venture_documents")
+    const { data: failedRows } = await supabase.from("venture_documents")
       .update({ status: "failed", last_error: error.slice(0, 600) })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", documentType)
+      .eq("status", "generating")
+      .is("content", null)
+      .select("id");
+    // A newer worker may already have completed this row. In that case this
+    // stale attempt owns nothing and must not publish a failure for the asset.
+    if (!failedRows?.length) return;
     await supabase.from("venture_generation_failures")
       .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
     await supabase.from("venture_generation_failures").insert({
