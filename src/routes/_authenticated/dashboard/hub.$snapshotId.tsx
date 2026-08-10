@@ -1152,7 +1152,25 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   let heroShowProgress = false;
   let heroDone = false;
 
-  if (jobRunning) {
+  if (jobNeedsAttention) {
+    heroTitle = "Paused — one asset needs another go";
+    heroSub = currentDocLabel
+      ? `${currentDocLabel} stopped part-way through. Resume it, or skip it and keep the rest of your kit moving.`
+      : "This run stopped part-way through. Resume it, or skip the stuck asset and keep going.";
+    heroShowProgress = true;
+    heroPrimary = {
+      label: "Resume",
+      onClick: () => bulk.mutate({ retryOnly: true }),
+      disabled: bulk.isPending,
+      loading: bulk.isPending,
+    };
+    if (job?.current_document_type) {
+      heroSecondary = {
+        label: skip.isPending ? "Skipping…" : "Skip this asset",
+        onClick: () => skip.mutate(job.current_document_type as string),
+      };
+    }
+  } else if (jobRunning) {
     heroTitle = "We're writing your assets…";
     heroSub = currentDocLabel
       ? `Working on: ${currentDocLabel}. You can leave this page — we'll keep going in the background.`
