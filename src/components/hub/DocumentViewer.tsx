@@ -485,7 +485,7 @@ export function DocumentViewer({
       });
 
       if (error) throw new Error(error.message);
-      if (data && data.ok === false) throw new Error(data.error ?? "Website PRD regeneration failed");
+      if (data && data.ok === false) throw payloadError(data, "Website PRD regeneration failed");
 
       const { data: row, error: rowError } = await supabase
         .from("venture_documents")
