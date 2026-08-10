@@ -927,48 +927,149 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const d = ctx.details;
   const ink = inkOn(primary);
   const invert = inverted(ctx, "presentation");
-  const coverBg = invert ? primary : paper;
   const coverInk = invert ? ink : fg;
   const pages: Page[] = [];
   const deck = ctx.copy?.deck ?? {};
   const points = (deck.points ?? []).slice(0, 3);
+  const agenda = (deck.agenda ?? []).slice(0, 6);
+  const stats = (deck.stats ?? []).slice(0, 3);
+  const steps = (deck.timeline ?? []).slice(0, 4);
 
   const rsCover = resolveSpec("slide-1-cover", W, H);
   const rsSlide = resolveSpec("slide-2-section", W, H);
   T.setFloor(Math.min(rsCover.minType, rsSlide.minType), rsSlide.measureMax);
   const coverBox = markBoxFor(ctx, rsCover, g.span(4), 0.65);
   const slideBox = markBoxFor(ctx, rsSlide, g.span(3), 0.6);
-  const markH = coverBox.h;
-  const markW = coverBox.w;
 
+  const total = 10;
+  /**
+   * Running chrome shared by every interior slide: folio, company footer and
+   * the mark in the safe corner, always resolved against the slide's own
+   * ground so a dark slide gets the reversed artwork.
+   */
+  const chrome = (n: number, ground: string, tone: string, markInk: string | null) => [
+    label(T, ctx, `${String(n).padStart(2, "0")} / ${total}`, g.M, g.M + step(ad, -0.6), step(ad, -1.2), tone, "start", g.span(2)),
+    T.line(ctx.company, g.M, H - g.M, step(ad, -0.9), tone, { maxWidth: g.span(5), opacity: 0.85 }),
+    markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, markInk, ground),
+  ].join("");
+
+  const headTop = g.M + step(ad, 2.2);
+  /** Slide title block, measured — the body always starts under what was drawn. */
+  const slideHead = (title: string, sub?: string) => {
+    const f = T.flow(g.M, headTop, g.span(Math.round(ad.grid.columns * 0.72)));
+    f.line(title, step(ad, 2.4), fg, { family: "head", weight: 700, tracking: step(ad, 2.4) * ad.type.displayTracking });
+    const ruleY = f.bottom + step(ad, 0.5);
+    let bottom = ruleY + step(ad, 1.4);
+    let subSvg = "";
+    if (sub) {
+      const sf = T.flow(g.M, ruleY + step(ad, 0.9), g.span(Math.round(ad.grid.columns * 0.6)));
+      sf.block(sub, step(ad, 0.2), muted, { leading: 1.5, maxLines: 2 });
+      subSvg = sf.svg();
+      bottom = sf.bottom + step(ad, 1.2);
+    }
+    return {
+      bottom,
+      svg: `${f.svg()}<rect x="${g.M}" y="${r(ruleY)}" width="${r(g.span(1))}" height="${r(ad.ink.ruleWeight * 2)}" fill="${accent}"/>${subSvg}`,
+    };
+  };
+
+  // ── 01 cover ──────────────────────────────────────────────────────────────
+  const coverGround = invert ? primary : paper;
+  const coverStack = T.flow(g.M, H * 0.52, g.span(Math.round(ad.grid.columns * 0.82)));
+  coverStack.line(ctx.company, step(ad, 5.2), coverInk, {
+    family: "head", weight: 700, tracking: step(ad, 5.2) * ad.type.displayTracking,
+  });
+  if (d.tagline) {
+    coverStack.block(d.tagline, step(ad, 0.8), coverInk, {
+      leading: 1.4, maxLines: 2, gap: step(ad, 1.1), opacity: invert ? 0.82 : 0.72,
+      width: g.span(Math.round(ad.grid.columns * 0.6)),
+    });
+  }
   pages.push({
     name: "slide-1-cover", width: W, height: H,
     svg: page(W, H, defs, [
       invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
-      markAt(ctx, g.M, g.M, markW, markH, invert ? coverInk : null, invert ? primary : paper),
-      T.line(ctx.company, g.M, H * 0.62, step(ad, 5.2), coverInk, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.82)), tracking: step(ad, 5.2) * ad.type.displayTracking }),
-      d.tagline ? T.line(d.tagline, g.M, H * 0.62 + step(ad, 2.6), step(ad, 0.8), coverInk, { opacity: invert ? 0.8 : 0.7, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)) }) : "",
+      markAt(ctx, g.M, g.M, coverBox.w, coverBox.h, invert ? coverInk : null, coverGround),
+      coverStack.svg(),
       label(T, ctx, String(new Date().getFullYear()), W - g.M, H - g.M, step(ad, -0.6), coverInk, "end", g.span(2)),
       motif(ctx, g, invert ? coverInk : accent, "br"),
     ].join("")),
   });
 
+  // ── 02 section divider ────────────────────────────────────────────────────
+  const sectionStack = T.flow(g.M, H * 0.34, g.span(Math.round(ad.grid.columns * 0.72)));
+  sectionStack.line("01", step(ad, 0.6), accent, { tracking: step(ad, 0.6) * ad.type.labelTracking, weight: 500 });
+  sectionStack.line(deck.section || "Where we are today", step(ad, 3.8), fg, {
+    family: "head", weight: 700, gap: step(ad, 1.1), tracking: step(ad, 3.8) * ad.type.displayTracking,
+  });
+  sectionStack.block(deck.sectionSub || "One sentence that frames what this section proves.", step(ad, 0.6), muted, {
+    leading: 1.5, maxLines: 2, gap: step(ad, 1.0), width: g.span(Math.round(ad.grid.columns * 0.55)),
+  });
   pages.push({
     name: "slide-2-section", width: W, height: H,
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       `<rect x="0" y="0" width="${r(ad.ink.ruleWeight * 6)}" height="${H}" fill="${accent}"/>`,
-      label(T, ctx, "01", g.M, H * 0.32, step(ad, 0.6), accent),
-      T.line(deck.section || "Section title", g.M, H * 0.46, step(ad, 3.8), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.72)), tracking: step(ad, 3.8) * ad.type.displayTracking }),
-      T.block(deck.sectionSub || "One sentence that frames what this section proves.", g.M, H * 0.56, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.55)), muted, { leading: 1.5, maxLines: 2 }).svg,
-      markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, mix(primary, paper, 0.25), paper),
+      sectionStack.svg(),
+      chrome(2, paper, muted, mix(primary, paper, 0.25)),
     ].join("")),
   });
 
+  // ── 03 agenda ─────────────────────────────────────────────────────────────
+  const agendaHead = slideHead("Agenda", deck.agendaSub || undefined);
+  const agendaItems = agenda.length ? agenda : [
+    "Where we are today", "What we heard", "What we propose", "How it works", "What it costs", "Next steps",
+  ];
+  const agendaCols = agendaItems.length > 3 ? 2 : 1;
+  const agendaColW = agendaCols === 2 ? (g.content - g.gutter * 2) / 2 : g.span(Math.round(ad.grid.columns * 0.7));
+  const perCol = Math.ceil(agendaItems.length / agendaCols);
+  const agendaRows: string[] = [];
+  for (let c = 0; c < agendaCols; c++) {
+    const x = g.M + c * (agendaColW + g.gutter * 2);
+    let y = agendaHead.bottom + step(ad, 0.6);
+    for (let i = c * perCol; i < Math.min(agendaItems.length, (c + 1) * perCol); i++) {
+      const f = T.flow(x, y, agendaColW);
+      f.line(`${String(i + 1).padStart(2, "0")}   ${agendaItems[i]}`, step(ad, 1.0), fg, {
+        family: "head", weight: 700,
+      });
+      const ruleY = f.bottom + step(ad, 0.5);
+      agendaRows.push(`${f.svg()}<rect x="${r(x)}" y="${r(ruleY)}" width="${r(agendaColW)}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.82)}"/>`);
+      y = ruleY + step(ad, 0.9);
+    }
+  }
+  pages.push({
+    name: "slide-3-agenda", width: W, height: H,
+    svg: page(W, H, defs, [
+      surface(W, H, paper, ad.material.grain),
+      agendaHead.svg,
+      agendaRows.join(""),
+      chrome(3, paper, muted, mix(primary, paper, 0.3)),
+    ].join("")),
+  });
+
+  // ── 04 statement ──────────────────────────────────────────────────────────
+  const stGround = primary;
+  const stInk = inkOn(stGround);
+  const stStack = T.flow(g.M, H * 0.3, g.span(Math.round(ad.grid.columns * 0.78)));
+  stStack.line("The point", step(ad, -0.4), stInk, { tracking: step(ad, -0.4) * ad.type.labelTracking, weight: 500, opacity: 0.75 });
+  stStack.block(deck.statement || deck.sectionSub || `${ctx.company} exists to make this simple.`, step(ad, 3.0), stInk, {
+    family: "head", weight: 700, leading: 1.18, maxLines: 4, gap: step(ad, 1.4),
+  });
+  pages.push({
+    name: "slide-4-statement", width: W, height: H,
+    svg: page(W, H, defs, [
+      `<rect width="${W}" height="${H}" fill="${stGround}"/>`,
+      stStack.svg(),
+      chrome(4, stGround, mix(stInk, stGround, 0.25), stInk),
+    ].join("")),
+  });
+
+  // ── 05 three-column content ───────────────────────────────────────────────
+  const contentHead = slideHead(deck.section || "What we propose");
   const cardGap = g.gutter * 2;
   const cardWidth = (g.content - cardGap * 2) / 3;
   const cardPad = step(ad, 1.4);
-  const cardTop = H * 0.3;
+  const cardTop = contentHead.bottom + step(ad, 0.6);
   const cardMaxH = H - g.M - slideBox.h - step(ad, 1.6) - cardTop;
   // Each card is typeset first, then all three are drawn at the tallest
   // measured height. Nothing is placed at a guessed offset, so the number,
@@ -992,32 +1093,143 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const cardH = Math.min(cardMaxH, Math.max(...cardStacks.map((c) => c.height), H * 0.22));
 
   pages.push({
-    name: "slide-3-content", width: W, height: H,
+    name: "slide-5-content", width: W, height: H,
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
-      T.line(deck.section ? `${deck.section}` : "Content slide", g.M, H * 0.17, step(ad, 2.4), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
-      `<rect x="${g.M}" y="${r(H * 0.2)}" width="${r(g.span(1))}" height="${r(ad.ink.ruleWeight * 2)}" fill="${accent}"/>`,
+      contentHead.svg,
       ...cardStacks.map((c) =>
         `<rect x="${r(c.x)}" y="${r(cardTop)}" width="${r(cardWidth)}" height="${r(cardH)}" fill="${primary}" opacity="0.05" rx="${ad.material.radius}"/>${c.svg}`,
       ),
-      T.line(ctx.company, g.M, H - g.M, step(ad, -0.6), muted, { maxWidth: g.span(5) }),
-      markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, mix(primary, paper, 0.3), paper),
+      chrome(5, paper, muted, mix(primary, paper, 0.3)),
     ].join("")),
   });
 
-
+  // ── 06 split: copy left, image well right ─────────────────────────────────
+  const splitHead = slideHead(deck.splitTitle || "How it works");
+  const splitColW = (g.content - g.gutter * 2) / 2;
+  const splitTop = splitHead.bottom + step(ad, 0.4);
+  const splitStack = T.flow(g.M, splitTop, splitColW);
+  splitStack.block(
+    deck.splitBody || deck.sectionSub || "A short paragraph that carries the argument, set at a comfortable measure so it stays readable from the back of the room.",
+    step(ad, 0.4), fg, { leading: 1.55, maxLines: 6 },
+  );
+  for (const p of points.slice(0, 3)) {
+    splitStack.line(`—  ${p.title}`, step(ad, 0.0), muted, { gap: step(ad, 0.7) });
+  }
+  const wellX = g.M + splitColW + g.gutter * 2;
+  const wellH = Math.min(H - g.M - slideBox.h - step(ad, 1.8) - splitTop, H * 0.5);
   pages.push({
-    name: "slide-4-closing", width: W, height: H,
+    name: "slide-6-split", width: W, height: H,
+    svg: page(W, H, defs, [
+      surface(W, H, paper, ad.material.grain),
+      splitHead.svg,
+      splitStack.svg(),
+      `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(wellH)}" rx="${ad.material.radius}" fill="${primary}" opacity="0.08"/>`,
+      `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(ad.ink.ruleWeight * 3)}" fill="${accent}"/>`,
+      label(T, ctx, "Image", wellX + step(ad, 1.2), splitTop + wellH - step(ad, 1.2), step(ad, -1.0), mix(fg, paper, 0.45), "start", splitColW - step(ad, 2.4)),
+      chrome(6, paper, muted, mix(primary, paper, 0.3)),
+    ].join("")),
+  });
+
+  // ── 07 data ───────────────────────────────────────────────────────────────
+  const dataHead = slideHead(deck.statsTitle || "By the numbers");
+  const statW = (g.content - g.gutter * 2 * 2) / 3;
+  const statTop = dataHead.bottom + step(ad, 1.0);
+  const fallbackStats = [
+    { figure: "—", label: "Add your figure", note: "Replace with a number you can defend." },
+    { figure: "—", label: "Add your figure", note: "Replace with a number you can defend." },
+    { figure: "—", label: "Add your figure", note: "Replace with a number you can defend." },
+  ];
+  const statSet = stats.length ? stats : fallbackStats;
+  const statStacks = statSet.slice(0, 3).map((s, i) => {
+    const x = g.M + i * (statW + g.gutter * 2);
+    const f = T.flow(x, statTop, statW);
+    f.line(s.figure || "—", step(ad, 4.0), primary, { family: "head", weight: 700, tracking: step(ad, 4.0) * ad.type.displayTracking });
+    f.line(s.label || "", step(ad, 0.4), fg, { family: "head", weight: 700, gap: step(ad, 0.6) });
+    f.block(s.note || "", step(ad, -0.6), muted, { leading: 1.5, maxLines: 3, gap: step(ad, 0.4) });
+    return { x, svg: f.svg(), bottom: f.bottom };
+  });
+  pages.push({
+    name: "slide-7-data", width: W, height: H,
+    svg: page(W, H, defs, [
+      surface(W, H, paper, ad.material.grain),
+      dataHead.svg,
+      ...statStacks.map((s) =>
+        `<rect x="${r(s.x)}" y="${r(statTop - step(ad, 0.6))}" width="${r(ad.ink.ruleWeight * 3)}" height="${r(s.bottom - statTop + step(ad, 0.8))}" fill="${accent}" opacity="0.35"/>${s.svg}`,
+      ),
+      chrome(7, paper, muted, mix(primary, paper, 0.3)),
+    ].join("")),
+  });
+
+  // ── 08 timeline ───────────────────────────────────────────────────────────
+  const tlHead = slideHead(deck.timelineTitle || "The path");
+  const tlSet = steps.length ? steps : [
+    { label: "Week 1", body: "Get the offer and the page live." },
+    { label: "Week 2", body: "Take it to real buyers." },
+    { label: "Week 3", body: "Fix what the market told us." },
+    { label: "Week 4", body: "Repeat what worked." },
+  ];
+  const tlW = (g.content - g.gutter * 2 * (tlSet.length - 1)) / tlSet.length;
+  const tlRuleY = tlHead.bottom + step(ad, 2.2);
+  const tlStacks = tlSet.map((s, i) => {
+    const x = g.M + i * (tlW + g.gutter * 2);
+    const f = T.flow(x, tlRuleY + step(ad, 1.0), tlW);
+    f.line(s.label || `Step ${i + 1}`, step(ad, 1.0), fg, { family: "head", weight: 700 });
+    f.block(s.body || "", step(ad, -0.4), muted, { leading: 1.5, maxLines: 4, gap: step(ad, 0.4) });
+    return `<circle cx="${r(x + ad.ink.ruleWeight * 3)}" cy="${r(tlRuleY)}" r="${r(ad.ink.ruleWeight * 3)}" fill="${accent}"/>${f.svg()}`;
+  });
+  pages.push({
+    name: "slide-8-timeline", width: W, height: H,
+    svg: page(W, H, defs, [
+      surface(W, H, paper, ad.material.grain),
+      tlHead.svg,
+      `<rect x="${g.M}" y="${r(tlRuleY - ad.ink.hairline / 2)}" width="${r(g.content)}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.78)}"/>`,
+      tlStacks.join(""),
+      chrome(8, paper, muted, mix(primary, paper, 0.3)),
+    ].join("")),
+  });
+
+  // ── 09 quote ──────────────────────────────────────────────────────────────
+  const qGround = fg;
+  const qInk = inkOn(qGround);
+  const qStack = T.flow(g.M, H * 0.3, g.span(Math.round(ad.grid.columns * 0.76)));
+  qStack.block(
+    `“${deck.quote || deck.statement || "The clearest offer wins."}”`,
+    step(ad, 2.4), qInk, { family: "head", weight: 700, leading: 1.25, maxLines: 4 },
+  );
+  qStack.line(deck.quoteAttribution || ctx.company, step(ad, 0.0), mix(qInk, qGround, 0.28), { gap: step(ad, 1.4) });
+  pages.push({
+    name: "slide-9-quote", width: W, height: H,
+    svg: page(W, H, defs, [
+      `<rect width="${W}" height="${H}" fill="${qGround}"/>`,
+      `<rect x="${g.M}" y="${r(H * 0.3 - step(ad, 2.4))}" width="${r(ad.ink.ruleWeight * 4)}" height="${r(step(ad, 2.0))}" fill="${accent}"/>`,
+      qStack.svg(),
+      chrome(9, qGround, mix(qInk, qGround, 0.3), qInk),
+    ].join("")),
+  });
+
+  // ── 10 closing ────────────────────────────────────────────────────────────
+  const closeStack = T.flow(g.M, H * 0.58, g.content);
+  closeStack.line(deck.closing || "Thank you", step(ad, 3.6), inkOn(fg), {
+    family: "head", weight: 700, anchor: "middle",
+  });
+  const contact = [d.website, d.email, d.phone].filter(Boolean).join("   ·   ");
+  if (contact) {
+    closeStack.line(contact, step(ad, 0.2), mix(inkOn(fg), fg, 0.22), { anchor: "middle", gap: step(ad, 1.0) });
+  }
+  pages.push({
+    name: "slide-10-closing", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${fg}"/>`,
       markAt(ctx, (W - coverBox.w) / 2, H * 0.3, coverBox.w, coverBox.h, inkOn(fg), fg),
-      T.line(deck.closing || "Thank you", W / 2, H * 0.6, step(ad, 3.6), inkOn(fg), { family: "head", weight: 700, anchor: "middle", maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
-      T.line([d.website, d.email].filter(Boolean).join("   ·   "), W / 2, H * 0.68, step(ad, 0.2), inkOn(fg), { anchor: "middle", opacity: 0.75, maxWidth: g.content }),
+      // Anchored middle: the flow cursor tracks the baseline, x is the centre.
+      closeStack.svg().replace(new RegExp(`x="${r(g.M)}"`, "g"), `x="${r(W / 2)}"`),
     ].join("")),
   });
 
   return pages;
 }
+
 
 function guidelines({ ctx, T, defs }: Args): Page[] {
   const W = 1600, H = 1000;
