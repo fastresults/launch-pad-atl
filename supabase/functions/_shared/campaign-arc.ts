@@ -215,28 +215,38 @@ export async function deriveCampaignArc(args: {
   const weeks = args.weekNumbers.slice(0, 12);
   if (!weeks.length) return null;
 
-  const stageMenu = STAGE_ORDER.map((s) => `${s.stage} (${s.label}) — ${s.job}; asks: ${s.rung}`).join("\n");
+  // The stage of each week is assigned here, positionally, and given to the
+  // model as a fixed brief. Letting it choose produced stacked urgency weeks.
+  const assignment = weeks
+    .map((w, i) => {
+      const s = stageForPosition(i);
+      return `Week ${w}: ${s.stage} (${s.label}) — ${s.job}; may ask: ${s.rung}`;
+    })
+    .join("\n");
 
-  const sys = `You are a direct-response campaign strategist. You are given a flight of paid social weeks that currently rotates the same content pillars over and over. Rebuild it as a sequential funnel that moves one viewer from never having heard of the brand to buying.
+  const sys = `You are a direct-response campaign strategist in the Ogilvy tradition. You are given a flight of paid social weeks that currently rotates the same content pillars over and over. Rebuild it as a sequential funnel that moves one viewer from never having heard of the brand to buying.
 
 Return JSON only:
 {
   "offer": { "name": string, "terms": string, "ask": string },
   "angle_ledger": [ "<distinct angle>", ... ],
-  "weeks": [ { "week": number, "stage": string, "audience": string, "temperature": "cold"|"warm"|"hot", "job": string, "claim": string, "proof": string, "cta_rung": "none"|"follow"|"learn"|"compare"|"answer"|"book", "kicker_taxonomy": ["SHORT LABEL"], "metric": string } ]
+  "weeks": [ { "week": number, "audience": string, "job": string, "claim": string, "proof": string, "kicker_taxonomy": ["SHORT LABEL"], "metric": string } ]
 }
 
-Stages, in order (use them in this order across the flight, one per week):
-${stageMenu}
+The stage and CTA rung of every week are FIXED and given to you below. Do not reassign them. Write the audience, claim and proof that serve the stage each week has been given.
 
 Hard rules:
 - One week, one claim. No two weeks may argue the same thing, use the same number, or restate each other in new words.
 - angle_ledger lists every claim, in the order the weeks spend them. Exactly one per week.
-- The CTA rung must escalate: early weeks ask for nothing, only the last third asks for the sale.
+- proof must be a concrete particular an ad can print: a number, a timeframe, a named result, a specific before/after. Never "customers love it" or "proven results". If the venture gives you no real figure, give a specific observable fact instead of inventing a statistic.
 - audience must name a real segment of buyer that shifts as the flight warms (e.g. "operators still hand-making every ad"), not "founders".
 - kicker_taxonomy labels the AUDIENCE or their moment, 1-3 words, all caps, never a topic noun like "STRATEGY" or "SYSTEM".
 - claim must be a sentence a person could disagree with, not a topic.
-- Ground the offer in the venture's actual business. If no price or term is known, say what the ask is without inventing numbers.`;
+- Ground the offer in the venture's actual business. If no price or term is known, say what the ask is without inventing numbers.
+
+Fixed stage assignment:
+${assignment}`;
+
 
   const byWeek = new Map<number, string[]>();
   for (const p of args.posts) {
