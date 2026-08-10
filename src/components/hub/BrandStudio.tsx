@@ -84,6 +84,12 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
         actions={
           <>
             {kit && (
+              <Button size="sm" variant="ghost" onClick={() => mood.regenerate.mutate()} disabled={mood.running} title="Rebuild the 9-tile mood board">
+                {mood.running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+                {mood.running ? mood.label : (Array.isArray(kit?.moodboard) && kit.moodboard.length ? "Regenerate mood board" : "Generate mood board")}
+              </Button>
+            )}
+            {kit && (
               <Button size="sm" variant="ghost" onClick={onReset} disabled={reset.isPending} title="Reset & start over">
                 <RotateCcw className="mr-1 h-3 w-3" />Reset
               </Button>
