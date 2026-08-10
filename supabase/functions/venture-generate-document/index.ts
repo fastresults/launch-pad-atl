@@ -157,6 +157,17 @@ function gatewayMessage(status: number, detail: string) {
 // stripper all live in supabase/functions/_shared/ so the single-doc path
 // and the bulk path produce identical quality for the same document_type.
 
+/**
+ * Phases (Website PRD only — every other deliverable runs "full"):
+ *   draft  — one model call, then the draft is CHECKPOINTED to the row and the
+ *            refine phase is self-invoked. A killed worker can no longer lose
+ *            the whole run.
+ *   refine — reads the checkpointed draft, runs copy expansion, the bounded
+ *            identity-repair loop, the master prompt and portraits, then
+ *            terminalizes the row.
+ */
+export type GenPhase = "full" | "draft" | "refine";
+
 export async function generateOne(
   supabase: any,
   snapshotId: string,
@@ -164,6 +175,7 @@ export async function generateOne(
   rewriteFeedback?: string,
   rewriteTags?: string[],
   intakeAnswers?: Record<string, any>,
+  phase: GenPhase = "full",
 ) {
   const [ctx, { data: type }] = await Promise.all([
     loadVentureContext(supabase, snapshotId),
