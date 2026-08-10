@@ -52,6 +52,7 @@ export const KIND_LABEL: Record<string, string> = {
   presentation: "Presentation",
   guidelines: "Guidelines",
   design_tokens: "Design tokens",
+  style_system: "Style system",
 };
 
 export const FIELD_SPECS: FieldSpec[] = [
