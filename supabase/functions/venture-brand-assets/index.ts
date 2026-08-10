@@ -1410,6 +1410,7 @@ Deno.serve(async (req) => {
       const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
       // Legacy uploads carry no variant — treat them as the primary slot.
       const slotOf = (l: any) => (l?.variant ?? "primary");
+      const superseded = existing.filter((l: any) => l?.source === "upload" && slotOf(l) === variant);
       const kept = existing.filter((l: any) => !(l?.source === "upload" && slotOf(l) === variant));
       const nextLogos =
         variant === "primary"
@@ -1421,6 +1422,15 @@ Deno.serve(async (req) => {
         .update({ logos: nextLogos, dna: { ...(kitRow?.dna ?? {}), ...dnaPatch } })
         .eq("snapshot_id", snapshotId);
       if (kitErr) throw new Error(`Could not save your logo: ${kitErr.message}`);
+
+      // Replacing a slot deletes the file it replaced — never leave orphans.
+      const stalePaths = superseded
+        .map((l: any) => l?.path)
+        .filter((p: any) => typeof p === "string" && p && p !== path);
+      if (stalePaths.length) {
+        await supabase.storage.from("user-media").remove(stalePaths).catch(() => null);
+      }
+
 
       if (runId && variant === "primary") await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
 
