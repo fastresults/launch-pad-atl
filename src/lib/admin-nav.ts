@@ -317,6 +317,15 @@ export const ADMIN_NAV: AdminNavItem[] = [
     super: true,
   },
   {
+    to: "/admin/ai-capacity",
+    label: "AI capacity notices",
+    icon: Zap,
+    group: "System",
+    description: "Founders blocked by provider limits",
+    keywords: ["ai", "credits", "tokens", "capacity", "openai", "google", "anthropic", "limit"],
+    super: true,
+  },
+  {
     to: "/admin/settings",
     label: "Site settings",
     icon: Settings,
