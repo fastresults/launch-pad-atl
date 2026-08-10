@@ -161,10 +161,21 @@ export const PIECE_SPECS: PieceSpec[] = [
     page: "guidelines-2-logo",
     widthIn: 1600, heightIn: 1000, trimW: 1600, trimH: 1000,
     bleedIn: 0, safeIn: 0.05 * 1000,
-    logo: [0.18, 0.34], logoLockup: [0.14, 0.28],
+    logo: [0.10, 0.34], logoLockup: [0.08, 0.28],
     clearSpace: 0.5, minTypePt: 16, measureMax: 75,
     bleedEdges: [], cropMarks: false,
     coverage: [0.005, 0.9], screen: true,
+  },
+  {
+    // Clear space and misuse pages draw the mark many times at deliberately
+    // different sizes, so the band has to span from thumbnail to specimen.
+    page: "guidelines-specimen",
+    widthIn: 1600, heightIn: 1000, trimW: 1600, trimH: 1000,
+    bleedIn: 0, safeIn: 0.05 * 1000,
+    logo: [0.03, 0.42], logoLockup: [0.03, 0.36],
+    clearSpace: 0.5, minTypePt: 15, measureMax: 75,
+    bleedEdges: [], cropMarks: false,
+    coverage: [0.004, 0.9], screen: true,
   },
   {
     page: "guidelines",
@@ -175,6 +186,7 @@ export const PIECE_SPECS: PieceSpec[] = [
     bleedEdges: [], cropMarks: false,
     coverage: [0.005, 0.9], screen: true,
   },
+
 ];
 
 /** Resolved, in page pixels. */
