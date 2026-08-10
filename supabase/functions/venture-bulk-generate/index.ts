@@ -925,7 +925,7 @@ async function runJob(
     await supabase.from("venture_generation_jobs").update({
       status: "canceled",
       completed_at: new Date().toISOString(),
-      progress_pct: Math.round((state.done / total) * 100),
+      progress_pct: await liveProgressPct(supabase, snapshotId, state),
       current_document_type: null,
     }).eq("id", jobId);
   };
