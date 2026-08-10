@@ -1402,9 +1402,6 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
           <Button variant="ghost" onClick={onDone}>Close</Button>
         </div>
       </div>
-
-        </div>
-      </div>
     </div>
   );
 }
