@@ -910,7 +910,7 @@ async function runJob(
 
   const layers = dependencyLayers(types);
   const total = types.length;
-  const state = { done: 0, total, fails: 0, canceled: false };
+  const state: RunState = { done: 0, total, fails: 0, canceled: false, keys: types.map((t: any) => t.type) };
 
   const startedAt = new Date().toISOString();
   await supabase.from("venture_generation_jobs").update({
