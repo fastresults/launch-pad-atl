@@ -10,6 +10,8 @@ import { ShareSection } from "@/components/share/ShareSection";
 import { ShareBrain } from "@/components/share/ShareBrain";
 import { SectionExportMenu } from "@/components/share/SectionExportMenu";
 import { buildFullDoc, buildSectionDoc } from "@/lib/share-export";
+import { SHARE_UI_VERSION } from "@/components/share/preview-copy";
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
