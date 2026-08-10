@@ -1008,7 +1008,7 @@ async function runJob(
       completed_at: new Date().toISOString(),
       progress_pct: await liveProgressPct(supabase, snapshotId, state),
       current_document_type: null,
-    }).eq("id", jobId);
+    }).eq("id", jobId).in("status", ["queued", "running", "paused"]);
   };
 
   // Stale blocks from an earlier run get re-evaluated (brand auto-derivation
