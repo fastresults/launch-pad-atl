@@ -993,6 +993,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Cancel failed"),
   });
 
+  const skip = useMutation({
+    mutationFn: (documentType: string) => skipDocument({ data: { snapshotId: snapshot.id, documentType } }),
+    onSuccess: () => {
+      toast.success("Skipped — the rest of your kit can continue.");
+      qc.invalidateQueries({ queryKey: ["hub"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Couldn't skip that asset"),
+  });
+
+
+
   const failuresQ = useQuery({
     queryKey: ["hub", "failures", snapshot.id],
     queryFn: () => listFailures({ data: { snapshotId: snapshot.id } }),
