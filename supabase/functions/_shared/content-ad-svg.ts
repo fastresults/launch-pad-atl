@@ -713,9 +713,20 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
       const href = built?.dataUrl ?? args.logoDataUrl ?? null;
       if (href) {
         // Re-derive the box from the trimmed mark so the inset stays optical.
-        const finalBox = logoBox(W, H, built?.aspect ?? aspect, size, chosen.corner, inset, capFrac, chosen.scale);
+        let finalBox = logoBox(W, H, built?.aspect ?? aspect, size, chosen.corner, inset, capFrac, chosen.scale);
+        // The trimmed aspect can grow the box — re-verify the contract and fall
+        // back to the approved box rather than drift onto the type block.
+        const pad = Math.round(inset * 0.4);
+        const outer = {
+          x: finalBox.x - (plated ? pad : 0),
+          y: finalBox.y - (plated ? pad : 0),
+          w: finalBox.boxW + (plated ? pad * 2 : 0),
+          h: finalBox.boxH + (plated ? pad * 2 : 0),
+        };
+        if (typeRect && intersects(outer, typeRect, Math.round(inset * 0.6))) {
+          finalBox = { x: chosen.box.x, y: chosen.box.y, boxW: chosen.box.boxW, boxH: chosen.box.boxH };
+        }
         if (plated) {
-          const pad = Math.round(inset * 0.4);
           parts.push(
             `<rect x="${finalBox.x - pad}" y="${finalBox.y - pad}" width="${finalBox.boxW + pad * 2}" height="${finalBox.boxH + pad * 2}" rx="${Math.round(minDim * 0.008)}" fill="${plateColor}" opacity="0.88"/>`,
           );
@@ -723,6 +734,7 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
         parts.push(
           `<image href="${escapeXml(href)}" x="${finalBox.x}" y="${finalBox.y}" width="${finalBox.boxW}" height="${finalBox.boxH}" preserveAspectRatio="xMidYMid meet"/>`,
         );
+
         metrics.logo_corner = chosen.corner;
         metrics.logo_ink = built ? inkHex : null;
         metrics.logo_contrast = Number(ratio.toFixed(2));
