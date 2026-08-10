@@ -395,6 +395,31 @@ Deno.serve(async (req) => {
           });
         }
       }
+
+        // The portable style system is text, not artwork — it reads as a
+        // document and carries its own download links.
+        const ssMd = collateral.find((c: any) => c.kind === "style_system" && /\.md$/i.test(c.storage_path ?? ""));
+        const ssCss = collateral.find((c: any) => c.kind === "style_system" && /\.css$/i.test(c.storage_path ?? ""));
+        if (ssMd && !excluded.has("brand:style-system")) {
+          const { data: file } = await admin.storage.from(BUCKET).download(ssMd.storage_path);
+          const markdown = file ? await file.text() : null;
+          const mdUrl = await sign(BUCKET, ssMd.storage_path);
+          const cssUrl = ssCss ? await sign(BUCKET, ssCss.storage_path) : null;
+          if (markdown) {
+            const links = [
+              mdUrl ? `- [Download style-system.md](${mdUrl})` : "",
+              cssUrl ? `- [Download style-system.css](${cssUrl})` : "",
+            ].filter(Boolean).join("\n");
+            push("Brand", {
+              key: "brand:style-system",
+              title: "Style system",
+              subtitle: "Portable tokens, type, marks and voice",
+              kind: "doc",
+              body: links ? `${markdown}\n\n---\n\n### Files\n\n${links}\n` : markdown,
+            });
+          }
+        }
+      }
     }
 
     // ---- Social kit ----------------------------------------------------------
