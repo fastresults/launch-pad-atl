@@ -221,6 +221,8 @@ export default function App() {
       <AskConcierge />
       </LandingOnlyGate>
       </ConfirmProvider>
+      </AiCapacityProvider>
+
     </Suspense>
   );
 }
