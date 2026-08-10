@@ -1067,17 +1067,24 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const agendaColW = agendaCols === 2 ? (g.content - g.gutter * 2) / 2 : g.span(Math.round(ad.grid.columns * 0.7));
   const perCol = Math.ceil(agendaItems.length / agendaCols);
   const agendaRows: string[] = [];
+  const agendaTop = agendaHead.bottom + sp(0.6);
+  // Rows breathe into the height they actually have instead of bunching under
+  // the title and leaving the lower third of the slide empty.
+  const agendaSlack = Math.max(0, (bandBottom - agendaTop) / perCol);
+  const agendaLead = Math.min(sp(2.4), Math.max(sp(0.9), agendaSlack * 0.22));
+  let agendaBottom = agendaTop;
   for (let c = 0; c < agendaCols; c++) {
     const x = g.M + c * (agendaColW + g.gutter * 2);
-    let y = agendaHead.bottom + sp( 0.6);
+    let y = agendaTop;
     for (let i = c * perCol; i < Math.min(agendaItems.length, (c + 1) * perCol); i++) {
       const f = T.flow(x, y, agendaColW);
-      f.line(`${String(i + 1).padStart(2, "0")}   ${agendaItems[i]}`, sp( 1.0), fg, {
+      f.line(`${String(i + 1).padStart(2, "0")}   ${agendaItems[i]}`, sp(1.0), fg, {
         family: "head", weight: 700,
       });
-      const ruleY = f.bottom + sp( 0.5);
+      const ruleY = f.bottom + sp(0.5);
       agendaRows.push(`${f.svg()}<rect x="${r(x)}" y="${r(ruleY)}" width="${r(agendaColW)}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.82)}"/>`);
-      y = ruleY + sp( 0.9);
+      y = ruleY + agendaLead;
+      agendaBottom = Math.max(agendaBottom, y);
     }
   }
   pages.push({
