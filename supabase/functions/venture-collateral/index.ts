@@ -150,6 +150,19 @@ async function buildCtx(
   }
   if (!logoSvg) throw new Error("NO_VECTOR_LOGO");
 
+  // The reversed mark — what every dark ground (deck cover, guidelines cover,
+  // closing slide) must draw. Founder's "reversed" slot first, then the
+  // generated knockout / mono variant. Missing is fine: the compositor knocks
+  // the primary out to a single ink instead.
+  const reversedSlot = logos.find((l: any) => l?.variant === "reversed" && (l?.svg_path ?? l?.path));
+  const darkPath =
+    (reversedSlot?.svg_path ?? reversedSlot?.path) ??
+    primaryLogo?.variants?.knockout?.path ??
+    primaryLogo?.variants?.mono?.path ??
+    null;
+  const logoSvgDark = darkPath ? await loadMarkArtwork(admin, String(darkPath)) : null;
+
+
   const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
   const brain = vctx?.brain ?? {};
 
