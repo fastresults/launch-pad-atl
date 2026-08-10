@@ -1,0 +1,519 @@
+/* =============================================================
+ * MASTER STYLE SYSTEM — drop-in stylesheet
+ * Electric violet on near-black · orange → magenta → violet brand
+ * gradient · glass panels · glow CTAs · Outfit + DM Sans
+ *
+ * TAILWIND v4 (default below). A Tailwind v3 fallback block is at
+ * the very bottom of this file.
+ *
+ * v4 install: paste everything from here down to the "TAILWIND v3
+ * FALLBACK" banner into src/styles.css (or index.css), keeping your
+ * existing @import "tailwindcss" line at the top.
+ * ============================================================= */
+
+/* --- Tailwind v4 color aliases (maps tokens to utility classes) --- */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-magenta: var(--brand-magenta);
+  --color-brand-violet: var(--brand-violet);
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-danger: var(--status-danger);
+  --color-status-info: var(--status-info);
+  --color-status-tip: var(--status-tip);
+}
+
+/* =============================== TOKENS =============================== */
+/* Dark is the default theme. Light is opt-in via <html class="light">. */
+:root {
+  --radius: 0.75rem;
+
+  /* Base surfaces */
+  --background: oklch(0.14 0.02 280);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.18 0.025 280);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.18 0.025 280);
+  --popover-foreground: oklch(0.98 0 0);
+
+  /* Electric violet — the single accent */
+  --primary: oklch(0.68 0.28 290);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.24 0.03 280);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.24 0.03 280);
+  --muted-foreground: oklch(0.72 0.02 270);
+  --accent: oklch(0.28 0.04 290);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.68 0.28 290);
+
+  /* Brand gradient stops */
+  --brand-orange: oklch(0.72 0.21 45);
+  --brand-magenta: oklch(0.62 0.27 350);
+  --brand-violet: oklch(0.55 0.27 295);
+
+  /* Status colours — readable on light cards and dark surfaces */
+  --status-success: oklch(0.76 0.17 155);
+  --status-warning: oklch(0.82 0.16 80);
+  --status-danger: oklch(0.72 0.2 25);
+  --status-info: oklch(0.76 0.15 230);
+  --status-tip: oklch(0.76 0.16 310);
+
+  /* Hero gradient: orange → hot magenta → electric blue */
+  --gradient-hero: linear-gradient(115deg, #d8941e 0%, #c040a0 48%, #6c92d4 100%);
+
+  /* Text gradient: orange → magenta → electric violet */
+  --gradient-text: linear-gradient(
+    90deg,
+    oklch(0.78 0.18 55),
+    oklch(0.72 0.28 350),
+    oklch(0.68 0.28 290)
+  );
+
+  /* Optional aliases used by the cinematic utilities */
+  --gradient-brand: var(--gradient-hero);
+  --gradient-haze: radial-gradient(
+    60% 60% at 50% 40%,
+    oklch(0.62 0.27 350 / 0.35),
+    transparent 70%
+  );
+  --brand-accent: var(--primary);
+
+  /* CTA glow shadows */
+  --glow-primary: 0 0 28px oklch(0.68 0.28 290 / 0.5), 0 0 8px oklch(0.68 0.28 290 / 0.35),
+    0 2px 16px oklch(0 0 0 / 0.4);
+  --glow-hero: 0 0 28px oklch(0.62 0.27 350 / 0.45), 0 0 8px oklch(0.72 0.21 45 / 0.3),
+    0 2px 16px oklch(0 0 0 / 0.4);
+
+  /* Typography */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+}
+
+:root.light {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.18 0.02 280);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 280);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 280);
+
+  --primary: oklch(0.58 0.28 290);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.96 0.01 280);
+  --secondary-foreground: oklch(0.18 0.02 280);
+  --muted: oklch(0.96 0.01 280);
+  --muted-foreground: oklch(0.45 0.02 270);
+  --accent: oklch(0.94 0.02 290);
+  --accent-foreground: oklch(0.18 0.02 280);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.18 0.02 280 / 12%);
+  --input: oklch(0.18 0.02 280 / 15%);
+  --ring: oklch(0.58 0.28 290);
+
+  --status-success: oklch(0.42 0.14 155);
+  --status-warning: oklch(0.48 0.13 70);
+  --status-danger: oklch(0.48 0.18 25);
+  --status-info: oklch(0.44 0.16 245);
+  --status-tip: oklch(0.46 0.16 310);
+}
+
+/* ================================ BASE ================================ */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html,
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+  }
+
+  h1 {
+    letter-spacing: -0.04em;
+  }
+}
+
+/* Uppercase kicker/eyebrow label */
+.kicker {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+/* ============================= UTILITIES ============================== */
+@utility bg-hero-gradient {
+  background-image: var(--gradient-hero);
+}
+
+@utility bg-gradient-brand {
+  background-image: var(--gradient-brand);
+}
+
+/* Real gradient text — orange → magenta → electric violet */
+@utility text-gradient-brand {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glowing CTA — use on bg-primary buttons */
+@utility btn-glow {
+  box-shadow: var(--glow-primary);
+  transition-property: box-shadow, opacity;
+  transition-duration: 0.2s;
+  &:hover {
+    box-shadow: 0 0 40px oklch(0.68 0.28 290 / 0.65), 0 0 14px oklch(0.68 0.28 290 / 0.45),
+      0 2px 20px oklch(0 0 0 / 0.5);
+  }
+}
+
+/* Glowing CTA — use on bg-hero-gradient buttons */
+@utility btn-glow-hero {
+  box-shadow: var(--glow-hero);
+  transition-property: box-shadow, opacity;
+  transition-duration: 0.2s;
+  &:hover {
+    box-shadow: 0 0 40px oklch(0.62 0.27 350 / 0.65), 0 0 14px oklch(0.72 0.21 45 / 0.45),
+      0 2px 20px oklch(0 0 0 / 0.5);
+  }
+}
+
+/* Glassmorphism card */
+@utility glass-card {
+  background: oklch(1 0 0 / 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid oklch(1 0 0 / 0.1);
+}
+
+/* Tinted glass — subtle violet edge for featured cards */
+@utility glass-card-tinted {
+  background: oklch(1 0 0 / 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid oklch(0.68 0.28 290 / 0.25);
+}
+
+/* Heavier cinematic panel with depth */
+@utility glass-panel {
+  background: oklch(0.185 0.021 268 / 20%);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 24px 60px -30px oklch(0.05 0.02 268 / 90%);
+}
+
+@utility gradient-ring {
+  position: relative;
+  background: var(--gradient-brand);
+  padding: 1.5px;
+}
+
+@utility glow-ring {
+  box-shadow: 0 0 0 1px var(--border), 0 0 60px -18px oklch(0.6 0.16 258 / 55%);
+}
+
+@utility hero-haze {
+  background-image: var(--gradient-haze);
+  filter: blur(20px);
+  opacity: 0.9;
+}
+
+@utility scene-fade {
+  mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+}
+
+/* ============================= MOTION ================================= */
+@keyframes scene-drift-kf {
+  from { transform: scale(1.04); }
+  to { transform: scale(1.14); }
+}
+@utility scene-drift {
+  animation: scene-drift-kf 14s ease-out forwards;
+}
+
+@keyframes caret-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@utility caret {
+  display: inline-block;
+  width: 1px;
+  height: 1.1em;
+  vertical-align: -0.16em;
+  background: var(--brand-accent);
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+@utility animate-marquee-left {
+  animation: marquee-left 110s linear infinite;
+}
+@utility animate-marquee-right {
+  animation: marquee-right 125s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Attract-loop pulse for onboarding hints — reads as "click me", not error. */
+@keyframes attract-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 0%, transparent);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--primary) 35%, transparent);
+    transform: scale(1.03);
+  }
+}
+@utility animate-attract-pulse {
+  animation: attract-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-attract-pulse,
+  .scene-drift,
+  .caret {
+    animation: none !important;
+  }
+  .marquee-track {
+    animation: none !important;
+  }
+}
+
+/* ======================== SCOPED DARK SURFACE =========================
+ * Keeps a subtree on the dark theme even when the app is in light mode.
+ * Usage: <section class="theme-dark-scope"> … </section>
+ * Also add it to portalled dialog content that opens from inside a scope.
+ * ===================================================================== */
+.theme-dark-scope {
+  color-scheme: dark;
+
+  --background: oklch(0.14 0.02 280);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.18 0.025 280);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.18 0.025 280);
+  --popover-foreground: oklch(0.98 0 0);
+
+  --primary: oklch(0.68 0.28 290);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.24 0.03 280);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.24 0.03 280);
+  --muted-foreground: oklch(0.72 0.02 270);
+  --accent: oklch(0.28 0.04 290);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.68 0.28 290);
+
+  --status-success: oklch(0.76 0.17 155);
+  --status-warning: oklch(0.82 0.16 80);
+  --status-danger: oklch(0.72 0.2 25);
+  --status-info: oklch(0.76 0.15 230);
+  --status-tip: oklch(0.76 0.16 310);
+
+  /* Tailwind's @theme aliases resolve at :root, so re-point them here too. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+/* =====================================================================
+ * ██  TAILWIND v3 FALLBACK  ██
+ * Many Lovable projects still run Tailwind v3 with src/index.css and a
+ * tailwind.config.ts. In that case IGNORE the @theme and @utility blocks
+ * above and use what follows instead.
+ *
+ * 1) Paste the token blocks above (:root, :root.light, .theme-dark-scope)
+ *    into index.css unchanged — plain CSS variables work in v3 too.
+ * 2) Replace the @layer base block with the one below.
+ * 3) Replace each @utility rule with the matching plain class below.
+ * 4) Extend tailwind.config.ts with the colour mapping at the end.
+ * ===================================================================== */
+
+/*
+@layer base {
+  * { @apply border-border; }
+  html, body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.03em; }
+}
+
+@layer utilities {
+  .bg-hero-gradient { background-image: var(--gradient-hero); }
+  .bg-gradient-brand { background-image: var(--gradient-brand); }
+  .text-gradient-brand {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .btn-glow { box-shadow: var(--glow-primary); transition: box-shadow .2s, opacity .2s; }
+  .btn-glow:hover {
+    box-shadow: 0 0 40px oklch(0.68 0.28 290 / 0.65), 0 0 14px oklch(0.68 0.28 290 / 0.45), 0 2px 20px oklch(0 0 0 / 0.5);
+  }
+  .btn-glow-hero { box-shadow: var(--glow-hero); transition: box-shadow .2s, opacity .2s; }
+  .btn-glow-hero:hover {
+    box-shadow: 0 0 40px oklch(0.62 0.27 350 / 0.65), 0 0 14px oklch(0.72 0.21 45 / 0.45), 0 2px 20px oklch(0 0 0 / 0.5);
+  }
+  .glass-card {
+    background: oklch(1 0 0 / 0.04);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid oklch(1 0 0 / 0.1);
+  }
+  .glass-card-tinted {
+    background: oklch(1 0 0 / 0.04);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid oklch(0.68 0.28 290 / 0.25);
+  }
+  .glass-panel {
+    background: oklch(0.185 0.021 268 / 20%);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: 0 24px 60px -30px oklch(0.05 0.02 268 / 90%);
+  }
+  .glow-ring { box-shadow: 0 0 0 1px var(--border), 0 0 60px -18px oklch(0.6 0.16 258 / 55%); }
+  .hero-haze { background-image: var(--gradient-haze); filter: blur(20px); opacity: .9; }
+  .scene-fade {
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  }
+}
+*/
+
+/* tailwind.config.ts (v3) — theme.extend:
+
+  darkMode: ["class"],           // and use `.light` on <html> for light mode
+  theme: {
+    extend: {
+      colors: {
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        card: { DEFAULT: "var(--card)", foreground: "var(--card-foreground)" },
+        popover: { DEFAULT: "var(--popover)", foreground: "var(--popover-foreground)" },
+        primary: { DEFAULT: "var(--primary)", foreground: "var(--primary-foreground)" },
+        secondary: { DEFAULT: "var(--secondary)", foreground: "var(--secondary-foreground)" },
+        muted: { DEFAULT: "var(--muted)", foreground: "var(--muted-foreground)" },
+        accent: { DEFAULT: "var(--accent)", foreground: "var(--accent-foreground)" },
+        destructive: { DEFAULT: "var(--destructive)", foreground: "var(--destructive-foreground)" },
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+        brand: {
+          orange: "var(--brand-orange)",
+          magenta: "var(--brand-magenta)",
+          violet: "var(--brand-violet)",
+        },
+        status: {
+          success: "var(--status-success)",
+          warning: "var(--status-warning)",
+          danger: "var(--status-danger)",
+          info: "var(--status-info)",
+          tip: "var(--status-tip)",
+        },
+      },
+      borderRadius: {
+        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 2px)",
+        lg: "var(--radius)",
+        xl: "calc(var(--radius) + 4px)",
+        "2xl": "calc(var(--radius) + 8px)",
+      },
+      fontFamily: {
+        display: ["Outfit", "system-ui", "sans-serif"],
+        sans: ["DM Sans", "system-ui", "sans-serif"],
+      },
+    },
+  }
+
+  Note: v3 colour values as `var(--x)` do not support Tailwind's /opacity
+  modifier. If you need `bg-primary/50`, either store tokens as raw HSL
+  channels (`--primary: 280 90% 65%`) and map with
+  `hsl(var(--primary) / <alpha-value>)`, or use color-mix() in CSS.
+*/
