@@ -26,6 +26,18 @@ const MAX_BYTES = 5 * 1024 * 1024;
 const isHex = (v: unknown) => typeof v === "string" && /^#?[0-9a-f]{3,8}$/i.test(v);
 const slotOf = (l: any) => l?.variant ?? "primary";
 
+/** Rough perceptual luminance so the brand tile picks the right mark. */
+function luminance(hex: string): number {
+  let h = hex.replace("#", "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (h.length < 6) return 0;
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+
 /** Legacy kits store uploads with no `variant` — read those as the primary slot. */
 export function logoSetFrom(logos: any): Record<string, any> {
   const list = Array.isArray(logos) ? logos.filter((l: any) => l?.url) : [];
@@ -55,7 +67,7 @@ function readDataUrl(file: File) {
   });
 }
 
-function MarkTile({ label, background, src, alt, light, compact }: any) {
+function MarkTile({ label, background, src, alt, light, compact, empty }: any) {
   return (
     <figure className="min-w-0">
       <div
@@ -70,7 +82,9 @@ function MarkTile({ label, background, src, alt, light, compact }: any) {
         {src ? (
           <img src={src} alt={alt} loading="lazy" className={cn("relative w-full object-contain", compact ? "max-h-10" : "max-h-14")} />
         ) : (
-          <span className="relative text-[11px] text-muted-foreground">No mark yet</span>
+          <span className="relative px-1 text-center text-[10px] leading-tight text-muted-foreground">
+            {empty ?? "No mark yet"}
+          </span>
         )}
       </div>
       <figcaption className="mt-1.5 truncate text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
@@ -79,6 +93,7 @@ function MarkTile({ label, background, src, alt, light, compact }: any) {
     </figure>
   );
 }
+
 
 function SlotTile({ slot, logo, busy, onPick, onRemove }: any) {
   const [over, setOver] = useState(false);
@@ -169,8 +184,13 @@ export function LogoSetPanel({
   const primaryColor = kit?.palette?.colors?.primary;
   const brandBg = isHex(primaryColor) ? primaryColor : "#101014";
   const alt = `${companyName ?? "Brand"} logo`;
+  // Each preview shows the mark that actually belongs on that ground. A single
+  // primary upload must not silently populate the dark and brand previews.
   const lightMark = set.primary?.url ?? null;
-  const darkMark = set.reversed?.url ?? lightMark;
+  const reversedMark = set.reversed?.url ?? null;
+  const brandIsDark = luminance(brandBg) < 0.5;
+  const brandMark = brandIsDark ? reversedMark : lightMark;
+
 
   // Stored signed URLs expire after a week; re-sign on mount so an older
   // venture never renders a dead mark.
@@ -293,9 +313,17 @@ export function LogoSetPanel({
           if (e.dataTransfer.files?.length) pickMany(e.dataTransfer.files);
         }}
       >
-        <MarkTile label="On light" background="#ffffff" src={lightMark} alt={alt} light compact={compact} />
-        <MarkTile label="On dark" background="#101014" src={darkMark} alt={alt} compact={compact} />
-        <MarkTile label="On brand" background={brandBg} src={darkMark} alt={alt} compact={compact} />
+        <MarkTile label="On light" background="#ffffff" src={lightMark} alt={alt} light compact={compact} empty="Upload a primary mark" />
+        <MarkTile label="On dark" background="#101014" src={reversedMark} alt={alt} compact={compact} empty="Upload a reversed mark" />
+        <MarkTile
+          label="On brand"
+          background={brandBg}
+          src={brandMark}
+          alt={alt}
+          compact={compact}
+          empty={brandIsDark ? "Upload a reversed mark" : "Upload a primary mark"}
+        />
+
       </div>
 
       <div className="grid grid-cols-4 gap-2">
@@ -313,7 +341,8 @@ export function LogoSetPanel({
 
       <p className="text-[10px] leading-relaxed text-muted-foreground">
         Drop files anywhere here or click a slot to replace it. SVG is best — PNG, JPG and WebP work too, up to 5 MB.
-        Reversed, icon and wordmark fall back to your primary mark when empty.
+        Each preview shows its own upload: primary on light, reversed on dark.
+
       </p>
     </section>
   );
