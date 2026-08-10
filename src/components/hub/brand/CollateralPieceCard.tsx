@@ -78,7 +78,7 @@ export function CollateralPieceCard({
           <p className="text-[11px] leading-snug text-status-warning">{qc.reasons[0]}</p>
         )}
 
-        <div className="mt-auto flex items-center gap-2 pt-2">
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
           <Button
             size="sm"
             variant="outline"
@@ -101,16 +101,16 @@ export function CollateralPieceCard({
           {generated && (
             <Button
               size="sm"
-              variant="ghost"
+              variant="outline"
               aria-label={`Delete ${label}`}
-              title="Delete"
-              className="h-7 px-2 text-[11px] text-muted-foreground hover:text-destructive"
+              className="h-7 px-2 text-[11px] border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
               onClick={onDelete}
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="mr-1 h-3 w-3" />Delete
             </Button>
           )}
         </div>
+
       </div>
     </div>
   );
