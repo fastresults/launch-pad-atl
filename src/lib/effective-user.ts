@@ -13,6 +13,25 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const IMPERSONATION_KEY = "sl.impersonation.v1";
 
+/** Where to send the admin back to when they exit impersonation. */
+export const IMPERSONATION_RETURN_KEY = "sl.impersonation.return.v1";
+
+export function readImpersonationReturnPath(): string {
+  try {
+    return sessionStorage.getItem(IMPERSONATION_RETURN_KEY) || "/admin/members";
+  } catch {
+    return "/admin/members";
+  }
+}
+
+export function clearImpersonationReturnPath() {
+  try {
+    sessionStorage.removeItem(IMPERSONATION_RETURN_KEY);
+  } catch {
+    /* no-op */
+  }
+}
+
 /** Impersonation auto-expires so a forgotten session can't quietly write later. */
 export const IMPERSONATION_TTL_MS = 60 * 60 * 1000;
 

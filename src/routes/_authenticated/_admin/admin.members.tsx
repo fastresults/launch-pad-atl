@@ -184,8 +184,11 @@ export default function AdminMembersPage() {
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
                       <Button asChild size="sm" variant="outline">
-                        <Link to={`/admin/members/${m.user_id}/view`}>
-                          <Eye className="mr-1 h-3 w-3" /> View dashboard
+                        <Link
+                          to={`/admin/members/${m.user_id}/view`}
+                          state={{ from: "/admin/members" }}
+                        >
+                          <Eye className="mr-1 h-3 w-3" /> Open as member
                         </Link>
                       </Button>
                       {isSuperAdmin && (
