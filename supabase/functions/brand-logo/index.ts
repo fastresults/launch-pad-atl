@@ -20,7 +20,6 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import {
   inkPasses,
   isUntintableSvg,
-  legibleInkFor,
   platedSvg,
   rasterInkHex,
   repairSvgContrast,

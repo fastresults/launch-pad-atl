@@ -1457,8 +1457,7 @@ Deno.serve(async (req) => {
           paints: svgPaints(cleaned),
           passes_dark: passesDark,
           passes_light: passesLight,
-          repaired_dark_svg: passesDark ? null : repairSvgContrast(cleaned, DARK_SURFACE),
-          repaired_light_svg: passesLight ? null : repairSvgContrast(cleaned, LIGHT_SURFACE),
+          repair_available: !passesDark || !passesLight,
         };
         bytes = new TextEncoder().encode(cleaned);
       }
