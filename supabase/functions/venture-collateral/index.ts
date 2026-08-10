@@ -124,6 +124,65 @@ async function seedWithSuggestions(
 }
 
 
+/** Width/height of a PNG, JPEG, WebP or GIF so a raster mark can be placed. */
+function rasterSize(b: Uint8Array): { w: number; h: number } | null {
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  // PNG
+  if (b.length > 24 && b[0] === 0x89 && b[1] === 0x50) return { w: dv.getUint32(16), h: dv.getUint32(20) };
+  // GIF
+  if (b.length > 10 && b[0] === 0x47 && b[1] === 0x49) return { w: dv.getUint16(6, true), h: dv.getUint16(8, true) };
+  // WebP (VP8X / VP8L / VP8)
+  if (b.length > 30 && b[8] === 0x57 && b[9] === 0x45) {
+    const fourcc = String.fromCharCode(b[12], b[13], b[14], b[15]);
+    if (fourcc === "VP8X") {
+      return { w: 1 + (b[24] | (b[25] << 8) | (b[26] << 16)), h: 1 + (b[27] | (b[28] << 8) | (b[29] << 16)) };
+    }
+    if (fourcc === "VP8 ") return { w: dv.getUint16(26, true) & 0x3fff, h: dv.getUint16(28, true) & 0x3fff };
+  }
+  // JPEG: walk the segments to the first SOF marker.
+  if (b.length > 4 && b[0] === 0xff && b[1] === 0xd8) {
+    let i = 2;
+    while (i + 9 < b.length) {
+      if (b[i] !== 0xff) { i++; continue; }
+      const marker = b[i + 1];
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+        return { w: dv.getUint16(i + 7), h: dv.getUint16(i + 5) };
+      }
+      i += 2 + dv.getUint16(i + 2);
+    }
+  }
+  return null;
+}
+
+function b64(bytes: Uint8Array): string {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+/**
+ * Load a stored mark as inline SVG. Vector files come through as-is; a raster
+ * mark (a founder can upload PNG/JPG/WebP into the reversed slot) is wrapped in
+ * an SVG at its true pixel aspect so the compositor can place it like any other
+ * artwork instead of skipping it.
+ */
+async function loadMarkArtwork(admin: any, path: string): Promise<string | null> {
+  try {
+    const { data: file } = await admin.storage.from(BUCKET).download(path);
+    if (!file) return null;
+    if (path.toLowerCase().endsWith(".svg")) return await file.text();
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const size = rasterSize(bytes) ?? { w: 1024, h: 1024 };
+    const ext = path.split(".").pop()?.toLowerCase();
+    const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : ext === "gif" ? "image/gif" : "image/png";
+    const href = `data:${mime};base64,${b64(bytes)}`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${size.w}" height="${size.h}" viewBox="0 0 ${size.w} ${size.h}"><image x="0" y="0" width="${size.w}" height="${size.h}" xlink:href="${href}" href="${href}"/></svg>`;
+  } catch {
+    return null;
+  }
+}
+
+
 async function buildCtx(
   admin: any,
   snapshotId: string,
