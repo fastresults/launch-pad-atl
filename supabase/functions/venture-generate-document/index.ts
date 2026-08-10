@@ -260,13 +260,16 @@ export async function generateOne(
     await markSnapshotBrainDirty(supabase, snapshotId).catch(() => {});
   }
 
-  // Mark as generating (preserve any intake answers we resolved).
-  await supabase.from("venture_documents").upsert({
-    snapshot_id: snapshotId,
-    document_type: documentType,
-    status: "generating",
-    ...(effectiveIntake ? { intake_answers: effectiveIntake } : {}),
-  }, { onConflict: "snapshot_id,document_type" });
+  // Mark as generating (preserve any intake answers we resolved). The refine
+  // phase must NOT clobber the checkpointed draft, so it only touches status.
+  if (phase !== "refine") {
+    await supabase.from("venture_documents").upsert({
+      snapshot_id: snapshotId,
+      document_type: documentType,
+      status: "generating",
+      ...(effectiveIntake ? { intake_answers: effectiveIntake } : {}),
+    }, { onConflict: "snapshot_id,document_type" });
+  }
 
   // Load dependency docs and distill them to bullet summaries (S3 — replaces
   // raw 600-900-word markdown dumps per upstream).
