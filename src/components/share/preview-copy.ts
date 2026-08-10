@@ -11,6 +11,8 @@ export type PreviewCopy = {
   pillar: string | null;
   fields: PreviewField[];
   caption: string;
+  /** Headline through hashtags, ready for a single "Copy ad" press. */
+  fullCopy: string;
   /** True when the creative genuinely ships without post copy. */
   artworkOnly: boolean;
 };
@@ -45,12 +47,15 @@ export function buildPreviewCopy(image: ShareImage | null, fallbackTitle: string
     .filter(Boolean)
     .join("\n\n");
 
+  const fullCopy = fields.map((f) => f.text).join("\n\n");
+
   return {
     eyebrow,
     headline,
     pillar: meta?.pillar ?? null,
     fields,
     caption,
+    fullCopy,
     artworkOnly: !meta?.body && !meta?.hook && !meta?.cta && !hashtags,
   };
 }
