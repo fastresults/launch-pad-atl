@@ -343,14 +343,41 @@ Deno.serve(async (req) => {
       }
 
 
+      // Every collateral page is stored twice — the vector source and a `-preview`
+      // raster of the same artwork — plus a few non-image handoff files (CSS,
+      // JSON, HTML). Showing the raw rows made the showcase look like it held
+      // duplicate cards. Collapse each pair into one tile (raster preferred, it
+      // renders everywhere) and drop files a gallery cannot display.
       const collateral = collRes.data ?? [];
       if (collateral.length && !excluded.has("brand:collateral")) {
-        const images = [];
+        const isImage = (p?: string | null) => !!p && /\.(png|jpe?g|webp|svg)$/i.test(p);
+        const baseOf = (name: string) => name.replace(/-preview$/i, "");
+
+        const byBase = new Map<string, { display: any; source: any }>();
         for (const c of collateral) {
-          const url = await sign(BUCKET, c.storage_path);
-          if (url) images.push({
-            url, label: c.name ?? c.kind, width: c.width, height: c.height,
-            meta: { assetKind: c.kind ?? null, filename: `${c.name ?? c.kind ?? "collateral"}` },
+          if (!isImage(c.storage_path)) continue;
+          const base = baseOf(String(c.name ?? c.kind ?? "collateral"));
+          const slot = byBase.get(base) ?? { display: null, source: null };
+          const raster = !/\.svg$/i.test(c.storage_path ?? "");
+          if (raster) slot.display = c;
+          else slot.source = c;
+          byBase.set(base, slot);
+        }
+
+        const images = [];
+        for (const [base, slot] of byBase) {
+          const pick = slot.display ?? slot.source;
+          if (!pick) continue;
+          const url = await sign(BUCKET, pick.storage_path);
+          if (!url) continue;
+          const label = base.replace(/[-_]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+          images.push({
+            url, label, width: pick.width, height: pick.height,
+            meta: {
+              assetKind: pick.kind ?? null,
+              filename: base,
+              collateralIds: [slot.display?.id, slot.source?.id].filter(Boolean),
+            },
           });
         }
         if (images.length) {
