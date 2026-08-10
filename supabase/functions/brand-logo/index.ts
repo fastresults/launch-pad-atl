@@ -26,7 +26,7 @@ import {
   surfaceHex,
   svgInkHex,
   tintSvg,
-  variantOrder,
+  logoCandidates,
 } from "../_shared/logo-ink.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
