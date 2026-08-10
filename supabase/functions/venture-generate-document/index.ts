@@ -384,8 +384,10 @@ export async function generateOne(
     `Description: ${type.description}`,
     `Category: ${type.category}`,
     brandBlock,
+    visionBlock,
     preamble,
     corpusBlock,
+    brainFactsBlock(factTokens),
     sourcingBlock,
     brainSlice
       ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`
