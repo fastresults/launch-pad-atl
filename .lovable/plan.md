@@ -44,3 +44,30 @@ No migration needed: the decision happens at request time from the existing bran
 - Contrast floor: 3.0 for a logo mark against its surface (same bar the collateral quality gate uses at 2.4, tightened here because the mark stands alone).
 - Unit tests for the ink-measurement and variant-choice helpers go next to `color-spaces.test.ts`.
 - No schema change, no regeneration of assets required.
+
+---
+
+# Part 2 — Superseded assets are still showing up
+
+The second screenshot shows the same page twice: `guidelines-1-cover` **and** `guidelines-1-cover-preview`, `guidelines-2-logo` **and** `guidelines-2-logo-preview`. A regeneration wrote the new files but the run it replaced was never swept, so the showcase lists stale twins of every page (and inflates the "61 assets" count).
+
+## Fix
+
+1. **Sweep on every regeneration, not just some.** Extend the `sweepKind` behaviour already in `venture-collateral` so it also applies to preview/derivative rows: after a successful run, any row for that kind whose `run_id` is not the current run is deleted from the table **and** its storage object removed. Same treatment applied to the other regenerators that write paired files (brand guidelines pages, social covers, ads, logo variants).
+2. **One canonical row per page.** Where a page legitimately has a print file and a screen preview, they belong to a single row (`path` + `preview_path`), not two rows. A one-off repair pass collapses existing `*-preview` duplicates into their parent and deletes the orphans.
+3. **Share payload de-dupes defensively.** `venture-share` filters out any item whose key ends in `-preview` when its parent exists, so already-generated ventures look right immediately, before the repair runs.
+
+# Part 3 — Delete and regenerate from the shareable link
+
+The share reader is the place founders actually review their assets, so the actions belong there too — for the **owner only**.
+
+- When the viewer is signed in and owns (or admin-impersonates) the venture, each item card and each image tile in the showcase gets a discreet overflow menu with **Regenerate** and **Delete**, next to the existing export menu.
+- Public/anonymous viewers see nothing new — the menu never renders and the endpoints reject non-owners.
+- **Regenerate** calls the same edge function the hub uses for that asset kind and, per the existing "regenerate means replace" rule, deletes the superseded file and row before writing the new one.
+- **Delete** removes the row and its storage object, then invalidates the share payload so the item disappears from the table of contents and the asset count.
+- Ownership is verified server-side in `venture-share` (a new `action: "owner-context"` returning `canManage`), never inferred in the browser.
+
+## Technical notes for Parts 2–3
+
+- Files touched: `supabase/functions/venture-collateral/index.ts` (sweep widening + duplicate repair), `supabase/functions/venture-share/index.ts` (de-dupe + owner context), `src/routes/v.$token.tsx`, `src/components/share/ShareSection.tsx`, `src/components/share/ImagePreviewDialog.tsx` (owner action menu), `src/lib/venture-share.functions.ts`.
+- Reuses `_shared/replace-asset.ts` for storage+row removal so deletion behaves identically wherever it is triggered.
