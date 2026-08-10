@@ -40,12 +40,19 @@ export function isUntintableSvg(svg: string): boolean {
  * Dominant ink of an SVG: the average luminance of every paint that isn't
  * `none` or transparent, weighted equally. Good enough to tell a navy mark
  * from a white one, which is the only call we need to make.
+ *
+ * Paints declared in `<style>` blocks and gradient `stop-color`s count too —
+ * plenty of exported artwork carries no `fill=` attribute at all. A shape that
+ * covers the whole viewBox is the artwork's own background, not its ink, so
+ * its paint is dropped before averaging.
  */
 export function svgInkHex(svg: string): string | null {
+  const source = stripBackgroundShapes(svg);
   const paints: string[] = [];
-  const re = /(?:fill|stroke)\s*[=:]\s*["']?\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]*\)|[a-zA-Z]+)/g;
+  const re =
+    /(?:fill|stroke|stop-color)\s*[=:]\s*["']?\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]*\)|[a-zA-Z]+)/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(svg))) {
+  while ((m = re.exec(source))) {
     const raw = m[1];
     if (/^(none|transparent|url|currentcolor|inherit)$/i.test(raw)) continue;
     const hex = normHex(raw);
@@ -66,6 +73,27 @@ export function svgInkHex(svg: string): string | null {
   const to = (v: number) => Math.round(v / n).toString(16).padStart(2, "0");
   return `#${to(r)}${to(g)}${to(b)}`;
 }
+
+/**
+ * Remove full-bleed rects (and a full-canvas circle) — the artwork's ground.
+ * Measuring them as ink is what makes a reversed mark look "dark" and a light
+ * mark look "white".
+ */
+export function stripBackgroundShapes(svg: string): string {
+  const vb = /viewBox\s*=\s*["']\s*([-\d.]+)[,\s]+([-\d.]+)[,\s]+([-\d.]+)[,\s]+([-\d.]+)/i.exec(svg);
+  const w = vb ? Number(vb[3]) : Number(/\bwidth\s*=\s*["']([\d.]+)/i.exec(svg)?.[1] ?? 0);
+  const h = vb ? Number(vb[4]) : Number(/\bheight\s*=\s*["']([\d.]+)/i.exec(svg)?.[1] ?? 0);
+  if (!(w > 0 && h > 0)) return svg;
+  return svg.replace(/<rect\b[^>]*\/?>/gi, (tag) => {
+    const num = (attr: string) => Number(/\s(?:width|height)\s*=/.test("") ? 0 : (new RegExp(`\\b${attr}\\s*=\\s*["']([-\\d.%]+)["']`, "i").exec(tag)?.[1] ?? "").replace("%", "") || NaN);
+    const rw = num("width");
+    const rh = num("height");
+    const pct = /width\s*=\s*["']\s*100%/i.test(tag) && /height\s*=\s*["']\s*100%/i.test(tag);
+    const covers = pct || (rw >= w * 0.98 && rh >= h * 0.98);
+    return covers ? "" : tag;
+  });
+}
+
 
 /** Average ink of a raster, ignoring transparent pixels. */
 export async function rasterInkHex(bytes: Uint8Array): Promise<string | null> {
