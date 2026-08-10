@@ -857,7 +857,16 @@ Deno.serve(async (req) => {
     const snap = ctx.snap;
     if (!snap) return new Response(JSON.stringify({ error: "Snapshot not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (internal) userId = snap.user_id;
-    if (snap.user_id !== userId) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (snap.user_id !== userId) {
+      // A super admin working inside a member's venture (without an explicit
+      // "view as" session) may act on the owner's behalf. Everyone else: 403.
+      const actorIsAdmin = await isAdminUser(supabase, userId);
+      if (!actorIsAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      console.log(`[admin-override] actor=${userId} acting_on_owner=${snap.user_id} snapshot=${snapshotId}`);
+      userId = snap.user_id;
+    }
 
     const { data: kit } = await supabase.from("venture_brand_kits").select("palette, typography, dna, logos, moodboard").eq("snapshot_id", snapshotId).maybeSingle();
     const tokens = {
