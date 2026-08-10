@@ -543,6 +543,8 @@ export async function generateOne(
     minImageryRows: 12,
     requireCopyDepth: isPrd,
     archetypeName: art?.archetype.name ?? null,
+    requireLogoCraft: isPrd && visionImages.length > 0,
+    brainFacts: factTokens,
   });
   if (!identity.ok) {
     console.warn("identity guard failed", documentType, identity);
@@ -557,7 +559,7 @@ export async function generateOne(
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
             { role: "assistant", content: raw.slice(0, 40_000) },
-            { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo, archetypeName: art?.archetype.name ?? null, minImageryRows: 12 }) },
+            { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo, archetypeName: art?.archetype.name ?? null, minImageryRows: 12, brainFacts: factTokens }) },
           ],
         }),
       }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: 0 });
@@ -572,6 +574,8 @@ export async function generateOne(
     minImageryRows: 12,
     requireCopyDepth: isPrd,
     archetypeName: art?.archetype.name ?? null,
+    requireLogoCraft: isPrd && visionImages.length > 0,
+    brainFacts: factTokens,
         });
         // Only accept the repair when it is both substantial and better.
         if (fixed.length > raw.length * 0.6 && (recheck.ok || (!recheck.nameMissing && identity.nameMissing))) {
