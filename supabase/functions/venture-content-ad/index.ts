@@ -16,6 +16,7 @@ import { buildContentAdSvgBytes, type PosterLayout } from "../_shared/content-ad
 import { buildPosterCopy, shortenHeadline } from "../_shared/poster-copy.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
+import { replaceSupersededAssets } from "../_shared/replace-asset.ts";
 import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
 import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
 import { ensureCampaignCard, deriveCampaignCard, layoutForIndex, type CampaignCard } from "../_shared/campaign-card.ts";
@@ -842,8 +843,26 @@ Deno.serve(async (req) => {
       .single();
     if (insErr) throw insErr;
 
-    step("done");
-    return json({ ad: row });
+    // Regenerate means replace: drop every earlier ad in this (post, aspect) slot.
+    const superseded = await replaceSupersededAssets({
+      admin,
+      bucket: BUCKET,
+      table: "venture_content_ads",
+      match: { snapshot_id: snapshotId, post_id: postId, aspect },
+      keepId: row.id,
+    });
+    let finalRow = row;
+    if (superseded.wasSelected) {
+      const { data: reselected } = await admin
+        .from("venture_content_ads")
+        .update({ is_selected: true })
+        .eq("id", row.id)
+        .select()
+        .single();
+      if (reselected) finalRow = reselected;
+    }
+    step("done", { superseded: superseded.removed });
+    return json({ ad: finalRow });
   } catch (e: any) {
     console.error(`[content-ad ${reqId}] +${Date.now() - startedAt}ms FAILED`, {
       name: e?.name,

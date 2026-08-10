@@ -21,6 +21,7 @@ import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
 import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
+import { replaceSupersededAssets } from "../_shared/replace-asset.ts";
 import { compositeHeadline, type AdAspect } from "../_shared/headline-compositor.ts";
 import { PNG } from "npm:pngjs@7.0.0";
 
@@ -738,7 +739,26 @@ Deno.serve(async (req) => {
       .single();
     if (insErr) throw insErr;
 
-    return json({ asset: row });
+    // Regenerate means replace: drop every earlier cover in this slot.
+    const superseded = await replaceSupersededAssets({
+      admin,
+      bucket: BUCKET,
+      table: "venture_social_assets",
+      match: { snapshot_id: snapshotId, platform: platform.platform, asset_kind: asset.kind },
+      keepId: row.id,
+    });
+    let finalRow = row;
+    if (superseded.wasSelected) {
+      const { data: reselected } = await admin
+        .from("venture_social_assets")
+        .update({ is_selected: true })
+        .eq("id", row.id)
+        .select()
+        .single();
+      if (reselected) finalRow = reselected;
+    }
+
+    return json({ asset: finalRow });
   } catch (e) {
     console.error("venture-social-cover error", e);
     return json({ error: (e as Error).message ?? "Internal error" }, 500);
