@@ -1066,6 +1066,20 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const jobPaused = job?.status === "paused";
   const jobNeedsAttention = jobPaused || jobStalled;
 
+  // Self-heal first, ask second: the first time we notice a dropped run we
+  // quietly pick it back up. The founder only ever sees a decision to make if
+  // that automatic attempt also fails.
+  const autoResumedRef = useRef<Set<string>>(new Set());
+  const [autoResuming, setAutoResuming] = useState(false);
+  useEffect(() => {
+    if (!jobNeedsAttention || !job?.id) return;
+    if (autoResumedRef.current.has(job.id)) return;
+    autoResumedRef.current.add(job.id);
+    setAutoResuming(true);
+    bulk.mutateAsync({ retryOnly: true }).catch(() => {}).finally(() => setAutoResuming(false));
+  }, [jobNeedsAttention, job?.id]);
+
+
 
 
   useEffect(() => {
