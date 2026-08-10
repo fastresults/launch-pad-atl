@@ -394,7 +394,7 @@ Deno.serve(async (req) => {
             images,
           });
         }
-      }
+
 
         // The portable style system is text, not artwork — it reads as a
         // document and carries its own download links.
