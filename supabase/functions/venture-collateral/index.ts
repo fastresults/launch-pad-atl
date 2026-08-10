@@ -421,6 +421,7 @@ async function generateKind(
       archetype: ctx.ad.archetype,
       qc: verdict,
     });
+    wrote.push(p.name);
 
     if (bytes) {
       await store(admin, snapshotId, userId, kind, `${p.name}-preview`, bytes, "image/png", p.width, p.height, {
@@ -428,6 +429,7 @@ async function generateKind(
         archetype: ctx.ad.archetype,
         qc: verdict,
       });
+      wrote.push(`${p.name}-preview`);
       bytes = null as unknown as Uint8Array;
     }
 
@@ -436,9 +438,12 @@ async function generateKind(
 
   if (kind === "email_signature") {
     await store(admin, snapshotId, userId, kind, "email-signature-html", signatureHtml(ctx), "text/html", null, null);
+    wrote.push("email-signature-html");
   }
+  await sweepKind(admin, snapshotId, kind, wrote);
   return { kind, files: count, qc: verdicts };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
