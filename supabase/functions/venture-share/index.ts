@@ -223,6 +223,15 @@ Deno.serve(async (req) => {
     const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
     const primaryLogo = logos.find((l) => l?.primary) ?? logos[0] ?? null;
     const logoUrl = primaryLogo ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}` : null;
+    // Surface-aware marks. The endpoint measures the stored variants' own ink
+    // and returns the one that clears contrast on the requested ground, so a
+    // navy wordmark never lands on a navy hero again.
+    const logoUrlOnDark = primaryLogo
+      ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto?on=dark`
+      : null;
+    const logoUrlOnLight = primaryLogo
+      ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto?on=light`
+      : null;
 
     const paletteColors: Record<string, string> =
       (kit?.palette?.colors && typeof kit.palette.colors === "object" ? kit.palette.colors : {}) as any;
