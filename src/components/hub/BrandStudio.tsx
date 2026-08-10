@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Palette, Sparkles, Lock, RotateCcw, RefreshCw, Loader2, Eye } from "lucide-react";
-import { getBrandKit, resetBrandKit, upsertBrandKit } from "@/lib/brandKit.functions";
+import { getBrandKit, resetBrandKit, upsertBrandKit, generateStyleGuide } from "@/lib/brandKit.functions";
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
 import { BrandIdentityHeader } from "@/components/hub/brand/BrandIdentityHeader";
 import { BrandCollateral } from "@/components/hub/brand/BrandCollateral";
@@ -40,6 +40,20 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
 
 
 
+  const lockBlockedReason = (() => {
+    const missing = [!kit?.palette && "a palette", !kit?.typography && "typography"].filter(Boolean) as string[];
+    return missing.length ? `Pick ${missing.join(" and ")} in the wizard first` : null;
+  })();
+
+  const lockKit = useMutation({
+    mutationFn: () => generateStyleGuide(snapshot.id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      toast.success("Brand kit locked — style guide generated");
+    },
+    onError: (e: any) => toast.error(e.message || "Lock failed"),
+  });
+
   const reset = useMutation({
     mutationFn: () => resetBrandKit(snapshot.id),
     onSuccess: () => {
@@ -48,6 +62,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
     },
     onError: (e: any) => toast.error(e.message || "Reset failed"),
   });
+
 
   const onReset = async () => {
     const description = locked
@@ -94,12 +109,24 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
                 <RotateCcw className="mr-1 h-3 w-3" />Reset
               </Button>
             )}
-            <Button size="sm" onClick={() => setOpen(true)}>
+            <Button size="sm" variant={kit && !locked ? "outline" : "default"} onClick={() => setOpen(true)}>
               <Sparkles className="mr-1 h-3 w-3" />
               {kit ? (locked ? "Edit brand" : "Resume wizard") : "Start brand wizard"}
             </Button>
+            {kit && !locked && (
+              <Button
+                size="sm"
+                onClick={() => (lockBlockedReason ? setOpen(true) : lockKit.mutate())}
+                disabled={lockKit.isPending}
+                title={lockBlockedReason ?? "Lock the brand kit and write the style guide"}
+              >
+                {lockKit.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Lock className="mr-1 h-3 w-3" />}
+                {lockKit.isPending ? "Locking…" : "Lock brand kit"}
+              </Button>
+            )}
           </>
         }
+
       />
       {expanded && (
         <div id="brand-studio-panel-body" className="space-y-6 rounded-2xl border border-white/10 bg-card p-5">
