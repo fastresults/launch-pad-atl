@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import type { ShareItem } from "@/lib/venture-share.functions";
+import type { ShareItem, ShareImage } from "@/lib/venture-share.functions";
 import { MarkdownProse } from "@/components/markdown/MarkdownProse";
 import { ShareBrandBoard } from "@/components/share/ShareBrandBoard";
 import { ExecutiveMetrics } from "@/components/share/ExecutiveMetrics";
@@ -12,7 +12,7 @@ import type { TimelineScenario } from "@/lib/venture-timeline";
 import { filterShowcaseContent } from "@/lib/share-content-filter";
 
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ImagePreviewDialog } from "@/components/share/ImagePreviewDialog";
 
 
 /**
@@ -62,7 +62,7 @@ export function ShareSection({
   /** Discreet Word / PDF / Drive export control for this section. */
   exportSlot?: ReactNode;
 }) {
-  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<ShareImage | null>(null);
 
 
   return (
@@ -140,7 +140,7 @@ export function ShareSection({
             <button
               key={`${img.url}-${i}`}
               type="button"
-              onClick={() => setLightbox(img.url)}
+              onClick={() => setLightbox(img)}
               className="group overflow-hidden rounded-2xl border border-border/60 bg-muted/20 text-left transition-colors hover:border-primary/50"
             >
               <img
@@ -162,13 +162,7 @@ export function ShareSection({
       {item.body && <MarkdownProse>{filterShowcaseContent(item.body)}</MarkdownProse>}
 
 
-      <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
-        <DialogContent className="theme-dark-scope max-w-5xl border-border/60 bg-background p-2">
-          {lightbox && (
-            <img src={lightbox} alt={item.title} className="max-h-[80vh] w-full rounded-xl object-contain" />
-          )}
-        </DialogContent>
-      </Dialog>
+      <ImagePreviewDialog image={lightbox} fallbackTitle={item.title} onClose={() => setLightbox(null)} />
     </section>
   );
 }
