@@ -1542,7 +1542,12 @@ function Step6Launch({
       <div className="grid gap-3 md:grid-cols-2">
         {platforms.map((p) => {
           const avatar = assets.find((a: any) => a.platform === p && a.asset_kind === "avatar");
-          const cover = assets.find((a: any) => a.platform === p && ["banner","header","channel_art"].includes(a.asset_kind));
+          const coverKind = coverKindFor(p, PLATFORM_SPECS as any);
+          const coverLabel = coverLabelFor(p, PLATFORM_SPECS as any);
+          const cover = coverKind
+            ? assets.find((a: any) => a.platform === p && a.asset_kind === coverKind)
+            : undefined;
+
           const live = !!launchStatus[p]?.live;
           const firstPost = extractFirstPost(launchMd, p);
           return (
