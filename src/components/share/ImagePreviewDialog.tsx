@@ -107,15 +107,13 @@ export function ImagePreviewDialog({
 
             <div className="flex min-w-0 flex-col gap-4 border-t border-border/60 p-5 md:max-h-[92vh] md:overflow-y-auto md:border-l md:border-t-0">
               <div>
-                {(meta?.platform || meta?.week || meta?.day) && (
+                {preview.eyebrow && (
                   <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-                    {[meta?.platform, meta?.week ? `Week ${meta.week}` : null, meta?.day, meta?.aspect]
-                      .filter(Boolean)
-                      .join(" · ")}
+                    {preview.eyebrow}
                   </p>
                 )}
-                <h3 className="font-serif text-[22px] leading-tight text-foreground">{headline ?? fallbackTitle}</h3>
-                {meta?.pillar && <p className="mt-1 text-xs text-muted-foreground">{meta.pillar}</p>}
+                <h3 className="font-serif text-[22px] leading-tight text-foreground">{preview.headline}</h3>
+                {preview.pillar && <p className="mt-1 text-xs text-muted-foreground">{preview.pillar}</p>}
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -125,8 +123,8 @@ export function ImagePreviewDialog({
                 <Button size="sm" variant="secondary" onClick={print}>
                   <Printer className="mr-1.5 h-3.5 w-3.5" /> Print
                 </Button>
-                {fullCaption && (
-                  <Button size="sm" variant="secondary" onClick={() => copyText("all", fullCaption)}>
+                {!!preview.caption && (
+                  <Button size="sm" variant="secondary" onClick={() => copyText("all", preview.caption)}>
                     {copied === "all" ? <Check className="mr-1.5 h-3.5 w-3.5" /> : <Copy className="mr-1.5 h-3.5 w-3.5" />}
                     {copied === "all" ? "Copied" : "Copy caption"}
                   </Button>
@@ -137,17 +135,16 @@ export function ImagePreviewDialog({
               </div>
 
               <div className="space-y-3">
-                {headline && <CopyRow id="headline" label="Headline" text={headline} />}
-                {meta?.hook && meta.hook !== headline && <CopyRow id="hook" label="Hook" text={meta.hook} />}
-                {meta?.body && <CopyRow id="body" label="Post copy" text={meta.body} />}
-                {meta?.cta && <CopyRow id="cta" label="Call to action" text={meta.cta} />}
-                {hashtags && <CopyRow id="tags" label="Hashtags" text={hashtags} />}
-                {!headline && !meta?.body && (
+                {preview.fields.map((f) => (
+                  <CopyRow key={f.id} id={f.id} label={f.label} text={f.text} />
+                ))}
+                {preview.artworkOnly && (
                   <p className="text-sm text-muted-foreground">
                     This asset ships as artwork only — no post copy is attached.
                   </p>
                 )}
               </div>
+
 
               {(image.width || image.height) && (
                 <p className="mt-auto pt-2 text-[11px] text-muted-foreground">
