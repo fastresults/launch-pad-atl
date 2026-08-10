@@ -285,6 +285,8 @@ No prose outside the JSON.`;
     const siblings = (args.siblingHooks ?? []).filter(Boolean).slice(0, 6);
     const taxonomy = (args.kickerTaxonomy ?? []).filter(Boolean).slice(0, 6);
     const used = (args.usedClaims ?? []).filter(Boolean).slice(0, 10);
+    const written = (args.siblingHeadlines ?? []).filter(Boolean).slice(0, 6);
+
     const stage = args.stage ?? null;
     const rung = args.ctaRung ?? null;
     const user = `Brand: ${args.brandName ?? "(unnamed)"}
