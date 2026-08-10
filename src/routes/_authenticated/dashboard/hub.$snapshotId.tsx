@@ -1042,6 +1042,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   ).filter((t: any) => !notApplicableKeys.has(t.type));
 
   const completedKeys = new Set(docs.filter((d) => d.status === "complete").map((d) => d.document_type));
+  const settledKeys = new Set([...completedKeys, ...notApplicableKeys]);
   const completeCount = new Set(
     docs
       .filter((d) => d.status === "complete")
@@ -1135,10 +1136,11 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   // Per-category progress
   const categoryProgress = useMemo(() => {
     return categories.map(([cat, items]) => {
-      const done = items.filter((t: any) => completedKeys.has(t.type)).length;
-      return { cat, total: items.length, done, complete: done === items.length };
-    });
-  }, [categories, completedKeys]);
+      const requiredItems = items.filter((t: any) => requiredTypes.some((required: any) => required.type === t.type));
+      const done = requiredItems.filter((t: any) => settledKeys.has(t.type)).length;
+      return { cat, total: requiredItems.length, done, complete: done === requiredItems.length };
+    }).filter((category) => category.total > 0);
+  }, [categories, requiredTypes, settledKeys]);
 
   const nextCategory = categoryProgress.find((c) => !c.complete) ?? null;
 
@@ -1200,7 +1202,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     if (job?.id) {
       heroSecondary = { label: job.cancel_requested ? "Stopping…" : "Stop", onClick: () => cancel.mutate(job.id) };
     }
-  } else if (!nextCategory) {
+  } else if (!nextCategory || completeCount >= total) {
     heroTitle = "Your startup kit is ready";
     heroSub = `All ${total} assets are ready. Open any one below to read or download.`;
     heroDone = true;
