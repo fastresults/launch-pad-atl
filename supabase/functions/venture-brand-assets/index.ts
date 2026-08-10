@@ -869,6 +869,45 @@ Deno.serve(async (req) => {
     const n = Math.max(1, Math.min(4, count ?? preset.defaultCount));
     const results: any[] = [];
 
+    // Commit a batched mood board run. Regenerate means replace: the previous
+    // board's storage objects and media rows are only deleted once the fresh
+    // tiles are safely written.
+    if (kind === "moodboard_commit") {
+      const nextTiles = (Array.isArray(tiles) ? tiles : [])
+        .filter((t: any) => t?.url && t?.path)
+        .map((t: any) => ({ url: t.url, path: t.path }))
+        .slice(0, 9);
+      if (!nextTiles.length) throw new Error("No mood board tiles to commit");
+
+      const existing = Array.isArray((kit as any)?.moodboard) ? (kit as any).moodboard : [];
+      const keep = new Set(nextTiles.map((t: any) => t.path));
+      const board = replace ? nextTiles : [...nextTiles, ...existing].slice(0, 9);
+
+      const { error: updErr } = await supabase
+        .from("venture_brand_kits")
+        .update({ moodboard: board })
+        .eq("snapshot_id", snapshotId);
+      if (updErr) throw updErr;
+
+      let removed = 0;
+      if (replace) {
+        const stalePaths = existing
+          .map((t: any) => t?.path)
+          .filter((p: any) => typeof p === "string" && p && !keep.has(p));
+        if (stalePaths.length) {
+          try { await supabase.storage.from("user-media").remove(stalePaths); } catch { /* non-fatal */ }
+          try { await supabase.from("media_assets").delete().in("storage_path", stalePaths); } catch { /* non-fatal */ }
+          removed = stalePaths.length;
+        }
+      }
+
+      return new Response(JSON.stringify({ ok: true, kind, moodboard: board, removed }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
+
     const getRun = async (id?: string) => {
       let query = supabase.from("brand_logo_runs").select("*").eq("snapshot_id", snapshotId);
       query = id ? query.eq("id", id) : query.order("created_at", { ascending: false }).limit(1);
