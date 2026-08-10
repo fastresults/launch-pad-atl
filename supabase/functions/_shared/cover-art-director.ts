@@ -41,7 +41,9 @@ HARD BANS (any of these = failure, regenerate without it):
 - If the final image, viewed at 240px thumbnail size, could be mistaken for grayscale or for a 2-color black-and-white render, it is a failure.
 - Any visible border, outline, frame, rule, hairline, stroke, or divider around the logo landing area — or anywhere else on the canvas. The logo sits directly on the composition with no container, no chip, no plate, no card, no bracket marks.
 - Any rectangular tonal panel, ghosted box, faint fill, drop shadow, gradient edge, or "placeholder" shape in the logo corner. Treat that area as unmarked negative space that continues the surrounding composition — no window cut out for it.
+- ANY white or light margin, mat, framed border, letterbox bar, pillarbox band, rounded-corner card, or padding around the artwork. The image is FULL BLEED: the surface color and the composition run to all four edges of the canvas. An edge strip of flat white/near-white is an automatic failure.
 `;
+
 
 
 const QUALITY = `
