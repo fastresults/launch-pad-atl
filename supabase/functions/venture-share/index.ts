@@ -58,7 +58,17 @@ type Item = {
   subtitle?: string | null;
   body?: string | null;
   heroImageUrl?: string | null;
-  images?: { url: string; label?: string | null; width?: number | null; height?: number | null }[];
+  images?: {
+    url: string; label?: string | null; width?: number | null; height?: number | null;
+    /** Everything the preview modal needs to show the copy that ships with the image. */
+    meta?: {
+      platform?: string | null; day?: string | null; week?: number | null;
+      pillar?: string | null; aspect?: string | null;
+      headline?: string | null; hook?: string | null; body?: string | null;
+      cta?: string | null; hashtags?: string[] | null;
+      assetKind?: string | null; filename?: string | null;
+    } | null;
+  }[];
   brandBoard?: {
     paletteName?: string | null;
     swatches: { label: string; hex: string }[];
@@ -329,7 +339,10 @@ Deno.serve(async (req) => {
         const images = [];
         for (const c of collateral) {
           const url = await sign(BUCKET, c.storage_path);
-          if (url) images.push({ url, label: c.name ?? c.kind, width: c.width, height: c.height });
+          if (url) images.push({
+            url, label: c.name ?? c.kind, width: c.width, height: c.height,
+            meta: { assetKind: c.kind ?? null, filename: `${c.name ?? c.kind ?? "collateral"}` },
+          });
         }
         if (images.length) {
           push("Brand", {
@@ -349,7 +362,10 @@ Deno.serve(async (req) => {
       const images = [];
       for (const s of socialAssets) {
         const url = await sign(BUCKET, s.storage_path);
-        if (url) images.push({ url, label: `${s.platform} · ${s.asset_kind}`, width: s.width, height: s.height });
+        if (url) images.push({
+          url, label: `${s.platform} · ${s.asset_kind}`, width: s.width, height: s.height,
+          meta: { platform: s.platform ?? null, assetKind: s.asset_kind ?? null, filename: `${s.platform}-${s.asset_kind}` },
+        });
       }
       if (images.length) {
         push("Social & Content", {
@@ -386,6 +402,19 @@ Deno.serve(async (req) => {
             label: a.last_headline ?? p?.hook ?? p?.platform ?? null,
             width: a.width,
             height: a.height,
+            meta: {
+              platform: p?.platform ?? null,
+              day: p?.day ?? null,
+              week: p?.week ?? week,
+              pillar: p?.pillar ?? null,
+              aspect: a.aspect ?? null,
+              headline: a.last_headline ?? null,
+              hook: p?.hook ?? null,
+              body: p?.body ?? null,
+              cta: p?.cta ?? null,
+              hashtags: Array.isArray(p?.hashtags) ? p.hashtags : null,
+              filename: `${p?.platform ?? "post"}-week-${p?.week ?? week}-${(a.aspect ?? "1x1").replace(":", "x")}`,
+            },
           });
         }
         if (!images.length) continue;
