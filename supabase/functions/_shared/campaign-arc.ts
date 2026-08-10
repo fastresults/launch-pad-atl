@@ -50,6 +50,8 @@ export type ArcWeek = {
 };
 
 export type CampaignArc = {
+  version: number;
+  input_fingerprint: string;
   weeks: ArcWeek[];
   /** Every distinct angle in the flight, in the order they are spent. */
   angle_ledger: string[];
@@ -58,6 +60,24 @@ export type CampaignArc = {
   derived_at?: string;
   source?: "ai" | "default";
 };
+
+export const CAMPAIGN_ARC_VERSION = 2;
+
+export function campaignInputFingerprint(
+  weekNumbers: number[],
+  posts: { week?: number | null; pillar?: string | null; format?: string | null; platform?: string | null; hook?: string | null }[],
+): string {
+  const source = JSON.stringify({
+    weeks: [...weekNumbers].sort((a, b) => a - b),
+    posts: posts.map((p) => [p.week, p.pillar, p.format, p.platform, p.hook]).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
+  });
+  let hash = 2166136261;
+  for (let i = 0; i < source.length; i += 1) {
+    hash ^= source.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `v${CAMPAIGN_ARC_VERSION}-${(hash >>> 0).toString(36)}`;
+}
 
 export const STAGE_ORDER: { stage: ArcStage; label: string; job: string; rung: CtaRung; temp: "cold" | "warm" | "hot" }[] = [
   { stage: "disrupt", label: "Disrupt", job: "Name the expensive belief the buyer holds", rung: "none", temp: "cold" },
@@ -91,7 +111,8 @@ function asRung(v: unknown, fallback: CtaRung): CtaRung {
 }
 
 export function isUsableArc(a: any): a is CampaignArc {
-  return !!a && Array.isArray(a.weeks) && a.weeks.length > 0 && typeof a.weeks[0]?.stage === "string";
+  return !!a && a.version === CAMPAIGN_ARC_VERSION && typeof a.input_fingerprint === "string"
+    && Array.isArray(a.weeks) && a.weeks.length > 0 && typeof a.weeks[0]?.stage === "string";
 }
 
 /**
@@ -124,7 +145,7 @@ export function approachForIndex(index: number): AdApproach {
 }
 
 /** A stage arc that works without an AI call — the shape is always right. */
-export function defaultCampaignArc(weekNumbers: number[]): CampaignArc {
+export function defaultCampaignArc(weekNumbers: number[], inputFingerprint = "default"): CampaignArc {
   const weeks = weekNumbers.map((w, i) => {
     const s = stageForPosition(i);
 
@@ -143,6 +164,8 @@ export function defaultCampaignArc(weekNumbers: number[]): CampaignArc {
     } as ArcWeek;
   });
   return {
+    version: CAMPAIGN_ARC_VERSION,
+    input_fingerprint: inputFingerprint,
     weeks,
     angle_ledger: [],
     offer: { name: "", terms: "", ask: "" },
@@ -151,8 +174,8 @@ export function defaultCampaignArc(weekNumbers: number[]): CampaignArc {
   };
 }
 
-function normalize(raw: any, weekNumbers: number[]): CampaignArc {
-  const base = defaultCampaignArc(weekNumbers);
+export function normalizeCampaignArc(raw: any, weekNumbers: number[], inputFingerprint: string): CampaignArc {
+  const base = defaultCampaignArc(weekNumbers, inputFingerprint);
   const byWeek = new Map<number, any>();
   for (const w of Array.isArray(raw?.weeks) ? raw.weeks : []) {
     const n = Number(w?.week);
@@ -186,6 +209,8 @@ function normalize(raw: any, weekNumbers: number[]): CampaignArc {
     } as ArcWeek;
   });
   return {
+    version: CAMPAIGN_ARC_VERSION,
+    input_fingerprint: inputFingerprint,
     weeks,
     angle_ledger: (Array.isArray(raw?.angle_ledger) ? raw.angle_ledger : [])
       .map((a: any) => tidy(a, 160))
@@ -214,6 +239,7 @@ export async function deriveCampaignArc(args: {
   if (!key) return null;
   const weeks = args.weekNumbers.slice(0, 12);
   if (!weeks.length) return null;
+  const inputFingerprint = campaignInputFingerprint(weeks, args.posts);
 
   // The stage of each week is assigned here, positionally, and given to the
   // model as a fixed brief. Letting it choose produced stacked urgency weeks.
@@ -282,7 +308,7 @@ ${assignment}`;
     }
     const json = await res.json();
     const parsed = JSON.parse(json?.choices?.[0]?.message?.content ?? "");
-    return normalize(parsed, weeks);
+    return normalizeCampaignArc(parsed, weeks, inputFingerprint);
   } catch (e) {
     console.warn("[campaign-arc] derive failed", e);
     return null;
@@ -298,7 +324,7 @@ export async function ensureCampaignArc(
   snapshotId: string,
   weekNumbers: number[],
   build: () => Promise<CampaignArc | null>,
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; inputFingerprint?: string } = {},
 ): Promise<CampaignArc | null> {
   if (!snapshotId) return null;
   try {
@@ -310,13 +336,16 @@ export async function ensureCampaignArc(
     const cached = data?.campaign_arc;
     if (!opts.force && isUsableArc(cached)) {
       const known = new Set((cached as CampaignArc).weeks.map((w) => w.week));
-      if (weekNumbers.every((w) => known.has(w))) return cached as CampaignArc;
+      if (weekNumbers.every((w) => known.has(w)) && (!opts.inputFingerprint || cached.input_fingerprint === opts.inputFingerprint)) {
+        // Re-normalize cached content so positional stage rules are applied on every read.
+        return normalizeCampaignArc(cached, weekNumbers, cached.input_fingerprint);
+      }
     }
   } catch (e) {
     console.warn("[campaign-arc] cache read failed", e);
   }
 
-  const arc = (await build()) ?? defaultCampaignArc(weekNumbers);
+  const arc = (await build()) ?? defaultCampaignArc(weekNumbers, opts.inputFingerprint);
   try {
     await admin
       .from("venture_content_progress")

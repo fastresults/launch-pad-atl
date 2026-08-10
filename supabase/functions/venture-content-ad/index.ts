@@ -20,7 +20,7 @@ import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts
 import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
 import { ensureCampaignCard, deriveCampaignCard, layoutForIndex, type CampaignCard } from "../_shared/campaign-card.ts";
 import {
-  ensureCampaignArc, deriveCampaignArc, weekCard, claimsBefore, CTA_RUNG_BRIEF,
+  ensureCampaignArc, deriveCampaignArc, weekCard, claimsBefore, CTA_RUNG_BRIEF, campaignInputFingerprint,
   approachForIndex, APPROACH_BRIEF,
   type CampaignArc,
 } from "../_shared/campaign-arc.ts";
@@ -355,6 +355,7 @@ Deno.serve(async (req) => {
       const weekNumbers = Array.from(
         new Set([...(allPosts ?? []).map((p: any) => Number(p.week)).filter(Number.isFinite), weekNo]),
       ).sort((a, b) => a - b);
+      const inputFingerprint = campaignInputFingerprint(weekNumbers, allPosts ?? []);
       arc = await ensureCampaignArc(
         admin,
         snapshotId,
@@ -367,7 +368,7 @@ Deno.serve(async (req) => {
           valueProp: ctx?.value_proposition ?? null,
           customer: ctx?.customer ?? null,
         }),
-        { force: body?.refreshArc === true },
+        { force: body?.refreshArc === true, inputFingerprint },
       );
     } catch (e) {
       console.warn("[content-ad] campaign arc unavailable", e);
@@ -413,6 +414,7 @@ Deno.serve(async (req) => {
 
     // Headlines already written for this week — never paraphrase them.
     let siblingHeadlines: string[] = [];
+    let campaignHeadlines: string[] = [];
     try {
       const otherIds = weekPosts.map((p: any) => p.id).filter((id: string) => id && id !== post.id);
       if (otherIds.length) {
@@ -425,6 +427,15 @@ Deno.serve(async (req) => {
           new Set((siblingAds ?? []).map((a: any) => String(a.last_headline ?? "").trim()).filter(Boolean)),
         ).slice(0, 6);
       }
+      const { data: campaignAds } = await admin
+        .from("venture_content_ads")
+        .select("post_id,last_headline,updated_at")
+        .eq("snapshot_id", snapshotId)
+        .neq("post_id", post.id)
+        .not("last_headline", "is", null)
+        .order("updated_at", { ascending: false })
+        .limit(240);
+      campaignHeadlines = Array.from(new Set((campaignAds ?? []).map((a: any) => String(a.last_headline ?? "").trim()).filter(Boolean)));
     } catch (e) {
       console.warn("[content-ad] sibling headlines unavailable", e);
     }
@@ -675,6 +686,7 @@ Deno.serve(async (req) => {
       proof: arcWeek?.proof || null,
       approach,
       siblingHeadlines,
+      campaignHeadlines,
 
       ctaRung: arcWeek
         ? {
@@ -701,6 +713,15 @@ Deno.serve(async (req) => {
       issue: posterCopy.headlineIssue ?? null,
       rationale: posterCopy.rationale ?? null,
     });
+    if (posterCopy.blocked) {
+      step("copy blocked", { conflict: posterCopy.repeatsClaim ?? null, reason: posterCopy.conflictReason ?? null });
+      return json({
+        error: `Headline conflicts with an existing campaign line: ${posterCopy.repeatsClaim ?? "duplicate campaign claim"}`,
+        code: "COPY_DUPLICATE_BLOCKED",
+        conflict: posterCopy.repeatsClaim ?? null,
+        reason: posterCopy.conflictReason ?? null,
+      }, 409);
+    }
 
 
     const headlineComposited = !!posterCopy.headline;
