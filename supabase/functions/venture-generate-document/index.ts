@@ -308,7 +308,13 @@ export async function generateOne(
   // Build the user prompt. If we have a brain, use the sliced brain JSON
   // instead of dumping raw extracted_data + research_brief. Saves ~70% of
   // the previous prompt size and eliminates signal dilution.
-  const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
+  //
+  // The Website PRD is the exception: a site brief needs the WHOLE venture —
+  // offer, pricing, segments, objections, proof, financials, voice, geography,
+  // founder story — so it gets the full brain rather than a keyed slice.
+  const brainSlice = isPrd
+    ? (ctx.brain ?? pickBrainSlice(ctx.brain, type.context_keys ?? null))
+    : pickBrainSlice(ctx.brain, type.context_keys ?? null);
   const preamble = compactPreamble(ctx, { hasBrandKit: !!brandKit });
 
   const brandBlock = brandKitBlock(brandKit, snapshotId);
@@ -316,19 +322,62 @@ export async function generateOne(
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
 
   // Ground the document in the founder's Second Brain corpus (uploaded
-  // materials + notes), retrieved for this specific deliverable.
+  // materials + notes), retrieved for this specific deliverable. The PRD runs
+  // a multi-query retrieval so audience, offer, proof and technical evidence
+  // all make it in rather than whichever topic happened to rank highest.
   let corpusBlock = "";
   try {
-    corpusBlock = await brainCorpusBlock(
-      supabase,
-      ctx.userId,
-      snapshotId,
-      [type.name, type.description ?? "", snap.concept_summary ?? ""].filter(Boolean).join(" \u2014 "),
-      10,
-    );
+    if (isPrd) {
+      const concept = snap.concept_summary ?? "";
+      const res = await brainCorpusBlockMulti(
+        supabase,
+        ctx.userId,
+        snapshotId,
+        [
+          `target audience, segments and objections — ${concept}`,
+          `offer, packaging and pricing — ${concept}`,
+          `proof, testimonials, credentials and results — ${concept}`,
+          `brand voice, story and founder background — ${concept}`,
+          `operations, logistics and technical requirements — ${concept}`,
+        ],
+        8,
+        40,
+      );
+      corpusBlock = res.block;
+    } else {
+      corpusBlock = await brainCorpusBlock(
+        supabase,
+        ctx.userId,
+        snapshotId,
+        [type.name, type.description ?? "", snap.concept_summary ?? ""].filter(Boolean).join(" \u2014 "),
+        10,
+      );
+    }
   } catch (e) {
     console.warn("brain corpus retrieval failed", e);
   }
+
+  // Distinctive facts the PRD copy has to echo (checked after generation).
+  const factTokens = isPrd
+    ? brainFactTokens(ctx.brain ?? snap.extracted_data ?? null, {
+      concept: snap.concept_summary,
+      value: snap.value_proposition,
+      brief: snap.research_brief,
+    })
+    : [];
+
+  // The real artwork, as images — so the art direction is read off the mark
+  // instead of inferred from hex strings.
+  let visionImages: Awaited<ReturnType<typeof collectBrandVisionImages>> = [];
+  if (isPrd && phase !== "refine") {
+    try {
+      visionImages = await collectBrandVisionImages(brandKit as Record<string, any> | null);
+    } catch (e) {
+      console.warn("brand vision collection failed", e);
+    }
+  }
+  const visionBlock = brandVisionInstruction(visionImages);
+
 
   const userPrompt = [
     `# Document to produce: ${type.name}`,
