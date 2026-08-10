@@ -1123,6 +1123,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
   const qc = useQueryClient();
   const websitePrd = useWebsitePrd(snapshot.id, kit?.locked_at ?? null);
+  const reviewMood = useMoodboard(snapshot.id);
   const [voice, setVoice] = useState<any>(kit?.voice ?? {
     attributes: { formal: 50, warm: 50, witty: 50, expert: 50 },
     rules: "",
