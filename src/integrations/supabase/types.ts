@@ -41,6 +41,53 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_capacity_notices: {
+        Row: {
+          context_label: string | null
+          created_at: string
+          error_code: string | null
+          id: string
+          note: string | null
+          providers: string[]
+          resolved_at: string | null
+          snapshot_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          context_label?: string | null
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          note?: string | null
+          providers?: string[]
+          resolved_at?: string | null
+          snapshot_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          context_label?: string | null
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          note?: string | null
+          providers?: string[]
+          resolved_at?: string | null
+          snapshot_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_capacity_notices_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_pipeline_runs: {
         Row: {
           created_at: string
