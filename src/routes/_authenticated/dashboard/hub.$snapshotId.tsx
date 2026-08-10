@@ -1166,14 +1166,21 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   let heroShowProgress = false;
   let heroDone = false;
 
-  if (jobNeedsAttention) {
-    heroTitle = "Paused — one asset needs another go";
+  if (jobNeedsAttention && (autoResuming || bulk.isPending)) {
+    // Self-healing: don't hand the founder a problem we're already solving.
+    heroTitle = "Picking your last asset back up…";
     heroSub = currentDocLabel
-      ? `${currentDocLabel} stopped part-way through. Resume it, or skip it and keep the rest of your kit moving.`
-      : "This run stopped part-way through. Resume it, or skip the stuck asset and keep going.";
+      ? `${currentDocLabel} took longer than expected, so we're running it again. Nothing else is affected.`
+      : "One asset took longer than expected, so we're running it again.";
+    heroShowProgress = true;
+  } else if (jobNeedsAttention) {
+    heroTitle = "One asset needs another go";
+    heroSub = currentDocLabel
+      ? `Everything else is written. ${currentDocLabel} didn't finish — try it again, or skip it and keep your kit moving.`
+      : "Everything else is written. One asset didn't finish — try it again, or skip it.";
     heroShowProgress = true;
     heroPrimary = {
-      label: "Resume",
+      label: "Try again",
       onClick: () => bulk.mutate({ retryOnly: true }),
       disabled: bulk.isPending,
       loading: bulk.isPending,
