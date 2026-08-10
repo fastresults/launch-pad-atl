@@ -584,13 +584,36 @@ Deno.serve(async (req) => {
       ? rawWebsite.replace(/^https?:\/\//i, "").replace(/\/+$/, "").trim() || null
       : null;
 
+    // Owner controls. A share link is public, but when the founder (or an admin)
+    // opens their own link while signed in we let them delete or regenerate the
+    // assets in place instead of hunting for them back in the hub.
+    let canManage = false;
+    try {
+      const jwt = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+      if (jwt) {
+        const { data: u } = await admin.auth.getUser(jwt);
+        const uid = u?.user?.id;
+        if (uid) {
+          if (uid === snap.user_id) canManage = true;
+          else {
+            const { data: isAdmin } = await admin.rpc("is_admin", { _user_id: uid });
+            canManage = !!isAdmin;
+          }
+        }
+      }
+    } catch { /* anonymous viewers just read */ }
+
     return json({
+      canManage,
+      snapshotId: canManage ? snapshotId : null,
       venture: {
         name: snap.company_name ?? "Untitled venture",
         oneLiner: snap.value_proposition ?? snap.concept_summary ?? null,
         location: [snap.city, snap.region].filter(Boolean).join(", ") || null,
         industry: snap.industry ?? null,
         logoUrl,
+        logoUrlOnDark,
+        logoUrlOnLight,
         founderName: snap.founder_name ?? null,
         website,
         colors: {
