@@ -667,6 +667,28 @@ export async function listFailures(input: any) {
   return data ?? [];
 }
 
+/**
+ * Skip one asset so a single stubborn document can never hold the rest of the
+ * kit hostage. It is marked not applicable and the paused job is released.
+ */
+export async function skipDocument(input: any): Promise<void> {
+  const { snapshotId, documentType } = unwrap<{ snapshotId: string; documentType: string }>(input);
+  const { error } = await supabase
+    .from("venture_documents")
+    .update({
+      status: "not_applicable",
+      last_error: "Skipped by the founder after repeated generation failures.",
+    })
+    .eq("snapshot_id", snapshotId)
+    .eq("document_type", documentType);
+  if (error) throw new Error(error.message);
+  await supabase
+    .from("venture_generation_failures")
+    .delete()
+    .eq("snapshot_id", snapshotId)
+    .eq("document_type", documentType);
+}
+
 // Assets that are waiting on the founder (e.g. Brand Wizard not locked).
 // These are never retried automatically — they need an action first.
 export async function listBlockedDocs(input: any) {
