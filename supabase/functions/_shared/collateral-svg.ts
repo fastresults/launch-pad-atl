@@ -205,6 +205,7 @@ export const COLLATERAL_KINDS = [
   "presentation",
   "guidelines",
   "design_tokens",
+  "style_system",
 ] as const;
 export type CollateralKind = typeof COLLATERAL_KINDS[number];
 
@@ -219,7 +220,9 @@ export const KIND_LABELS: Record<CollateralKind, string> = {
   presentation: "Presentation template",
   guidelines: "Brand guidelines",
   design_tokens: "Design tokens",
+  style_system: "Style system",
 };
+
 
 export type Page = { name: string; svg: string; width: number; height: number; metrics?: PageMetrics };
 

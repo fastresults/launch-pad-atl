@@ -49,7 +49,14 @@ export const COLLATERAL_TIERS: Array<{
     tier: "premium",
     label: "Web & handoff",
     blurb: "Hand these to a developer and the site comes out on brand.",
-    kinds: [{ kind: "design_tokens", label: "Design tokens", note: "CSS variables + JSON with full colour spaces" }],
+    kinds: [
+      { kind: "design_tokens", label: "Design tokens", note: "CSS variables + JSON with full colour spaces" },
+      {
+        kind: "style_system",
+        label: "Style system",
+        note: "Portable spec + drop-in CSS — paste into another project and it comes out on brand",
+      },
+    ],
   },
 ];
 

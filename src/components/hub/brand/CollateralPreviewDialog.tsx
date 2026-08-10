@@ -43,6 +43,7 @@ function ext(f: File) {
   if (f.mime_type === "image/png") return "PNG";
   if (f.mime_type === "text/html") return "HTML";
   if (f.mime_type === "text/css") return "CSS";
+  if (f.mime_type === "text/markdown") return "MD";
   if (f.mime_type === "application/json") return "JSON";
   return "FILE";
 }
@@ -96,6 +97,36 @@ export function CollateralPreviewDialog({
   const page = pages[idx] ?? null;
   const rendered = page?.render ?? null;
   const isHtml = rendered?.mime_type === "text/html";
+  // Markdown, CSS and JSON pieces (design tokens, the style system) are read,
+  // not looked at — show the source with a copy button instead of a dead <img>.
+  const isText = ["text/markdown", "text/css", "application/json", "text/plain"].includes(rendered?.mime_type ?? "");
+  const [textSource, setTextSource] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setTextSource(null);
+    if (!open || !isText || !rendered?.url) return;
+    fetch(rendered.url)
+      .then((r) => (r.ok ? r.text() : null))
+      .then((t) => { if (!cancelled) setTextSource(t); })
+      .catch(() => { if (!cancelled) setTextSource(null); });
+    return () => { cancelled = true; };
+  }, [open, isText, rendered?.url]);
+
+  const copyText = async () => {
+    if (!textSource) return;
+    try { await navigator.clipboard.writeText(textSource); toast.success("Copied"); }
+    catch { toast.error("Couldn't copy"); }
+  };
+
+  const copyPrompt = async () => {
+    if (!textSource) return;
+    const prompt =
+      "Apply this style system to my app — replace my tokens with these, wire the fonts, " +
+      "and swap any hardcoded colour utilities for the semantic tokens.\n\n" + textSource;
+    try { await navigator.clipboard.writeText(prompt); toast.success("Prompt copied — paste it into the other project"); }
+    catch { toast.error("Couldn't copy"); }
+  };
 
   // The HTML signature is fetched and injected rather than iframed by URL —
   // signed storage URLs download rather than render inline.
@@ -207,7 +238,13 @@ export function CollateralPreviewDialog({
               : <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading preview…</div>
           )}
 
-          {rendered && !isHtml && rendered.url && (
+          {rendered && isText && (
+            textSource
+              ? <pre className="max-h-[65vh] w-full max-w-3xl overflow-auto rounded-xl border border-border bg-card/60 p-4 text-left text-[11px] leading-relaxed text-foreground whitespace-pre-wrap">{textSource}</pre>
+              : <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading…</div>
+          )}
+
+          {rendered && !isHtml && !isText && rendered.url && (
             <img
               src={rendered.url}
               alt={page?.label ?? kind.label}
@@ -215,7 +252,7 @@ export function CollateralPreviewDialog({
             />
           )}
 
-          {rendered && !isHtml && !rendered.url && (
+          {rendered && !isHtml && !isText && !rendered.url && (
             <div className="flex flex-col items-center gap-2 text-muted-foreground">
               <FileText className="h-8 w-8" /><span className="text-xs">No preview available</span>
             </div>
@@ -253,7 +290,7 @@ export function CollateralPreviewDialog({
                   title={p.label}
                   className={`h-12 w-16 shrink-0 overflow-hidden rounded border bg-white transition ${i === idx ? "border-primary ring-1 ring-primary" : "border-border opacity-70 hover:opacity-100"}`}
                 >
-                  {p.render?.url && p.render.mime_type !== "text/html"
+                  {p.render?.url && !/^text\/|json$/.test(p.render.mime_type ?? "")
                     ? <img src={p.render.url} alt="" className="h-full w-full rounded object-contain" loading="lazy" />
                     : <span className="flex h-full w-full items-center justify-center text-[9px] text-muted-foreground">{p.label}</span>}
                 </button>
@@ -273,6 +310,18 @@ export function CollateralPreviewDialog({
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {isText && textSource && (
+              <>
+                <Button size="sm" variant="outline" onClick={copyText}>
+                  <Copy className="mr-1 h-3 w-3" />Copy source
+                </Button>
+                {rendered?.mime_type === "text/markdown" && (
+                  <Button size="sm" onClick={copyPrompt}>
+                    <Sparkles className="mr-1 h-3 w-3" />Copy prompt
+                  </Button>
+                )}
+              </>
+            )}
             {isHtml && htmlSource && (
               <Button size="sm" variant="outline" onClick={copyHtml}>
                 <Copy className="mr-1 h-3 w-3" />Copy HTML
