@@ -13,6 +13,11 @@ Rules:
 - Every line must be true to the venture described. No invented metrics, no client names.
 - Plain, specific, confident. No jargon, no hype, no exclamation marks.
 - Deck point headlines: 2-5 words. Deck point bodies: one sentence, max 18 words.
+- Agenda items: 2-5 words each, in the order a real meeting would run.
+- Stat figures must NOT be invented. If you do not have a real number, return "—" as the figure
+  and write the label and note as an instruction to the founder about what to put there.
+- Timeline steps: a short label (e.g. "Week 1") plus one sentence of what happens.
+- The quote must be a line the founder could truthfully say — never attributed to a fake customer.
 - Scope lines: a concrete deliverable, max 8 words each.
 - Never end mid-thought. Every line is a complete idea.
 Return strict JSON only.`;
