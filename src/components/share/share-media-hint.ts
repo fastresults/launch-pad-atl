@@ -22,10 +22,10 @@ export function mediaHintForItem(item: ShareItem): MediaHint {
     }
   }
 
+  // Header/hero images are chrome, not content — they never earn a cue.
   const gallery = item.images?.length ?? 0;
   if (gallery > 1) return { kind: "images", count: gallery, label: `${gallery} images` };
   if (gallery === 1) return { kind: "image", count: 1, label: "1 image" };
-  if (item.heroImageUrl) return { kind: "image", count: 1, label: "1 image" };
   return null;
 }
 
