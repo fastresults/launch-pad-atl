@@ -50,13 +50,6 @@ function contentTypeFor(path: string) {
 
 const CACHE = "public, max-age=300, stale-while-revalidate=86400";
 
-function pathFor(primary: any, variant: string): string | null {
-  if (variant === "mark") {
-    return primary.svg_path ?? primary.path ?? primary.variants?.mark?.path ?? null;
-  }
-  return primary.variants?.[variant]?.path ?? null;
-}
-
 function toDataUri(bytes: Uint8Array, mime: string) {
   let bin = "";
   for (let i = 0; i < bytes.length; i += 0x8000) {
