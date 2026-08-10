@@ -11,11 +11,23 @@ When any AI action fails because of capacity (credits exhausted, workspace credi
 - StartupLabs logo at the top (existing `StartupLabsLogo` component).
 - Headline: "This step needs more AI capacity"
 - Body: friendly, non-technical — the process paused because additional AI tokens are required to finish it. Sending a notice alerts the team; issues like this are typically resolved by the next business day.
+- **Which provider is at its limit** — a labeled row listing the affected AI provider(s) (OpenAI, Google, Anthropic, xAI, Perplexity, or "Lovable AI capacity" when the block is workspace-level rather than provider-level), each as a small chip with the provider name and the blocked capability ("image generation", "writing", "research"). If more than one is affected, all are listed.
 - Optional one-line note field ("Anything we should know?"), prefilled with which asset/step was blocked.
 - Buttons: **Send notice** (primary) and **Not now**. After sending: a calm confirmation state ("Notice sent — we'll have this resolved by the next business day") with a **Try again** button that re-runs the original action when the caller provided one.
 - If a notice for the same venture was already sent in the last 24h, the modal opens straight to the confirmation state ("You already sent a notice") instead of allowing duplicates.
 
 Rate-limit (429) variant uses the same shell with softer copy ("We're briefly at capacity — try again in a minute") and no notice form.
+
+## Naming the provider that hit the limit
+
+Provider attribution has to come from the server — the browser only sees a status code today, so the edge functions must say who blocked them.
+
+- Shared helper `supabase/functions/_shared/capacity-error.ts` maps a failed AI call to `{ provider, providerLabel, capability, code }`. Provider is derived from the model id's vendor prefix (`openai/*` → OpenAI, `google/*` → Google, `anthropic/*` → Anthropic, `x-ai/*` → xAI) for gateway calls, and set explicitly for any direct third-party call (e.g. Perplexity in research/scrape paths). A workspace-level credit cap (`AI_CREDIT_LIMIT_REACHED`, no upstream provider) reports `provider: "lovable"` with the label "Lovable AI capacity".
+- Every function that currently returns `PAYMENT_REQUIRED` / `AI_CREDIT_LIMIT_REACHED` / 429 (`venture-social-cover`, `venture-style-preview`, `venture-content-ad`, `venture-generate-document`, `venture-generate-roadmap`, `venture-post-caption`, `venture-parse-content-calendar`, `venture-hero-sweep`, `venture-synthesize-concept`, `venture-bulk-generate`, `workshop-hero-image-generate`, and the rest) returns those fields in the error body instead of a bare code.
+- Bulk/multi-step runs can hit more than one provider in a single job, so the error body carries a `providers: [...]` array; the modal renders one chip per entry.
+- The client parses these fields in `src/lib/ai-capacity.ts`. When a function has not yet been updated, or the body carries no provider, the modal falls back to "AI capacity" with no chip rather than guessing a vendor.
+- The provider list is stored on the notice row and included in the internal alert email, so the team sees exactly which provider needs topping up.
+
 
 ## Where it fires
 
