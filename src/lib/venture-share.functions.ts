@@ -81,12 +81,19 @@ export interface ShareItem {
 
 
 export interface SharePayload {
+  /** True when the signed-in viewer owns this venture (or is an admin). */
+  canManage?: boolean;
+  /** Only returned to a manager — powers regenerate / delete from the showcase. */
+  snapshotId?: string | null;
   venture: {
     name: string;
     oneLiner: string | null;
     location: string | null;
     industry: string | null;
     logoUrl: string | null;
+    /** Contrast-checked marks: the endpoint picks a variant that stays legible. */
+    logoUrlOnDark?: string | null;
+    logoUrlOnLight?: string | null;
     founderName: string | null;
     /** Bare domain (no scheme) confirmed by the founder, when they have one. */
     website?: string | null;
@@ -277,13 +284,23 @@ const SUPABASE_URL =
   "https://hflfxytqrlkobhuugsca.supabase.co";
 const FUNCTIONS_BASE = `${SUPABASE_URL}/functions/v1`;
 
-/** Public fetch — works signed out, so it calls the endpoint directly. */
+/**
+ * Public fetch — works signed out, so it calls the endpoint directly. When the
+ * viewer happens to be signed in we forward the session so the founder opening
+ * their own link gets the owner controls back.
+ */
 export async function fetchSharePayload(token: string, password?: string) {
   let res: Response;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  try {
+    const { data } = await supabase.auth.getSession();
+    const jwt = data.session?.access_token;
+    if (jwt) headers.Authorization = `Bearer ${jwt}`;
+  } catch { /* anonymous viewer */ }
   try {
     res = await fetch(`${FUNCTIONS_BASE}/venture-share`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ token, password, action: "get" }),
     });
   } catch {

@@ -223,6 +223,15 @@ Deno.serve(async (req) => {
     const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
     const primaryLogo = logos.find((l) => l?.primary) ?? logos[0] ?? null;
     const logoUrl = primaryLogo ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}` : null;
+    // Surface-aware marks. The endpoint measures the stored variants' own ink
+    // and returns the one that clears contrast on the requested ground, so a
+    // navy wordmark never lands on a navy hero again.
+    const logoUrlOnDark = primaryLogo
+      ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto?on=dark`
+      : null;
+    const logoUrlOnLight = primaryLogo
+      ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto?on=light`
+      : null;
 
     const paletteColors: Record<string, string> =
       (kit?.palette?.colors && typeof kit.palette.colors === "object" ? kit.palette.colors : {}) as any;
@@ -334,14 +343,41 @@ Deno.serve(async (req) => {
       }
 
 
+      // Every collateral page is stored twice — the vector source and a `-preview`
+      // raster of the same artwork — plus a few non-image handoff files (CSS,
+      // JSON, HTML). Showing the raw rows made the showcase look like it held
+      // duplicate cards. Collapse each pair into one tile (raster preferred, it
+      // renders everywhere) and drop files a gallery cannot display.
       const collateral = collRes.data ?? [];
       if (collateral.length && !excluded.has("brand:collateral")) {
-        const images = [];
+        const isImage = (p?: string | null) => !!p && /\.(png|jpe?g|webp|svg)$/i.test(p);
+        const baseOf = (name: string) => name.replace(/-preview$/i, "");
+
+        const byBase = new Map<string, { display: any; source: any }>();
         for (const c of collateral) {
-          const url = await sign(BUCKET, c.storage_path);
-          if (url) images.push({
-            url, label: c.name ?? c.kind, width: c.width, height: c.height,
-            meta: { assetKind: c.kind ?? null, filename: `${c.name ?? c.kind ?? "collateral"}` },
+          if (!isImage(c.storage_path)) continue;
+          const base = baseOf(String(c.name ?? c.kind ?? "collateral"));
+          const slot = byBase.get(base) ?? { display: null, source: null };
+          const raster = !/\.svg$/i.test(c.storage_path ?? "");
+          if (raster) slot.display = c;
+          else slot.source = c;
+          byBase.set(base, slot);
+        }
+
+        const images = [];
+        for (const [base, slot] of byBase) {
+          const pick = slot.display ?? slot.source;
+          if (!pick) continue;
+          const url = await sign(BUCKET, pick.storage_path);
+          if (!url) continue;
+          const label = base.replace(/[-_]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+          images.push({
+            url, label, width: pick.width, height: pick.height,
+            meta: {
+              assetKind: pick.kind ?? null,
+              filename: base,
+              collateralIds: [slot.display?.id, slot.source?.id].filter(Boolean),
+            },
           });
         }
         if (images.length) {
@@ -548,13 +584,36 @@ Deno.serve(async (req) => {
       ? rawWebsite.replace(/^https?:\/\//i, "").replace(/\/+$/, "").trim() || null
       : null;
 
+    // Owner controls. A share link is public, but when the founder (or an admin)
+    // opens their own link while signed in we let them delete or regenerate the
+    // assets in place instead of hunting for them back in the hub.
+    let canManage = false;
+    try {
+      const jwt = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+      if (jwt) {
+        const { data: u } = await admin.auth.getUser(jwt);
+        const uid = u?.user?.id;
+        if (uid) {
+          if (uid === snap.user_id) canManage = true;
+          else {
+            const { data: isAdmin } = await admin.rpc("is_admin", { _user_id: uid });
+            canManage = !!isAdmin;
+          }
+        }
+      }
+    } catch { /* anonymous viewers just read */ }
+
     return json({
+      canManage,
+      snapshotId: canManage ? snapshotId : null,
       venture: {
         name: snap.company_name ?? "Untitled venture",
         oneLiner: snap.value_proposition ?? snap.concept_summary ?? null,
         location: [snap.city, snap.region].filter(Boolean).join(", ") || null,
         industry: snap.industry ?? null,
         logoUrl,
+        logoUrlOnDark,
+        logoUrlOnLight,
         founderName: snap.founder_name ?? null,
         website,
         colors: {

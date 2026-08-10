@@ -215,7 +215,9 @@ export async function buildSectionDoc(
   payload: SharePayload,
   item: ShareItem,
 ): Promise<ExportDoc> {
-  const logo = payload.venture.logoUrl ? await fetchImage(payload.venture.logoUrl) : null;
+  // Export pages are printed on white, so ask for the light-ground mark.
+  const logoSrc = payload.venture.logoUrlOnLight ?? payload.venture.logoUrl;
+  const logo = logoSrc ? await fetchImage(logoSrc) : null;
   const eyebrow = payload.sections.find((s) => s.items.some((i) => i.key === item.key))?.label;
   return {
     fileBase: `${slug(payload.venture.name)}-${slug(item.title)}`,
@@ -233,7 +235,9 @@ export async function buildFullDoc(
   payload: SharePayload,
   onProgress?: (done: number, total: number) => void,
 ): Promise<ExportDoc> {
-  const logo = payload.venture.logoUrl ? await fetchImage(payload.venture.logoUrl) : null;
+  // Export pages are printed on white, so ask for the light-ground mark.
+  const logoSrc = payload.venture.logoUrlOnLight ?? payload.venture.logoUrl;
+  const logo = logoSrc ? await fetchImage(logoSrc) : null;
   const items = payload.sections.flatMap((s) =>
     s.items.map((item) => ({ item, label: s.label })),
   );
