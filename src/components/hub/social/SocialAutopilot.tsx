@@ -1579,21 +1579,22 @@ function Step6Launch({
                     type="button"
                     onClick={() => cover?.signed_url && setPreviewId(cover.id)}
                     disabled={!cover?.signed_url}
-                    title={cover?.signed_url ? `Preview ${p} channel art` : undefined}
+                    title={cover?.signed_url ? `Preview ${p} ${coverLabel.toLowerCase()}` : undefined}
                     className="group relative block aspect-[4/1] w-full overflow-hidden rounded-md border border-white/10 bg-muted/40 transition hover:border-primary disabled:cursor-default"
                   >
                     {cover?.signed_url
-                      ? <img src={cover.signed_url} alt={`${p} cover`} className="h-full w-full object-cover transition group-hover:scale-[1.03]" />
-                      : <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">no cover</div>}
+                      ? <img src={cover.signed_url} alt={`${p} ${coverLabel}`} className="h-full w-full object-cover transition group-hover:scale-[1.03]" />
+                      : <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">no {coverLabel.toLowerCase()}</div>}
                     {cover?.signed_url && (
                       <span className="pointer-events-none absolute inset-0 hidden items-center justify-center bg-background/50 text-[10px] font-medium group-hover:flex">
                         Click to enlarge
                       </span>
                     )}
                   </button>
-                  <Button size="sm" variant="ghost" className="mt-1 h-6 px-1.5 text-[9px]" disabled={!!regenerating[`${p}:${kitTasks.find((task) => task.platform === p && task.asset !== "avatar")?.asset}`]} onClick={() => regenerate(p, kitTasks.find((task) => task.platform === p && task.asset !== "avatar")?.asset)}>
-                    <RefreshCw className="mr-1 h-3 w-3" /> Regenerate cover
+                  <Button size="sm" variant="ghost" className="mt-1 h-6 px-1.5 text-[9px]" disabled={!coverKind || !!regenerating[`${p}:${coverKind}`]} onClick={() => coverKind && regenerate(p, coverKind)}>
+                    <RefreshCw className="mr-1 h-3 w-3" /> Regenerate {coverLabel.toLowerCase()}
                   </Button>
+
                 </div>
               </div>
 
