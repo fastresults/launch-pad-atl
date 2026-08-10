@@ -145,7 +145,9 @@ function normalize(raw: any, weekNumbers: number[]): CampaignArc {
       job: tidy(w.job, 200) || fallback.job,
       claim: tidy(w.claim, 200),
       proof: tidy(w.proof, 200),
-      cta_rung: asRung(w.cta_rung, stage?.rung ?? fallback.cta_rung),
+      // The rung belongs to the stage, not to the model's mood.
+      cta_rung: stage?.rung ?? fallback.cta_rung,
+
       kicker_taxonomy: (Array.isArray(w.kicker_taxonomy) ? w.kicker_taxonomy : [])
         .map((k: any) => tidy(k, 26).toUpperCase())
         .filter(Boolean)
