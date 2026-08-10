@@ -82,6 +82,38 @@ async function generateOne(
 ) {
   const snapshotId = ctx.snapshotId;
   const snap = ctx.snap;
+
+  // Bulk generation is idempotent. A previously persisted artifact is the
+  // source of truth even if an interrupted retry left its status as
+  // "generating" or "failed". Never replace good content merely because a
+  // worker/watchdog was restarted; explicit single-asset regeneration uses a
+  // separate endpoint and remains the only path allowed to rewrite it.
+  const { data: persisted } = await supabase
+    .from("venture_documents")
+    .select("status, content, word_count, quality_score, version")
+    .eq("snapshot_id", snapshotId)
+    .eq("document_type", documentType)
+    .maybeSingle();
+  const hasPersistedArtifact =
+    typeof persisted?.content === "string" &&
+    persisted.content.trim().length > 0 &&
+    (persisted.status === "complete" ||
+      (Number(persisted.word_count ?? 0) > 0 &&
+        Number(persisted.version ?? 0) > 0 &&
+        persisted.quality_score !== null));
+  if (hasPersistedArtifact) {
+    if (persisted.status !== "complete") {
+      await supabase.from("venture_documents").update({
+        status: "complete",
+        last_error: null,
+        blocked_reason: null,
+      }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    }
+    await supabase.from("venture_generation_failures")
+      .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    return;
+  }
+
   const { data: type } = await supabase
     .from("venture_document_types")
     .select("*")
@@ -1124,6 +1156,18 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    // Do not attach another external worker to a healthy in-flight job. This
+    // was the second half of the retry loop: the watchdog and browser could
+    // both launch runJob() for the same row. Internal watchdog calls are
+    // intentionally allowed because they have just claimed the stalled job.
+    if (existing?.status === "running" && !internal) {
+      return new Response(JSON.stringify({
+        ok: true,
+        jobId: existing.id,
+        alreadyRunning: true,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     let jobId = existing?.id as string | undefined;
     if (!jobId) {
