@@ -1335,6 +1335,12 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
                 ? "Regenerate Website PRD"
                 : "Generate Website PRD"}
           </Button>
+          <Button variant="outline" onClick={() => reviewMood.regenerate.mutate()} disabled={reviewMood.running} className="shrink-0">
+            {reviewMood.running ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
+            {reviewMood.running
+              ? reviewMood.label
+              : (Array.isArray(kit?.moodboard) && kit.moodboard.length ? "Regenerate Mood Board" : "Generate Mood Board")}
+          </Button>
           <Button variant="outline" onClick={() => lock.mutate()} disabled={lock.isPending || !kit?.palette || !kit?.typography}>
             {lock.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
             {kit?.guide_markdown ? "Regenerate style guide" : "Generate brand style guide"}
