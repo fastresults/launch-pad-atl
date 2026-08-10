@@ -88,7 +88,13 @@ const MOODBOARD_ANGLES = [
   "Tile 2 — Hero environment: a wide cinematic scene of a person or place that represents the customer's world. Natural light, editorial photography.",
   "Tile 3 — Object still life: an art-directed still life of 2–3 props that evoke the brand's category and personality. Studio lighting, clean composition.",
   "Tile 4 — Color & motion: an abstract painterly composition built from the brand's primary, secondary and accent colors. Smooth gradients, organic shapes.",
+  "Tile 5 — Human moment: a candid editorial portrait of the kind of person this brand serves, in their real context. Shallow depth of field, honest expression, no eye contact with camera. No text.",
+  "Tile 6 — Space & structure: architecture or an interior whose geometry carries the brand's structural feeling (open and airy, or tight and engineered). Strong light direction, no people.",
+  "Tile 7 — Typography in the wild: a real-world surface where type lives — signage, printed collateral, packaging, a painted wall. Type must be abstract or blurred so no words are readable. Shows the brand's type mood, not its name.",
+  "Tile 8 — Craft in progress: a tight detail crop of hands, tools or process from this brand's category — the work actually being done. Warm natural light, documentary feel.",
+  "Tile 9 — Palette-forward hero frame: a wide, sparse composition dominated by the brand's colours with generous negative space on one side, as if a headline could sit over it. No text.",
 ];
+
 
 /* ----------------------- LOGO STUDIO ----------------------- */
 
