@@ -1087,6 +1087,8 @@ function fallbackFor(family: string): string {
 function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: ResolvedSpec): PageMetrics {
   const markHs = [...svg.matchAll(/data-mark-h="([\d.]+)"/g)].map((m) => Number(m[1]));
   const markWs = [...svg.matchAll(/data-mark-w="([\d.]+)"/g)].map((m) => Number(m[1]));
+  const markArts = [...svg.matchAll(/data-mark-art="([^"]*)"/g)].map((m) => m[1]);
+  const markBgs = [...svg.matchAll(/data-mark-bg="([^"]*)"/g)].map((m) => m[1]);
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
   const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
   const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
@@ -1095,7 +1097,10 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
     page: name,
     markH: primaryMark,
     markW: idx >= 0 ? markWs[idx] : undefined,
+    markArt: idx >= 0 ? markArts[idx] : undefined,
+    markBg: idx >= 0 ? markBgs[idx] : undefined,
     markBand: isLockup(ctx) ? rs.lockupBand : rs.logoBand,
+
     safe: rs.safe,
     bleed: rs.bleed,
     minType: rs.minType,
