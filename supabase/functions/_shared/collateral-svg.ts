@@ -1003,6 +1003,17 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     };
   };
 
+  /** Vertical band left for slide body between the head and the footer chrome. */
+  const bandBottom = H - g.M - slideBox.h - sp(1.2);
+  /**
+   * Slides were reading top-heavy: every body stack started right under the
+   * title and left the lower third empty. The measured stack is centred in the
+   * band it actually has, so the composition sits on the slide instead of
+   * clinging to the headline.
+   */
+  const balance = (top: number, height: number) =>
+    `translate(0, ${r(Math.max(0, (bandBottom - top - height) / 2))})`;
+
   // ── 01 cover ──────────────────────────────────────────────────────────────
   const coverGround = invert ? primary : paper;
   const coverStack = T.flow(g.M, H * 0.52, g.span(Math.round(ad.grid.columns * 0.82)));
@@ -1074,7 +1085,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       agendaHead.svg,
-      agendaRows.join(""),
+      `<g transform="${balance(agendaTop, agendaBottom - agendaTop)}">${agendaRows.join("")}</g>`,
       chrome(3, paper, muted, mix(primary, paper, 0.3)),
     ].join("")),
   });
@@ -1122,16 +1133,16 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     );
     return { x, svg: f.svg(), height: f.bottom - cardTop + cardPad };
   });
-  const cardH = Math.min(cardMaxH, Math.max(...cardStacks.map((c) => c.height), H * 0.22));
+  const cardH = Math.min(cardMaxH, Math.max(...cardStacks.map((c) => c.height), (bandBottom - cardTop) * 0.72));
 
   pages.push({
     name: "slide-5-content", width: W, height: H,
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       contentHead.svg,
-      ...cardStacks.map((c) =>
+      `<g transform="${balance(cardTop, cardH)}">${cardStacks.map((c) =>
         `<rect x="${r(c.x)}" y="${r(cardTop)}" width="${r(cardWidth)}" height="${r(cardH)}" fill="${primary}" opacity="0.05" rx="${ad.material.radius}"/>${c.svg}`,
-      ),
+      ).join("")}</g>`,
       chrome(5, paper, muted, mix(primary, paper, 0.3)),
     ].join("")),
   });
@@ -1155,7 +1166,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       splitHead.svg,
-      splitStack.svg(),
+      `<g transform="${balance(splitTop, Math.max(wellH, splitStack.bottom - splitTop))}">${splitStack.svg()}` +
       `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(wellH)}" rx="${ad.material.radius}" fill="${primary}" opacity="0.08"/>`,
       `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(ad.ink.ruleWeight * 3)}" fill="${accent}"/>`,
       label(T, ctx, "Image", wellX + sp( 1.2), splitTop + wellH - sp( 1.2), sp( -1.0), mix(fg, paper, 0.45), "start", splitColW - sp( 2.4)),
@@ -1186,9 +1197,9 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       dataHead.svg,
-      ...statStacks.map((s) =>
+      `<g transform="${balance(statTop, Math.max(...statStacks.map((s) => s.bottom)) - statTop)}">${statStacks.map((s) =>
         `<rect x="${r(s.x)}" y="${r(statTop - sp( 0.6))}" width="${r(ad.ink.ruleWeight * 3)}" height="${r(s.bottom - statTop + sp( 0.8))}" fill="${accent}" opacity="0.35"/>${s.svg}`,
-      ),
+      ).join("")}</g>`,
       chrome(7, paper, muted, mix(primary, paper, 0.3)),
     ].join("")),
   });
