@@ -674,7 +674,7 @@ async function retrySweep(
   ctx: VentureContext,
   jobId: string,
   types: any[],
-  state: { done: number; total: number; fails: number; canceled: boolean },
+  state: RunState,
 ): Promise<{ remaining: string[]; blocked: string[] }> {
   const snapshotId = ctx.snapshotId;
   const byKey = new Map(types.map((t) => [t.type, t]));
