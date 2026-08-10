@@ -1269,6 +1269,7 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
   const markWs = [...svg.matchAll(/data-mark-w="([\d.]+)"/g)].map((m) => Number(m[1]));
   const markArts = [...svg.matchAll(/data-mark-art="([^"]*)"/g)].map((m) => m[1]);
   const markBgs = [...svg.matchAll(/data-mark-bg="([^"]*)"/g)].map((m) => m[1]);
+  const markInks = [...svg.matchAll(/data-mark-ink="([^"]*)"/g)].map((m) => m[1]);
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
   const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
   const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
@@ -1279,7 +1280,16 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
     markW: idx >= 0 ? markWs[idx] : undefined,
     markArt: idx >= 0 ? markArts[idx] : undefined,
     markBg: idx >= 0 ? markBgs[idx] : undefined,
+    // Every mark on the page, not just the biggest — a specimen sheet stands or
+    // falls on the small tiles being legible too.
+    marks: markHs.map((h, i) => ({
+      h,
+      art: markArts[i] ?? "",
+      bg: markBgs[i] ?? "",
+      ink: markInks[i] ?? "",
+    })),
     markBand: isLockup(ctx) ? rs.lockupBand : rs.logoBand,
+
 
     safe: rs.safe,
     bleed: rs.bleed,
