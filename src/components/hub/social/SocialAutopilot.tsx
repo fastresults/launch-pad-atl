@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 import {
   getSocialProgress, upsertSocialProgress, listPlanDocs, ensurePlanDoc,
-  buildKitTasks, generateOneKitTask, PLAN_DOCS, type SocialGoals, type KitTask,
+  buildKitTasks, generateOneKitTask, coverKindFor, coverLabelFor, PLAN_DOCS, type SocialGoals, type KitTask,
 } from "@/lib/social-autopilot.functions";
 import { PLATFORM_SPECS, ART_DIRECTIONS } from "@/lib/social-platform-specs";
 import { listSocialAssets, deleteSocialAsset } from "@/lib/social-cover.functions";
