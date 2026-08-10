@@ -55,6 +55,7 @@ export const PLATFORM_SPECS: Record<string, PlatformSpec> = {
     platform: "LinkedIn",
     label: "LinkedIn",
     assets: [
+      { kind: "avatar", label: "Profile avatar", width: 400, height: 400, guidance: "circular crop center", modelSize: "1024x1024" },
       { kind: "banner", label: "Company banner", width: 1128, height: 191, guidance: "ultra-wide letterbox, content left-aligned, right third clean", modelSize: "1536x1024" },
       { kind: "header", label: "Founder banner", width: 1584, height: 396, guidance: "ultra-wide letterbox, avoid lower-left where profile photo overlays", modelSize: "1536x1024" },
       { kind: "pinned_post", label: "Square pinned post", width: 1200, height: 1200, guidance: "square, type-led, generous whitespace", modelSize: "1024x1024" },
@@ -73,6 +74,7 @@ export const PLATFORM_SPECS: Record<string, PlatformSpec> = {
     platform: "YouTube",
     label: "YouTube",
     assets: [
+      { kind: "avatar", label: "Profile avatar", width: 800, height: 800, guidance: "circular crop center", modelSize: "1024x1024" },
       { kind: "channel_art", label: "Channel art", width: 2560, height: 1440, guidance: "all critical content INSIDE centered 1546x423 safe area; outer regions can bleed", modelSize: "1536x1024" },
       { kind: "thumbnail", label: "Video thumbnail", width: 1280, height: 720, guidance: "16:9, one face/subject + bold 3-5 word headline, high contrast", modelSize: "1536x1024" },
     ],
@@ -81,6 +83,7 @@ export const PLATFORM_SPECS: Record<string, PlatformSpec> = {
     platform: "Facebook",
     label: "Facebook",
     assets: [
+      { kind: "avatar", label: "Profile avatar", width: 1080, height: 1080, guidance: "circular crop center", modelSize: "1024x1024" },
       { kind: "banner", label: "Page cover", width: 1640, height: 624, guidance: "wide cover; keep critical content within centered safe rectangle", modelSize: "1536x1024" },
       { kind: "pinned_post", label: "Square post", width: 1200, height: 1200, guidance: "square post", modelSize: "1024x1024" },
     ],
