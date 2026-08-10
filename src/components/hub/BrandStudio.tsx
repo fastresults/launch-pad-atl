@@ -36,6 +36,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
   const [expanded, setExpanded] = useState(!locked);
   const [prdOpen, setPrdOpen] = useState(false);
   const websitePrd = useWebsitePrd(snapshot.id, kit?.locked_at ?? null);
+  const mood = useMoodboard(snapshot.id);
 
 
 
