@@ -216,7 +216,10 @@ function specFor(pageName: string): PieceSpec {
   if (/^slide-1-cover/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "slide-cover")!;
   if (/^slide-/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "slide")!;
   if (/^guidelines-1-cover/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "guidelines-cover")!;
+  if (/^guidelines-\d+-(clearspace|misuse)/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "guidelines-specimen")!;
+  if (/^guidelines-\d+-logo/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "guidelines-2-logo")!;
   if (/^guidelines-/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "guidelines")!;
+
   return PIECE_SPECS.find((s) => s.page === "letterhead")!;
 }
 
