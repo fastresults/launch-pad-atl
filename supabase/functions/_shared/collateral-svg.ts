@@ -1182,7 +1182,49 @@ function fallbackFor(family: string): string {
  * mark size, the smallest type on the page, and the longest line. QC compares
  * these against the piece's standard.
  */
-function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: ResolvedSpec): PageMetrics {
+/** Every `<text>` on the page, resolved to a drawn bounding box. */
+function textBoxes(svg: string, T: TypeKit): { box: [number, number, number, number]; text: string }[] {
+  const out: { box: [number, number, number, number]; text: string }[] = [];
+  for (const m of svg.matchAll(/<text\b([^>]*)>([^<]*)<\/text>/g)) {
+    const attrs = m[1];
+    const text = m[2];
+    if (!text.trim()) continue;
+    const num = (k: string) => Number(/\b(?:^|\s)/.test("") ? 0 : (new RegExp(`${k}="([-\\d.]+)"`).exec(attrs)?.[1] ?? 0));
+    const x = num("x"), y = num("y"), size = num("font-size"), tracking = num("letter-spacing");
+    if (!size) continue;
+    const family = /font-family="BrandHead"/.test(attrs) ? "head" : "body";
+    const anchor = /text-anchor="(\w+)"/.exec(attrs)?.[1] ?? "start";
+    const w = T.width(text, size, family as "head" | "body", tracking);
+    const x0 = anchor === "end" ? x - w : anchor === "middle" ? x - w / 2 : x;
+    out.push({ box: [x0, y - size * 0.78, x0 + w, y + size * 0.22], text });
+  }
+  return out;
+}
+
+/**
+ * Two pieces of type sharing the same pixels is the defect a founder sees
+ * first — a title with a rule through it, an address printed over a table
+ * header. Report it by name so a page can be re-set instead of shipped.
+ */
+function textOverlaps(svg: string, T: TypeKit): string[] {
+  const boxes = textBoxes(svg, T);
+  const hits: string[] = [];
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i].box, b = boxes[j].box;
+      const ox = Math.min(a[2], b[2]) - Math.max(a[0], b[0]);
+      const oy = Math.min(a[3], b[3]) - Math.max(a[1], b[1]);
+      if (ox <= 1 || oy <= 1) continue;
+      const smaller = Math.min((a[2] - a[0]) * (a[3] - a[1]), (b[2] - b[0]) * (b[3] - b[1]));
+      if (smaller <= 0 || (ox * oy) / smaller < 0.18) continue;
+      hits.push(`"${boxes[i].text.slice(0, 28)}" overlaps "${boxes[j].text.slice(0, 28)}"`);
+      if (hits.length >= 6) return hits;
+    }
+  }
+  return hits;
+}
+
+function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: ResolvedSpec, T?: TypeKit): PageMetrics {
   const markHs = [...svg.matchAll(/data-mark-h="([\d.]+)"/g)].map((m) => Number(m[1]));
   const markWs = [...svg.matchAll(/data-mark-w="([\d.]+)"/g)].map((m) => Number(m[1]));
   const markArts = [...svg.matchAll(/data-mark-art="([^"]*)"/g)].map((m) => m[1]);
@@ -1205,8 +1247,10 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
     textLines: texts.length,
     smallestType: sizes.length ? Math.min(...sizes) : undefined,
     longestLine: texts.length ? Math.max(...texts.map((t) => t.length)) : undefined,
+    overlaps: T ? textOverlaps(svg, T) : undefined,
   };
 }
+
 
 export type RenderResult = { pages: Page[]; fontBuffers: Uint8Array[]; fontsOk: boolean };
 
