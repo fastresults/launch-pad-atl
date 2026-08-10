@@ -29,6 +29,13 @@ export type PosterCopy = {
   truncated: boolean;
   /** set when the line still echoes a claim an earlier week already spent */
   repeatsClaim?: string | null;
+  /** which of the week's three arguments this ad ran (claim / proof / edge) */
+  approach?: string | null;
+  /** true when the line carries a concrete particular (number, timeframe, named thing) */
+  specific?: boolean;
+  /** set when the line leans on advertising boilerplate ("proven results") */
+  vagueness?: string | null;
+
 };
 
 const STOP = new Set([
