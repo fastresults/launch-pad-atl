@@ -1316,6 +1316,43 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
         )}
       </div>
 
+      {(() => {
+        const isLocked = kit?.status === "locked";
+        const missing = [!kit?.palette && "a palette", !kit?.typography && "typography"].filter(Boolean) as string[];
+        const blocked = missing.length ? `Pick ${missing.join(" and ")} first` : null;
+        return isLocked ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-status-success/40 bg-status-success/5 p-4">
+            <p className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+              <Lock className="h-4 w-4 text-status-success" />
+              Brand kit locked{kit?.locked_at ? ` · ${new Date(kit.locked_at).toLocaleDateString()}` : ""}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Your palette, typography, mark and voice now drive every asset we generate.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Ready to lock your brand kit</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                Locking writes your brand style guide and feeds these tokens into your Website PRD, print
+                collateral and social assets. You can always come back and edit.
+              </p>
+            </div>
+            <Button
+              size="lg"
+              onClick={() => lock.mutate()}
+              disabled={lock.isPending || !!blocked}
+              title={blocked ?? "Lock the brand kit and write the style guide"}
+              className="shrink-0"
+            >
+              {lock.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Lock className="mr-1 h-4 w-4" />}
+              {lock.isPending ? "Locking brand kit…" : "Lock brand kit"}
+            </Button>
+          </div>
+        );
+      })()}
+
       <div className="sticky bottom-0 z-20 -mx-6 -mb-8 flex flex-wrap items-center justify-between gap-2 border-t border-border bg-background/95 px-6 py-4 shadow-lg backdrop-blur">
         <Button variant="ghost" onClick={onBack}><ArrowLeft className="mr-1 h-4 w-4" />Back</Button>
         <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2">
@@ -1326,6 +1363,7 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
           )}
           {websitePrd.exists && !websitePrd.running && <PrdExportActions doc={websitePrd.prd} />}
           <Button
+            variant="ghost"
             onClick={regenerateWebsitePrd}
             disabled={websitePrd.running}
             className="shrink-0"
@@ -1337,21 +1375,34 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
                 ? "Regenerate Website PRD"
                 : "Generate Website PRD"}
           </Button>
-          <Button variant="outline" onClick={() => reviewMood.regenerate.mutate()} disabled={reviewMood.running} className="shrink-0">
+          <Button variant="ghost" onClick={() => reviewMood.regenerate.mutate()} disabled={reviewMood.running} className="shrink-0">
             {reviewMood.running ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
             {reviewMood.running
               ? reviewMood.label
               : (Array.isArray(kit?.moodboard) && kit.moodboard.length ? "Regenerate Mood Board" : "Generate Mood Board")}
           </Button>
-          <Button variant="outline" onClick={() => lock.mutate()} disabled={lock.isPending || !kit?.palette || !kit?.typography}>
-            {lock.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
-            {kit?.guide_markdown ? "Regenerate style guide" : "Generate brand style guide"}
-          </Button>
-          <Button variant="outline" onClick={saveToFiles} disabled={saving || !kit?.guide_markdown}>
+          <Button variant="ghost" onClick={saveToFiles} disabled={saving || !kit?.guide_markdown}>
             {saving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
             Save to My Files
           </Button>
+          <Button
+            size="lg"
+            onClick={() => lock.mutate()}
+            disabled={lock.isPending || !kit?.palette || !kit?.typography}
+            title={!kit?.palette || !kit?.typography ? "Pick a palette and typography first" : undefined}
+            className="shrink-0"
+          >
+            {lock.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Lock className="mr-1 h-4 w-4" />}
+            {lock.isPending
+              ? "Locking brand kit…"
+              : kit?.status === "locked"
+                ? "Regenerate style guide"
+                : "Lock brand kit"}
+          </Button>
           <Button variant="ghost" onClick={onDone}>Close</Button>
+        </div>
+      </div>
+
         </div>
       </div>
     </div>
