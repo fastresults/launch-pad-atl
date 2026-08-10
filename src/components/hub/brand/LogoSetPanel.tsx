@@ -55,7 +55,7 @@ function readDataUrl(file: File) {
   });
 }
 
-function MarkTile({ label, background, src, alt, light, compact }: any) {
+function MarkTile({ label, background, src, alt, light, compact, empty }: any) {
   return (
     <figure className="min-w-0">
       <div
@@ -70,7 +70,9 @@ function MarkTile({ label, background, src, alt, light, compact }: any) {
         {src ? (
           <img src={src} alt={alt} loading="lazy" className={cn("relative w-full object-contain", compact ? "max-h-10" : "max-h-14")} />
         ) : (
-          <span className="relative text-[11px] text-muted-foreground">No mark yet</span>
+          <span className="relative px-1 text-center text-[10px] leading-tight text-muted-foreground">
+            {empty ?? "No mark yet"}
+          </span>
         )}
       </div>
       <figcaption className="mt-1.5 truncate text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
@@ -79,6 +81,7 @@ function MarkTile({ label, background, src, alt, light, compact }: any) {
     </figure>
   );
 }
+
 
 function SlotTile({ slot, logo, busy, onPick, onRemove }: any) {
   const [over, setOver] = useState(false);
