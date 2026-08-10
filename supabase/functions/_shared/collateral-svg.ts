@@ -878,15 +878,16 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   // instead of being assumed to end nine steps down.
   const metaW = g.span(Math.round(ad.grid.columns * 0.42));
   const metaX2 = g.col(Math.round(ad.grid.columns * 0.55));
-  const fromCol = T.flow(g.M, metaTop - step(ad, -1.5), metaW);
-  fromCol.line(ctx.ad.type.caseLabels === "upper" ? "FROM" : "From", step(ad, -1.5), accent, { tracking: step(ad, -1.5) * ad.type.labelTracking, weight: 500 });
+  const lab = (t: string) => (ad.type.caseLabels === "upper" ? t.toUpperCase() : t);
+  const labelSize = step(ad, -1.5);
+  const labelOpts = { tracking: labelSize * ad.type.labelTracking, weight: 500 };
+  const fromCol = T.flow(g.M, metaTop - labelSize, metaW);
+  fromCol.line(lab("From"), labelSize, accent, labelOpts);
   fromCol.block(fromLines, step(ad, -0.7), fg, { leading: 1.6, maxLines: 6, gap: step(ad, -0.2) });
-  const clientCol = T.flow(metaX2, metaTop - step(ad, -1.5), metaW);
-  clientCol.line(
-    (isInvoice ? "Bill to" : "Client")[ctx.ad.type.caseLabels === "upper" ? "toUpperCase" : "toString"](),
-    step(ad, -1.5), accent, { tracking: step(ad, -1.5) * ad.type.labelTracking, weight: 500 },
-  );
+  const clientCol = T.flow(metaX2, metaTop - labelSize, metaW);
+  clientCol.line(lab(isInvoice ? "Bill to" : "Client"), labelSize, accent, labelOpts);
   clientCol.block("Client name\nCompany\nEmail\nAddress", step(ad, -0.7), mix(fg, paper, 0.4), { leading: 1.6, maxLines: 6, gap: step(ad, -0.2) });
+
 
   const metaBottom = Math.max(fromCol.bottom, clientCol.bottom);
   const tableTop = snap(ad, Math.max(metaTop + step(ad, 7), metaBottom + step(ad, 3.4)));
