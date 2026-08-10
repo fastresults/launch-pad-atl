@@ -41,14 +41,14 @@ A single provider + hook so no screen has to reimplement it:
 
 ## Sending the notice
 
-- New table `ai_capacity_notices`: user_id, venture/snapshot id (nullable), context label (e.g. "Website PRD", "Campaign week 4"), error code, user note, status (`open` / `resolved`), timestamps. RLS: users insert/select their own rows; admins select/update all. GRANTs for `authenticated` and `service_role`.
-- New edge function `ai-capacity-notice`: validates the caller, rate-limits to one notice per user per 24h, inserts the row, and sends an internal alert email through the existing transactional email pipeline so the team sees it immediately.
-- Admin visibility: a "AI capacity notices" list in the admin area with open/resolved toggle, so the team can clear them.
+- New table `ai_capacity_notices`: user_id, venture/snapshot id (nullable), context label (e.g. "Website PRD", "Campaign week 4"), error code, `providers` (text array), user note, status (`open` / `resolved`), timestamps. RLS: users insert/select their own rows; admins select/update all. GRANTs for `authenticated` and `service_role`.
+- New edge function `ai-capacity-notice`: validates the caller, rate-limits to one notice per user per 24h, inserts the row, and sends an internal alert email through the existing transactional email pipeline so the team sees it immediately. The email subject names the provider(s), e.g. "AI capacity — OpenAI, Google".
+- Admin visibility: a "AI capacity notices" list in the admin area with open/resolved toggle and a provider column, so the team can see at a glance which provider needs topping up.
 
 ## Technical notes
 
-- New: `src/components/system/AiCapacityDialog.tsx`, `src/components/system/AiCapacityProvider.tsx`, `src/lib/ai-capacity.ts` (error classification + notice client), `supabase/functions/ai-capacity-notice/index.ts`, one migration.
-- Modified: `src/lib/edge-errors.ts`, `src/App.tsx`, the five screens listed above, admin nav + a new admin route.
+- New: `src/components/system/AiCapacityDialog.tsx`, `src/components/system/AiCapacityProvider.tsx`, `src/lib/ai-capacity.ts` (error classification, provider parsing + notice client), `supabase/functions/_shared/capacity-error.ts`, `supabase/functions/ai-capacity-notice/index.ts`, one migration.
+- Modified: `src/lib/edge-errors.ts`, `src/App.tsx`, the five screens listed above, the AI edge functions listed under provider attribution, admin nav + a new admin route.
 - Modal uses the existing shadcn `dialog` and design tokens (no hardcoded colors), and is theme-safe in light and dark.
 - Retry support is opt-in: callers can pass `{ retry: () => ... }` to `toastEdgeError`; without it the modal simply omits the Try again button.
 - Copy avoids "tokens"/"credits" as user-facing jargon and never exposes internal billing details.
