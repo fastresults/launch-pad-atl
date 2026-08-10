@@ -8,6 +8,7 @@
  */
 
 import { BANNED_COPY_PHRASES, SECTION4_WORD_FLOOR } from "./copy-craft.ts";
+import { countFactEchoes } from "./brain-facts.ts";
 
 /** Pull the body of a top-level numbered section (e.g. `## 4. Page-by-Page`). */
 function extractSection(raw: string, n: number): string {
