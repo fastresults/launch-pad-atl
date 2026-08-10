@@ -20,7 +20,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
-import { resolveOwner } from "../_shared/impersonation.ts";
+import { resolveOwner, isAdminUser } from "../_shared/impersonation.ts";
 import {
   applyConstruction,
   lintVectorSpec,
