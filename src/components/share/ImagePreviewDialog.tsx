@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { Button } from "@/components/ui/button";
 import { Check, Copy, Download, ExternalLink, Printer } from "lucide-react";
 import type { ShareImage } from "@/lib/venture-share.functions";
+import { buildPreviewCopy } from "@/components/share/preview-copy";
+
 
 /** Everything a viewer needs from one creative: the art, the copy, and the ways to take it with them. */
 export function ImagePreviewDialog({
