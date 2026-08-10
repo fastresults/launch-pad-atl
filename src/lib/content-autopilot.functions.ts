@@ -111,6 +111,8 @@ export async function generateContentAd(
     sceneOverride?: string;
     /** Re-derive the venture scene brief before generating. */
     refreshScenes?: boolean;
+    /** Rebuild the flight strategy before generating this ad. */
+    refreshArc?: boolean;
   },
 ) {
   return invoke("venture-content-ad", {

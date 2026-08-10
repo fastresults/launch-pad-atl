@@ -724,10 +724,12 @@ function Step4BuildAds({
   const runWeek = async (week: number, opts?: { force?: boolean }) => {
     setRunning(true);
     try {
+      let refreshedArc = false;
       for (const t of tasks) {
         if (t.post.week !== week) continue;
         if (t.ad && !opts?.force) continue;
-        await doGenerate(t);
+        await doGenerate(t, opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
+        refreshedArc = refreshedArc || !!opts?.force;
       }
       toast.success(opts?.force ? `Week ${week} ads regenerated` : `Week ${week} ads generated`);
     } finally {
@@ -749,7 +751,13 @@ function Step4BuildAds({
   const runAll = async (opts?: { force?: boolean }) => {
     setRunning(true);
     try {
-      for (const t of tasks) if (!t.ad || opts?.force) await doGenerate(t);
+      let refreshedArc = false;
+      for (const t of tasks) {
+        if (!t.ad || opts?.force) {
+          await doGenerate(t, opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
+          refreshedArc = refreshedArc || !!opts?.force;
+        }
+      }
       toast.success(opts?.force ? "All ads regenerated" : "All ads generated");
     } finally {
       setRunning(false);

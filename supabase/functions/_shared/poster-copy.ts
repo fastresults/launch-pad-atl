@@ -35,6 +35,9 @@ export type PosterCopy = {
   specific?: boolean;
   /** set when the line leans on advertising boilerplate ("proven results") */
   vagueness?: string | null;
+  /** true when automated copy could not clear the campaign-wide distinctness gate */
+  blocked?: boolean;
+  conflictReason?: string | null;
 
 };
 
@@ -42,6 +45,47 @@ const STOP = new Set([
   "the", "a", "an", "and", "or", "to", "of", "in", "on", "for", "with", "your", "you", "our",
   "that", "this", "it", "is", "are", "be", "make", "makes", "into", "every", "more", "than",
 ]);
+
+const SYNONYMS: Record<string, string> = {
+  advertisements: "ad", advertising: "ad", ads: "ad",
+  customers: "customer", buyers: "customer", users: "customer",
+  creators: "creator", voices: "creator",
+  recycled: "reuse", recycling: "reuse", rerun: "reuse", reruns: "reuse", old: "reuse",
+  delayed: "delay", delays: "delay", delaying: "delay", postpones: "delay",
+  launched: "launch", launches: "launch", launching: "launch",
+  scalable: "scale", scaled: "scale", scaling: "scale",
+  replacements: "replace", replacement: "replace", replacing: "replace",
+};
+
+function normalizedWords(s: string): string[] {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP.has(w))
+    .map((w) => SYNONYMS[w] ?? w.replace(/(ing|ed|es|s)$/, ""));
+}
+
+function sentenceFrame(s: string): string {
+  return normalizedWords(s).slice(0, 2).join(" ");
+}
+
+/** Campaign-wide duplicate gate: lexical, normalized synonym and sentence-frame overlap. */
+export function headlineConflict(headline: string, prior: string[]): { headline: string; reason: string } | null {
+  const candidate = normalizedWords(headline);
+  if (candidate.length < 2) return null;
+  const candidateSet = new Set(candidate);
+  for (const existing of prior) {
+    const words = normalizedWords(existing);
+    if (words.length < 2) continue;
+    const existingSet = new Set(words);
+    let shared = 0;
+    for (const word of candidateSet) if (existingSet.has(word)) shared += 1;
+    const overlap = shared / Math.min(candidateSet.size, existingSet.size);
+    const sameFrame = sentenceFrame(headline) === sentenceFrame(existing) && shared >= 2;
+    if (overlap >= 0.55 || sameFrame) {
+      return { headline: existing, reason: sameFrame ? "repeats the same sentence structure" : `${Math.round(overlap * 100)}% normalized overlap` };
+    }
+  }
+  return null;
+}
 
 /** Content-word overlap: catches "polished ads drain margin" vs "trade polished ads for trust". */
 export function usedClaimEcho(headline: string, claims: string[]): { claim: string; index: number } | null {
@@ -222,6 +266,8 @@ export async function buildPosterCopy(args: {
   approach?: { name: string; brief: string } | null;
   /** Headlines already written for this week — never paraphrase them. */
   siblingHeadlines?: string[];
+  /** Every accepted headline elsewhere in the flight, excluding this post. */
+  campaignHeadlines?: string[];
   /** How hard this week is allowed to ask, plus the brief for that rung. */
   ctaRung?: { rung: string; brief: string; offer?: string | null } | null;
   post: { hook?: string | null; body?: string | null; cta?: string | null; pillar?: string | null; platform?: string | null };
@@ -287,7 +333,8 @@ No prose outside the JSON.`;
     const siblings = (args.siblingHooks ?? []).filter(Boolean).slice(0, 6);
     const taxonomy = (args.kickerTaxonomy ?? []).filter(Boolean).slice(0, 6);
     const used = (args.usedClaims ?? []).filter(Boolean).slice(0, 10);
-    const written = (args.siblingHeadlines ?? []).filter(Boolean).slice(0, 6);
+    const written = (args.siblingHeadlines ?? []).filter(Boolean).slice(0, 12);
+    const campaignWritten = (args.campaignHeadlines ?? []).filter(Boolean).slice(0, 80);
 
     const stage = args.stage ?? null;
     const rung = args.ctaRung ?? null;
@@ -412,6 +459,36 @@ Source CTA: ${post.cta ?? ""}${
         } else {
           console.warn("[poster-copy] headline paraphrases a sibling ad", { headline: ai.headline, sibling: twin.claim });
         }
+      }
+
+      // Campaign-wide hard gate. Unlike the old warning, a known duplicate is
+      // never accepted and silently composited.
+      let conflict = headlineConflict(ai.headline ?? "", campaignWritten);
+      for (let attempt = 0; conflict && attempt < 2; attempt += 1) {
+        const retry = await ask(
+          `Your headline conflicts with an accepted campaign line ("${conflict.headline}"): ${conflict.reason}. Write a genuinely different argument with a different opening verb, subject, proof point, and sentence structure. Do not use the key nouns or verb frame from that line.`,
+        );
+        const retryDetail = headlineIssueDetail(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
+        const retryConflict = headlineConflict(retry.headline ?? "", campaignWritten);
+        if (retry.headline && !retryConflict && (!retryDetail.issue || retryDetail.soft)) {
+          ai = { ...ai, ...retry }; issue = retryDetail.issue; soft = retryDetail.soft; conflict = null;
+          break;
+        }
+        conflict = retryConflict ?? conflict;
+      }
+      if (conflict) {
+        console.warn("[poster-copy] copy blocked by campaign duplicate gate", { headline: ai.headline, conflict });
+        return {
+          kicker: ai.kicker || fb.kicker,
+          headline: "",
+          ctaLine: "",
+          source: "none",
+          truncated: false,
+          blocked: true,
+          repeatsClaim: conflict.headline,
+          conflictReason: conflict.reason,
+          approach: args.approach?.name ?? null,
+        };
       }
 
       // Ogilvy's specificity test. A generic line ships only if a rewrite

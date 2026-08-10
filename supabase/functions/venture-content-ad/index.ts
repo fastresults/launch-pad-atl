@@ -20,7 +20,7 @@ import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts
 import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
 import { ensureCampaignCard, deriveCampaignCard, layoutForIndex, type CampaignCard } from "../_shared/campaign-card.ts";
 import {
-  ensureCampaignArc, deriveCampaignArc, weekCard, claimsBefore, CTA_RUNG_BRIEF,
+  ensureCampaignArc, deriveCampaignArc, weekCard, claimsBefore, CTA_RUNG_BRIEF, campaignInputFingerprint,
   approachForIndex, APPROACH_BRIEF,
   type CampaignArc,
 } from "../_shared/campaign-arc.ts";
@@ -355,6 +355,7 @@ Deno.serve(async (req) => {
       const weekNumbers = Array.from(
         new Set([...(allPosts ?? []).map((p: any) => Number(p.week)).filter(Number.isFinite), weekNo]),
       ).sort((a, b) => a - b);
+      const inputFingerprint = campaignInputFingerprint(weekNumbers, allPosts ?? []);
       arc = await ensureCampaignArc(
         admin,
         snapshotId,
@@ -367,7 +368,7 @@ Deno.serve(async (req) => {
           valueProp: ctx?.value_proposition ?? null,
           customer: ctx?.customer ?? null,
         }),
-        { force: body?.refreshArc === true },
+        { force: body?.refreshArc === true, inputFingerprint },
       );
     } catch (e) {
       console.warn("[content-ad] campaign arc unavailable", e);
@@ -413,6 +414,7 @@ Deno.serve(async (req) => {
 
     // Headlines already written for this week — never paraphrase them.
     let siblingHeadlines: string[] = [];
+    let campaignHeadlines: string[] = [];
     try {
       const otherIds = weekPosts.map((p: any) => p.id).filter((id: string) => id && id !== post.id);
       if (otherIds.length) {
@@ -425,6 +427,15 @@ Deno.serve(async (req) => {
           new Set((siblingAds ?? []).map((a: any) => String(a.last_headline ?? "").trim()).filter(Boolean)),
         ).slice(0, 6);
       }
+      const { data: campaignAds } = await admin
+        .from("venture_content_ads")
+        .select("post_id,last_headline,updated_at")
+        .eq("snapshot_id", snapshotId)
+        .neq("post_id", post.id)
+        .not("last_headline", "is", null)
+        .order("updated_at", { ascending: false })
+        .limit(240);
+      campaignHeadlines = Array.from(new Set((campaignAds ?? []).map((a: any) => String(a.last_headline ?? "").trim()).filter(Boolean)));
     } catch (e) {
       console.warn("[content-ad] sibling headlines unavailable", e);
     }
@@ -438,6 +449,58 @@ Deno.serve(async (req) => {
       stage: arcWeek?.stage ?? null,
       cta_rung: arcWeek?.cta_rung ?? null,
     });
+
+    // Copy is accepted before the expensive image call. A repeated headline
+    // must never consume image credits or leave an orphaned plate behind.
+    const resolvedHeadline = resolveAdHeadline(post.hook, headlineOverride, aspect);
+    const headlineCap = HEADLINE_CAP[aspect] ?? 52;
+    const posterCopy = await buildPosterCopy({
+      apiKey,
+      brandName: ctx?.company_name ?? kit?.company_name ?? null,
+      valueProp: ctx?.value_proposition ?? null,
+      headlineCap,
+      siblingHooks,
+      kickerTaxonomy: (arcWeek?.kicker_taxonomy?.length ? arcWeek.kicker_taxonomy : campaignCard?.kicker_taxonomy) ?? [],
+      stage: arcWeek
+        ? { label: arcWeek.stage_label, job: arcWeek.job, audience: arcWeek.audience, temperature: arcWeek.temperature }
+        : null,
+      assignedAngle: arcWeek?.claim || null,
+      usedClaims,
+      proof: arcWeek?.proof || null,
+      approach,
+      siblingHeadlines,
+      campaignHeadlines,
+      ctaRung: arcWeek
+        ? {
+            rung: arcWeek.cta_rung,
+            brief: CTA_RUNG_BRIEF[arcWeek.cta_rung],
+            offer: arc?.offer?.name
+              ? [arc.offer.name, arc.offer.terms, arc.offer.ask].filter(Boolean).join(" — ")
+              : null,
+          }
+        : null,
+      post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
+      headlineOverride: resolvedHeadline.mode === "none"
+        ? { mode: "none" }
+        : resolvedHeadline.mode === "custom"
+        ? { mode: "custom", text: resolvedHeadline.text }
+        : { mode: "auto" },
+    });
+    step("poster copy written", {
+      headline: posterCopy.headline,
+      source: posterCopy.source,
+      issue: posterCopy.headlineIssue ?? null,
+      rationale: posterCopy.rationale ?? null,
+    });
+    if (posterCopy.blocked) {
+      step("copy blocked", { conflict: posterCopy.repeatsClaim ?? null, reason: posterCopy.conflictReason ?? null });
+      return json({
+        error: `Headline conflicts with an existing campaign line: ${posterCopy.repeatsClaim ?? "duplicate campaign claim"}`,
+        code: "COPY_DUPLICATE_BLOCKED",
+        conflict: posterCopy.repeatsClaim ?? null,
+        reason: posterCopy.conflictReason ?? null,
+      }, 409);
+    }
 
 
     const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
@@ -653,56 +716,6 @@ Deno.serve(async (req) => {
     // ---- Editorial poster typography (server-side SVG overlay) ----
     // The model paints only the photographic plate; the kicker / display
     // headline / CTA lockup is typeset here in real brand fonts.
-    const resolvedHeadline = resolveAdHeadline(post.hook, headlineOverride, aspect);
-    const headlineCap = HEADLINE_CAP[aspect] ?? 52;
-    const posterCopy = await buildPosterCopy({
-      apiKey,
-      brandName: ctx?.company_name ?? kit?.company_name ?? null,
-      valueProp: ctx?.value_proposition ?? null,
-      headlineCap,
-      // Sibling hooks from the same week so the claim isn't repeated in-set,
-      // and the campaign kicker taxonomy so labels stay consistent.
-      siblingHooks,
-      // Audience-shaped kickers from the arc win over topic labels.
-      kickerTaxonomy: (arcWeek?.kicker_taxonomy?.length ? arcWeek.kicker_taxonomy : campaignCard?.kicker_taxonomy) ?? [],
-      // Where this week sits in the funnel, the claim it owns, what earlier
-      // weeks already spent, and how hard it is allowed to ask.
-      stage: arcWeek
-        ? { label: arcWeek.stage_label, job: arcWeek.job, audience: arcWeek.audience, temperature: arcWeek.temperature }
-        : null,
-      assignedAngle: arcWeek?.claim || null,
-      usedClaims,
-      proof: arcWeek?.proof || null,
-      approach,
-      siblingHeadlines,
-
-      ctaRung: arcWeek
-        ? {
-            rung: arcWeek.cta_rung,
-            brief: CTA_RUNG_BRIEF[arcWeek.cta_rung],
-            offer: arc?.offer?.name
-              ? [arc.offer.name, arc.offer.terms, arc.offer.ask].filter(Boolean).join(" — ")
-              : null,
-          }
-        : null,
-      // The hook/body are source material — the copy pass writes the headline.
-      post: { hook: post.hook, body: post.body, cta: post.cta, pillar: post.pillar, platform: post.platform },
-
-
-      headlineOverride: resolvedHeadline.mode === "none"
-        ? { mode: "none" }
-        : resolvedHeadline.mode === "custom"
-        ? { mode: "custom", text: resolvedHeadline.text }
-        : { mode: "auto" },
-    });
-    step("poster copy written", {
-      headline: posterCopy.headline,
-      source: posterCopy.source,
-      issue: posterCopy.headlineIssue ?? null,
-      rationale: posterCopy.rationale ?? null,
-    });
-
-
     const headlineComposited = !!posterCopy.headline;
     const logoComposited = !!(logoSvgText || logoBytes || logoDataUrl);
     const platePngBytes = bytes;
