@@ -29,6 +29,13 @@ export type PosterCopy = {
   truncated: boolean;
   /** set when the line still echoes a claim an earlier week already spent */
   repeatsClaim?: string | null;
+  /** which of the week's three arguments this ad ran (claim / proof / edge) */
+  approach?: string | null;
+  /** true when the line carries a concrete particular (number, timeframe, named thing) */
+  specific?: boolean;
+  /** set when the line leans on advertising boilerplate ("proven results") */
+  vagueness?: string | null;
+
 };
 
 const STOP = new Set([
@@ -134,6 +141,40 @@ export function headlineIssue(h: string, cap: number, kicker = ""): string | nul
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Ogilvy's test: "The headline that promises a benefit, in specific terms,
+// outsells the clever one." These two checks enforce specificity.
+// ---------------------------------------------------------------------------
+
+/** Category boilerplate — words that could sit on any competitor's poster. */
+const VAGUE_PHRASES: { re: RegExp; why: string }[] = [
+  { re: /\b(proven|real|authentic|powerful|seamless|effortless|game[- ]chang\w+|next[- ]level|world[- ]class|cutting[- ]edge|innovative|unlock\w*|elevate\w*|transform\w*|revolutioniz\w*|supercharg\w*|leverage\w*)\b/i, why: "advertising adjective" },
+  { re: /\b(results|solutions|strategies|insights|success|growth|impact|value|potential|performance)\b\s*$/i, why: "abstract noun ending" },
+  { re: /\bthat (work|works|matter|matters|convert|converts|scale|scales)\b/i, why: "empty qualifier" },
+  { re: /\b(more|better|faster|smarter|bigger)\b(?!\s+than\s+\S)/i, why: "comparative with nothing to compare to" },
+];
+
+/** A concrete particular: a number, a unit of time, money, or a named thing. */
+export function hasParticular(h: string): boolean {
+  const t = h || "";
+  if (/\d/.test(t)) return true;
+  if (/\$|%|£|€/.test(t)) return true;
+  if (/\b(one|two|three|four|five|six|seven|eight|nine|ten|twelve|dozen|half|double|triple)\b/i.test(t)) return true;
+  if (/\b(day|days|week|weeks|month|months|hour|hours|minute|minutes|year|years|monday|friday|weekend|tonight|today|overnight)\b/i.test(t)) return true;
+  // A proper noun that isn't the first word reads as a named, checkable thing.
+  if (/\s[A-Z][a-z]{2,}/.test(t)) return true;
+  return false;
+}
+
+/** Returns the reason a headline reads generic, or null. */
+export function specificityIssue(h: string): string | null {
+  const t = (h || "").trim();
+  if (!t) return null;
+  for (const p of VAGUE_PHRASES) if (p.re.test(t)) return p.why;
+  return null;
+}
+
+
 /** Shorten an existing headline by a clause — the compositor's last-resort refit. */
 export function shortenHeadline(h: string, cap: number): string {
   const t = (h || "").trim();
@@ -175,10 +216,17 @@ export async function buildPosterCopy(args: {
   assignedAngle?: string | null;
   /** Claims spent by earlier weeks — hard negative context. */
   usedClaims?: string[];
+  /** The week's proof: the concrete particular this flight is allowed to print. */
+  proof?: string | null;
+  /** Which of the week's three arguments this ad runs, plus its brief. */
+  approach?: { name: string; brief: string } | null;
+  /** Headlines already written for this week — never paraphrase them. */
+  siblingHeadlines?: string[];
   /** How hard this week is allowed to ask, plus the brief for that rung. */
   ctaRung?: { rung: string; brief: string; offer?: string | null } | null;
   post: { hook?: string | null; body?: string | null; cta?: string | null; pillar?: string | null; platform?: string | null };
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string } | null;
+
 
 }): Promise<PosterCopy> {
 
@@ -208,6 +256,8 @@ export async function buildPosterCopy(args: {
   let issue: string | null = "no ai key";
   let soft = false;
   let repeats: string | null = null;
+  let vague: string | null = null;
+
 
 
   if (args.apiKey) {
@@ -225,15 +275,20 @@ headline — this is the whole job:
 - BANNED: article-title phrasing — "Tips for…", "Why X matters", "How to…", "Everything you need to know", "Navigating/Understanding/Exploring X", listicles, and "Topic: subtitle" constructions unless both halves are complete sentences.
 - No ellipsis, no trailing punctuation, no quotes, no emoji, no hashtags, no unbroken word over 18 characters.
 - Sentence case. Never shout. Do not repeat the kicker's words.
+- SPECIFIC, not general. Ogilvy's rule: the specific promise outsells the clever line. Where the brief gives you a number, a timeframe, a named thing or a real result, PRINT IT. A headline that could be lifted onto a competitor's poster without changing a word has failed.
+- BANNED vocabulary: proven, real, authentic, powerful, seamless, effortless, game-changing, next-level, world-class, innovative, unlock, elevate, transform, supercharge, leverage — and bare abstractions as the payoff word ("…that drives results", "…for real growth", "…with real impact").
 
 kicker — 1-4 words naming the AUDIENCE or the moment they are in, so the headline never has to.
 ctaLine — obey the CTA rung given below exactly. It sets how hard this ad is allowed to ask; an early-funnel ad that asks for a booking is wrong, and so is a late-funnel ad that only says "see how it works". MAX 42 characters, starts with a verb, no URL unless the source CTA has one. If the rung is "none", return an empty string.
 rationale — one sentence on why this line lands.
 
+
 No prose outside the JSON.`;
     const siblings = (args.siblingHooks ?? []).filter(Boolean).slice(0, 6);
     const taxonomy = (args.kickerTaxonomy ?? []).filter(Boolean).slice(0, 6);
     const used = (args.usedClaims ?? []).filter(Boolean).slice(0, 10);
+    const written = (args.siblingHeadlines ?? []).filter(Boolean).slice(0, 6);
+
     const stage = args.stage ?? null;
     const rung = args.ctaRung ?? null;
     const user = `Brand: ${args.brandName ?? "(unnamed)"}
@@ -253,6 +308,14 @@ Source CTA: ${post.cta ?? ""}${
         ? `\n- The ONE claim this week owns — argue this and nothing else: ${args.assignedAngle}`
         : ""
     }${
+      args.proof
+        ? `\n- The week's PROOF — the concrete particular you are allowed to print: ${args.proof}`
+        : ""
+    }${
+      args.approach
+        ? `\n- This ad's angle on that claim is "${args.approach.name}": ${args.approach.brief} The other ads this week take the other angles, so do not write theirs.`
+        : ""
+    }${
       rung
         ? `\n- CTA rung "${rung.rung}": ${rung.brief}${rung.offer ? `\n- The offer, when you are allowed to name it: ${rung.offer}` : ""}`
         : ""
@@ -263,10 +326,15 @@ Source CTA: ${post.cta ?? ""}${
     }${
       taxonomy.length ? `\n\nCampaign kicker vocabulary (pick the closest fit, or a close variant): ${taxonomy.join(" | ")}` : ""
     }${
+      written.length
+        ? `\n\nHeadlines ALREADY WRITTEN for this same week — yours must not paraphrase any of them:\n- ${written.join("\n- ")}`
+        : ""
+    }${
       siblings.length
         ? `\n\nOther posts running the same week — make a DIFFERENT argument from all of these:\n- ${siblings.join("\n- ")}`
         : ""
     }`;
+
 
 
 
@@ -331,6 +399,46 @@ Source CTA: ${post.cta ?? ""}${
           console.warn("[poster-copy] headline repeats an earlier week's claim", { headline: ai.headline, claim: echoed.claim });
         }
       }
+
+      // Within-week paraphrase: three ads must argue three ways.
+      const twin = usedClaimEcho(ai.headline ?? "", written);
+      if (twin) {
+        const retry = await ask(
+          `Your headline paraphrases another ad already running this week ("${twin.claim}"). Take this ad's assigned angle instead${args.approach ? ` — "${args.approach.name}": ${args.approach.brief}` : ""}.`,
+        );
+        const retryDetail = headlineIssueDetail(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
+        if (retry.headline && !usedClaimEcho(retry.headline, written) && !usedClaimEcho(retry.headline, used) && (!retryDetail.issue || retryDetail.soft)) {
+          ai = { ...ai, ...retry }; issue = retryDetail.issue; soft = retryDetail.soft;
+        } else {
+          console.warn("[poster-copy] headline paraphrases a sibling ad", { headline: ai.headline, sibling: twin.claim });
+        }
+      }
+
+      // Ogilvy's specificity test. A generic line ships only if a rewrite
+      // can't beat it — but it is always flagged so the founder can see it.
+      vague = specificityIssue(ai.headline ?? "");
+      const generic = vague || (args.proof && !hasParticular(ai.headline ?? ""));
+      if (generic) {
+        const why = vague
+          ? `it leans on ${vague}`
+          : "it carries no concrete particular — no number, timeframe, or named thing";
+        const retry = await ask(
+          `Your headline "${ai.headline ?? ""}" is too general: ${why}. Rewrite it around the specific${args.proof ? `: ${args.proof}` : " detail in the source material"}. Print the number or the named thing in the line itself.`,
+        );
+        const retryDetail = headlineIssueDetail(retry.headline ?? "", cap, retry.kicker ?? ai.kicker ?? "");
+        const retryVague = specificityIssue(retry.headline ?? "");
+        const better = !!retry.headline
+          && (!retryDetail.issue || retryDetail.soft)
+          && !retryVague
+          && !usedClaimEcho(retry.headline, used)
+          && (!args.proof || hasParticular(retry.headline));
+        if (better) {
+          ai = { ...ai, ...retry }; issue = retryDetail.issue; soft = retryDetail.soft; vague = null;
+        } else {
+          console.warn("[poster-copy] headline stayed generic", { headline: ai.headline, why });
+        }
+      }
+
     } catch (e) {
       console.warn("poster copy failed", e);
       issue = "copy pass failed";
@@ -346,6 +454,10 @@ Source CTA: ${post.cta ?? ""}${
     headline: wrote ? ai.headline! : (ai.headline ? firstClause(ai.headline, cap) : fb.headline),
     ctaLine: suppressCta ? "" : (ai.ctaLine || fb.ctaLine),
     repeatsClaim: repeats,
+    approach: args.approach?.name ?? null,
+    specific: hasParticular(wrote ? (ai.headline ?? "") : fb.headline),
+    vagueness: vague,
+
 
     source: wrote ? "written" : "fallback",
     headlineIssue: issue,

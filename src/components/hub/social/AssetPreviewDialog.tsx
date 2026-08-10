@@ -271,6 +271,25 @@ export function AssetPreviewDialog({
                     </div>
                   )}
 
+                  {asset.qaNotes?.campaign && (
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      Campaign: week {asset.qaNotes.campaign.week} ·{" "}
+                      {asset.qaNotes.campaign.stage_label}
+                      {asset.qaNotes.campaign.approach ? ` · ${asset.qaNotes.campaign.approach} angle` : ""}
+                      {asset.qaNotes.campaign.cta_rung ? ` · asks: ${asset.qaNotes.campaign.cta_rung}` : ""}
+                    </div>
+                  )}
+                  {asset.qaNotes?.campaign?.specific === false && (
+                    <div className="mt-1 text-[10px] text-amber-600">
+                      Generic headline — no number, timeframe or named thing
+                      {asset.qaNotes.campaign.vagueness ? ` (${asset.qaNotes.campaign.vagueness})` : ""}
+                    </div>
+                  )}
+                  {asset.qaNotes?.campaign?.repeats_claim && (
+                    <div className="mt-1 text-[10px] text-amber-600">
+                      Repeats an earlier week's claim: “{asset.qaNotes.campaign.repeats_claim}”
+                    </div>
+                  )}
 
 
 

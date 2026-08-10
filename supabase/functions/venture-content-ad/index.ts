@@ -21,8 +21,10 @@ import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art
 import { ensureCampaignCard, deriveCampaignCard, layoutForIndex, type CampaignCard } from "../_shared/campaign-card.ts";
 import {
   ensureCampaignArc, deriveCampaignArc, weekCard, claimsBefore, CTA_RUNG_BRIEF,
+  approachForIndex, APPROACH_BRIEF,
   type CampaignArc,
 } from "../_shared/campaign-arc.ts";
+
 
 
 
@@ -405,6 +407,29 @@ Deno.serve(async (req) => {
       .filter(Boolean)
       .slice(0, 6);
 
+    // The three ads in a week must argue the SAME claim three DIFFERENT ways.
+    const approachName = approachForIndex(postIndex);
+    const approach = { name: approachName, brief: APPROACH_BRIEF[approachName] };
+
+    // Headlines already written for this week — never paraphrase them.
+    let siblingHeadlines: string[] = [];
+    try {
+      const otherIds = weekPosts.map((p: any) => p.id).filter((id: string) => id && id !== post.id);
+      if (otherIds.length) {
+        const { data: siblingAds } = await admin
+          .from("venture_content_ads")
+          .select("last_headline")
+          .eq("snapshot_id", snapshotId)
+          .in("post_id", otherIds);
+        siblingHeadlines = Array.from(
+          new Set((siblingAds ?? []).map((a: any) => String(a.last_headline ?? "").trim()).filter(Boolean)),
+        ).slice(0, 6);
+      }
+    } catch (e) {
+      console.warn("[content-ad] sibling headlines unavailable", e);
+    }
+
+
     step("campaign card ready", {
       week: weekNo,
       grade: campaignCard?.grade ?? null,
@@ -647,6 +672,10 @@ Deno.serve(async (req) => {
         : null,
       assignedAngle: arcWeek?.claim || null,
       usedClaims,
+      proof: arcWeek?.proof || null,
+      approach,
+      siblingHeadlines,
+
       ctaRung: arcWeek
         ? {
             rung: arcWeek.cta_rung,
@@ -738,6 +767,11 @@ Deno.serve(async (req) => {
           claim: arcWeek.claim,
           cta_rung: arcWeek.cta_rung,
           repeats_claim: posterCopy.repeatsClaim ?? null,
+          approach: posterCopy.approach ?? null,
+          specific: posterCopy.specific ?? null,
+          vagueness: posterCopy.vagueness ?? null,
+          proof: arcWeek.proof || null,
+
         }
       : null;
 
