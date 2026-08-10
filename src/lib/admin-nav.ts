@@ -25,6 +25,8 @@ import {
   Megaphone,
   type LucideIcon,
   Plus,
+  Zap,
+
 } from "lucide-react";
 
 export type AdminGroup =
