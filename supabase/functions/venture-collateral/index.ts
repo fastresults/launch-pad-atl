@@ -327,6 +327,46 @@ async function store(
   return path;
 }
 
+/**
+ * A regenerate replaces the pieces it produces — but a kind can also stop
+ * producing a page (fewer slides, a renamed file, svg → png). Anything left
+ * behind keeps showing in the grid and the ZIP, so sweep it once the kind has
+ * finished successfully. Never call this on a failed run.
+ */
+async function sweepKind(
+  admin: any,
+  snapshotId: string,
+  kind: CollateralKind,
+  keptNames: string[],
+) {
+  try {
+    const { data, error } = await admin
+      .from("venture_brand_collateral")
+      .select("id, name, storage_path")
+      .eq("snapshot_id", snapshotId)
+      .eq("kind", kind);
+    if (error) throw error;
+    const keep = new Set(keptNames);
+    const stale = (data ?? []).filter((r: any) => !keep.has(r.name));
+    if (!stale.length) return;
+
+    const paths = stale.map((r: any) => r.storage_path).filter(Boolean) as string[];
+    if (paths.length) {
+      const { error: rmErr } = await admin.storage.from(BUCKET).remove(paths);
+      if (rmErr) console.warn(`[collateral sweep] storage remove failed for ${kind}:`, rmErr.message);
+    }
+    const { error: delErr } = await admin
+      .from("venture_brand_collateral")
+      .delete()
+      .in("id", stale.map((r: any) => r.id));
+    if (delErr) console.warn(`[collateral sweep] row delete failed for ${kind}:`, delErr.message);
+    else console.log(`[collateral sweep] ${kind}: removed ${stale.length} superseded file(s)`);
+  } catch (e) {
+    // Cleanup must never break a successful generation.
+    console.warn(`[collateral sweep] skipped for ${kind}:`, (e as Error).message);
+  }
+}
+
 async function generateKind(
   admin: any,
   snapshotId: string,
@@ -334,12 +374,16 @@ async function generateKind(
   kind: CollateralKind,
   ctx: CollateralCtx,
 ): Promise<{ kind: CollateralKind; files: number; qc: QcVerdict[] }> {
+  const wrote: string[] = [];
   if (kind === "design_tokens") {
     const { css, json: tokenJson } = designTokens(ctx);
     await store(admin, snapshotId, userId, kind, "brand-tokens", css, "text/css", null, null);
     await store(admin, snapshotId, userId, kind, "brand-tokens-json", tokenJson, "application/json", null, null);
+    wrote.push("brand-tokens", "brand-tokens-json");
+    await sweepKind(admin, snapshotId, kind, wrote);
     return { kind, files: 2, qc: [] };
   }
+
 
   const { pages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx);
   // Fail loudly. Without a real TTF the rasteriser silently drops every line of
@@ -377,6 +421,7 @@ async function generateKind(
       archetype: ctx.ad.archetype,
       qc: verdict,
     });
+    wrote.push(p.name);
 
     if (bytes) {
       await store(admin, snapshotId, userId, kind, `${p.name}-preview`, bytes, "image/png", p.width, p.height, {
@@ -384,6 +429,7 @@ async function generateKind(
         archetype: ctx.ad.archetype,
         qc: verdict,
       });
+      wrote.push(`${p.name}-preview`);
       bytes = null as unknown as Uint8Array;
     }
 
@@ -392,9 +438,12 @@ async function generateKind(
 
   if (kind === "email_signature") {
     await store(admin, snapshotId, userId, kind, "email-signature-html", signatureHtml(ctx), "text/html", null, null);
+    wrote.push("email-signature-html");
   }
+  await sweepKind(admin, snapshotId, kind, wrote);
   return { kind, files: count, qc: verdicts };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
