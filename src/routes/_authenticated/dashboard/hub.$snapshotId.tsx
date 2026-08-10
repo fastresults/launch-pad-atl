@@ -1225,11 +1225,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     }
   }
 
-  const pct = jobRunning
-    ? (job?.progress_pct ?? 0)
-    : total > 0
-      ? Math.round((completeCount / total) * 100)
-      : 0;
+  // Never show a percentage lower than what's actually on disk — a resumed run
+  // reports progress for its own slice of work, not the whole kit.
+  const docPct = total > 0 ? Math.round((completeCount / total) * 100) : 0;
+  const pct = jobRunning ? Math.max(docPct, job?.progress_pct ?? 0) : docPct;
 
   return (
     <div className="theme-dark-scope space-y-6 rounded-2xl bg-background p-4 text-foreground sm:p-5">
