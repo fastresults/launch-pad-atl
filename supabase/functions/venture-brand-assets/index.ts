@@ -20,7 +20,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
-import { resolveOwner } from "../_shared/impersonation.ts";
+import { resolveOwner, isAdminUser } from "../_shared/impersonation.ts";
 import {
   applyConstruction,
   lintVectorSpec,
@@ -857,7 +857,16 @@ Deno.serve(async (req) => {
     const snap = ctx.snap;
     if (!snap) return new Response(JSON.stringify({ error: "Snapshot not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     if (internal) userId = snap.user_id;
-    if (snap.user_id !== userId) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (snap.user_id !== userId) {
+      // A super admin working inside a member's venture (without an explicit
+      // "view as" session) may act on the owner's behalf. Everyone else: 403.
+      const actorIsAdmin = await isAdminUser(supabase, userId);
+      if (!actorIsAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      console.log(`[admin-override] actor=${userId} acting_on_owner=${snap.user_id} snapshot=${snapshotId}`);
+      userId = snap.user_id;
+    }
 
     const { data: kit } = await supabase.from("venture_brand_kits").select("palette, typography, dna, logos, moodboard").eq("snapshot_id", snapshotId).maybeSingle();
     const tokens = {
@@ -1414,10 +1423,20 @@ Deno.serve(async (req) => {
       const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
       const dataUrl = typeof body?.dataUrl === "string" ? body.dataUrl : "";
       const filename = typeof body?.filename === "string" ? body.filename : "logo.png";
-      const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      // Some browsers/OSes hand over a file with no MIME type at all
+      // ("data:;base64,…"), so fall back to the filename extension.
+      const match = dataUrl.match(/^data:([^;,]*);base64,([\s\S]+)$/);
       if (!match) throw new Error("Upload a PNG, JPG, WebP or SVG file.");
-      const contentType = match[1];
-      if (!/^image\/(png|jpe?g|webp|svg\+xml)$/i.test(contentType)) {
+      const extHint = (filename.split(".").pop() ?? "").toLowerCase();
+      const byExt: Record<string, string> = {
+        png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+        webp: "image/webp", svg: "image/svg+xml",
+      };
+      const declared = (match[1] || "").toLowerCase();
+      const contentType = /^image\/(png|jpe?g|webp|svg\+xml)$/.test(declared)
+        ? declared
+        : byExt[extHint] ?? "";
+      if (!contentType) {
         throw new Error("Only PNG, JPG, WebP or SVG files are supported.");
       }
       let bytes = decodeBase64(match[2]);

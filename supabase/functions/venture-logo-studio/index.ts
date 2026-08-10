@@ -20,7 +20,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
-import { resolveOwner } from "../_shared/impersonation.ts";
+import { resolveOwner, isAdminUser } from "../_shared/impersonation.ts";
 import { MODELS } from "../_shared/models.ts";
 import {
   buildCreativeDirection,
@@ -489,7 +489,14 @@ Deno.serve(async (req) => {
     const ctx = await loadVentureContext(supabase, snapshotId);
     const snap = ctx.snap;
     if (!snap) return json({ error: "Venture not found" }, 404);
-    if (snap.user_id !== userId) return json({ error: "Forbidden" }, 403);
+    if (snap.user_id !== userId) {
+      // Super admins may work inside a member's venture without an explicit
+      // "view as" session; all writes still land on the owner's records.
+      const actorIsAdmin = await isAdminUser(supabase, userId);
+      if (!actorIsAdmin) return json({ error: "Forbidden" }, 403);
+      console.log(`[admin-override] actor=${userId} acting_on_owner=${snap.user_id} snapshot=${snapshotId}`);
+      userId = snap.user_id;
+    }
 
     const { data: kit } = await supabase
       .from("venture_brand_kits")
