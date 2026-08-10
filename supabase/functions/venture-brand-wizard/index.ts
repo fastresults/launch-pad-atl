@@ -8,7 +8,7 @@ import { loadVentureContext, compactPreamble, renderSources } from "../_shared/v
 import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { sanitizePaletteOption } from "../_shared/palette-rules.ts";
-import { resolveOwner } from "../_shared/impersonation.ts";
+import { resolveOwner, isAdminUser } from "../_shared/impersonation.ts";
 import { deriveBrandKitFromAssets } from "../_shared/brand-derive.ts";
 
 
@@ -408,9 +408,20 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.warn("brain corpus retrieval failed", e);
     }
-    if (!ctx.snap || ctx.snap.user_id !== userId) {
+    if (!ctx.snap) {
       return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    if (ctx.snap.user_id !== userId) {
+      // A super admin working inside a member's venture (without an explicit
+      // "view as" session) may act on the owner's behalf. Everyone else: 404.
+      const actorIsAdmin = await isAdminUser(supabase, userId);
+      if (!actorIsAdmin) {
+        return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      console.log(`[admin-override] actor=${userId} acting_on_owner=${ctx.snap.user_id} snapshot=${snapshotId}`);
+      userId = ctx.snap.user_id;
+    }
+
     const { data: kit } = await supabase.from("venture_brand_kits").select("*").eq("snapshot_id", snapshotId).maybeSingle();
 
     if (action === "palettes") {
