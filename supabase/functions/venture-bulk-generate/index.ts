@@ -584,7 +584,7 @@ async function runLayer(
   ctx: VentureContext,
   jobId: string,
   layer: any[],
-  state: { done: number; total: number; fails: number; canceled: boolean },
+  state: RunState,
   mode: GenMode = "full",
   dayContext = "",
 ) {
