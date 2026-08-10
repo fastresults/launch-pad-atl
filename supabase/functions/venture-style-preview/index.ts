@@ -5,6 +5,7 @@
 // look like what Step 5 will actually produce.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { capacityProvider } from "../_shared/capacity-error.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { ART_DIRECTIONS, type ArtDirectionId, type AssetSpec } from "../_shared/social-platform-specs.ts";
 import { buildCoverArtPrompt } from "../_shared/cover-art-director.ts";
@@ -311,6 +312,13 @@ Deno.serve(async (req) => {
       else if (e?.status === 429) { out.code = "RATE_LIMITED"; }
       else if (e?.code) { out.code = e.code; }
       if (e?.details) out.details = e.details;
+      if (out.code === "PAYMENT_REQUIRED" || out.code === "AI_CREDIT_LIMIT_REACHED" || out.code === "RATE_LIMITED") {
+        out.providers = [
+          out.code === "AI_CREDIT_LIMIT_REACHED"
+            ? capacityProvider("lovable", "image generation")
+            : capacityProvider(e?.model ?? result?.modelUsed ?? null, "image generation"),
+        ];
+      }
       return json(out, 200);
     }
 

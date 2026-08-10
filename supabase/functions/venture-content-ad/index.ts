@@ -5,6 +5,7 @@
 // of (platform, asset_kind).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { capacityProvider } from "../_shared/capacity-error.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { buildCanvasPlan, applyPaletteOverride, type CanvasPlan } from "../_shared/canvas-plan.ts";
 import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-tile.ts";
@@ -609,6 +610,13 @@ Deno.serve(async (req) => {
       else if (status === 504 || e?.code === "UPSTREAM_TIMEOUT") { out.code = "UPSTREAM_TIMEOUT"; }
       else if (e?.code) { out.code = e.code; }
       if (e?.details) out.details = e.details;
+      if (out.code === "PAYMENT_REQUIRED" || out.code === "AI_CREDIT_LIMIT_REACHED" || out.code === "RATE_LIMITED") {
+        out.providers = [
+          out.code === "AI_CREDIT_LIMIT_REACHED"
+            ? capacityProvider("lovable", "image generation")
+            : capacityProvider(e?.model ?? result?.modelUsed ?? null, "image generation"),
+        ];
+      }
       return json(out, 200);
     }
     step("image gateway call done", { model: result.modelUsed });
