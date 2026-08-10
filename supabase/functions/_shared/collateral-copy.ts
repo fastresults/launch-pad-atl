@@ -223,8 +223,8 @@ export async function writeCollateralCopy(input: CollateralCopyInput): Promise<C
 
   // Two passes: the fast model first, then a stronger one. A silent null here
   // is what produces a generic deck, so it is worth the second call.
-  const ladder = [MODELS.flashLite, MODELS.flash ?? MODELS.flashLite, MODELS.pro].filter(Boolean) as string[];
-  for (const model of ladder.slice(0, 2)) {
+  const ladder: string[] = [MODELS.flash, MODELS.pro];
+  for (const model of ladder) {
     try {
       const out = await attempt(key, model, input);
       if (copyIsUsable(out)) {
