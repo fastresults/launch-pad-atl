@@ -284,13 +284,23 @@ const SUPABASE_URL =
   "https://hflfxytqrlkobhuugsca.supabase.co";
 const FUNCTIONS_BASE = `${SUPABASE_URL}/functions/v1`;
 
-/** Public fetch — works signed out, so it calls the endpoint directly. */
+/**
+ * Public fetch — works signed out, so it calls the endpoint directly. When the
+ * viewer happens to be signed in we forward the session so the founder opening
+ * their own link gets the owner controls back.
+ */
 export async function fetchSharePayload(token: string, password?: string) {
   let res: Response;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  try {
+    const { data } = await supabase.auth.getSession();
+    const jwt = data.session?.access_token;
+    if (jwt) headers.Authorization = `Bearer ${jwt}`;
+  } catch { /* anonymous viewer */ }
   try {
     res = await fetch(`${FUNCTIONS_BASE}/venture-share`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ token, password, action: "get" }),
     });
   } catch {
