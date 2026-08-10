@@ -694,10 +694,27 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers } = await req.json();
+    const { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers, phase } = await req.json();
     if (!snapshotId || !documentType) {
       return jsonResponse({ error: "snapshotId and documentType required" }, 400, corsHeaders);
     }
+
+    // Internal phase handoff (draft -> refine) carries the service key and
+    // skips the user checks: the draft phase already authorised the run.
+    const internal = req.headers.get("x-internal-key") === SERVICE_KEY;
+    if (internal && phase === "refine") {
+      const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+      const job = generateOne(sb, snapshotId, documentType, undefined, undefined, undefined, "refine")
+        .catch(async (err) => {
+          await sb.from("venture_documents").update({
+            status: "failed",
+            last_error: (err instanceof Error ? err.message : String(err)).slice(0, 500),
+          }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+        });
+      try { (globalThis as any).EdgeRuntime?.waitUntil?.(job); } catch { /* ignore */ }
+      return jsonResponse({ ok: true, phase: "refine", pending: true }, 202, corsHeaders);
+    }
+
     const auth = await requireUser(req, corsHeaders);
     if (auth.error) return auth.error;
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -713,7 +730,9 @@ Deno.serve(async (req) => {
       rewriteFeedback,
       Array.isArray(rewriteTags) ? rewriteTags : undefined,
       intakeAnswers && typeof intakeAnswers === "object" ? intakeAnswers : undefined,
+      documentType === "website_prd" ? "draft" : "full",
     );
+
 
     // Long deliverables (Website PRD, with its copy-expansion and repair
     // passes) routinely run past the platform's 150s request idle timeout.
