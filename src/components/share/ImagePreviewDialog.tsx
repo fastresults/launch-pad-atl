@@ -127,12 +127,19 @@ export function ImagePreviewDialog({
                 <Button size="sm" variant="secondary" onClick={print}>
                   <Printer className="mr-1.5 h-3.5 w-3.5" /> Print
                 </Button>
+                {!!preview.fullCopy && (
+                  <Button size="sm" variant="secondary" onClick={() => copyText("ad", preview.fullCopy)}>
+                    {copied === "ad" ? <Check className="mr-1.5 h-3.5 w-3.5" /> : <Copy className="mr-1.5 h-3.5 w-3.5" />}
+                    {copied === "ad" ? "Copied" : "Copy ad"}
+                  </Button>
+                )}
                 {!!preview.caption && (
                   <Button size="sm" variant="secondary" onClick={() => copyText("all", preview.caption)}>
                     {copied === "all" ? <Check className="mr-1.5 h-3.5 w-3.5" /> : <Copy className="mr-1.5 h-3.5 w-3.5" />}
                     {copied === "all" ? "Copied" : "Copy caption"}
                   </Button>
                 )}
+
                 <Button size="sm" variant="ghost" onClick={() => window.open(image.url, "_blank", "noopener")}>
                   <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> Open
                 </Button>
