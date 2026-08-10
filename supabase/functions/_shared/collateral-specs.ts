@@ -138,7 +138,7 @@ export const PIECE_SPECS: PieceSpec[] = [
   {
     // The closing slide signs off with the mark — it is the subject, like a
     // title card, so it carries a display band rather than the running one.
-    page: "slide-4-closing",
+    page: "slide-closing",
     widthIn: 1920, heightIn: 1080, trimW: 1920, trimH: 1080,
     bleedIn: 0, safeIn: 0.06 * 1080,
     logo: [0.08, 0.16], logoLockup: [0.06, 0.13],
@@ -214,6 +214,7 @@ function specFor(pageName: string): PieceSpec {
   const exact = PIECE_SPECS.find((s) => s.page === pageName);
   if (exact) return exact;
   if (/^slide-1-cover/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "slide-cover")!;
+  if (/^slide-.*closing/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "slide-closing")!;
   if (/^slide-/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "slide")!;
   if (/^guidelines-1-cover/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "guidelines-cover")!;
   if (/^guidelines-.*(clearspace|misuse)/.test(pageName)) return PIECE_SPECS.find((s) => s.page === "guidelines-specimen")!;
