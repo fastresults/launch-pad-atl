@@ -1280,7 +1280,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 <span>{pct}%</span>
               </div>
               <Progress value={pct} />
-              {retryRound > 0 && (
+              {retryRound > 0 && !jobNeedsAttention && (
                 <p className="text-xs text-muted-foreground">
                   Retrying {retryRemaining} asset{retryRemaining === 1 ? "" : "s"} (round {retryRound} of 3)…
                 </p>
