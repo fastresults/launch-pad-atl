@@ -491,7 +491,11 @@ async function generateKind(
     // marks those duplicate resvg passes exceed the worker CPU allowance.
     // The stored preview is already suitable for both the library thumbnail
     // and detailed preview, so do not manufacture a second presentation image.
-    const bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 1100), undefined, fontBuffers);
+    // Ten-slide decks blew the worker CPU allowance at 1100px a page. QC reads
+    // ink coverage and contrast, both of which survive a smaller raster, so
+    // multi-page kinds review (and preview) at a lighter width.
+    const rasterWidth = Math.min(p.width, pages.length > 6 ? 760 : 1100);
+    const bytes = await rasterizeSvgToBytes(p.svg, rasterWidth, undefined, fontBuffers);
 
     // Quarantine in memory: nothing is promoted until every page in the kind
     // passes geometry and final-raster review.
