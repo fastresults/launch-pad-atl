@@ -1047,6 +1047,14 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const failures = (failuresQ.data ?? []).filter((f: any) => !blockedKeys.has(f.document_type));
   const retryRound = (job as any)?.retry_round ?? 0;
   const retryRemaining = (job as any)?.retry_remaining ?? 0;
+  // A run is only "working" while its heartbeat is fresh. Anything older than
+  // the watchdog window (or an explicitly paused job) is surfaced honestly
+  // instead of spinning a progress bar that will never move.
+  const heartbeatAgeMs = job?.heartbeat_at ? Date.now() - new Date(job.heartbeat_at).getTime() : null;
+  const jobStalled = jobRunning && heartbeatAgeMs !== null && heartbeatAgeMs > 6 * 60 * 1000;
+  const jobPaused = job?.status === "paused";
+  const jobNeedsAttention = jobPaused || jobStalled;
+
 
 
   useEffect(() => {
