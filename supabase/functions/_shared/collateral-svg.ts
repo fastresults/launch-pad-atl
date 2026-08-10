@@ -1093,6 +1093,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   const footNote = step(ad, 6);
   const gridH = H - g.M - top - footNote;
   const tileH = (gridH - tGap * (rowsL - 1)) / rowsL;
+  const capBand = step(ad, 3.8);
   const artH = tileH - capBand;
   pages.push({
     name: "guidelines-2-logo", width: W, height: H,
