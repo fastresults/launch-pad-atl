@@ -618,57 +618,66 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
 
 
 
-  // ---------- logo: vector ink in the quietest legal corner ----------
+  // ---------- logo: vector ink in the quietest LEGAL corner ----------
+  // Contract: the mark never sits on a face and never sits on a text element.
+  // It shrinks first; if no legal position exists, it is omitted entirely.
   if (args.logoSvgText || args.logoBytes || args.logoDataUrl) {
     const size = args.logoSize || "sm";
     const aspect = args.logoAspect || 1;
     const capFrac = LOGO_HEIGHT_CAP[args.aspect] ?? 0.11;
     // Sit diagonally opposite the type lockup by default.
     const preferred: CornerId[] = args.logoCorner
-      ? [args.logoCorner as CornerId]
-      : layout === "centered-plate"
-        ? ["top-right", "top-left", "bottom-right", "bottom-left"]
-        : ["top-right", "top-left", "bottom-right", "bottom-left"];
-    const candidates: CornerId[] = Array.from(
-      new Set<CornerId>([...preferred, "top-right", "top-left", "bottom-right", "bottom-left"]),
-    );
+      ? [args.logoCorner as CornerId, "top-right", "top-left", "bottom-right", "bottom-left"]
+      : ["top-right", "top-left", "bottom-right", "bottom-left"];
 
-    const boxes = {} as Record<CornerId, { x: number; y: number; w: number; h: number }>;
-    const collides: Partial<Record<CornerId, boolean>> = {};
-    const contrastByCorner: Partial<Record<CornerId, number>> = {};
-    const lumByCorner: Partial<Record<CornerId, number>> = {};
-    const boxByCorner = {} as Record<CornerId, ReturnType<typeof logoBox>>;
-    for (const corner of candidates) {
-      const box = logoBox(W, H, aspect, size, corner as Corner, inset, capFrac);
-      boxByCorner[corner] = box;
-      boxes[corner] = { x: box.x, y: box.y, w: box.boxW, h: box.boxH };
-      collides[corner] = typeRect
-        ? intersects({ x: box.x, y: box.y, w: box.boxW, h: box.boxH }, typeRect, Math.round(inset * 0.6))
-        : false;
-      const stat = sampler.sample(box.x, box.y, box.boxW, box.boxH, W, H);
+    const inkContrastAt = (box: { x: number; y: number; w: number; h: number }) => {
+      const stat = sampler.sample(box.x, box.y, box.w, box.h, W, H);
       const behind = stat ? stat.lum : lum(surface);
-      lumByCorner[corner] = behind;
-      contrastByCorner[corner] = Math.max(contrastOf(lum("#FFFFFF"), behind), contrastOf(lum(planInk), behind));
-    }
+      return Math.max(contrastOf(lum("#FFFFFF"), behind), contrastOf(lum(planInk), behind));
+    };
 
-    // Emptiness first, contrast second — and never on a face.
-    const scores = scoreCorners({ sampler, W, H, boxes, collides, contrast: contrastByCorner, preferred });
-    const pick = pickCorner(scores);
-    const chosen = pick
+    const placement = resolveMarkPlacement({
+      sampler,
+      W,
+      H,
+      preferred,
+      forbidden: [typeRect],
+      guard: Math.round(inset * 0.6),
+      contrastFor: inkContrastAt,
+      makeBox: (corner, scale) => {
+        const b = logoBox(W, H, aspect, size, corner as Corner, inset, capFrac, scale);
+        return { x: b.x, y: b.y, w: b.boxW, h: b.boxH };
+      },
+    });
+
+    const chosen = placement
       ? {
-          corner: pick.corner as Corner,
-          box: boxByCorner[pick.corner],
-          lumBehind: lumByCorner[pick.corner] ?? lum(surface),
-          score: pick.score,
+          corner: placement.corner as Corner,
+          scale: placement.scale,
+          box: {
+            x: placement.box.x,
+            y: placement.box.y,
+            boxW: placement.box.w,
+            boxH: placement.box.h,
+          },
+          lumBehind: (() => {
+            const s = sampler.sample(placement.box.x, placement.box.y, placement.box.w, placement.box.h, W, H);
+            return s ? s.lum : lum(surface);
+          })(),
+          score: placement.score,
         }
       : null;
-    if (pick) {
-      metrics.logo_placement = {
-        edge: Number(pick.edge.toFixed(3)),
-        skin_pct: Number(pick.skinPct.toFixed(3)),
-        face_avoided: scores.some((s) => s.faceLikely),
-      };
+    metrics.logo_placement = placement
+      ? {
+          edge: Number(placement.edge.toFixed(3)),
+          skin_pct: Number(placement.skinPct.toFixed(3)),
+          face_avoided: placement.faceAvoided,
+        }
+      : { edge: 0, skin_pct: 0, face_avoided: true };
+    if (!placement) {
+      (metrics as any).logo_suppressed = "no-legal-position";
     }
+
 
     if (chosen) {
 
