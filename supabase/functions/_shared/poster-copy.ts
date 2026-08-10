@@ -141,6 +141,40 @@ export function headlineIssue(h: string, cap: number, kicker = ""): string | nul
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Ogilvy's test: "The headline that promises a benefit, in specific terms,
+// outsells the clever one." These two checks enforce specificity.
+// ---------------------------------------------------------------------------
+
+/** Category boilerplate — words that could sit on any competitor's poster. */
+const VAGUE_PHRASES: { re: RegExp; why: string }[] = [
+  { re: /\b(proven|real|authentic|powerful|seamless|effortless|game[- ]chang\w+|next[- ]level|world[- ]class|cutting[- ]edge|innovative|unlock\w*|elevate\w*|transform\w*|revolutioniz\w*|supercharg\w*|leverage\w*)\b/i, why: "advertising adjective" },
+  { re: /\b(results|solutions|strategies|insights|success|growth|impact|value|potential|performance)\b\s*$/i, why: "abstract noun ending" },
+  { re: /\bthat (work|works|matter|matters|convert|converts|scale|scales)\b/i, why: "empty qualifier" },
+  { re: /\b(more|better|faster|smarter|bigger)\b(?!\s+than\s+\S)/i, why: "comparative with nothing to compare to" },
+];
+
+/** A concrete particular: a number, a unit of time, money, or a named thing. */
+export function hasParticular(h: string): boolean {
+  const t = h || "";
+  if (/\d/.test(t)) return true;
+  if (/\$|%|£|€/.test(t)) return true;
+  if (/\b(one|two|three|four|five|six|seven|eight|nine|ten|twelve|dozen|half|double|triple)\b/i.test(t)) return true;
+  if (/\b(day|days|week|weeks|month|months|hour|hours|minute|minutes|year|years|monday|friday|weekend|tonight|today|overnight)\b/i.test(t)) return true;
+  // A proper noun that isn't the first word reads as a named, checkable thing.
+  if (/\s[A-Z][a-z]{2,}/.test(t)) return true;
+  return false;
+}
+
+/** Returns the reason a headline reads generic, or null. */
+export function specificityIssue(h: string): string | null {
+  const t = (h || "").trim();
+  if (!t) return null;
+  for (const p of VAGUE_PHRASES) if (p.re.test(t)) return p.why;
+  return null;
+}
+
+
 /** Shorten an existing headline by a clause — the compositor's last-resort refit. */
 export function shortenHeadline(h: string, cap: number): string {
   const t = (h || "").trim();
