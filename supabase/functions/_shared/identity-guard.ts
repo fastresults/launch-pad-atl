@@ -106,7 +106,14 @@ export function checkIdentity(
     requireCopyDepth?: boolean;
     /** PRD only: minimum words of Section 4 page copy. */
     minSection4Words?: number;
+    /** PRD only: the art direction must be derived from the attached mark. */
+    requireLogoCraft?: boolean;
+    /** PRD only: distinctive facts from the venture brain the copy must echo. */
+    brainFacts?: string[];
+    /** PRD only: how many of those facts must appear (default 3). */
+    minBrainFacts?: number;
   },
+
 ): IdentityCheck {
   const nameMissing = !mentionsCompany(raw, opts.companyName);
   const logo = (opts.logoUrl ?? "").trim();
