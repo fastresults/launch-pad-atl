@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { fetchSharePayload, trackShareView, type SharePayload } from "@/lib/venture-share.functions";
+import { useSurfaceLogo } from "@/hooks/use-surface-logo";
+import { OwnerAssetActions } from "@/components/share/OwnerAssetActions";
 import { ShareSidebar, BRAIN_KEY, TIMELINE_KEY } from "@/components/share/ShareSidebar";
 import { decodeScenario, encodeScenario, type TimelineScenario } from "@/lib/venture-timeline";
 import { ShareSection } from "@/components/share/ShareSection";
@@ -310,9 +312,9 @@ export default function VentureSharePage() {
             /* Phone masthead: one line, sticky, with the one-liner on demand. */
             <header className="shrink-0 border-b border-border/60 bg-card/50 px-4 pt-[calc(env(safe-area-inset-top)+10px)] pb-2.5 backdrop-blur">
               <div className="flex items-center gap-3">
-                {payload.venture.logoUrl && (
+                {surfaceLogo && (
                   <img
-                    src={payload.venture.logoUrl}
+                    src={surfaceLogo}
                     alt={payload.venture.name}
                     className={`shrink-0 rounded-lg object-contain transition-all ${
                       condensed ? "h-8 w-8" : "h-10 w-10"
@@ -402,9 +404,9 @@ export default function VentureSharePage() {
                   </SheetContent>
                 </Sheet>
 
-                {payload.venture.logoUrl && (
+                {surfaceLogo && (
                   <img
-                    src={payload.venture.logoUrl}
+                    src={surfaceLogo}
                     alt={payload.venture.name}
                     className={`shrink-0 rounded-lg object-contain transition-all ${
                       condensed ? "h-9 w-9" : "h-12 w-12 md:h-16 md:w-16"
