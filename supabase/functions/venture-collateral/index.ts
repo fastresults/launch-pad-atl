@@ -251,6 +251,14 @@ async function buildCtx(
     await admin.from("venture_brand_kits").update({ art_direction: ad }).eq("snapshot_id", snapshotId);
   }
 
+  const snap = vctx?.snap ?? {};
+  const sourceExcerpts = [
+    ...(vctx?.sources.documents ?? []).map((d) => `${d.filename}: ${d.text}`),
+    ...(vctx?.sources.urls ?? []).map((u) => `${u.title || u.url}: ${u.text}`),
+  ].map((t) => t.replace(/\s+/g, " ").trim().slice(0, 1200)).filter(Boolean).slice(0, 4);
+
+  // The whole dossier, not a one-liner. A deck written from seven fields reads
+  // like a template; the brain already holds the facts and the numbers.
   const copy: CollateralCopy | null = await writeCollateralCopy({
     company,
     tagline: details.tagline ?? null,
@@ -258,9 +266,22 @@ async function buildCtx(
     problem: tidy(brain?.problem) || null,
     solution: tidy(brain?.solution) || null,
     customer: tidy(brain?.customer) || null,
-    differentiators: Array.isArray(brain?.differentiators) ? brain.differentiators.slice(0, 4) : null,
+    differentiators: Array.isArray(brain?.differentiators) ? brain.differentiators.slice(0, 6) : null,
     voice,
+    industry: [tidy(snap.industry), tidy(snap.sub_industry)].filter(Boolean).join(" / ") || null,
+    location: [snap.city, snap.region, snap.country].map(tidy).filter(Boolean).join(", ") || null,
+    founder: tidy(brain?.identity?.founder) || tidy(snap.founder_name) || null,
+    concept: tidy(snap.concept_summary) || null,
+    valueProposition: tidy(snap.value_proposition) || null,
+    differentiation: tidy(snap.differentiation_statement) || null,
+    businessModel: tidy(brain?.business_model_summary) || null,
+    marketFacts: Array.isArray(brain?.market_facts) ? brain.market_facts.slice(0, 8) : null,
+    knownNumbers: brain?.known_numbers && Object.keys(brain.known_numbers).length ? brain.known_numbers : null,
+    bannedAssumptions: Array.isArray(brain?.banned_assumptions) ? brain.banned_assumptions.slice(0, 6) : null,
+    sourceExcerpts: sourceExcerpts.length ? sourceExcerpts : null,
   });
+
+  const imagery = await loadVentureImagery(admin, kit);
 
   const ctx: CollateralCtx = {
     company,
@@ -288,7 +309,9 @@ async function buildCtx(
     voice,
     ad,
     copy,
+    imagery,
   };
+
   return { ctx, details };
 }
 
