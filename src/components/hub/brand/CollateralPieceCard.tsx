@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Eye, Loader2, Plus, Sparkles } from "lucide-react";
+import { CheckCircle2, Eye, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 
 /**
  * One deliverable in the collateral library. Uniform height, artwork-first —
@@ -19,6 +19,7 @@ export function CollateralPieceCard({
   disabled,
   onPreview,
   onGenerate,
+  onDelete,
 }: {
   label: string;
   note: string;
@@ -31,6 +32,8 @@ export function CollateralPieceCard({
   disabled: boolean;
   onPreview: () => void;
   onGenerate: () => void;
+  /** Remove every file for this piece. Only offered once something exists. */
+  onDelete: () => void;
 }) {
   const generated = fileCount > 0;
 
@@ -95,6 +98,18 @@ export function CollateralPieceCard({
             {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
             {generated ? "Regenerate" : "Generate"}
           </Button>
+          {generated && (
+            <Button
+              size="sm"
+              variant="ghost"
+              aria-label={`Delete ${label}`}
+              title="Delete"
+              className="h-7 px-2 text-[11px] text-muted-foreground hover:text-destructive"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       </div>
     </div>
