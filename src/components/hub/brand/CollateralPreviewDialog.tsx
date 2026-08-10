@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ChevronLeft, ChevronRight, Copy, Download, ExternalLink, FileText, Loader2, Package, RotateCcw, Sparkles,
-, Trash2 } from "lucide-react";
+  ChevronLeft, ChevronRight, Copy, Download, ExternalLink, FileText, Loader2, Package, RotateCcw, Sparkles, Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 type File = {
