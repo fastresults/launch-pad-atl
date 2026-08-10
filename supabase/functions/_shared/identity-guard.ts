@@ -8,6 +8,7 @@
  */
 
 import { BANNED_COPY_PHRASES, SECTION4_WORD_FLOOR } from "./copy-craft.ts";
+import { countFactEchoes } from "./brain-facts.ts";
 
 /** Pull the body of a top-level numbered section (e.g. `## 4. Page-by-Page`). */
 function extractSection(raw: string, n: number): string {
@@ -65,8 +66,13 @@ export type IdentityCheck = {
   contrastTokensMissing?: boolean;
   /** PRD only: the surface ladder is absent or components have no surface. */
   surfaceSystemMissing?: boolean;
+  /** PRD only: the art direction was never derived from the actual mark. */
+  logoCraftMissing?: boolean;
+  /** PRD only: the copy echoes too few real facts from the venture brain. */
+  brainFactsThin?: boolean;
   ok: boolean;
 };
+
 
 
 /** Replace `{Company}` / `{COMPANY_NAME}` style placeholders with the real name. */
@@ -101,7 +107,14 @@ export function checkIdentity(
     requireCopyDepth?: boolean;
     /** PRD only: minimum words of Section 4 page copy. */
     minSection4Words?: number;
+    /** PRD only: the art direction must be derived from the attached mark. */
+    requireLogoCraft?: boolean;
+    /** PRD only: distinctive facts from the venture brain the copy must echo. */
+    brainFacts?: string[];
+    /** PRD only: how many of those facts must appear (default 3). */
+    minBrainFacts?: number;
   },
+
 ): IdentityCheck {
   const nameMissing = !mentionsCompany(raw, opts.companyName);
   const logo = (opts.logoUrl ?? "").trim();
@@ -202,6 +215,20 @@ export function checkIdentity(
   const artDirectionMissing = !!archetype &&
     !raw.toLowerCase().includes(archetype.toLowerCase());
 
+  // The art direction has to be read off the actual mark, not invented.
+  const logoCraftMissing = !!opts.requireLogoCraft &&
+    !(/mark-derived art direction/i.test(raw) &&
+      /ink sampled/i.test(raw) &&
+      /geometry and negative space/i.test(raw));
+
+  // The copy has to carry real facts out of the venture brain.
+  let brainFactsThin = false;
+  const facts = opts.brainFacts ?? [];
+  if (facts.length) {
+    const need = Math.min(opts.minBrainFacts ?? 3, facts.length);
+    brainFactsThin = countFactEchoes(raw, facts) < need;
+  }
+
   return {
     nameMissing,
     logoMissing,
@@ -217,11 +244,14 @@ export function checkIdentity(
     testimonialPortraitsMissing,
     contrastTokensMissing,
     surfaceSystemMissing,
+    logoCraftMissing,
+    brainFactsThin,
     ok: !testimonialPortraitsMissing && !contrastTokensMissing && !surfaceSystemMissing && !copyThin && !copyGeneric && !faqThin && !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
       !imageryCraftMissing && !portraitCraftMissing && !imageryTooDark &&
-      !artDirectionMissing,
+      !artDirectionMissing && !logoCraftMissing && !brainFactsThin,
   };
 }
+
 
 
 /** Corrective instruction appended to a second gateway pass when a check fails. */
@@ -233,9 +263,23 @@ export function correctionPrompt(
     archetypeName?: string | null;
     minImageryRows?: number;
     minSection4Words?: number;
+    brainFacts?: string[];
   },
 ): string {
   const fixes: string[] = [];
+  if (check.logoCraftMissing) {
+    fixes.push(
+      'You never read the attached logo. Add the "### Mark-derived art direction" block to Section 1 with all four lines filled in from the artwork you were shown: the ink hexes sampled from the mark (and which is the site\'s primary ink), what the mark\'s geometry and negative space dictate about corner radius, rule weight and spacing, the letterform classification observed in the lockup and the type pairing it implies, and the imagery grade observed on the mood board. Then make the rest of the document obey those observations.',
+    );
+  }
+  if (check.brainFactsThin) {
+    fixes.push(
+      `The copy ignores the venture's real facts. Work these into the body copy verbatim — at least six of them, in the sections where a buyer would expect them: ${
+        (opts.brainFacts ?? []).slice(0, 12).join(" | ")
+      }. Do not round the numbers, rename the segments, or replace them with generic equivalents.`,
+    );
+  }
+
   if (check.nameMissing) {
     fixes.push(
       `You used the wrong company name. The company is **${opts.companyName}** — that exact string and no other. Rewrite the document so every headline, nav item, footer, meta title, email address and code sample uses it verbatim. Remove every trace of any other brand name you invented.`,

@@ -1,0 +1,1 @@
+UPDATE public.venture_documents SET status='failed', last_error='Generation stalled — rebuild with current engine.' WHERE document_type='website_prd' AND status='generating';

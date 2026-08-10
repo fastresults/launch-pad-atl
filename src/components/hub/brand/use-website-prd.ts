@@ -41,12 +41,20 @@ export function useWebsitePrd(snapshotId: string, brandLockedAt?: string | null)
     onError: (e: any) => toast.error(e?.message ?? "Could not rebuild the Website PRD"),
   });
 
-  // Stale when the brand was locked meaningfully after the PRD was written.
+  // The date the award-grade PRD engine (image craft + copy craft contracts,
+  // mark-derived art direction) shipped. Anything written before it is a
+  // previous-generation document and should be rebuilt.
+  const PRD_ENGINE_EPOCH = new Date("2026-01-01T00:00:00Z").getTime();
+
+  // Stale when the brand was locked meaningfully after the PRD was written,
+  // or when the PRD predates the current generation engine.
   const stale = Boolean(
     prd?.updated_at &&
-      brandLockedAt &&
-      new Date(brandLockedAt).getTime() - new Date(prd.updated_at).getTime() > 60_000,
+      ((brandLockedAt &&
+        new Date(brandLockedAt).getTime() - new Date(prd.updated_at).getTime() > 60_000) ||
+        new Date(prd.updated_at).getTime() < PRD_ENGINE_EPOCH),
   );
+
 
   return { prd, exists: Boolean(prd), stale, loading: prdQ.isLoading, running: regenerate.isPending, regenerate };
 }

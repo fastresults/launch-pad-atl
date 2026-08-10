@@ -24,7 +24,13 @@ import {
 import { ensureBrandKit } from "../_shared/brand-derive.ts";
 
 import { ensureSnapshotBrain, markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
-import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
+import { brainCorpusBlock, brainCorpusBlockMulti } from "../_shared/brain-corpus.ts";
+import { brainFactsBlock, brainFactTokens } from "../_shared/brain-facts.ts";
+import {
+  brandVisionInstruction,
+  collectBrandVisionImages,
+  visionUserContent,
+} from "../_shared/prd-brand-vision.ts";
 import { trackTone } from "../_shared/track-tones.ts";
 import {
   BASE_SYSTEM_PROMPT,
@@ -151,6 +157,17 @@ function gatewayMessage(status: number, detail: string) {
 // stripper all live in supabase/functions/_shared/ so the single-doc path
 // and the bulk path produce identical quality for the same document_type.
 
+/**
+ * Phases (Website PRD only — every other deliverable runs "full"):
+ *   draft  — one model call, then the draft is CHECKPOINTED to the row and the
+ *            refine phase is self-invoked. A killed worker can no longer lose
+ *            the whole run.
+ *   refine — reads the checkpointed draft, runs copy expansion, the bounded
+ *            identity-repair loop, the master prompt and portraits, then
+ *            terminalizes the row.
+ */
+export type GenPhase = "full" | "draft" | "refine";
+
 export async function generateOne(
   supabase: any,
   snapshotId: string,
@@ -158,6 +175,7 @@ export async function generateOne(
   rewriteFeedback?: string,
   rewriteTags?: string[],
   intakeAnswers?: Record<string, any>,
+  phase: GenPhase = "full",
 ) {
   const [ctx, { data: type }] = await Promise.all([
     loadVentureContext(supabase, snapshotId),
@@ -242,13 +260,16 @@ export async function generateOne(
     await markSnapshotBrainDirty(supabase, snapshotId).catch(() => {});
   }
 
-  // Mark as generating (preserve any intake answers we resolved).
-  await supabase.from("venture_documents").upsert({
-    snapshot_id: snapshotId,
-    document_type: documentType,
-    status: "generating",
-    ...(effectiveIntake ? { intake_answers: effectiveIntake } : {}),
-  }, { onConflict: "snapshot_id,document_type" });
+  // Mark as generating (preserve any intake answers we resolved). The refine
+  // phase must NOT clobber the checkpointed draft, so it only touches status.
+  if (phase !== "refine") {
+    await supabase.from("venture_documents").upsert({
+      snapshot_id: snapshotId,
+      document_type: documentType,
+      status: "generating",
+      ...(effectiveIntake ? { intake_answers: effectiveIntake } : {}),
+    }, { onConflict: "snapshot_id,document_type" });
+  }
 
   // Load dependency docs and distill them to bullet summaries (S3 — replaces
   // raw 600-900-word markdown dumps per upstream).
@@ -287,7 +308,13 @@ export async function generateOne(
   // Build the user prompt. If we have a brain, use the sliced brain JSON
   // instead of dumping raw extracted_data + research_brief. Saves ~70% of
   // the previous prompt size and eliminates signal dilution.
-  const brainSlice = pickBrainSlice(ctx.brain, type.context_keys ?? null);
+  //
+  // The Website PRD is the exception: a site brief needs the WHOLE venture —
+  // offer, pricing, segments, objections, proof, financials, voice, geography,
+  // founder story — so it gets the full brain rather than a keyed slice.
+  const brainSlice = isPrd
+    ? (ctx.brain ?? pickBrainSlice(ctx.brain, type.context_keys ?? null))
+    : pickBrainSlice(ctx.brain, type.context_keys ?? null);
   const preamble = compactPreamble(ctx, { hasBrandKit: !!brandKit });
 
   const brandBlock = brandKitBlock(brandKit, snapshotId);
@@ -295,27 +322,72 @@ export async function generateOne(
   const sourcingBlock = renderSourcingBlock(snap.sourcing_profile, snap.research_brief?.sourcing);
 
   // Ground the document in the founder's Second Brain corpus (uploaded
-  // materials + notes), retrieved for this specific deliverable.
+  // materials + notes), retrieved for this specific deliverable. The PRD runs
+  // a multi-query retrieval so audience, offer, proof and technical evidence
+  // all make it in rather than whichever topic happened to rank highest.
   let corpusBlock = "";
   try {
-    corpusBlock = await brainCorpusBlock(
-      supabase,
-      ctx.userId,
-      snapshotId,
-      [type.name, type.description ?? "", snap.concept_summary ?? ""].filter(Boolean).join(" \u2014 "),
-      10,
-    );
+    if (isPrd) {
+      const concept = snap.concept_summary ?? "";
+      const res = await brainCorpusBlockMulti(
+        supabase,
+        ctx.userId,
+        snapshotId,
+        [
+          `target audience, segments and objections — ${concept}`,
+          `offer, packaging and pricing — ${concept}`,
+          `proof, testimonials, credentials and results — ${concept}`,
+          `brand voice, story and founder background — ${concept}`,
+          `operations, logistics and technical requirements — ${concept}`,
+        ],
+        8,
+        40,
+      );
+      corpusBlock = res.block;
+    } else {
+      corpusBlock = await brainCorpusBlock(
+        supabase,
+        ctx.userId,
+        snapshotId,
+        [type.name, type.description ?? "", snap.concept_summary ?? ""].filter(Boolean).join(" \u2014 "),
+        10,
+      );
+    }
   } catch (e) {
     console.warn("brain corpus retrieval failed", e);
   }
+
+  // Distinctive facts the PRD copy has to echo (checked after generation).
+  const factTokens = isPrd
+    ? brainFactTokens(ctx.brain ?? snap.extracted_data ?? null, {
+      concept: snap.concept_summary,
+      value: snap.value_proposition,
+      brief: snap.research_brief,
+    })
+    : [];
+
+  // The real artwork, as images — so the art direction is read off the mark
+  // instead of inferred from hex strings.
+  let visionImages: Awaited<ReturnType<typeof collectBrandVisionImages>> = [];
+  if (isPrd) {
+    try {
+      visionImages = await collectBrandVisionImages(brandKit as Record<string, any> | null);
+    } catch (e) {
+      console.warn("brand vision collection failed", e);
+    }
+  }
+  const visionBlock = brandVisionInstruction(visionImages);
+
 
   const userPrompt = [
     `# Document to produce: ${type.name}`,
     `Description: ${type.description}`,
     `Category: ${type.category}`,
     brandBlock,
+    visionBlock,
     preamble,
     corpusBlock,
+    brainFactsBlock(factTokens),
     sourcingBlock,
     brainSlice
       ? `\n## Venture brain (compressed, authoritative — every section must reflect these)\n${JSON.stringify(brainSlice, null, 2)}`
@@ -337,7 +409,7 @@ export async function generateOne(
           rewriteTags && rewriteTags.length ? `Tags: ${rewriteTags.join(", ")}\n\n` : ""
         }${rewriteFeedback?.trim() ?? ""}`
       : "",
-  ].filter(Boolean).join("\n\n").slice(0, MAX_USER_PROMPT_CHARS);
+  ].filter(Boolean).join("\n\n").slice(0, isPrd ? 220_000 : MAX_USER_PROMPT_CHARS);
 
   // S5 — Per-deliverable model tier ('pro' | 'flash' | 'lite').
   // website_prd runs on Pro: it is the longest and most design-sensitive
@@ -345,65 +417,114 @@ export async function generateOne(
   const modelId = isPrd ? modelForTier("pro") : modelForTier(type.model_tier);
   const maxTokens = isPrd ? 24000 : 16000;
 
-
-  let aiRes: Response;
-  try {
-    aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: modelId,
-        max_tokens: maxTokens,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: isPrd ? 0 : 2 });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    await supabase.from("venture_documents").update({ status: "failed" })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
-    await supabase.from("venture_generation_failures").insert({
-      snapshot_id: snapshotId, document_type: documentType, error: `Gateway request failed: ${msg.slice(0, 300)}`,
-    });
-    throw e;
-  }
-
-
-
-  if (!aiRes.ok) {
-    const txt = await aiRes.text();
-    await supabase.from("venture_documents").update({ status: "failed" })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
-    await supabase.from("venture_generation_failures").insert({
-      snapshot_id: snapshotId, document_type: documentType, error: `Gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
-    });
-    throw new GatewayError(aiRes.status, txt);
-  }
-
-  const aiJson = await aiRes.json();
-  let raw = aiJson.choices?.[0]?.message?.content ?? "";
-  const finishReason = aiJson.choices?.[0]?.finish_reason ?? aiJson.choices?.[0]?.finishReason ?? "";
-  let truncated = String(finishReason).toLowerCase() === "length";
-
-  // Extract quality score line
-  let quality = 75;
-  const qm = raw.match(/QUALITY_SCORE:\s*(\d{1,3})/i);
-  if (qm) {
-    quality = Math.max(0, Math.min(100, parseInt(qm[1], 10)));
-    raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
-  }
-
-  // Strip any citation residue the model may have produced despite instructions.
-  raw = stripCitations(raw);
-
-  // ---- Identity guard: the company name and the committed logo are not optional.
   const lockedName = (snap.company_name ?? "").trim() || null;
   const lockedLogo = brandKit && Array.isArray(brandKit.logos) && brandKit.logos.length
     ? brandLogoUrl(snapshotId)
     : null;
-  raw = substituteIdentity(raw, lockedName);
+
+  let raw = "";
+  let quality = 75;
+  let truncated = false;
+
+  // ---- Refine phase: pick the checkpointed draft back up. -------------
+  if (phase === "refine") {
+    const { data: checkpoint } = await supabase
+      .from("venture_documents")
+      .select("content, quality_score")
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", documentType)
+      .maybeSingle();
+    raw = checkpoint?.content ?? "";
+    quality = checkpoint?.quality_score ?? 75;
+    if (!raw) {
+      // Nothing to refine (checkpoint lost) — fall back to a full run.
+      phase = "full";
+    }
+  }
+
+  if (!raw) {
+    let aiRes: Response;
+    try {
+      aiRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: modelId,
+          max_tokens: maxTokens,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: visionUserContent(userPrompt, visionImages) },
+          ],
+        }),
+      }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: isPrd ? 0 : 2 });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      await supabase.from("venture_documents").update({
+        status: "failed",
+        last_error: `Gateway request failed: ${msg.slice(0, 300)}`,
+      }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      await supabase.from("venture_generation_failures").insert({
+        snapshot_id: snapshotId, document_type: documentType, error: `Gateway request failed: ${msg.slice(0, 300)}`,
+      });
+      throw e;
+    }
+
+    if (!aiRes.ok) {
+      const txt = await aiRes.text();
+      await supabase.from("venture_documents").update({
+        status: "failed",
+        last_error: `Gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
+      }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      await supabase.from("venture_generation_failures").insert({
+        snapshot_id: snapshotId, document_type: documentType, error: `Gateway ${aiRes.status}: ${txt.slice(0, 300)}`,
+      });
+      throw new GatewayError(aiRes.status, txt);
+    }
+
+    const aiJson = await aiRes.json();
+    raw = aiJson.choices?.[0]?.message?.content ?? "";
+    const finishReason = aiJson.choices?.[0]?.finish_reason ?? aiJson.choices?.[0]?.finishReason ?? "";
+    truncated = String(finishReason).toLowerCase() === "length";
+
+    // Extract quality score line
+    const qm = raw.match(/QUALITY_SCORE:\s*(\d{1,3})/i);
+    if (qm) {
+      quality = Math.max(0, Math.min(100, parseInt(qm[1], 10)));
+      raw = raw.replace(/QUALITY_SCORE:\s*\d{1,3}\s*$/i, "").trim();
+    }
+
+    // Strip any citation residue the model may have produced despite instructions.
+    raw = stripCitations(raw);
+    raw = substituteIdentity(raw, lockedName);
+
+    // ---- Checkpoint: a real new-engine draft is on the row BEFORE any of
+    // the long enrichment passes run, so a killed worker can never leave the
+    // founder looking at a months-old document.
+    if (isPrd && phase === "draft") {
+      await supabase.from("venture_documents").update({
+        content: raw,
+        word_count: raw.split(/\s+/).filter(Boolean).length,
+        quality_score: quality,
+        status: "generating",
+        last_error: null,
+        metadata: { phase: "draft", checkpointed_at: new Date().toISOString() },
+      }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+
+      // Hand the enrichment to a fresh worker with its own wall clock.
+      await fetch(`${SUPABASE_URL}/functions/v1/venture-generate-document`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-key": SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+        },
+        body: JSON.stringify({ snapshotId, documentType, phase: "refine" }),
+      }).catch((e) => console.warn("refine handoff failed", e));
+
+      return { wordCount: raw.split(/\s+/).filter(Boolean).length, quality, phase: "draft" };
+    }
+  }
+
 
   // Page copy depth: deepen Section 4 before the guard so a thin-but-fixable
   // draft is expanded rather than fully regenerated.
@@ -422,6 +543,8 @@ export async function generateOne(
     minImageryRows: 12,
     requireCopyDepth: isPrd,
     archetypeName: art?.archetype.name ?? null,
+    requireLogoCraft: isPrd && visionImages.length > 0,
+    brainFacts: factTokens,
   });
   if (!identity.ok) {
     console.warn("identity guard failed", documentType, identity);
@@ -436,7 +559,7 @@ export async function generateOne(
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
             { role: "assistant", content: raw.slice(0, 40_000) },
-            { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo, archetypeName: art?.archetype.name ?? null, minImageryRows: 12 }) },
+            { role: "user", content: correctionPrompt(identity, { companyName: lockedName, logoUrl: lockedLogo, archetypeName: art?.archetype.name ?? null, minImageryRows: 12, brainFacts: factTokens }) },
           ],
         }),
       }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: 0 });
@@ -451,6 +574,8 @@ export async function generateOne(
     minImageryRows: 12,
     requireCopyDepth: isPrd,
     archetypeName: art?.archetype.name ?? null,
+    requireLogoCraft: isPrd && visionImages.length > 0,
+    brainFacts: factTokens,
         });
         // Only accept the repair when it is both substantial and better.
         if (fixed.length > raw.length * 0.6 && (recheck.ok || (!recheck.nameMissing && identity.nameMissing))) {
@@ -569,10 +694,27 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers } = await req.json();
+    const { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers, phase } = await req.json();
     if (!snapshotId || !documentType) {
       return jsonResponse({ error: "snapshotId and documentType required" }, 400, corsHeaders);
     }
+
+    // Internal phase handoff (draft -> refine) carries the service key and
+    // skips the user checks: the draft phase already authorised the run.
+    const internal = req.headers.get("x-internal-key") === SERVICE_KEY;
+    if (internal && phase === "refine") {
+      const sb = createClient(SUPABASE_URL, SERVICE_KEY);
+      const job = generateOne(sb, snapshotId, documentType, undefined, undefined, undefined, "refine")
+        .catch(async (err) => {
+          await sb.from("venture_documents").update({
+            status: "failed",
+            last_error: (err instanceof Error ? err.message : String(err)).slice(0, 500),
+          }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+        });
+      try { (globalThis as any).EdgeRuntime?.waitUntil?.(job); } catch { /* ignore */ }
+      return jsonResponse({ ok: true, phase: "refine", pending: true }, 202, corsHeaders);
+    }
+
     const auth = await requireUser(req, corsHeaders);
     if (auth.error) return auth.error;
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -588,7 +730,9 @@ Deno.serve(async (req) => {
       rewriteFeedback,
       Array.isArray(rewriteTags) ? rewriteTags : undefined,
       intakeAnswers && typeof intakeAnswers === "object" ? intakeAnswers : undefined,
+      documentType === "website_prd" ? "draft" : "full",
     );
+
 
     // Long deliverables (Website PRD, with its copy-expansion and repair
     // passes) routinely run past the platform's 150s request idle timeout.
