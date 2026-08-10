@@ -767,6 +767,11 @@ Deno.serve(async (req) => {
           claim: arcWeek.claim,
           cta_rung: arcWeek.cta_rung,
           repeats_claim: posterCopy.repeatsClaim ?? null,
+          approach: posterCopy.approach ?? null,
+          specific: posterCopy.specific ?? null,
+          vagueness: posterCopy.vagueness ?? null,
+          proof: arcWeek.proof || null,
+
         }
       : null;
 
