@@ -9,6 +9,7 @@
 import { PNG } from "npm:pngjs@7.0.0";
 import { Buffer } from "node:buffer";
 import type { PageMetrics, ResolvedSpec } from "./collateral-specs.ts";
+import { isDarkSurface } from "./color-spaces.ts";
 
 export type QcVerdict = {
   ok: boolean;
@@ -60,18 +61,8 @@ export function qcPage(
   // A full-colour, light-background mark drawn on a dark ground is the classic
   // "wrong logo" failure — the reversed artwork or a knockout must be used.
   if (metrics.markArt === "primary" && metrics.markBg) {
-    const m = /#?([0-9a-f]{6})/i.exec(metrics.markBg);
-    if (m) {
-      const n = parseInt(m[1], 16);
-      const l = [(n >> 16) & 255, (n >> 8) & 255, n & 255]
-        .map((v) => {
-          const s = v / 255;
-          return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-        })
-        .reduce((acc, c, i) => acc + c * [0.2126, 0.7152, 0.0722][i], 0);
-      if (l < 0.35) {
-        reasons.push("The light-background logo was drawn on a dark surface — use the reversed mark.");
-      }
+    if (isDarkSurface(metrics.markBg)) {
+      reasons.push("The light-background logo was drawn on a dark surface — use the reversed mark.");
     }
   }
 
@@ -165,8 +156,10 @@ export function qcPage(
         }
       }
     } catch {
-      // Decode failure is not a design fault — skip the pixel layer.
+      reasons.push("The final raster could not be decoded for visual quality review.");
     }
+  } else {
+    reasons.push("The final raster is missing, so visual quality could not be verified.");
   }
 
   return { ok: reasons.length === 0, page: metrics.page, reasons, observed };

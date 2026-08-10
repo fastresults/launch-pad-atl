@@ -6,7 +6,7 @@
 // laid out on the grid the art director chose, typeset with real font metrics,
 // and rasterised.
 
-import { colorSpaces, inkOn } from "./color-spaces.ts";
+import { colorSpaces, contrastRatio, inkOn, isDarkSurface } from "./color-spaces.ts";
 import { stripSvgBackground } from "./logo-raster.ts";
 import { inkAspect, inkBox } from "./logo-geometry.ts";
 
@@ -400,23 +400,6 @@ function grainDef(fg: string): string {
   </pattern>`;
 }
 
-/** Relative luminance of a hex colour, 0–1. */
-function lum(hex: string): number {
-  const m = /#?([0-9a-f]{6})/i.exec(hex || "");
-  if (!m) return 0;
-  const n = parseInt(m[1], 16);
-  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
-    const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-}
-
-function contrast(a: string, b: string): number {
-  const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
-  return (x + 0.05) / (y + 0.05);
-}
-
 /** Every explicit fill colour in a fragment — used to spot invisible artwork. */
 function fillsIn(svg: string): string[] {
   return [...svg.matchAll(/fill\s*[=:]\s*["']?(#[0-9a-f]{3,8}|white|black)/gi)].map((m) => m[1].toLowerCase());
@@ -432,11 +415,6 @@ function fillsIn(svg: string): string[] {
  * cannot be recoloured at all (embedded raster, gradient-only fills) it is set
  * on a light plate rather than left to vanish.
  */
-
-/** True when a surface is dark enough to demand the reversed mark. */
-function isDarkSurface(bg?: string | null): boolean {
-  return !!bg && lum(bg) < 0.35;
-}
 
 /** Artwork chosen for a surface, plus whether it is the reversed set. */
 function markSvgFor(ctx: CollateralCtx, bg?: string | null): { svg: string | null; dark: boolean } {
@@ -481,17 +459,20 @@ function markAt(
 
   const untintable = isUntintable(inner);
   const dark = isDarkSurface(bg);
-  let use = picked.dark ? null : ink;
+  // A variant label is not proof of visible pixels. On a dark surface, force
+  // tintable vector artwork to the mathematically legible on-colour even when
+  // the stored "reversed" variant itself contains dark paint.
+  let use = picked.dark && !untintable && bg ? inkOn(bg) : ink;
   let plate = false;
 
   if (bg && !picked.dark) {
     const MIN = 2.4;
-    if (use && contrast(use, bg) < MIN) use = inkOn(bg);
+    if (use && contrastRatio(use, bg) < MIN) use = inkOn(bg);
     if (!use && !untintable) {
       // Untinted artwork: knock it out when the ground is dark, or when nothing
       // in the artwork separates from the surface.
       const fills = fillsIn(inner);
-      const visible = fills.some((f) => contrast(f === "white" ? "#ffffff" : f === "black" ? "#000000" : f, bg) >= MIN);
+      const visible = fills.some((f) => contrastRatio(f === "white" ? "#ffffff" : f === "black" ? "#000000" : f, bg) >= MIN);
       if (dark || (fills.length && !visible)) use = inkOn(bg);
     }
     // Full-colour artwork we cannot recolour, on a dark ground, with no
@@ -1069,8 +1050,11 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
     ].join("")),
   });
 
-  const boxW = g.span(Math.round(ad.grid.columns * 0.46));
-  const boxH = H * 0.4;
+  const specimenGap = g.gutter * 2;
+  const boxW = (g.content - specimenGap) * 0.62;
+  const sideW = g.content - boxW - specimenGap;
+  const boxH = H * 0.43;
+  const sideH = (boxH - step(ad, 1.2)) / 2;
   pages.push({
     name: "guidelines-2-logo", width: W, height: H,
     svg: page(W, H, defs, [
@@ -1078,12 +1062,12 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
       `<rect x="${g.M}" y="${r(top)}" width="${r(boxW)}" height="${r(boxH)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
       markAt(ctx, g.M + boxW * 0.14, top + boxH * 0.18, boxW * 0.72, boxH * 0.64, null, paper),
       label(T, ctx, "Primary — full colour", g.M, top + boxH + step(ad, 1.4), step(ad, -1.2), muted),
-      `<rect x="${r(g.M + boxW + g.gutter * 2)}" y="${r(top)}" width="${r(boxW * 0.55)}" height="${r(boxH * 0.52)}" fill="${fg}"/>`,
-      markAt(ctx, g.M + boxW + g.gutter * 2 + boxW * 0.09, top + boxH * 0.1, boxW * 0.37, boxH * 0.32, inkOn(fg), fg),
-      label(T, ctx, "Knockout", g.M + boxW + g.gutter * 2, top + boxH * 0.62, step(ad, -1.3), muted),
-      `<rect x="${r(g.M + boxW + g.gutter * 2)}" y="${r(top + boxH * 0.72)}" width="${r(boxW * 0.55)}" height="${r(boxH * 0.46)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
-      markAt(ctx, g.M + boxW + g.gutter * 2 + boxW * 0.09, top + boxH * 0.8, boxW * 0.37, boxH * 0.3, "#121212", paper),
-      label(T, ctx, "Mono", g.M + boxW + g.gutter * 2, top + boxH * 1.28, step(ad, -1.3), muted),
+       `<rect x="${r(g.M + boxW + specimenGap)}" y="${r(top)}" width="${r(sideW)}" height="${r(sideH)}" fill="${fg}"/>`,
+       markAt(ctx, g.M + boxW + specimenGap + sideW * 0.12, top + sideH * 0.18, sideW * 0.76, sideH * 0.64, inkOn(fg), fg),
+       label(T, ctx, "Knockout", g.M + boxW + specimenGap, top + sideH + step(ad, 1), step(ad, -1.3), muted, "start", sideW),
+       `<rect x="${r(g.M + boxW + specimenGap)}" y="${r(top + sideH + step(ad, 1.2))}" width="${r(sideW)}" height="${r(sideH)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
+       markAt(ctx, g.M + boxW + specimenGap + sideW * 0.12, top + sideH + step(ad, 1.2) + sideH * 0.18, sideW * 0.76, sideH * 0.64, "#121212", paper),
+       label(T, ctx, "Mono", g.M + boxW + specimenGap, top + boxH + step(ad, 2.2), step(ad, -1.3), muted, "start", sideW),
       T.block(
         "Keep clear space of at least the mark's cap height on every side. Never stretch, recolour outside these variants, add effects, or place the mark on a busy photograph without a scrim.",
         g.M, H - g.M - step(ad, 2.4), step(ad, -0.4), g.span(Math.round(ad.grid.columns * 0.7)), fg, { leading: ad.type.bodyLeading, maxLines: 3 },
@@ -1092,21 +1076,28 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   });
 
   const entries = Object.entries(ctx.colors ?? {}).slice(0, 8);
-  const swW = (g.content - g.gutter * 3 * 2) / 4;
+  const swGap = g.gutter * 2;
+  const swW = (g.content - swGap * 3) / 4;
+  const swatchH = H * 0.13;
+  const cellH = H * 0.31;
   pages.push({
     name: "guidelines-3-colour", width: W, height: H,
     svg: page(W, H, defs, [
       head("Colour", "02"),
       ...entries.map(([k, v], i) => {
         const cs = colorSpaces(v);
-        const x = g.M + (i % 4) * (swW + g.gutter * 3);
-        const y = top + Math.floor(i / 4) * (H * 0.33);
-        const rows = [cs.hex, `RGB ${cs.rgb.join(" ")}`, `CMYK ${cs.cmyk.join(" ")}`];
+        const x = g.M + (i % 4) * (swW + swGap);
+        const y = top + Math.floor(i / 4) * cellH;
+        const role = k.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        const f = T.flow(x, y + swatchH + step(ad, 0.7), swW);
+        f.line(role, step(ad, -1.1), fg, { family: "head", weight: 700 })
+          .line(cs.hex, step(ad, -1.3), muted, { gap: step(ad, 0.35) })
+          .line(`RGB ${cs.rgb.join(" · ")}`, step(ad, -1.3), muted, { gap: step(ad, 0.15) })
+          .line(`CMYK ${cs.cmyk.join(" · ")}`, step(ad, -1.3), muted, { gap: step(ad, 0.15) })
+          .line(cs.pantone, step(ad, -1.3), accent, { gap: step(ad, 0.15) });
         return [
-          `<rect x="${r(x)}" y="${r(y)}" width="${r(swW)}" height="${r(H * 0.15)}" fill="${v}" rx="${ad.material.radius}"/>`,
-          label(T, ctx, k, x, y + H * 0.15 + step(ad, 1.6), step(ad, -1.1), fg, "start", swW),
-          ...rows.map((t, j) => T.line(t, x, y + H * 0.15 + step(ad, 3 + j * 1.4), step(ad, -1.3), muted, { maxWidth: swW })),
-          T.line(cs.pantone, x, y + H * 0.15 + step(ad, 7.2), step(ad, -1.3), accent, { maxWidth: swW }),
+          `<rect x="${r(x)}" y="${r(y)}" width="${r(swW)}" height="${r(swatchH)}" fill="${v}" rx="${ad.material.radius}"/>`,
+          f.svg(),
         ].join("");
       }),
     ].join("")),
@@ -1301,32 +1292,14 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
       const svg = p.svg
         .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
         .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
-        // Backstop: any literal <text> written outside the type kit still obeys
-        // the piece's legal minimum. Fitted lines are already at or above it.
-        .replace(/font-size="([\d.]+)"/g, (m, v) => {
-          const n = Number(v);
-          return n && n < rs.minType ? `font-size="${Math.round(rs.minType * 10) / 10}"` : m;
-        })
         .replace("<svg ", `<svg${printMeta(rs)} `);
       return { ...p, svg, metrics: pageMetrics(drawCtx, p.name, svg, rs, T) };
     });
   };
 
-  let pages = draw(ctx);
-  // A collision is a defect, not a taste call. If any page still has type on
-  // type, re-set the whole piece one notch smaller — the layout is measured,
-  // so a smaller scale resolves what a longer-than-expected string caused.
-  let attemptCtx = ctx;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const clashing = pages.filter((p) => (p.metrics?.overlaps?.length ?? 0) > 0);
-    if (!clashing.length) break;
-    console.warn("[collateral layout]", kind, "type collision, re-setting smaller:", clashing.map((p) => `${p.name}: ${p.metrics!.overlaps!.join("; ")}`).join(" | "));
-    attemptCtx = {
-      ...attemptCtx,
-      ad: { ...attemptCtx.ad, scale: { ...attemptCtx.ad.scale, base: attemptCtx.ad.scale.base * 0.92 } },
-    };
-    pages = draw(attemptCtx);
-  }
+  const pages = draw(ctx);
+  // Do not globally shrink a broken composition. Measured templates must pass
+  // at their intended scale; the publication gate reports the exact page.
 
 
   const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
