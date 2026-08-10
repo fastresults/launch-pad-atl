@@ -172,8 +172,13 @@ export function LogoSetPanel({
   const primaryColor = kit?.palette?.colors?.primary;
   const brandBg = isHex(primaryColor) ? primaryColor : "#101014";
   const alt = `${companyName ?? "Brand"} logo`;
+  // Each preview shows the mark that actually belongs on that ground. A single
+  // primary upload must not silently populate the dark and brand previews.
   const lightMark = set.primary?.url ?? null;
-  const darkMark = set.reversed?.url ?? lightMark;
+  const reversedMark = set.reversed?.url ?? null;
+  const brandIsDark = luminance(brandBg) < 0.5;
+  const brandMark = brandIsDark ? reversedMark : lightMark;
+
 
   // Stored signed URLs expire after a week; re-sign on mount so an older
   // venture never renders a dead mark.
