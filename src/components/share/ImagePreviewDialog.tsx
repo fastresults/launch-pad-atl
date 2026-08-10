@@ -21,8 +21,10 @@ export function ImagePreviewDialog({
   }, [image]);
 
   const meta = image?.meta ?? null;
-  const headline = meta?.headline ?? image?.label ?? null;
+  const preview = buildPreviewCopy(image, fallbackTitle);
+  const headline = preview.headline;
   const hashtags = meta?.hashtags?.length ? meta.hashtags.join(" ") : null;
+
 
   const fullCaption = [
     meta?.hook && meta.hook !== headline ? meta.hook : null,
