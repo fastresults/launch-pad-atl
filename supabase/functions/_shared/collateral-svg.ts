@@ -1024,18 +1024,37 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   const pages: Page[] = [];
   const d = ctx.details;
 
-  const head = (title: string, n: string) => [
-    surface(W, H, paper, ad.material.grain),
-    label(T, ctx, n, g.M, g.M + step(ad, 0.4), step(ad, -1), accent),
-    T.line(title, g.M, g.M + step(ad, 3.4), step(ad, 2.4), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)), tracking: step(ad, 2.4) * ad.type.displayTracking }),
-    `<rect x="${g.M}" y="${r(g.M + step(ad, 4.4))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(primary, paper, 0.55)}"/>`,
-    label(T, ctx, `${ctx.company} — Brand guidelines`, W - g.M, g.M + step(ad, 0.4), step(ad, -1.3), muted, "end", g.span(5)),
-  ].join("");
-
   const rsG = resolveSpec("guidelines-1-cover", W, H);
-  T.setFloor(Math.min(rsG.minType, resolveSpec("guidelines-3-colour", W, H).minType), rsG.measureMax);
+  const rsPage = resolveSpec("guidelines-3-colour", W, H);
+  const rsLogo = resolveSpec("guidelines-2-logo", W, H);
+
+  // The running head is set as a measured stack: the folio number, then the
+  // title under its real drawn height, then the rule under that. Fixed offsets
+  // are what put "01" through "Logo".
+  const head = (title: string, n: string): { svg: string; bottom: number } => {
+    const eyebrow = step(ad, -1);
+    const f = T.flow(g.M, g.M, g.span(Math.round(ad.grid.columns * 0.6)));
+    f.line(ad.type.caseLabels === "upper" ? n.toUpperCase() : n, eyebrow, accent, {
+      tracking: eyebrow * ad.type.labelTracking, weight: 500,
+    });
+    f.line(title, step(ad, 2.4), fg, {
+      family: "head", weight: 700, gap: step(ad, 0.4), tracking: step(ad, 2.4) * ad.type.displayTracking,
+    });
+    const ruleY = f.bottom + step(ad, 0.9);
+    return {
+      bottom: ruleY + step(ad, 1.6),
+      svg: [
+        surface(W, H, paper, ad.material.grain),
+        f.svg(),
+        `<rect x="${g.M}" y="${r(ruleY)}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(primary, paper, 0.55)}"/>`,
+        label(T, ctx, `${ctx.company} — Brand guidelines`, W - g.M, g.M + eyebrow, step(ad, -1.3), muted, "end", g.span(5)),
+      ].join(""),
+    };
+  };
+
+  // Cover carries its own (larger) type floor; the interior pages share theirs.
+  T.setFloor(rsG.minType, rsG.measureMax);
   const gCover = markBoxFor(ctx, rsG, g.span(4), 0.68);
-  const top = g.M + step(ad, 6.4);
 
   pages.push({
     name: "guidelines-1-cover", width: W, height: H,
@@ -1045,29 +1064,34 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
       label(T, ctx, "Brand guidelines", g.M, H * 0.52, step(ad, 0.6), ink, "start", g.span(6)),
       T.line(ctx.company, g.M, H * 0.66, step(ad, 4), ink, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.8)), tracking: step(ad, 4) * ad.type.displayTracking }),
       d.tagline ? T.line(d.tagline, g.M, H * 0.73, step(ad, 0.4), ink, { opacity: 0.75, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)) }) : "",
-      T.line(new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }), g.M, H - g.M, step(ad, -1), ink, { opacity: 0.7, maxWidth: g.span(4) }),
+      T.line(new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }), g.M, H - g.M, Math.max(step(ad, -1), rsG.minType), ink, { opacity: 0.7, maxWidth: g.span(4) }),
       motif(ctx, g, ink, "br"),
     ].join("")),
   });
 
+  T.setFloor(Math.min(rsPage.minType, rsLogo.minType), rsPage.measureMax);
+
+  const hLogo = head("Logo", "01");
+  const top = hLogo.bottom;
   const specimenGap = g.gutter * 2;
   const boxW = (g.content - specimenGap) * 0.62;
   const sideW = g.content - boxW - specimenGap;
-  const boxH = H * 0.43;
-  const sideH = (boxH - step(ad, 1.2)) / 2;
+  const captionBand = step(ad, 2);
+  const boxH = Math.min(H * 0.43, H - g.M - top - step(ad, 7));
+  const sideH = (boxH - captionBand) / 2;
   pages.push({
     name: "guidelines-2-logo", width: W, height: H,
     svg: page(W, H, defs, [
-      head("Logo", "01"),
+      hLogo.svg,
       `<rect x="${g.M}" y="${r(top)}" width="${r(boxW)}" height="${r(boxH)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
       markAt(ctx, g.M + boxW * 0.14, top + boxH * 0.18, boxW * 0.72, boxH * 0.64, null, paper),
-      label(T, ctx, "Primary — full colour", g.M, top + boxH + step(ad, 1.4), step(ad, -1.2), muted),
-       `<rect x="${r(g.M + boxW + specimenGap)}" y="${r(top)}" width="${r(sideW)}" height="${r(sideH)}" fill="${fg}"/>`,
-       markAt(ctx, g.M + boxW + specimenGap + sideW * 0.12, top + sideH * 0.18, sideW * 0.76, sideH * 0.64, inkOn(fg), fg),
-       label(T, ctx, "Knockout", g.M + boxW + specimenGap, top + sideH + step(ad, 1), step(ad, -1.3), muted, "start", sideW),
-       `<rect x="${r(g.M + boxW + specimenGap)}" y="${r(top + sideH + step(ad, 1.2))}" width="${r(sideW)}" height="${r(sideH)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
-       markAt(ctx, g.M + boxW + specimenGap + sideW * 0.12, top + sideH + step(ad, 1.2) + sideH * 0.18, sideW * 0.76, sideH * 0.64, "#121212", paper),
-       label(T, ctx, "Mono", g.M + boxW + specimenGap, top + boxH + step(ad, 2.2), step(ad, -1.3), muted, "start", sideW),
+      label(T, ctx, "Primary — full colour", g.M, top + boxH + step(ad, 1.4), step(ad, -1.2), muted, "start", boxW),
+      `<rect x="${r(g.M + boxW + specimenGap)}" y="${r(top)}" width="${r(sideW)}" height="${r(sideH)}" fill="${fg}"/>`,
+      markAt(ctx, g.M + boxW + specimenGap + sideW * 0.12, top + sideH * 0.18, sideW * 0.76, sideH * 0.64, inkOn(fg), fg),
+      label(T, ctx, "Knockout", g.M + boxW + specimenGap, top + sideH + captionBand * 0.62, step(ad, -1.3), muted, "start", sideW),
+      `<rect x="${r(g.M + boxW + specimenGap)}" y="${r(top + sideH + captionBand)}" width="${r(sideW)}" height="${r(sideH)}" fill="${paper}" stroke="${mix(fg, paper, 0.8)}" stroke-width="${r(ad.ink.hairline)}"/>`,
+      markAt(ctx, g.M + boxW + specimenGap + sideW * 0.12, top + sideH + captionBand + sideH * 0.18, sideW * 0.76, sideH * 0.64, "#121212", paper),
+      label(T, ctx, "Mono", g.M + boxW + specimenGap, top + boxH + step(ad, 1.4), step(ad, -1.3), muted, "start", sideW),
       T.block(
         "Keep clear space of at least the mark's cap height on every side. Never stretch, recolour outside these variants, add effects, or place the mark on a busy photograph without a scrim.",
         g.M, H - g.M - step(ad, 2.4), step(ad, -0.4), g.span(Math.round(ad.grid.columns * 0.7)), fg, { leading: ad.type.bodyLeading, maxLines: 3 },
@@ -1075,21 +1099,24 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
     ].join("")),
   });
 
+  const hColour = head("Colour", "02");
+  const cTop = hColour.bottom;
   const entries = Object.entries(ctx.colors ?? {}).slice(0, 8);
   const swGap = g.gutter * 2;
   const swW = (g.content - swGap * 3) / 4;
-  const swatchH = H * 0.13;
-  const cellH = H * 0.31;
+  const rows = Math.max(1, Math.ceil(entries.length / 4));
+  const cellH = (H - g.M - cTop) / rows;
+  const swatchH = Math.min(H * 0.13, cellH * 0.42);
   pages.push({
     name: "guidelines-3-colour", width: W, height: H,
     svg: page(W, H, defs, [
-      head("Colour", "02"),
+      hColour.svg,
       ...entries.map(([k, v], i) => {
         const cs = colorSpaces(v);
         const x = g.M + (i % 4) * (swW + swGap);
-        const y = top + Math.floor(i / 4) * cellH;
+        const y = cTop + Math.floor(i / 4) * cellH;
         const role = k.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-        const f = T.flow(x, y + swatchH + step(ad, 0.7), swW);
+        const f = T.flow(x, y + swatchH + step(ad, 0.5), swW);
         f.line(role, step(ad, -1.1), fg, { family: "head", weight: 700 })
           .line(cs.hex, step(ad, -1.3), muted, { gap: step(ad, 0.35) })
           .line(`RGB ${cs.rgb.join(" · ")}`, step(ad, -1.3), muted, { gap: step(ad, 0.15) })
@@ -1103,37 +1130,55 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
     ].join("")),
   });
 
+  const hType = head("Typography", "03");
+  const tf = T.flow(g.M, hType.bottom, g.span(Math.round(ad.grid.columns * 0.7)));
+  tf.line(
+    ad.type.caseLabels === "upper" ? (ctx.fonts?.heading || "Heading").toUpperCase() : (ctx.fonts?.heading || "Heading"),
+    step(ad, 0.2), accent, { tracking: step(ad, 0.2) * ad.type.labelTracking, weight: 500 },
+  )
+    .line("Aa Bb Cc 0123", step(ad, 3.6), fg, { family: "head", weight: 700, gap: step(ad, 0.8) })
+    .line("Headlines · weight 700 · tight tracking", step(ad, -0.6), muted, { gap: step(ad, 0.4) })
+    .line(
+      ad.type.caseLabels === "upper" ? (ctx.fonts?.body || "Body").toUpperCase() : (ctx.fonts?.body || "Body"),
+      step(ad, 0.2), accent, { gap: step(ad, 2.2), tracking: step(ad, 0.2) * ad.type.labelTracking, weight: 500 },
+    )
+    .line("Aa Bb Cc 0123", step(ad, 2.8), fg, { gap: step(ad, 0.8) })
+    .block(
+      "Body copy is set at 16–20px with a 1.6 line height. Sentence case everywhere except small labels, which are set uppercase with generous tracking.",
+      step(ad, -0.4), fg, { gap: step(ad, 1.4), leading: ad.type.bodyLeading, maxLines: 3 },
+    );
   pages.push({
     name: "guidelines-4-type", width: W, height: H,
-    svg: page(W, H, defs, [
-      head("Typography", "03"),
-      label(T, ctx, ctx.fonts?.heading || "Heading", g.M, top + step(ad, 0.6), step(ad, 0.2), accent, "start", g.span(6)),
-      T.line("Aa Bb Cc 0123", g.M, top + step(ad, 4), step(ad, 3.6), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
-      T.line("Headlines · weight 700 · tight tracking", g.M, top + step(ad, 5.4), step(ad, -0.6), muted, { maxWidth: g.span(8) }),
-      label(T, ctx, ctx.fonts?.body || "Body", g.M, top + step(ad, 8.4), step(ad, 0.2), accent, "start", g.span(6)),
-      T.line("Aa Bb Cc 0123", g.M, top + step(ad, 11.4), step(ad, 2.8), fg, { maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
-      T.block(
-        "Body copy is set at 16–20px with a 1.6 line height. Sentence case everywhere except small labels, which are set uppercase with generous tracking.",
-        g.M, H - g.M - step(ad, 2.4), step(ad, -0.4), g.span(Math.round(ad.grid.columns * 0.7)), fg, { leading: ad.type.bodyLeading, maxLines: 3 },
-      ).svg,
-    ].join("")),
+    svg: page(W, H, defs, [hType.svg, tf.svg()].join("")),
   });
+
 
   const voice = d.voice || ctx.voice || "Plain, specific, and confident. Short sentences. Name the outcome, not the process. No jargon, no hype, no exclamation marks.";
   const halfW = (g.content - g.gutter * 3) / 2;
+  const hVoice = head("Voice", "04");
+  const vf = T.flow(g.M, hVoice.bottom, g.span(Math.round(ad.grid.columns * 0.72)));
+  vf.block(voice, step(ad, 0.6), fg, { leading: 1.7, maxLines: 6 });
+  const panelTop = Math.max(H * 0.62, vf.bottom + step(ad, 2));
+  const panelH = Math.min(H * 0.22, H - g.M - panelTop);
+  const doF = T.flow(g.M + step(ad, 1.6), panelTop + step(ad, 1.2), halfW - step(ad, 3.2));
+  doF.line(ad.type.caseLabels === "upper" ? "DO" : "Do", step(ad, -0.4), accent, { tracking: step(ad, -0.4) * ad.type.labelTracking, weight: 500 })
+    .block(ctx.copy?.voiceDo || "Lead with the result. Use the customer's words. One idea per sentence.", step(ad, -0.7), fg, { gap: step(ad, 0.6), leading: 1.5, maxLines: 3 });
+  const dontX = g.M + halfW + g.gutter * 3 + step(ad, 1.6);
+  const dontF = T.flow(dontX, panelTop + step(ad, 1.2), halfW - step(ad, 3.2));
+  dontF.line(ad.type.caseLabels === "upper" ? "DON'T" : "Don't", step(ad, -0.4), muted, { tracking: step(ad, -0.4) * ad.type.labelTracking, weight: 500 })
+    .block(ctx.copy?.voiceDont || "Don't stack adjectives, borrow buzzwords, or promise what the product can't do yet.", step(ad, -0.7), fg, { gap: step(ad, 0.6), leading: 1.5, maxLines: 3 });
   pages.push({
     name: "guidelines-5-voice", width: W, height: H,
     svg: page(W, H, defs, [
-      head("Voice", "04"),
-      T.block(voice, g.M, top + step(ad, 1), step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.72)), fg, { leading: 1.7, maxLines: 6 }).svg,
-      `<rect x="${g.M}" y="${r(H * 0.66)}" width="${r(halfW)}" height="${r(H * 0.2)}" fill="${primary}" opacity="0.06" rx="${ad.material.radius}"/>`,
-      label(T, ctx, "Do", g.M + step(ad, 1.6), H * 0.66 + step(ad, 2.2), step(ad, -0.4), accent),
-      T.block(ctx.copy?.voiceDo || "Lead with the result. Use the customer's words. One idea per sentence.", g.M + step(ad, 1.6), H * 0.66 + step(ad, 4.2), step(ad, -0.7), halfW - step(ad, 3.2), fg, { leading: 1.5, maxLines: 3 }).svg,
-      `<rect x="${r(g.M + halfW + g.gutter * 3)}" y="${r(H * 0.66)}" width="${r(halfW)}" height="${r(H * 0.2)}" fill="${fg}" opacity="0.05" rx="${ad.material.radius}"/>`,
-      label(T, ctx, "Don't", g.M + halfW + g.gutter * 3 + step(ad, 1.6), H * 0.66 + step(ad, 2.2), step(ad, -0.4), muted),
-      T.block(ctx.copy?.voiceDont || "Don't stack adjectives, borrow buzzwords, or promise what the product can't do yet.", g.M + halfW + g.gutter * 3 + step(ad, 1.6), H * 0.66 + step(ad, 4.2), step(ad, -0.7), halfW - step(ad, 3.2), fg, { leading: 1.5, maxLines: 3 }).svg,
+      hVoice.svg,
+      vf.svg(),
+      `<rect x="${g.M}" y="${r(panelTop)}" width="${r(halfW)}" height="${r(panelH)}" fill="${primary}" opacity="0.06" rx="${ad.material.radius}"/>`,
+      `<rect x="${r(g.M + halfW + g.gutter * 3)}" y="${r(panelTop)}" width="${r(halfW)}" height="${r(panelH)}" fill="${fg}" opacity="0.05" rx="${ad.material.radius}"/>`,
+      doF.svg(),
+      dontF.svg(),
     ].join("")),
   });
+
 
   return pages;
 }
