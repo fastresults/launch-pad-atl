@@ -539,6 +539,46 @@ function dependencyLayers(types: any[]): any[][] {
 
 const CONCURRENCY = 6;
 
+type RunState = { done: number; total: number; fails: number; canceled: boolean; keys?: string[] };
+
+/**
+ * Truthful progress: count what's actually complete in the database for the
+ * documents this run covers, instead of counting work done inside this one
+ * worker. A resumed / retry-only run used to report a collapse in progress
+ * (e.g. "62 of 63 done" next to 37%).
+ */
+async function liveProgressPct(supabase: any, snapshotId: string, state: RunState): Promise<number> {
+  try {
+    let q = supabase
+      .from("venture_documents")
+      .select("id", { count: "exact", head: true })
+      .eq("snapshot_id", snapshotId)
+      .eq("status", "complete");
+    if (state.keys?.length) q = q.in("document_type", state.keys);
+    const { count } = await q;
+    const done = Math.min(state.total, Math.max(state.done, count ?? 0));
+    return state.total > 0 ? Math.round((done / state.total) * 100) : 0;
+  } catch {
+    return state.total > 0 ? Math.round((state.done / state.total) * 100) : 0;
+  }
+}
+
+/**
+ * Keep the job's heartbeat fresh *while* a single long document is being
+ * written. The website build brief can legitimately take three minutes; a
+ * heartbeat written only between documents made the watchdog kill healthy work.
+ */
+function startHeartbeat(supabase: any, jobId: string, everyMs = 20_000) {
+  const timer = setInterval(() => {
+    supabase
+      .from("venture_generation_jobs")
+      .update({ heartbeat_at: new Date().toISOString() })
+      .eq("id", jobId)
+      .then(() => {}, () => {});
+  }, everyMs);
+  return () => clearInterval(timer);
+}
+
 async function runLayer(
   supabase: any,
   ctx: VentureContext,
