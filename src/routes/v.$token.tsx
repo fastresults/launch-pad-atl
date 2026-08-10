@@ -77,9 +77,12 @@ export default function VentureSharePage() {
   useEffect(() => {
     if (payload && !tracked.current) {
       tracked.current = true;
+      // Stamped so a stale published bundle is identifiable in one look.
+      console.info(`[showcase] ${SHARE_UI_VERSION}`);
       void trackShareView(token, submitted);
     }
   }, [payload, token, submitted]);
+
 
   // One asset at a time: 60+ documents in a single scroll is unreadable.
   // The hash keeps every asset individually linkable.
