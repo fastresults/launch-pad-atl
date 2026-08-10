@@ -611,6 +611,55 @@ function startHeartbeat(supabase: any, jobId: string, everyMs = 20_000) {
   return () => clearInterval(timer);
 }
 
+/**
+ * Repair rows whose finished artifact survived but whose status was changed by
+ * an interrupted retry. This makes the database artifact authoritative and
+ * lets any later request close a ghost run without spending another AI call.
+ */
+async function reconcilePersistedArtifacts(supabase: any, snapshotId: string) {
+  const { data: rows } = await supabase
+    .from("venture_documents")
+    .select("id, document_type, status, content, word_count, quality_score, version")
+    .eq("snapshot_id", snapshotId)
+    .neq("status", "complete");
+  const recoverable = (rows ?? []).filter((row: any) =>
+    typeof row.content === "string" &&
+    row.content.trim().length > 0 &&
+    Number(row.word_count ?? 0) > 0 &&
+    Number(row.version ?? 0) > 0 &&
+    row.quality_score !== null
+  );
+  if (recoverable.length) {
+    await supabase.from("venture_documents").update({
+      status: "complete",
+      last_error: null,
+      blocked_reason: null,
+    }).in("id", recoverable.map((row: any) => row.id));
+    await supabase.from("venture_generation_failures")
+      .delete()
+      .eq("snapshot_id", snapshotId)
+      .in("document_type", recoverable.map((row: any) => row.document_type));
+  }
+
+  const { data: activeTypes } = await supabase
+    .from("venture_document_types")
+    .select("type")
+    .eq("active", true);
+  const keys = (activeTypes ?? []).map((row: any) => row.type);
+  if (!keys.length) return { recovered: recoverable.length, allDone: false };
+  const { data: finalRows } = await supabase
+    .from("venture_documents")
+    .select("document_type, status")
+    .eq("snapshot_id", snapshotId)
+    .in("document_type", keys);
+  const settled = new Set(
+    (finalRows ?? [])
+      .filter((row: any) => row.status === "complete" || row.status === "not_applicable")
+      .map((row: any) => row.document_type),
+  );
+  return { recovered: recoverable.length, allDone: keys.every((key: string) => settled.has(key)) };
+}
+
 async function runLayer(
   supabase: any,
   ctx: VentureContext,
@@ -1142,6 +1191,37 @@ Deno.serve(async (req) => {
         : null;
 
     const dayOnlyArg = Array.isArray(daysArg) && daysArg.length > 0;
+
+    const reconciliation = await reconcilePersistedArtifacts(supabase, snapshotId);
+    if (reconciliation.allDone && !dayOnlyArg) {
+      const completedAt = new Date().toISOString();
+      const { data: completedJobs } = await supabase
+        .from("venture_generation_jobs")
+        .update({
+          status: "completed",
+          completed_at: completedAt,
+          heartbeat_at: completedAt,
+          progress_pct: 100,
+          current_document_type: null,
+          circuit_breaker_open: false,
+          retry_round: 0,
+          retry_remaining: 0,
+          error: null,
+          cancel_requested: true,
+        })
+        .eq("snapshot_id", snapshotId)
+        .in("status", ["queued", "running", "paused", "completed_with_blockers"])
+        .select("id")
+        .order("created_at", { ascending: false })
+        .limit(1);
+      await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
+      return new Response(JSON.stringify({
+        ok: true,
+        jobId: completedJobs?.[0]?.id ?? null,
+        reconciled: reconciliation.recovered,
+        completed: true,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Reuse a running job if there is one. Retry-only and day-only runs also
     // adopt a paused or blocked job instead of starting a fresh one.
