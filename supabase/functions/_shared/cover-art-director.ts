@@ -590,8 +590,9 @@ function assetSystem(
 - Treat the canvas as a 12-column print grid. Critical content lives in columns 2–8 (left-anchored); columns 9–12 stay quiet for platform UI overlap.
 ${zone("bottom-right", 16, 16)}
 ${suppressHeadline ? suppressBlock : verbatimNote(headline)}
-- Strict safe inset of 8% on all sides — no critical content in the bleed.
+- Strict safe inset of 8% on all sides — no critical content in the bleed, but the surface and imagery still run fully to every edge (no white margin, no frame).
 - ${asset.guidance}`;
+
   }
 
   if (kind === "thumbnail" || kind === "video_poster" || kind === "vertical_pin") {
