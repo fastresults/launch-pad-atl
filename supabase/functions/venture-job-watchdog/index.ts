@@ -39,19 +39,32 @@ Deno.serve(async (req) => {
     let paused = 0;
     let unstuck = 0;
     let resumed = 0;
+    const resumeRun = async (snapshotId: string) => {
+      await fetch(`${SUPABASE_URL}/functions/v1/venture-bulk-generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-key": SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+        },
+        body: JSON.stringify({ snapshotId, retryOnly: true }),
+      });
+    };
+
     for (const j of stalled ?? []) {
-      // Reset any docs stuck mid-generation for this snapshot first, so a
-      // resumed run treats them as retryable instead of in-flight.
+      // Reset docs stuck mid-generation — but only ones whose OWN row has been
+      // untouched past the stall window. A long, healthy document still being
+      // written must never be flipped to failed underneath the worker.
       const { data: stuckDocs } = await supabase
         .from("venture_documents")
         .select("id")
         .eq("snapshot_id", j.snapshot_id)
-        .eq("status", "generating");
+        .eq("status", "generating")
+        .lt("updated_at", cutoff);
       if (stuckDocs?.length) {
         await supabase.from("venture_documents")
           .update({ status: "failed", last_error: "Generation stalled — worker dropped." })
-          .eq("snapshot_id", j.snapshot_id)
-          .eq("status", "generating");
+          .in("id", stuckDocs.map((d: any) => d.id));
         unstuck += stuckDocs.length;
       }
 
@@ -66,15 +79,7 @@ Deno.serve(async (req) => {
           error: null,
         }).eq("id", j.id);
         try {
-          await fetch(`${SUPABASE_URL}/functions/v1/venture-bulk-generate`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-internal-key": SERVICE_KEY,
-              Authorization: `Bearer ${SERVICE_KEY}`,
-            },
-            body: JSON.stringify({ snapshotId: j.snapshot_id, retryOnly: true }),
-          });
+          await resumeRun(j.snapshot_id);
           resumed++;
           continue;
         } catch (e) {
@@ -84,10 +89,37 @@ Deno.serve(async (req) => {
 
       await supabase.from("venture_generation_jobs").update({
         status: "paused",
-        error: "Watchdog: no heartbeat for 3+ minutes",
+        error: "Paused — we lost the worker on this asset. You can resume or skip it.",
       }).eq("id", j.id);
       paused++;
     }
+
+    // Paused jobs are not abandoned: sweep them back into a retry-only run on
+    // a slow cadence, bounded so a permanently failing asset can't loop.
+    const pausedCutoff = new Date(Date.now() - PAUSED_SWEEP_MS).toISOString();
+    const { data: pausedJobs } = await supabase
+      .from("venture_generation_jobs")
+      .select("id, snapshot_id, resume_count, heartbeat_at")
+      .eq("status", "paused")
+      .lt("heartbeat_at", pausedCutoff)
+      .limit(5);
+    for (const j of pausedJobs ?? []) {
+      const resumeCount = j.resume_count ?? 0;
+      if (resumeCount >= MAX_PAUSED_SWEEPS) continue;
+      await supabase.from("venture_generation_jobs").update({
+        status: "running",
+        resume_count: resumeCount + 1,
+        heartbeat_at: new Date().toISOString(),
+        error: null,
+      }).eq("id", j.id);
+      try {
+        await resumeRun(j.snapshot_id);
+        resumed++;
+      } catch (e) {
+        console.error("paused sweep resume failed", e);
+      }
+    }
+
 
     // Logo stages are durable and browser-resumable. Release abandoned leases
     // so the next studio poll can continue the exact stage instead of starting
