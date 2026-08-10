@@ -51,7 +51,26 @@ Deno.serve(async (req) => {
       });
     };
 
+    // Standalone documents (generated outside a bulk run — e.g. a single
+    // Website PRD rebuild) also strand in `generating` when a worker dies.
+    // Terminalize them so the founder gets a retry button instead of an
+    // indefinite spinner over stale content.
+    {
+      const { data: orphanDocs } = await supabase
+        .from("venture_documents")
+        .select("id")
+        .eq("status", "generating")
+        .lt("updated_at", cutoff);
+      if (orphanDocs?.length) {
+        await supabase.from("venture_documents")
+          .update({ status: "failed", last_error: "Generation stalled — worker dropped." })
+          .in("id", orphanDocs.map((d: any) => d.id));
+        unstuck += orphanDocs.length;
+      }
+    }
+
     for (const j of stalled ?? []) {
+
       // Reset docs stuck mid-generation — but only ones whose OWN row has been
       // untouched past the stall window. A long, healthy document still being
       // written must never be flipped to failed underneath the worker.
