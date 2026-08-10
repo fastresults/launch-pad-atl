@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Palette, Sparkles, Lock, RotateCcw, RefreshCw, Loader2, Eye } from "lucide-react";
-import { getBrandKit, resetBrandKit, upsertBrandKit } from "@/lib/brandKit.functions";
+import { getBrandKit, resetBrandKit, upsertBrandKit, generateStyleGuide } from "@/lib/brandKit.functions";
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
 import { BrandIdentityHeader } from "@/components/hub/brand/BrandIdentityHeader";
 import { BrandCollateral } from "@/components/hub/brand/BrandCollateral";
@@ -40,6 +40,20 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
 
 
 
+  const lockBlockedReason = (() => {
+    const missing = [!kit?.palette && "a palette", !kit?.typography && "typography"].filter(Boolean) as string[];
+    return missing.length ? `Pick ${missing.join(" and ")} in the wizard first` : null;
+  })();
+
+  const lockKit = useMutation({
+    mutationFn: () => generateStyleGuide(snapshot.id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      toast.success("Brand kit locked — style guide generated");
+    },
+    onError: (e: any) => toast.error(e.message || "Lock failed"),
+  });
+
   const reset = useMutation({
     mutationFn: () => resetBrandKit(snapshot.id),
     onSuccess: () => {
@@ -48,6 +62,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
     },
     onError: (e: any) => toast.error(e.message || "Reset failed"),
   });
+
 
   const onReset = async () => {
     const description = locked
