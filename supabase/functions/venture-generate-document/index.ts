@@ -48,6 +48,7 @@ import {
   type PrdVentureFacts,
 } from "../_shared/website-prd.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
+import { capacityProvider } from "../_shared/capacity-error.ts";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
 const MAX_USER_PROMPT_CHARS = 120_000;
