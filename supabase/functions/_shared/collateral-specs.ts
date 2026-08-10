@@ -290,5 +290,7 @@ export type PageMetrics = {
   textLines: number;
   smallestType?: number;
   longestLine?: number;
+  /** Pairs of type that share pixels — the collision defect, named. */
+  overlaps?: string[];
 };
 

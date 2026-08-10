@@ -76,6 +76,10 @@ export function qcPage(
   }
 
 
+  if (metrics.overlaps?.length) {
+    reasons.push(`Type collides on the page: ${metrics.overlaps.slice(0, 3).join("; ")}.`);
+  }
+
   observed.textLines = metrics.textLines;
   if (metrics.textLines === 0 && rs.spec.page !== "design-tokens") {
     reasons.push("No type was set on the page.");

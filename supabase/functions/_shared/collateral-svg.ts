@@ -317,7 +317,67 @@ function makeType(fonts: Fonts) {
   const width = (t: string, size: number, family: "head" | "body" = "body", tracking = 0) =>
     measure(t, size, bytesFor(family), tracking);
 
-  return { line, block, width, setFloor };
+  /** The size a single line will actually be drawn at after shrink-to-fit. */
+  function lineSize(text: string, size: number, maxWidth?: number, o: LineOpts = {}): number {
+    const t = String(text ?? "").trim();
+    const family = o.family ?? "body";
+    const floor = min(o);
+    let s = Math.max(size, floor);
+    if (t && maxWidth) {
+      s = fitLine(t, {
+        size: s, maxWidth, bytes: bytesFor(family), tracking: o.tracking ?? 0, minSize: floor || undefined,
+      }).size;
+    }
+    return s;
+  }
+
+  /**
+   * A top-down cursor. Every element is placed under the *measured* bottom of
+   * the one before it, so a headline that shrank to fit — or a paragraph that
+   * ran to four lines instead of two — pushes what follows down instead of
+   * being written over. Fixed step offsets are what produced the collisions
+   * this replaces.
+   */
+  function flow(x: number, startY: number, boxWidth: number) {
+    let y = startY;
+    const parts: string[] = [];
+    const rest = (s: number) => s * 0.24; // descender + optical breathing room
+    const api = {
+      get y() { return y; },
+      get bottom() { return y; },
+      gap(px: number) { y += px; return api; },
+      line(text: string, size: number, fill: string, o: LineOpts & { gap?: number } = {}) {
+        const t = String(text ?? "").trim();
+        if (!t) return api;
+        const s = lineSize(t, size, boxWidth, o);
+        y += (o.gap ?? 0) + s;
+        parts.push(line(t, x, y, size, fill, { ...o, maxWidth: boxWidth }));
+        y += rest(s);
+        return api;
+      },
+      block(
+        text: string,
+        size: number,
+        fill: string,
+        o: Parameters<typeof block>[6] & { gap?: number; width?: number } = {},
+      ) {
+        const t = String(text ?? "").trim();
+        if (!t) return api;
+        const w = o.width ?? boxWidth;
+        const leading = o.leading ?? 1.5;
+        const probe = block(t, x, 0, size, w, fill, { ...o, leading });
+        y += (o.gap ?? 0) + probe.size;
+        parts.push(block(t, x, y, size, w, fill, { ...o, leading }).svg);
+        y += (probe.lines - 1) * probe.size * leading + rest(probe.size);
+        return api;
+      },
+      svg() { return parts.join(""); },
+    };
+    return api;
+  }
+
+  return { line, block, width, setFloor, lineSize, flow };
+
 }
 
 type TypeKit = ReturnType<typeof makeType>;
@@ -806,16 +866,38 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.5)), 0.7).h;
   const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const metaTop = snap(ad, headBase + clearSpace(logoH) + step(ad, 2.5));
-  const tableTop = snap(ad, metaTop + step(ad, 9));
-  const rowH = step(ad, 1.8);
-  const rows = 7;
-  const totalsY = snap(ad, tableTop + rowH * (rows + 1.6));
 
   const fromLines = [d.legal_entity || ctx.company, d.person_name, d.email, d.phone, addressLine(d)].filter(Boolean).join("\n");
   const scope = ctx.copy?.proposal?.scope ?? [];
   const terms = isInvoice
     ? (d.payment_terms || ctx.copy?.invoice?.terms || "Payment terms: net 15. Late balances accrue 1.5% monthly.")
     : (ctx.copy?.proposal?.terms || "This proposal is valid for 30 days. Work begins on countersignature and receipt of the deposit.");
+
+  // Both meta columns are typeset through a measured cursor, so a five-line
+  // sender block with a wrapping street address reports its real bottom edge
+  // instead of being assumed to end nine steps down.
+  const metaW = g.span(Math.round(ad.grid.columns * 0.42));
+  const metaX2 = g.col(Math.round(ad.grid.columns * 0.55));
+  const lab = (t: string) => (ad.type.caseLabels === "upper" ? t.toUpperCase() : t);
+  const labelSize = step(ad, -1.5);
+  const labelOpts = { tracking: labelSize * ad.type.labelTracking, weight: 500 };
+  const fromCol = T.flow(g.M, metaTop - labelSize, metaW);
+  fromCol.line(lab("From"), labelSize, accent, labelOpts);
+  fromCol.block(fromLines, step(ad, -0.7), fg, { leading: 1.6, maxLines: 6, gap: step(ad, -0.2) });
+  const clientCol = T.flow(metaX2, metaTop - labelSize, metaW);
+  clientCol.line(lab(isInvoice ? "Bill to" : "Client"), labelSize, accent, labelOpts);
+  clientCol.block("Client name\nCompany\nEmail\nAddress", step(ad, -0.7), mix(fg, paper, 0.4), { leading: 1.6, maxLines: 6, gap: step(ad, -0.2) });
+
+
+  const metaBottom = Math.max(fromCol.bottom, clientCol.bottom);
+  const tableTop = snap(ad, Math.max(metaTop + step(ad, 7), metaBottom + step(ad, 3.4)));
+  const rowH = step(ad, 1.8);
+  const bodyTop = tableTop + step(ad, 0.2);
+  // Rows follow the content, and the table can never grow into the footer.
+  const footerTop = H - g.M - step(ad, 5.4);
+  const maxRows = Math.max(3, Math.floor((footerTop - step(ad, 2.6)) / rowH - bodyTop / rowH - 1.6));
+  const rows = Math.min(maxRows, isInvoice ? 6 : Math.min(9, Math.max(4, scope.length + 1)));
+  const totalsY = snap(ad, bodyTop + rowH * (rows + 1.6));
 
   const body = [
     surface(W, H, paper, ad.material.grain),
@@ -824,16 +906,14 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
     label(T, ctx, title, W - g.M, headBase - logoH * 0.35, step(ad, 1.8), primary, "end", g.span(4)),
     T.line(isInvoice ? "No. 0001" : "Prepared for", W - g.M, headBase + step(ad, -0.4), step(ad, -1), muted, { anchor: "end", maxWidth: g.span(4) }),
 
-    label(T, ctx, "From", g.M, metaTop, step(ad, -1.5), accent),
-    T.block(fromLines, g.M, metaTop + step(ad, 1.1), step(ad, -0.7), g.span(Math.round(ad.grid.columns * 0.42)), fg, { leading: 1.6, maxLines: 6 }).svg,
-    label(T, ctx, isInvoice ? "Bill to" : "Client", g.col(Math.round(ad.grid.columns * 0.55)), metaTop, step(ad, -1.5), accent),
-    T.block("Client name\nCompany\nEmail\nAddress", g.col(Math.round(ad.grid.columns * 0.55)), metaTop + step(ad, 1.1), step(ad, -0.7), g.span(Math.round(ad.grid.columns * 0.42)), mix(fg, paper, 0.4), { leading: 1.6, maxLines: 6 }).svg,
+    fromCol.svg(),
+    clientCol.svg(),
 
     `<rect x="${g.M}" y="${r(tableTop - step(ad, 1.5))}" width="${g.content}" height="${r(ad.ink.ruleWeight)}" fill="${primary}"/>`,
     ...cols.map((c, i) => label(T, ctx, c, colX[i], tableTop - step(ad, -0.2), step(ad, -1.4), primary, i === cols.length - 1 ? "end" : "start", g.span(3))),
-    `<rect x="${g.M}" y="${r(tableTop + step(ad, 0.2))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.65)}"/>`,
+    `<rect x="${g.M}" y="${r(bodyTop)}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.65)}"/>`,
     ...Array.from({ length: rows }, (_, i) => {
-      const y = tableTop + step(ad, 0.2) + (i + 1) * rowH;
+      const y = bodyTop + (i + 1) * rowH;
       const text = !isInvoice && scope[i]
         ? T.line(scope[i], g.M, y - rowH * 0.35, step(ad, -0.8), fg, { maxWidth: g.span(Math.round(ad.grid.columns * 0.5)) })
         : "";
@@ -847,8 +927,10 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
     T.block(terms, g.M, H - g.M - step(ad, 3.6), step(ad, -1.1), g.span(Math.round(ad.grid.columns * 0.7)), muted, { leading: 1.5, maxLines: 3 }).svg,
     d.tax_id ? T.line(`EIN ${d.tax_id}`, g.M, H - g.M - step(ad, 0.4), step(ad, -1.4), mix(fg, paper, 0.5), { maxWidth: g.span(4) }) : "",
     label(T, ctx, [d.website, d.email].filter(Boolean).join("   ·   "), W - g.M, H - g.M - step(ad, 0.4), step(ad, -1.4), muted, "end", g.span(6)),
-    motif(ctx, g, accent, "tr"),
+    // No corner motif here: all four corners are already spoken for (mark,
+    // title, terms, contact line). The ornament was striking through the title.
   ].join("");
+
   return [{ name: mode, svg: page(W, H, defs, body), width: W, height: H }];
 }
 
@@ -898,30 +980,46 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     ].join("")),
   });
 
-  const cardW = g.span(Math.floor(ad.grid.columns / 3) - (ad.grid.columns >= 12 ? 0 : 0));
   const cardGap = g.gutter * 2;
   const cardWidth = (g.content - cardGap * 2) / 3;
+  const cardPad = step(ad, 1.4);
+  const cardTop = H * 0.3;
+  const cardMaxH = H - g.M - slideBox.h - step(ad, 1.6) - cardTop;
+  // Each card is typeset first, then all three are drawn at the tallest
+  // measured height. Nothing is placed at a guessed offset, so the number,
+  // the headline and the body can no longer land on top of one another, and
+  // three short points no longer leave two-thirds of the card empty.
+  const cardStacks = [0, 1, 2].map((i) => {
+    const x = g.M + i * (cardWidth + cardGap);
+    const p = points[i];
+    const inner = cardWidth - cardPad * 2;
+    const f = T.flow(x + cardPad, cardTop + cardPad * 0.4, inner);
+    f.line(`0${i + 1}`, step(ad, -0.6), accent, { tracking: step(ad, -0.6) * ad.type.labelTracking, weight: 500 });
+    f.block(p?.title || "Point headline", step(ad, 1.2), fg, {
+      family: "head", weight: 700, leading: 1.15, maxLines: 3, gap: step(ad, 0.5),
+    });
+    f.block(
+      p?.body || "Supporting detail, kept short so the slide stays readable from the back of the room.",
+      step(ad, -0.2), muted, { leading: 1.5, maxLines: 6, gap: step(ad, 0.4) },
+    );
+    return { x, svg: f.svg(), height: f.bottom - cardTop + cardPad };
+  });
+  const cardH = Math.min(cardMaxH, Math.max(...cardStacks.map((c) => c.height), H * 0.22));
+
   pages.push({
     name: "slide-3-content", width: W, height: H,
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       T.line(deck.section ? `${deck.section}` : "Content slide", g.M, H * 0.17, step(ad, 2.4), fg, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.7)) }),
       `<rect x="${g.M}" y="${r(H * 0.2)}" width="${r(g.span(1))}" height="${r(ad.ink.ruleWeight * 2)}" fill="${accent}"/>`,
-      ...[0, 1, 2].map((i) => {
-        const x = g.M + i * (cardWidth + cardGap);
-        const p = points[i];
-        const top = H * 0.3;
-        return [
-          `<rect x="${r(x)}" y="${r(top)}" width="${r(cardWidth)}" height="${r(H * 0.42)}" fill="${primary}" opacity="0.05" rx="${ad.material.radius}"/>`,
-          label(T, ctx, `0${i + 1}`, x + step(ad, 1.4), top + step(ad, 2.2), step(ad, 0.2), accent),
-          T.line(p?.title || "Point headline", x + step(ad, 1.4), top + step(ad, 4.2), step(ad, 1.2), fg, { family: "head", weight: 700, maxWidth: cardWidth - step(ad, 2.8) }),
-          T.block(p?.body || "Supporting detail, kept short so the slide stays readable from the back of the room.", x + step(ad, 1.4), top + step(ad, 5.9), step(ad, -0.2), cardWidth - step(ad, 2.8), muted, { leading: 1.5, maxLines: 5 }).svg,
-        ].join("");
-      }),
+      ...cardStacks.map((c) =>
+        `<rect x="${r(c.x)}" y="${r(cardTop)}" width="${r(cardWidth)}" height="${r(cardH)}" fill="${primary}" opacity="0.05" rx="${ad.material.radius}"/>${c.svg}`,
+      ),
       T.line(ctx.company, g.M, H - g.M, step(ad, -0.6), muted, { maxWidth: g.span(5) }),
       markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, mix(primary, paper, 0.3), paper),
     ].join("")),
   });
+
 
   pages.push({
     name: "slide-4-closing", width: W, height: H,
@@ -1084,7 +1182,49 @@ function fallbackFor(family: string): string {
  * mark size, the smallest type on the page, and the longest line. QC compares
  * these against the piece's standard.
  */
-function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: ResolvedSpec): PageMetrics {
+/** Every `<text>` on the page, resolved to a drawn bounding box. */
+function textBoxes(svg: string, T: TypeKit): { box: [number, number, number, number]; text: string }[] {
+  const out: { box: [number, number, number, number]; text: string }[] = [];
+  for (const m of svg.matchAll(/<text\b([^>]*)>([^<]*)<\/text>/g)) {
+    const attrs = m[1];
+    const text = m[2];
+    if (!text.trim()) continue;
+    const num = (k: string) => Number(new RegExp(`${k}="([-\\d.]+)"`).exec(attrs)?.[1] ?? 0);
+    const x = num("x"), y = num("y"), size = num("font-size"), tracking = num("letter-spacing");
+    if (!size) continue;
+    const family = /font-family="BrandHead"/.test(attrs) ? "head" : "body";
+    const anchor = /text-anchor="(\w+)"/.exec(attrs)?.[1] ?? "start";
+    const w = T.width(text, size, family as "head" | "body", tracking);
+    const x0 = anchor === "end" ? x - w : anchor === "middle" ? x - w / 2 : x;
+    out.push({ box: [x0, y - size * 0.78, x0 + w, y + size * 0.22], text });
+  }
+  return out;
+}
+
+/**
+ * Two pieces of type sharing the same pixels is the defect a founder sees
+ * first — a title with a rule through it, an address printed over a table
+ * header. Report it by name so a page can be re-set instead of shipped.
+ */
+function textOverlaps(svg: string, T: TypeKit): string[] {
+  const boxes = textBoxes(svg, T);
+  const hits: string[] = [];
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i].box, b = boxes[j].box;
+      const ox = Math.min(a[2], b[2]) - Math.max(a[0], b[0]);
+      const oy = Math.min(a[3], b[3]) - Math.max(a[1], b[1]);
+      if (ox <= 1 || oy <= 1) continue;
+      const smaller = Math.min((a[2] - a[0]) * (a[3] - a[1]), (b[2] - b[0]) * (b[3] - b[1]));
+      if (smaller <= 0 || (ox * oy) / smaller < 0.18) continue;
+      hits.push(`"${boxes[i].text.slice(0, 28)}" overlaps "${boxes[j].text.slice(0, 28)}"`);
+      if (hits.length >= 6) return hits;
+    }
+  }
+  return hits;
+}
+
+function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: ResolvedSpec, T?: TypeKit): PageMetrics {
   const markHs = [...svg.matchAll(/data-mark-h="([\d.]+)"/g)].map((m) => Number(m[1]));
   const markWs = [...svg.matchAll(/data-mark-w="([\d.]+)"/g)].map((m) => Number(m[1]));
   const markArts = [...svg.matchAll(/data-mark-art="([^"]*)"/g)].map((m) => m[1]);
@@ -1107,8 +1247,10 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
     textLines: texts.length,
     smallestType: sizes.length ? Math.min(...sizes) : undefined,
     longestLine: texts.length ? Math.max(...texts.map((t) => t.length)) : undefined,
+    overlaps: T ? textOverlaps(svg, T) : undefined,
   };
 }
+
 
 export type RenderResult = { pages: Page[]; fontBuffers: Uint8Array[]; fontsOk: boolean };
 
@@ -1135,38 +1277,57 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
   const { fg } = palette(ctx);
   const defs = `<style>${faces}</style>${grainDef(fg)}`;
   const T = makeType({ head: head?.bytes, body: bodyFont?.bytes });
-  const args: Args = { ctx, T, defs };
-
-  let pages: Page[];
-  switch (kind) {
-    case "business_card": pages = businessCard(args); break;
-    case "letterhead": pages = letterhead(args); break;
-    case "envelope": pages = envelope(args); break;
-    case "notecard": pages = notecard(args); break;
-    case "email_signature": pages = emailSignature(args); break;
-    case "invoice": pages = docTemplate(args, "invoice"); break;
-    case "proposal": pages = docTemplate(args, "proposal"); break;
-    case "presentation": pages = presentation(args); break;
-    case "guidelines": pages = guidelines(args); break;
-    default: pages = [];
-  }
 
   const headStack = `${heading}, ${fallbackFor(heading)}`;
   const bodyStack = `${body}, ${fallbackFor(body)}`;
-  pages = pages.map((p) => {
-    const rs = resolveSpec(p.name, p.width, p.height);
-    const svg = p.svg
-      .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
-      .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
-      // Backstop: any literal <text> written outside the type kit still obeys
-      // the piece's legal minimum. Fitted lines are already at or above it.
-      .replace(/font-size="([\d.]+)"/g, (m, v) => {
-        const n = Number(v);
-        return n && n < rs.minType ? `font-size="${Math.round(rs.minType * 10) / 10}"` : m;
-      })
-      .replace("<svg ", `<svg${printMeta(rs)} `);
-    return { ...p, svg, metrics: pageMetrics(ctx, p.name, svg, rs) };
-  });
+
+  const draw = (drawCtx: CollateralCtx): Page[] => {
+    const args: Args = { ctx: drawCtx, T, defs };
+    let raw: Page[];
+    switch (kind) {
+      case "business_card": raw = businessCard(args); break;
+      case "letterhead": raw = letterhead(args); break;
+      case "envelope": raw = envelope(args); break;
+      case "notecard": raw = notecard(args); break;
+      case "email_signature": raw = emailSignature(args); break;
+      case "invoice": raw = docTemplate(args, "invoice"); break;
+      case "proposal": raw = docTemplate(args, "proposal"); break;
+      case "presentation": raw = presentation(args); break;
+      case "guidelines": raw = guidelines(args); break;
+      default: raw = [];
+    }
+    return raw.map((p) => {
+      const rs = resolveSpec(p.name, p.width, p.height);
+      const svg = p.svg
+        .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
+        .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
+        // Backstop: any literal <text> written outside the type kit still obeys
+        // the piece's legal minimum. Fitted lines are already at or above it.
+        .replace(/font-size="([\d.]+)"/g, (m, v) => {
+          const n = Number(v);
+          return n && n < rs.minType ? `font-size="${Math.round(rs.minType * 10) / 10}"` : m;
+        })
+        .replace("<svg ", `<svg${printMeta(rs)} `);
+      return { ...p, svg, metrics: pageMetrics(drawCtx, p.name, svg, rs, T) };
+    });
+  };
+
+  let pages = draw(ctx);
+  // A collision is a defect, not a taste call. If any page still has type on
+  // type, re-set the whole piece one notch smaller — the layout is measured,
+  // so a smaller scale resolves what a longer-than-expected string caused.
+  let attemptCtx = ctx;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const clashing = pages.filter((p) => (p.metrics?.overlaps?.length ?? 0) > 0);
+    if (!clashing.length) break;
+    console.warn("[collateral layout]", kind, "type collision, re-setting smaller:", clashing.map((p) => `${p.name}: ${p.metrics!.overlaps!.join("; ")}`).join(" | "));
+    attemptCtx = {
+      ...attemptCtx,
+      ad: { ...attemptCtx.ad, scale: { ...attemptCtx.ad.scale, base: attemptCtx.ad.scale.base * 0.92 } },
+    };
+    pages = draw(attemptCtx);
+  }
+
 
   const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
   return { pages, fontBuffers, fontsOk: fontBuffers.length > 0 };
