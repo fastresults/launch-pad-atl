@@ -235,17 +235,15 @@ export function ShareSidebar({
                           )}
                         >
                           <span className="line-clamp-2">{item.title}</span>
+                          <MediaCue hint={mediaHintForItem(item)} sheet={sheet} active={active} />
                           {seen.has(item.key) && !active && (
                             <span
                               aria-hidden
-                              className="ml-auto mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60"
+                              className={cn(
+                                "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60",
+                                !mediaHintForItem(item) && "ml-auto",
+                              )}
                             />
-                          )}
-
-                          {item.kind === "gallery" && !!item.images?.length && (
-                            <span className="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground/60">
-                              {item.images.length}
-                            </span>
                           )}
                         </a>
                       </li>
