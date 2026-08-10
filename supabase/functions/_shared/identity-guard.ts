@@ -214,6 +214,20 @@ export function checkIdentity(
   const artDirectionMissing = !!archetype &&
     !raw.toLowerCase().includes(archetype.toLowerCase());
 
+  // The art direction has to be read off the actual mark, not invented.
+  const logoCraftMissing = !!opts.requireLogoCraft &&
+    !(/mark-derived art direction/i.test(raw) &&
+      /ink sampled/i.test(raw) &&
+      /geometry and negative space/i.test(raw));
+
+  // The copy has to carry real facts out of the venture brain.
+  let brainFactsThin = false;
+  const facts = opts.brainFacts ?? [];
+  if (facts.length) {
+    const need = Math.min(opts.minBrainFacts ?? 3, facts.length);
+    brainFactsThin = countFactEchoes(raw, facts) < need;
+  }
+
   return {
     nameMissing,
     logoMissing,
@@ -229,11 +243,14 @@ export function checkIdentity(
     testimonialPortraitsMissing,
     contrastTokensMissing,
     surfaceSystemMissing,
+    logoCraftMissing,
+    brainFactsThin,
     ok: !testimonialPortraitsMissing && !contrastTokensMissing && !surfaceSystemMissing && !copyThin && !copyGeneric && !faqThin && !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
       !imageryCraftMissing && !portraitCraftMissing && !imageryTooDark &&
-      !artDirectionMissing,
+      !artDirectionMissing && !logoCraftMissing && !brainFactsThin,
   };
 }
+
 
 
 /** Corrective instruction appended to a second gateway pass when a check fails. */
