@@ -182,6 +182,36 @@ async function loadMarkArtwork(admin: any, path: string): Promise<string | null>
   }
 }
 
+/**
+ * The venture's own imagery, inlined as data URIs so the rasteriser can draw
+ * it. Collateral used to leave a grey box labelled "Image" on the deck while a
+ * committed, art-directed mood board sat one table away. Two tiles is the
+ * budget: each is a ~1MB PNG once base64'd.
+ */
+async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
+  const tiles = (Array.isArray(kit?.moodboard) ? kit.moodboard : [])
+    .map((t: any) => String(t?.path ?? "")).filter(Boolean).slice(0, 2);
+  const out: string[] = [];
+  for (const path of tiles) {
+    try {
+      const { data: file } = await admin.storage.from(BUCKET).download(path);
+      if (!file) continue;
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (!bytes.length) continue;
+      const ext = path.split(".").pop()?.toLowerCase();
+      const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : "image/png";
+      out.push(`data:${mime};base64,${b64(bytes)}`);
+    } catch (e) {
+      console.warn("[collateral imagery] skipped a tile:", (e as Error).message);
+    }
+  }
+  console.log(`[collateral imagery] ${out.length} venture image(s) available to the templates`);
+  return out;
+}
+
+
+
+
 
 async function buildCtx(
   admin: any,
