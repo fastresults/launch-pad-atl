@@ -978,24 +978,24 @@ function presentation({ ctx, T, defs }: Args): Page[] {
    * ground so a dark slide gets the reversed artwork.
    */
   const chrome = (n: number, ground: string, tone: string, markInk: string | null) => [
-    label(T, ctx, `${String(n).padStart(2, "0")} / ${total}`, g.M, g.M + sp( -0.6), sp( -1.2), tone, "start", g.span(2)),
-    T.line(ctx.company, g.M, H - g.M, sp( -0.9), tone, { maxWidth: g.span(5), opacity: 0.85 }),
+    label(T, ctx, `${String(n).padStart(2, "0")} / ${total}`, g.M, g.M + sp(-0.6), sp(-1.2), tone, "start", g.span(2)),
+    T.line(ctx.company, g.M, H - g.M, sp(-0.9), tone, { maxWidth: g.span(5), opacity: 0.85 }),
     markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, markInk, ground),
   ].join("");
 
-  const headTop = g.M + sp( 2.2);
+  const headTop = g.M + sp(2.2);
   /** Slide title block, measured — the body always starts under what was drawn. */
   const slideHead = (title: string, sub?: string) => {
     const f = T.flow(g.M, headTop, g.span(Math.round(ad.grid.columns * 0.72)));
-    f.line(title, sp( 2.4), fg, { family: "head", weight: 700, tracking: sp( 2.4) * ad.type.displayTracking });
-    const ruleY = f.bottom + sp( 0.5);
-    let bottom = ruleY + sp( 1.4);
+    f.line(title, sp(2.4), fg, { family: "head", weight: 700, tracking: sp(2.4) * ad.type.displayTracking });
+    const ruleY = f.bottom + sp(0.5);
+    let bottom = ruleY + sp(1.4);
     let subSvg = "";
     if (sub) {
-      const sf = T.flow(g.M, ruleY + sp( 0.9), g.span(Math.round(ad.grid.columns * 0.6)));
-      sf.block(sub, sp( 0.2), muted, { leading: 1.5, maxLines: 2 });
+      const sf = T.flow(g.M, ruleY + sp(0.9), g.span(Math.round(ad.grid.columns * 0.6)));
+      sf.block(sub, sp(0.2), muted, { leading: 1.5, maxLines: 2 });
       subSvg = sf.svg();
-      bottom = sf.bottom + sp( 1.2);
+      bottom = sf.bottom + sp(1.2);
     }
     return {
       bottom,
@@ -1017,12 +1017,12 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   // ── 01 cover ──────────────────────────────────────────────────────────────
   const coverGround = invert ? primary : paper;
   const coverStack = T.flow(g.M, H * 0.52, g.span(Math.round(ad.grid.columns * 0.82)));
-  coverStack.line(ctx.company, sp( 5.2), coverInk, {
-    family: "head", weight: 700, tracking: sp( 5.2) * ad.type.displayTracking,
+  coverStack.line(ctx.company, sp(5.2), coverInk, {
+    family: "head", weight: 700, tracking: sp(5.2) * ad.type.displayTracking,
   });
   if (d.tagline) {
-    coverStack.block(d.tagline, sp( 0.8), coverInk, {
-      leading: 1.4, maxLines: 2, gap: sp( 1.1), opacity: invert ? 0.82 : 0.72,
+    coverStack.block(d.tagline, sp(0.8), coverInk, {
+      leading: 1.4, maxLines: 2, gap: sp(1.1), opacity: invert ? 0.82 : 0.72,
       width: g.span(Math.round(ad.grid.columns * 0.6)),
     });
   }
@@ -1032,7 +1032,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
       invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
       markAt(ctx, g.M, g.M, coverBox.w, coverBox.h, invert ? coverInk : null, coverGround),
       coverStack.svg(),
-      label(T, ctx, String(new Date().getFullYear()), W - g.M, H - g.M, sp( -0.6), coverInk, "end", g.span(2)),
+      label(T, ctx, String(new Date().getFullYear()), W - g.M, H - g.M, sp(-0.6), coverInk, "end", g.span(2)),
       motif(ctx, g, invert ? coverInk : accent, "br"),
     ].join("")),
   });
@@ -1041,12 +1041,12 @@ function presentation({ ctx, T, defs }: Args): Page[] {
 
   // ── 02 section divider ────────────────────────────────────────────────────
   const sectionStack = T.flow(g.M, H * 0.34, g.span(Math.round(ad.grid.columns * 0.72)));
-  sectionStack.line("01", sp( 0.6), accent, { tracking: sp( 0.6) * ad.type.labelTracking, weight: 500 });
-  sectionStack.line(deck.section || "Where we are today", sp( 3.8), fg, {
-    family: "head", weight: 700, gap: sp( 1.1), tracking: sp( 3.8) * ad.type.displayTracking,
+  sectionStack.line("01", sp(0.6), accent, { tracking: sp(0.6) * ad.type.labelTracking, weight: 500 });
+  sectionStack.line(deck.section || "Where we are today", sp(3.8), fg, {
+    family: "head", weight: 700, gap: sp(1.1), tracking: sp(3.8) * ad.type.displayTracking,
   });
-  sectionStack.block(deck.sectionSub || "One sentence that frames what this section proves.", sp( 0.6), muted, {
-    leading: 1.5, maxLines: 2, gap: sp( 1.0), width: g.span(Math.round(ad.grid.columns * 0.55)),
+  sectionStack.block(deck.sectionSub || "One sentence that frames what this section proves.", sp(0.6), muted, {
+    leading: 1.5, maxLines: 2, gap: sp(1.0), width: g.span(Math.round(ad.grid.columns * 0.55)),
   });
   pages.push({
     name: "slide-2-section", width: W, height: H,
@@ -1101,9 +1101,9 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const stGround = primary;
   const stInk = inkOn(stGround);
   const stStack = T.flow(g.M, H * 0.3, g.span(Math.round(ad.grid.columns * 0.78)));
-  stStack.line("The point", sp( -0.4), stInk, { tracking: sp( -0.4) * ad.type.labelTracking, weight: 500, opacity: 0.75 });
-  stStack.block(deck.statement || deck.sectionSub || `${ctx.company} exists to make this simple.`, sp( 3.0), stInk, {
-    family: "head", weight: 700, leading: 1.18, maxLines: 4, gap: sp( 1.4),
+  stStack.line("The point", sp(-0.4), stInk, { tracking: sp(-0.4) * ad.type.labelTracking, weight: 500, opacity: 0.75 });
+  stStack.block(deck.statement || deck.sectionSub || `${ctx.company} exists to make this simple.`, sp(3.0), stInk, {
+    family: "head", weight: 700, leading: 1.18, maxLines: 4, gap: sp(1.4),
   });
   pages.push({
     name: "slide-4-statement", width: W, height: H,
@@ -1118,9 +1118,9 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const contentHead = slideHead(deck.section || "What we propose");
   const cardGap = g.gutter * 2;
   const cardWidth = (g.content - cardGap * 2) / 3;
-  const cardPad = sp( 1.4);
-  const cardTop = contentHead.bottom + sp( 0.6);
-  const cardMaxH = H - g.M - slideBox.h - sp( 1.6) - cardTop;
+  const cardPad = sp(1.4);
+  const cardTop = contentHead.bottom + sp(0.6);
+  const cardMaxH = H - g.M - slideBox.h - sp(1.6) - cardTop;
   // Each card is typeset first, then all three are drawn at the tallest
   // measured height. Nothing is placed at a guessed offset, so the number,
   // the headline and the body can no longer land on top of one another, and
@@ -1130,13 +1130,13 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     const p = points[i];
     const inner = cardWidth - cardPad * 2;
     const f = T.flow(x + cardPad, cardTop + cardPad * 0.4, inner);
-    f.line(`0${i + 1}`, sp( -0.6), accent, { tracking: sp( -0.6) * ad.type.labelTracking, weight: 500 });
-    f.block(p?.title || "Point headline", sp( 1.2), fg, {
-      family: "head", weight: 700, leading: 1.15, maxLines: 3, gap: sp( 0.5),
+    f.line(`0${i + 1}`, sp(-0.6), accent, { tracking: sp(-0.6) * ad.type.labelTracking, weight: 500 });
+    f.block(p?.title || "Point headline", sp(1.2), fg, {
+      family: "head", weight: 700, leading: 1.15, maxLines: 3, gap: sp(0.5),
     });
     f.block(
       p?.body || "Supporting detail, kept short so the slide stays readable from the back of the room.",
-      sp( -0.2), muted, { leading: 1.5, maxLines: 6, gap: sp( 0.4) },
+      sp(-0.2), muted, { leading: 1.5, maxLines: 6, gap: sp(0.4) },
     );
     return { x, svg: f.svg(), height: f.bottom - cardTop + cardPad };
   });
@@ -1157,17 +1157,17 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   // ── 06 split: copy left, image well right ─────────────────────────────────
   const splitHead = slideHead(deck.splitTitle || "How it works");
   const splitColW = (g.content - g.gutter * 2) / 2;
-  const splitTop = splitHead.bottom + sp( 0.4);
+  const splitTop = splitHead.bottom + sp(0.4);
   const splitStack = T.flow(g.M, splitTop, splitColW);
   splitStack.block(
     deck.splitBody || deck.sectionSub || "A short paragraph that carries the argument, set at a comfortable measure so it stays readable from the back of the room.",
-    sp( 0.4), fg, { leading: 1.55, maxLines: 6 },
+    sp(0.4), fg, { leading: 1.55, maxLines: 6 },
   );
   for (const p of points.slice(0, 3)) {
-    splitStack.line(`—  ${p.title}`, sp( 0.0), muted, { gap: sp( 0.7) });
+    splitStack.line(`—  ${p.title}`, sp(0.0), muted, { gap: sp(0.7) });
   }
   const wellX = g.M + splitColW + g.gutter * 2;
-  const wellH = Math.min(H - g.M - slideBox.h - sp( 1.8) - splitTop, H * 0.5);
+  const wellH = Math.max((bandBottom - splitTop) * 0.86, splitStack.bottom - splitTop);
   pages.push({
     name: "slide-6-split", width: W, height: H,
     svg: page(W, H, defs, [
@@ -1176,7 +1176,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
       `<g transform="${balance(splitTop, Math.max(wellH, splitStack.bottom - splitTop))}">${splitStack.svg()}` +
       `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(wellH)}" rx="${ad.material.radius}" fill="${primary}" opacity="0.08"/>`,
       `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(ad.ink.ruleWeight * 3)}" fill="${accent}"/>`,
-      label(T, ctx, "Image", wellX + sp( 1.2), splitTop + wellH - sp( 1.2), sp( -1.0), mix(fg, paper, 0.45), "start", splitColW - sp( 2.4)),
+      label(T, ctx, "Image", wellX + sp(1.2), splitTop + wellH - sp(1.2), sp(-1.0), mix(fg, paper, 0.45), "start", splitColW - sp(2.4)),
       chrome(6, paper, muted, mix(primary, paper, 0.3)),
     ].join("")),
   });
@@ -1184,7 +1184,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   // ── 07 data ───────────────────────────────────────────────────────────────
   const dataHead = slideHead(deck.statsTitle || "By the numbers");
   const statW = (g.content - g.gutter * 2 * 2) / 3;
-  const statTop = dataHead.bottom + sp( 1.0);
+  const statTop = dataHead.bottom + sp(1.0);
   const fallbackStats = [
     { figure: "—", label: "Add your figure", note: "Replace with a number you can defend." },
     { figure: "—", label: "Add your figure", note: "Replace with a number you can defend." },
@@ -1194,9 +1194,9 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const statStacks = statSet.slice(0, 3).map((s, i) => {
     const x = g.M + i * (statW + g.gutter * 2);
     const f = T.flow(x, statTop, statW);
-    f.line(s.figure || "—", sp( 4.0), primary, { family: "head", weight: 700, tracking: sp( 4.0) * ad.type.displayTracking });
-    f.line(s.label || "", sp( 0.4), fg, { family: "head", weight: 700, gap: sp( 0.6) });
-    f.block(s.note || "", sp( -0.6), muted, { leading: 1.5, maxLines: 3, gap: sp( 0.4) });
+    f.line(s.figure || "—", sp(4.0), primary, { family: "head", weight: 700, tracking: sp(4.0) * ad.type.displayTracking });
+    f.line(s.label || "", sp(0.4), fg, { family: "head", weight: 700, gap: sp(0.6) });
+    f.block(s.note || "", sp(-0.6), muted, { leading: 1.5, maxLines: 3, gap: sp(0.4) });
     return { x, svg: f.svg(), bottom: f.bottom };
   });
   pages.push({
@@ -1205,7 +1205,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
       surface(W, H, paper, ad.material.grain),
       dataHead.svg,
       `<g transform="${balance(statTop, Math.max(...statStacks.map((s) => s.bottom)) - statTop)}">${statStacks.map((s) =>
-        `<rect x="${r(s.x)}" y="${r(statTop - sp( 0.6))}" width="${r(ad.ink.ruleWeight * 3)}" height="${r(s.bottom - statTop + sp( 0.8))}" fill="${accent}" opacity="0.35"/>${s.svg}`,
+        `<rect x="${r(s.x)}" y="${r(statTop - sp(0.6))}" width="${r(ad.ink.ruleWeight * 3)}" height="${r(s.bottom - statTop + sp(0.8))}" fill="${accent}" opacity="0.35"/>${s.svg}`,
       ).join("")}</g>`,
       chrome(7, paper, muted, mix(primary, paper, 0.3)),
     ].join("")),
@@ -1220,12 +1220,12 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     { label: "Week 4", body: "Repeat what worked." },
   ];
   const tlW = (g.content - g.gutter * 2 * (tlSet.length - 1)) / tlSet.length;
-  const tlRuleY = tlHead.bottom + sp( 2.2);
+  const tlRuleY = tlHead.bottom + sp(2.2);
   const tlStacks = tlSet.map((s, i) => {
     const x = g.M + i * (tlW + g.gutter * 2);
-    const f = T.flow(x, tlRuleY + sp( 1.0), tlW);
-    f.line(s.label || `Step ${i + 1}`, sp( 1.0), fg, { family: "head", weight: 700 });
-    f.block(s.body || "", sp( -0.4), muted, { leading: 1.5, maxLines: 4, gap: sp( 0.4) });
+    const f = T.flow(x, tlRuleY + sp(1.0), tlW);
+    f.line(s.label || `Step ${i + 1}`, sp(1.0), fg, { family: "head", weight: 700 });
+    f.block(s.body || "", sp(-0.4), muted, { leading: 1.5, maxLines: 4, gap: sp(0.4) });
     return `<circle cx="${r(x + ad.ink.ruleWeight * 3)}" cy="${r(tlRuleY)}" r="${r(ad.ink.ruleWeight * 3)}" fill="${accent}"/>${f.svg()}`;
   });
   pages.push({
@@ -1245,14 +1245,14 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const qStack = T.flow(g.M, H * 0.3, g.span(Math.round(ad.grid.columns * 0.76)));
   qStack.block(
     `“${deck.quote || deck.statement || "The clearest offer wins."}”`,
-    sp( 2.4), qInk, { family: "head", weight: 700, leading: 1.25, maxLines: 4 },
+    sp(2.4), qInk, { family: "head", weight: 700, leading: 1.25, maxLines: 4 },
   );
-  qStack.line(deck.quoteAttribution || ctx.company, sp( 0.0), mix(qInk, qGround, 0.28), { gap: sp( 1.4) });
+  qStack.line(deck.quoteAttribution || ctx.company, sp(0.0), mix(qInk, qGround, 0.28), { gap: sp(1.4) });
   pages.push({
     name: "slide-9-quote", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${qGround}"/>`,
-      `<rect x="${g.M}" y="${r(H * 0.3 - sp( 2.4))}" width="${r(ad.ink.ruleWeight * 4)}" height="${r(sp( 2.0))}" fill="${accent}"/>`,
+      `<rect x="${g.M}" y="${r(H * 0.3 - sp(2.4))}" width="${r(ad.ink.ruleWeight * 4)}" height="${r(sp(2.0))}" fill="${accent}"/>`,
       qStack.svg(),
       chrome(9, qGround, mix(qInk, qGround, 0.3), qInk),
     ].join("")),
@@ -1260,12 +1260,12 @@ function presentation({ ctx, T, defs }: Args): Page[] {
 
   // ── 10 closing ────────────────────────────────────────────────────────────
   const closeStack = T.flow(W / 2, H * 0.58, g.span(Math.round(ad.grid.columns * 0.7)));
-  closeStack.line(deck.closing || "Thank you", sp( 3.6), inkOn(fg), {
+  closeStack.line(deck.closing || "Thank you", sp(3.6), inkOn(fg), {
     family: "head", weight: 700, anchor: "middle",
   });
   const contact = [d.website, d.email, d.phone].filter(Boolean).join("   ·   ");
   if (contact) {
-    closeStack.line(contact, sp( 0.2), mix(inkOn(fg), fg, 0.22), { anchor: "middle", gap: sp( 1.0) });
+    closeStack.line(contact, sp(0.2), mix(inkOn(fg), fg, 0.22), { anchor: "middle", gap: sp(1.0) });
   }
   pages.push({
     name: "slide-10-closing", width: W, height: H,
