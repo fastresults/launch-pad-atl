@@ -341,7 +341,8 @@ export function LogoSetPanel({
 
       <p className="text-[10px] leading-relaxed text-muted-foreground">
         Drop files anywhere here or click a slot to replace it. SVG is best — PNG, JPG and WebP work too, up to 5 MB.
-        Reversed, icon and wordmark fall back to your primary mark when empty.
+        Each preview shows its own upload: primary on light, reversed on dark.
+
       </p>
     </section>
   );
