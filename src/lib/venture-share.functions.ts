@@ -43,6 +43,28 @@ export interface ShareMetric {
   source?: string | null;
 }
 
+export interface ShareImage {
+  url: string;
+  label?: string | null;
+  width?: number | null;
+  height?: number | null;
+  /** Copy that ships with the creative, surfaced in the preview modal. */
+  meta?: {
+    platform?: string | null;
+    day?: string | null;
+    week?: number | null;
+    pillar?: string | null;
+    aspect?: string | null;
+    headline?: string | null;
+    hook?: string | null;
+    body?: string | null;
+    cta?: string | null;
+    hashtags?: string[] | null;
+    assetKind?: string | null;
+    filename?: string | null;
+  } | null;
+}
+
 export interface ShareItem {
   key: string;
   title: string;
@@ -50,7 +72,7 @@ export interface ShareItem {
   kind: "doc" | "gallery" | "timeline";
   body?: string | null;
   heroImageUrl?: string | null;
-  images?: { url: string; label?: string | null; width?: number | null; height?: number | null }[];
+  images?: ShareImage[];
   brandBoard?: ShareBrandBoard;
   metrics?: ShareMetric[];
   /** Launch cadence payload — raw timeline plus the founder's saved scenario. */
