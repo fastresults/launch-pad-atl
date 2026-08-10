@@ -147,11 +147,20 @@ export type CollateralCtx = {
   /** Traced vector mark (preferred) — inlined so the ink stays vector. */
   logoSvg?: string | null;
   /**
+   * The reversed / knockout artwork, used whenever a piece draws the mark on a
+   * dark ground. Sourced from the founder's "reversed" logo slot, else the
+   * generated knockout/mono variant. Absent for ventures that only have a
+   * primary mark — those fall back to a single-ink knockout of the primary.
+   */
+  logoSvgDark?: string | null;
+  symbolSvgDark?: string | null;
+  /**
    * Symbol isolated from a traced lockup. When present it is the artwork every
    * piece draws, and the company name is set in real type beside it instead of
    * shipping the tracer's polygon letterforms.
    */
   symbolSvg?: string | null;
+
 
   voice?: string | null;
   ad: ArtDirection;
