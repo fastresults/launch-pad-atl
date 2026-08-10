@@ -764,10 +764,13 @@ export async function refineConcept(input: any): Promise<any> {
 }
 
 export async function generateBrandAsset(input: any): Promise<any> {
-  const { snapshotId, kind, count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId, defer, angleOffset, tiles, replace } = unwrap<any>(input);
+  // Forward the whole payload — whitelisting fields here silently dropped
+  // upload bodies (variant / dataUrl / filename) before they reached the server.
+  const payload = unwrap<any>(input);
   const { data, error } = await invokeEdge("venture-brand-assets", {
-    body: { snapshotId, kind, count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId, defer, angleOffset, tiles, replace },
+    body: { ...payload },
   });
+
 
 
   if (error) {
