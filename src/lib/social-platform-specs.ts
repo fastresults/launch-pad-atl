@@ -30,6 +30,7 @@ export const PLATFORM_SPECS: Record<string, PlatformSpec> = {
     { kind: "video_poster", label: "Video cover poster", width: 1080, height: 1920 },
   ]},
   LinkedIn: { platform: "LinkedIn", label: "LinkedIn", assets: [
+    { kind: "avatar", label: "Profile avatar", width: 400, height: 400 },
     { kind: "banner", label: "Company banner", width: 1128, height: 191 },
     { kind: "header", label: "Founder banner", width: 1584, height: 396 },
     { kind: "pinned_post", label: "Square pinned post", width: 1200, height: 1200 },
@@ -40,14 +41,17 @@ export const PLATFORM_SPECS: Record<string, PlatformSpec> = {
     { kind: "pinned_post", label: "Pinned post card", width: 1200, height: 675 },
   ]},
   YouTube: { platform: "YouTube", label: "YouTube", assets: [
+    { kind: "avatar", label: "Profile avatar", width: 800, height: 800 },
     { kind: "channel_art", label: "Channel art", width: 2560, height: 1440 },
     { kind: "thumbnail", label: "Video thumbnail", width: 1280, height: 720 },
   ]},
   Facebook: { platform: "Facebook", label: "Facebook", assets: [
+    { kind: "avatar", label: "Profile avatar", width: 1080, height: 1080 },
     { kind: "banner", label: "Page cover", width: 1640, height: 624 },
     { kind: "pinned_post", label: "Square post", width: 1200, height: 1200 },
   ]},
   Pinterest: { platform: "Pinterest", label: "Pinterest", assets: [
+    { kind: "avatar", label: "Profile avatar", width: 1080, height: 1080 },
     { kind: "banner", label: "Profile cover", width: 800, height: 450 },
     { kind: "vertical_pin", label: "Vertical pin", width: 1000, height: 1500 },
   ]},
