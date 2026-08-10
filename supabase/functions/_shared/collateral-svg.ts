@@ -121,7 +121,29 @@ async function loadFontOrFallback(family: string, weight: number): Promise<Loade
 
 
 export type CollateralCopy = {
-  deck?: { section?: string; sectionSub?: string; points?: Array<{ title: string; body: string }>; closing?: string };
+  deck?: {
+    section?: string;
+    sectionSub?: string;
+    points?: Array<{ title: string; body: string }>;
+    closing?: string;
+    /** Agenda / contents slide. */
+    agenda?: string[];
+    agendaSub?: string;
+    /** Full-bleed statement slide. */
+    statement?: string;
+    /** Two-column copy + image well. */
+    splitTitle?: string;
+    splitBody?: string;
+    /** Data slide. */
+    statsTitle?: string;
+    stats?: Array<{ figure: string; label: string; note: string }>;
+    /** Process / timeline slide. */
+    timelineTitle?: string;
+    timeline?: Array<{ label: string; body: string }>;
+    /** Quote slide. */
+    quote?: string;
+    quoteAttribution?: string;
+  };
   proposal?: { scope?: string[]; terms?: string };
   invoice?: { terms?: string };
   notecard?: string;
