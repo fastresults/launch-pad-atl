@@ -2,6 +2,8 @@ import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AskConcierge } from "@/components/site/AskConcierge";
+import { AiCapacityProvider } from "@/components/system/AiCapacityProvider";
+
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { LandingOnlyGate } from "@/components/site/LandingOnlyGate";
 import { LandingOnlyBanner } from "@/components/admin/LandingOnlyBanner";
@@ -61,6 +63,7 @@ const WorkshopStage = lazy(() => import("@/routes/_authenticated/workshop.$stage
 const AdminIndex = lazy(() => import("@/routes/_authenticated/_admin/admin.index"));
 const AdminUsers = lazy(() => import("@/routes/_authenticated/_admin/admin.users"));
 const AdminSettings = lazy(() => import("@/routes/_authenticated/_admin/admin.settings"));
+const AdminAiCapacity = lazy(() => import("@/routes/_authenticated/_admin/admin.ai-capacity"));
 const AdminDecks = lazy(() => import("@/routes/_authenticated/_admin/admin.decks"));
 const AdminDeckEditor = lazy(() => import("@/routes/_authenticated/_admin/admin.decks.$slug"));
 
@@ -112,8 +115,10 @@ function Loading() {
 export default function App() {
   return (
     <Suspense fallback={<Loading />}>
+      <AiCapacityProvider>
       <ConfirmProvider>
       <ScrollToTop />
+
       <LandingOnlyBanner />
       <LandingOnlyGate>
       <Routes>
@@ -174,6 +179,7 @@ export default function App() {
             <Route path="/admin" element={<AdminIndex />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/ai-capacity" element={<AdminAiCapacity />} />
             <Route path="/admin/decks" element={<AdminDecks />} />
             <Route path="/admin/decks/:slug" element={<AdminDeckEditor />} />
             <Route path="/admin/review" element={<AdminReview />} />
@@ -219,6 +225,8 @@ export default function App() {
       <AskConcierge />
       </LandingOnlyGate>
       </ConfirmProvider>
+      </AiCapacityProvider>
+
     </Suspense>
   );
 }

@@ -52,7 +52,36 @@ export function edgeErrorMessage(err: any, fallback = "Something went wrong. Ple
   return typeof msg === "string" && msg.length > 0 ? msg : fallback;
 }
 
+/**
+ * AI capacity failures (402 / 429 / credit limits) are handled by a branded
+ * modal instead of a red toast. AiCapacityProvider registers the handler at
+ * app start; when it claims the error, no toast is shown.
+ */
+type CapacityHandler = (err: any) => boolean;
+let capacityHandler: CapacityHandler | null = null;
+
+export function registerCapacityHandler(handler: CapacityHandler | null) {
+  capacityHandler = handler;
+}
+
 /** Show a user-friendly toast for an edge function error. */
 export function toastEdgeError(err: any, fallback?: string) {
+  if (capacityHandler?.(err)) return;
   toast.error(edgeErrorMessage(err, fallback));
 }
+
+/**
+ * Build an Error from a 200 payload that reports failure (`{ ok: false }`),
+ * carrying `code`/`providers` so capacity walls keep their provider
+ * attribution instead of degrading to a bare message string.
+ */
+export function payloadError(payload: any, fallback = "Request failed"): Error {
+  const message = typeof payload?.error === "string" && payload.error ? payload.error : fallback;
+  return Object.assign(new Error(message), {
+    code: payload?.code,
+    providers: payload?.providers,
+    status: payload?.upstreamStatus ?? payload?.gatewayStatus,
+  });
+}
+
+

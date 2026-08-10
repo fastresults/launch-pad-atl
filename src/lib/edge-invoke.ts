@@ -33,17 +33,32 @@ export async function invokeEdge<T = any>(name: string, options?: InvokeOptions)
   const context = (result.error as unknown as { context?: Response }).context;
   if (context) {
     try {
-      const payload = await context.clone().json() as { error?: unknown; message?: unknown };
+      const payload = await context.clone().json() as {
+        error?: unknown;
+        message?: unknown;
+        code?: unknown;
+        providers?: unknown;
+      };
       const detail = payload?.error ?? payload?.message;
       const message = typeof detail === "string"
         ? detail
         : detail && typeof detail === "object"
           ? JSON.stringify(detail)
           : null;
-      if (message) return { ...result, error: new Error(message) };
+      if (message) {
+        // Carry structured fields (capacity code, provider attribution) onto the
+        // Error so callers can classify without re-reading the response body.
+        const err = Object.assign(new Error(message), {
+          status: context.status,
+          code: payload?.code,
+          providers: payload?.providers,
+        });
+        return { ...result, error: err };
+      }
     } catch {
       // Keep the library error when a function returned a non-JSON body.
     }
   }
   return result;
 }
+

@@ -25,6 +25,8 @@ import {
   Megaphone,
   type LucideIcon,
   Plus,
+  Zap,
+
 } from "lucide-react";
 
 export type AdminGroup =
@@ -314,6 +316,15 @@ export const ADMIN_NAV: AdminNavItem[] = [
     group: "System",
     description: "Grant admin access or view the app as a user",
     keywords: ["roles", "permissions", "admin", "super admin", "grant", "impersonate", "view as", "sign in as", "act as"],
+    super: true,
+  },
+  {
+    to: "/admin/ai-capacity",
+    label: "AI capacity notices",
+    icon: Zap,
+    group: "System",
+    description: "Founders blocked by provider limits",
+    keywords: ["ai", "credits", "tokens", "capacity", "openai", "google", "anthropic", "limit"],
     super: true,
   },
   {

@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
+import { payloadError } from "@/lib/edge-errors";
 import { getEffectiveUserId } from "@/lib/effective-user";
 import { invokeEdge } from "@/lib/edge-invoke";
 
@@ -507,7 +508,7 @@ export async function generateDocument(input: any): Promise<void> {
     body: { snapshotId, documentType, rewriteFeedback, rewriteTags, intakeAnswers },
   });
   if (error) throw new Error(error.message);
-  if (data && data.ok === false) throw new Error(data.error ?? "Generation failed");
+  if (data && data.ok === false) throw payloadError(data, "Generation failed");
 }
 
 export async function generateDeepAssessment(input: any): Promise<void> {
@@ -521,7 +522,7 @@ export async function generateDeepAssessment(input: any): Promise<void> {
     body: { snapshotId, documentType, feedback, tags },
   });
   if (error) throw new Error(error.message);
-  if (data && data.ok === false) throw new Error(data.error ?? "Deep assessment failed");
+  if (data && data.ok === false) throw payloadError(data, "Deep assessment failed");
 }
 
 export async function bulkGenerate(input: any): Promise<{ ok?: boolean; jobId?: string; category?: string | null }> {

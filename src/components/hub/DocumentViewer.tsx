@@ -24,7 +24,7 @@ import {
   BookmarkCheck,
 } from "lucide-react";
 import { toast } from "sonner";
-import { edgeErrorMessage } from "@/lib/edge-errors";
+import { edgeErrorMessage, payloadError } from "@/lib/edge-errors";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
@@ -485,7 +485,7 @@ export function DocumentViewer({
       });
 
       if (error) throw new Error(error.message);
-      if (data && data.ok === false) throw new Error(data.error ?? "Website PRD regeneration failed");
+      if (data && data.ok === false) throw payloadError(data, "Website PRD regeneration failed");
 
       const { data: row, error: rowError } = await supabase
         .from("venture_documents")
