@@ -345,7 +345,7 @@ export async function ensureCampaignArc(
     console.warn("[campaign-arc] cache read failed", e);
   }
 
-  const arc = (await build()) ?? defaultCampaignArc(weekNumbers, opts.inputFingerprint);
+  const arc = (await build()) ?? defaultCampaignArc(weekNumbers, opts.inputFingerprint ?? "default");
   try {
     await admin
       .from("venture_content_progress")
