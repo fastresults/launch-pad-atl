@@ -33,6 +33,7 @@ import {
   bulkGenerate,
   getActiveJob,
   cancelJob,
+  skipDocument,
   listFailures,
   listBlockedDocs,
 
