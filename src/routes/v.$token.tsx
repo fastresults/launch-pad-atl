@@ -76,6 +76,9 @@ export default function VentureSharePage() {
   });
 
   const payload = q.data as SharePayload | undefined;
+  // The mark that clears contrast on whichever ground the reader is painting.
+  const surfaceLogo = useSurfaceLogo(payload?.venture);
+  const canManage = !!payload?.canManage && !!payload?.snapshotId;
   const items = useMemo(() => payload?.sections.flatMap((s) => s.items) ?? [], [payload]);
 
   useEffect(() => {
