@@ -459,25 +459,25 @@ function markAt(
 
   const untintable = isUntintable(inner);
   const dark = isDarkSurface(bg);
-  // A variant label is not proof of visible pixels. On a dark surface, force
-  // tintable vector artwork to the mathematically legible on-colour even when
-  // the stored "reversed" variant itself contains dark paint.
-  let use = picked.dark && !untintable && bg ? inkOn(bg) : ink;
+  const MIN = 2.4;
+  // A variant label is not proof of visible pixels. On any known surface we
+  // resolve the ink mathematically; when the artwork cannot be recoloured at
+  // all we give it a plate instead of letting it vanish — that is true of a
+  // founder's uploaded "reversed" raster too, which is how a dark mark used to
+  // land on a dark ground and still be called a knockout.
+  let use = ink;
   let plate = false;
 
-  if (bg && !picked.dark) {
-    const MIN = 2.4;
+  if (bg && !untintable) {
+    if (picked.dark) use = inkOn(bg);
     if (use && contrastRatio(use, bg) < MIN) use = inkOn(bg);
-    if (!use && !untintable) {
-      // Untinted artwork: knock it out when the ground is dark, or when nothing
-      // in the artwork separates from the surface.
+    if (!use) {
       const fills = fillsIn(inner);
       const visible = fills.some((f) => contrastRatio(f === "white" ? "#ffffff" : f === "black" ? "#000000" : f, bg) >= MIN);
       if (dark || (fills.length && !visible)) use = inkOn(bg);
     }
-    // Full-colour artwork we cannot recolour, on a dark ground, with no
-    // reversed slot to fall back on: give it a light plate to sit on.
-    if (untintable && dark) plate = true;
+  } else if (bg && untintable && dark) {
+    plate = true;
   }
 
   if (use && !untintable) inner = tint(inner, use);
@@ -498,10 +498,14 @@ function markAt(
     : "";
 
   // The drawn size is recorded on the group so QC can verify the mark landed
-  // inside the size band this piece's standard allows; the surface and the
-  // artwork used are recorded so QC can catch a light mark on a dark ground.
-  return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${bg ?? ""}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  // inside the size band this piece's standard allows; the surface, the artwork
+  // used and the ink it was actually drawn in are recorded so QC can measure
+  // the specimen's real legibility rather than trusting a variant label.
+  const effectiveBg = plate ? "#ffffff" : (bg ?? "");
+  const drawnInk = use ?? (untintable ? "" : (fillsIn(inner)[0] ?? ""));
+  return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
+
 
 
 function logoAspect(ctx: CollateralCtx): number {
