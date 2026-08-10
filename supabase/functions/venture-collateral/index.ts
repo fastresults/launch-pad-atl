@@ -34,6 +34,7 @@ import { suggestDetails } from "../_shared/collateral-suggest.ts";
 import { type ArtDirection, directArt, hydrate } from "../_shared/brand-art-direction.ts";
 import { copyIsUsable, writeCollateralCopy } from "../_shared/collateral-copy.ts";
 import { resolveSpec } from "../_shared/collateral-specs.ts";
+import { type StyleSystemExtras, styleSystemCss, styleSystemMarkdown } from "../_shared/style-system.ts";
 import { qcPage, type QcVerdict } from "../_shared/collateral-qc.ts";
 
 const corsHeaders = {
@@ -240,7 +241,7 @@ async function buildCtx(
   admin: any,
   snapshotId: string,
   opts: { redirect?: boolean } = {},
-): Promise<{ ctx: CollateralCtx; details: ContactDetails }> {
+): Promise<{ ctx: CollateralCtx; details: ContactDetails; extras: StyleSystemExtras }> {
   const kit = await loadKit(admin, snapshotId);
   if (!kit) throw new Error("NO_BRAND_KIT");
 
@@ -365,7 +366,25 @@ async function buildCtx(
     imagery,
   };
 
-  return { ctx, details };
+  // The style system needs the kit's own voice block and imagery URLs, which
+  // the SVG templates never see (they take inlined data URIs).
+  const moodPaths = (Array.isArray(kit.moodboard) ? kit.moodboard : [])
+    .map((t: any) => String(t?.path ?? "")).filter(Boolean).slice(0, 4);
+  const moodboardUrls: string[] = [];
+  for (const path of moodPaths) {
+    const { data: s } = await admin.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24 * 7);
+    if (s?.signedUrl) moodboardUrls.push(s.signedUrl);
+  }
+  const extras: StyleSystemExtras = {
+    voice: kit.voice ?? voice,
+    moodboardUrls,
+    hasDarkMark: !!logoSvgDark,
+    radius: ad?.material?.radius ?? 12,
+    baseline: ad?.grid?.baseline ?? 8,
+    archetype: ad?.archetype ?? null,
+  };
+
+  return { ctx, details, extras };
 }
 
 async function store(
@@ -380,7 +399,7 @@ async function store(
   height: number | null,
   meta: Record<string, unknown> = {},
 ) {
-  const ext = mime.includes("svg") ? "svg" : mime.includes("png") ? "png" : mime.includes("json") ? "json" : mime.includes("css") ? "css" : mime.includes("html") ? "html" : "txt";
+  const ext = mime.includes("svg") ? "svg" : mime.includes("png") ? "png" : mime.includes("json") ? "json" : mime.includes("markdown") ? "md" : mime.includes("css") ? "css" : mime.includes("html") ? "html" : "txt";
   const path = `${userId}/brand-collateral/${snapshotId}/${name}.${ext}`;
   const body = typeof bytes === "string" ? new TextEncoder().encode(bytes) : bytes;
   const { error } = await admin.storage.from(BUCKET).upload(path, body, { contentType: mime, upsert: true });
@@ -449,8 +468,20 @@ async function generateKind(
   userId: string,
   kind: CollateralKind,
   ctx: CollateralCtx,
+  extras: StyleSystemExtras = {},
 ): Promise<{ kind: CollateralKind; files: number; qc: QcVerdict[] }> {
   const wrote: string[] = [];
+  if (kind === "style_system") {
+    // Portable handoff: the venture's own tokens, type, marks, voice and
+    // imagery written as a spec another project can adopt wholesale.
+    const md = styleSystemMarkdown(ctx, extras);
+    const css = styleSystemCss(ctx, extras);
+    await store(admin, snapshotId, userId, kind, "style-system", md, "text/markdown", null, null, { portable: true });
+    await store(admin, snapshotId, userId, kind, "style-system-css", css, "text/css", null, null, { portable: true });
+    wrote.push("style-system", "style-system-css");
+    await sweepKind(admin, snapshotId, kind, wrote);
+    return { kind, files: 2, qc: [] };
+  }
   if (kind === "design_tokens") {
     const { css, json: tokenJson } = designTokens(ctx);
     await store(admin, snapshotId, userId, kind, "brand-tokens", css, "text/css", null, null);
@@ -661,8 +692,9 @@ Deno.serve(async (req) => {
 
       let ctx: CollateralCtx;
       let details: ContactDetails;
+      let extras: StyleSystemExtras;
       try {
-        ({ ctx, details } = await buildCtx(admin, snapshotId, { redirect: !!body?.redirect }));
+        ({ ctx, details, extras } = await buildCtx(admin, snapshotId, { redirect: !!body?.redirect }));
       } catch (e) {
         const code = (e as Error).message;
         const msg = code === "NO_BRAND_KIT"
@@ -693,7 +725,7 @@ Deno.serve(async (req) => {
       const failed: any[] = [];
       for (const kind of requested) {
         try {
-          done.push(await generateKind(admin, snapshotId, userId, kind, ctx));
+          done.push(await generateKind(admin, snapshotId, userId, kind, ctx, extras));
         } catch (e) {
           console.error("collateral failed", kind, e);
           failed.push({ kind, error: (e as Error).message });
