@@ -304,6 +304,14 @@ Source CTA: ${post.cta ?? ""}${
         ? `\n- The ONE claim this week owns — argue this and nothing else: ${args.assignedAngle}`
         : ""
     }${
+      args.proof
+        ? `\n- The week's PROOF — the concrete particular you are allowed to print: ${args.proof}`
+        : ""
+    }${
+      args.approach
+        ? `\n- This ad's angle on that claim is "${args.approach.name}": ${args.approach.brief} The other ads this week take the other angles, so do not write theirs.`
+        : ""
+    }${
       rung
         ? `\n- CTA rung "${rung.rung}": ${rung.brief}${rung.offer ? `\n- The offer, when you are allowed to name it: ${rung.offer}` : ""}`
         : ""
@@ -314,10 +322,15 @@ Source CTA: ${post.cta ?? ""}${
     }${
       taxonomy.length ? `\n\nCampaign kicker vocabulary (pick the closest fit, or a close variant): ${taxonomy.join(" | ")}` : ""
     }${
+      written.length
+        ? `\n\nHeadlines ALREADY WRITTEN for this same week — yours must not paraphrase any of them:\n- ${written.join("\n- ")}`
+        : ""
+    }${
       siblings.length
         ? `\n\nOther posts running the same week — make a DIFFERENT argument from all of these:\n- ${siblings.join("\n- ")}`
         : ""
     }`;
+
 
 
 
