@@ -89,9 +89,11 @@ export const PLATFORM_SPECS: Record<string, PlatformSpec> = {
     platform: "Pinterest",
     label: "Pinterest",
     assets: [
+      { kind: "avatar", label: "Profile avatar", width: 1080, height: 1080, guidance: "circular crop center", modelSize: "1024x1024" },
       { kind: "banner", label: "Profile cover", width: 800, height: 450, guidance: "16:9 wide cover", modelSize: "1536x1024" },
       { kind: "vertical_pin", label: "Vertical pin", width: 1000, height: 1500, guidance: "2:3 vertical, headline upper third, image lower two-thirds", modelSize: "1024x1536" },
     ],
+
   },
   Threads: {
     platform: "Threads",
