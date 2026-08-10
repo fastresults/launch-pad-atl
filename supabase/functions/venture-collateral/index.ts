@@ -436,10 +436,10 @@ async function generateKind(
     wrote.push(p.name);
 
     await store(admin, snapshotId, userId, kind, `${p.name}-preview`, candidate.bytes, "image/png", p.width, p.height, {
-        preview: true,
-        archetype: ctx.ad.archetype,
-        qc: verdict,
-      });
+      preview: true,
+      archetype: ctx.ad.archetype,
+      qc: verdict,
+    });
     wrote.push(`${p.name}-preview`);
   }
 

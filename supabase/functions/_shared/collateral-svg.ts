@@ -1289,7 +1289,7 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
     }
     return raw.map((p) => {
       const rs = resolveSpec(p.name, p.width, p.height);
-       const svg = p.svg
+      const svg = p.svg
         .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
         .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
         .replace("<svg ", `<svg${printMeta(rs)} `);
@@ -1297,7 +1297,7 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
     });
   };
 
-  let pages = draw(ctx);
+  const pages = draw(ctx);
   // Do not globally shrink a broken composition. Measured templates must pass
   // at their intended scale; the publication gate reports the exact page.
 
