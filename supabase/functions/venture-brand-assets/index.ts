@@ -827,11 +827,11 @@ Deno.serve(async (req) => {
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     const body = await req.json();
-    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId } = body ?? {};
+    const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId, defer, angleOffset = 0, tiles, replace } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // Durable logo stages share the logo preset.
     const logoKinds = ["logo_create_run", "logo_read_context", "logo_develop_brief", "logo_develop_directions", "logo_render_concept", "logo_jury", "logo_vectorize", "logo_render_status", "logo_draw_vector", "logo_retry_direction", "logo_get_run", "logo_cancel_run", "logo_force_reset", "logo_remove_direction", "logo_select_direction", "logo_upload_own", "logo_remove_upload", "logo_refresh_urls", "logo_refine_direction", "logo_restore_render"];
-    const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : undefined);
+    const preset = KIND_PRESETS[kind] ?? (logoKinds.includes(kind) ? KIND_PRESETS.logo : (kind === "moodboard_commit" ? KIND_PRESETS.moodboard : undefined));
     if (!preset) throw new Error(`Unknown kind: ${kind}`);
 
 
