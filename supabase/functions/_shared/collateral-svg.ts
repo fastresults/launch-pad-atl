@@ -1209,7 +1209,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   });
 
   // ── 10 closing ────────────────────────────────────────────────────────────
-  const closeStack = T.flow(g.M, H * 0.58, g.content);
+  const closeStack = T.flow(W / 2, H * 0.58, g.span(Math.round(ad.grid.columns * 0.7)));
   closeStack.line(deck.closing || "Thank you", step(ad, 3.6), inkOn(fg), {
     family: "head", weight: 700, anchor: "middle",
   });
@@ -1222,8 +1222,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${fg}"/>`,
       markAt(ctx, (W - coverBox.w) / 2, H * 0.3, coverBox.w, coverBox.h, inkOn(fg), fg),
-      // Anchored middle: the flow cursor tracks the baseline, x is the centre.
-      closeStack.svg().replace(new RegExp(`x="${r(g.M)}"`, "g"), `x="${r(W / 2)}"`),
+      closeStack.svg(),
     ].join("")),
   });
 
