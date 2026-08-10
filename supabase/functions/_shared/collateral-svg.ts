@@ -1189,7 +1189,7 @@ function textBoxes(svg: string, T: TypeKit): { box: [number, number, number, num
     const attrs = m[1];
     const text = m[2];
     if (!text.trim()) continue;
-    const num = (k: string) => Number(/\b(?:^|\s)/.test("") ? 0 : (new RegExp(`${k}="([-\\d.]+)"`).exec(attrs)?.[1] ?? 0));
+    const num = (k: string) => Number(new RegExp(`${k}="([-\\d.]+)"`).exec(attrs)?.[1] ?? 0);
     const x = num("x"), y = num("y"), size = num("font-size"), tracking = num("letter-spacing");
     if (!size) continue;
     const family = /font-family="BrandHead"/.test(attrs) ? "head" : "body";
