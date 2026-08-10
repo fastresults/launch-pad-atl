@@ -263,9 +263,23 @@ export function correctionPrompt(
     archetypeName?: string | null;
     minImageryRows?: number;
     minSection4Words?: number;
+    brainFacts?: string[];
   },
 ): string {
   const fixes: string[] = [];
+  if (check.logoCraftMissing) {
+    fixes.push(
+      'You never read the attached logo. Add the "### Mark-derived art direction" block to Section 1 with all four lines filled in from the artwork you were shown: the ink hexes sampled from the mark (and which is the site\'s primary ink), what the mark\'s geometry and negative space dictate about corner radius, rule weight and spacing, the letterform classification observed in the lockup and the type pairing it implies, and the imagery grade observed on the mood board. Then make the rest of the document obey those observations.',
+    );
+  }
+  if (check.brainFactsThin) {
+    fixes.push(
+      `The copy ignores the venture's real facts. Work these into the body copy verbatim — at least six of them, in the sections where a buyer would expect them: ${
+        (opts.brainFacts ?? []).slice(0, 12).join(" | ")
+      }. Do not round the numbers, rename the segments, or replace them with generic equivalents.`,
+    );
+  }
+
   if (check.nameMissing) {
     fixes.push(
       `You used the wrong company name. The company is **${opts.companyName}** — that exact string and no other. Rewrite the document so every headline, nav item, footer, meta title, email address and code sample uses it verbatim. Remove every trace of any other brand name you invented.`,
