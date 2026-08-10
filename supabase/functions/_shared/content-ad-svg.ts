@@ -14,7 +14,7 @@ import type { AdAspect } from "./content-ad-director.ts";
 import { type LogoSize, buildVectorInkLogoPng } from "./logo-compositor.ts";
 import { loadPosterFonts } from "./poster-fonts.ts";
 import { PlateSampler, contrastOf, relLuminance } from "./plate-sample.ts";
-import { scoreCorners, pickCorner, type CornerId } from "./plate-saliency.ts";
+import { resolveMarkPlacement, type CornerId } from "./plate-saliency.ts";
 
 
 export type PosterLayout = "bottom-scrim" | "centered-plate" | "edge-rule";
@@ -713,7 +713,7 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
       const href = built?.dataUrl ?? args.logoDataUrl ?? null;
       if (href) {
         // Re-derive the box from the trimmed mark so the inset stays optical.
-        const finalBox = logoBox(W, H, built?.aspect ?? aspect, size, chosen.corner, inset, capFrac);
+        const finalBox = logoBox(W, H, built?.aspect ?? aspect, size, chosen.corner, inset, capFrac, chosen.scale);
         if (plated) {
           const pad = Math.round(inset * 0.4);
           parts.push(
