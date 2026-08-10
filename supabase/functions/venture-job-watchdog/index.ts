@@ -14,7 +14,15 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const STALL_MS = 3 * 60 * 1000;
+// The slowest single legal generation (website_prd on Pro, or a "minimal"
+// retry) can take up to 240s. The stall window must sit above that, or the
+// watchdog kills healthy in-flight work and re-runs it — the old 3-minute
+// window did exactly that and froze runs at "62 of 63".
+const STALL_MS = 6 * 60 * 1000;
+// Paused jobs are swept back into a retry-only run on a slower cadence so one
+// stubborn asset can't strand a founder, without burning credits in a loop.
+const PAUSED_SWEEP_MS = 20 * 60 * 1000;
+const MAX_PAUSED_SWEEPS = 4;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
