@@ -24,7 +24,13 @@ import {
 import { ensureBrandKit } from "../_shared/brand-derive.ts";
 
 import { ensureSnapshotBrain, markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
-import { brainCorpusBlock } from "../_shared/brain-corpus.ts";
+import { brainCorpusBlock, brainCorpusBlockMulti } from "../_shared/brain-corpus.ts";
+import { brainFactsBlock, brainFactTokens } from "../_shared/brain-facts.ts";
+import {
+  brandVisionInstruction,
+  collectBrandVisionImages,
+  visionUserContent,
+} from "../_shared/prd-brand-vision.ts";
 import { trackTone } from "../_shared/track-tones.ts";
 import {
   BASE_SYSTEM_PROMPT,
