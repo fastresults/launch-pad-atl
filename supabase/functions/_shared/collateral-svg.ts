@@ -1177,9 +1177,12 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   const mCap = step(ad, 2.6);
   const mH = Math.min(H * 0.42, H - g.M - mTop - step(ad, 3.2));
   const mArt = mH - mCap;
-  const misuse: Array<{ cap: string; wrap: (art: string) => string; ink?: string | null }> = [
-    { cap: "Do not stretch or condense", wrap: (a) => `<g transform="translate(${r(W * 0)} 0)"><g transform="scale(1.18 0.82)" transform-origin="center">${a}</g></g>` },
-    { cap: "Do not rotate", wrap: (a) => `<g transform="rotate(-11 ${r(0)} ${r(0)})" transform-origin="center">${a}</g>` },
+  // `transform-origin` is not honoured by the rasteriser, so every distortion
+  // is expressed about the tile's own centre with explicit translates.
+  const about = (cx: number, cy: number, t: string) => `translate(${r(cx)} ${r(cy)}) ${t} translate(${r(-cx)} ${r(-cy)})`;
+  const misuse: Array<{ cap: string; wrap: (art: string, cx: number, cy: number) => string; ink?: string | null }> = [
+    { cap: "Do not stretch or condense", wrap: (a, cx, cy) => `<g transform="${about(cx, cy, "scale(1.18 0.82)")}">${a}</g>` },
+    { cap: "Do not rotate", wrap: (a, cx, cy) => `<g transform="rotate(-11 ${r(cx)} ${r(cy)})">${a}</g>` },
     { cap: "Do not recolour off-palette", wrap: (a) => a, ink: "#C2410C" },
     { cap: "Do not add effects", wrap: (a) => `<g opacity="0.85" filter="url(#misuseBlur)">${a}</g>` },
   ];
@@ -1194,7 +1197,8 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
         f.line(m.cap, step(ad, -1.2), fg, { family: "head", weight: 700 });
         return [
           `<rect x="${r(x)}" y="${r(mTop)}" width="${r(mW)}" height="${r(mArt)}" fill="${paper}" stroke="${mix(fg, paper, 0.82)}" stroke-width="${r(ad.ink.hairline)}" rx="${ad.material.radius}"/>`,
-          m.wrap(art),
+          m.wrap(art, x + mW / 2, mTop + mArt / 2),
+
           `<line x1="${r(x)}" y1="${r(mTop + mArt)}" x2="${r(x + mW)}" y2="${r(mTop)}" stroke="#C2410C" stroke-width="${r(ad.ink.hairline * 1.6)}" opacity="0.5"/>`,
           f.svg(),
         ].join("");
