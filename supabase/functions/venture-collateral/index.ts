@@ -32,7 +32,7 @@ import {
 import { suggestDetails } from "../_shared/collateral-suggest.ts";
 
 import { type ArtDirection, directArt, hydrate } from "../_shared/brand-art-direction.ts";
-import { writeCollateralCopy } from "../_shared/collateral-copy.ts";
+import { copyIsUsable, writeCollateralCopy } from "../_shared/collateral-copy.ts";
 import { resolveSpec } from "../_shared/collateral-specs.ts";
 import { qcPage, type QcVerdict } from "../_shared/collateral-qc.ts";
 
@@ -182,6 +182,36 @@ async function loadMarkArtwork(admin: any, path: string): Promise<string | null>
   }
 }
 
+/**
+ * The venture's own imagery, inlined as data URIs so the rasteriser can draw
+ * it. Collateral used to leave a grey box labelled "Image" on the deck while a
+ * committed, art-directed mood board sat one table away. Two tiles is the
+ * budget: each is a ~1MB PNG once base64'd.
+ */
+async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
+  const tiles = (Array.isArray(kit?.moodboard) ? kit.moodboard : [])
+    .map((t: any) => String(t?.path ?? "")).filter(Boolean).slice(0, 2);
+  const out: string[] = [];
+  for (const path of tiles) {
+    try {
+      const { data: file } = await admin.storage.from(BUCKET).download(path);
+      if (!file) continue;
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (!bytes.length) continue;
+      const ext = path.split(".").pop()?.toLowerCase();
+      const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : "image/png";
+      out.push(`data:${mime};base64,${b64(bytes)}`);
+    } catch (e) {
+      console.warn("[collateral imagery] skipped a tile:", (e as Error).message);
+    }
+  }
+  console.log(`[collateral imagery] ${out.length} venture image(s) available to the templates`);
+  return out;
+}
+
+
+
+
 
 async function buildCtx(
   admin: any,
@@ -251,6 +281,14 @@ async function buildCtx(
     await admin.from("venture_brand_kits").update({ art_direction: ad }).eq("snapshot_id", snapshotId);
   }
 
+  const snap = vctx?.snap ?? {};
+  const sourceExcerpts = [
+    ...(vctx?.sources.documents ?? []).map((d) => `${d.filename}: ${d.text}`),
+    ...(vctx?.sources.urls ?? []).map((u) => `${u.title || u.url}: ${u.text}`),
+  ].map((t) => t.replace(/\s+/g, " ").trim().slice(0, 1200)).filter(Boolean).slice(0, 4);
+
+  // The whole dossier, not a one-liner. A deck written from seven fields reads
+  // like a template; the brain already holds the facts and the numbers.
   const copy: CollateralCopy | null = await writeCollateralCopy({
     company,
     tagline: details.tagline ?? null,
@@ -258,9 +296,22 @@ async function buildCtx(
     problem: tidy(brain?.problem) || null,
     solution: tidy(brain?.solution) || null,
     customer: tidy(brain?.customer) || null,
-    differentiators: Array.isArray(brain?.differentiators) ? brain.differentiators.slice(0, 4) : null,
+    differentiators: Array.isArray(brain?.differentiators) ? brain.differentiators.slice(0, 6) : null,
     voice,
+    industry: [tidy(snap.industry), tidy(snap.sub_industry)].filter(Boolean).join(" / ") || null,
+    location: [snap.city, snap.region, snap.country].map(tidy).filter(Boolean).join(", ") || null,
+    founder: tidy(brain?.identity?.founder) || tidy(snap.founder_name) || null,
+    concept: tidy(snap.concept_summary) || null,
+    valueProposition: tidy(snap.value_proposition) || null,
+    differentiation: tidy(snap.differentiation_statement) || null,
+    businessModel: tidy(brain?.business_model_summary) || null,
+    marketFacts: Array.isArray(brain?.market_facts) ? brain.market_facts.slice(0, 8) : null,
+    knownNumbers: brain?.known_numbers && Object.keys(brain.known_numbers).length ? brain.known_numbers : null,
+    bannedAssumptions: Array.isArray(brain?.banned_assumptions) ? brain.banned_assumptions.slice(0, 6) : null,
+    sourceExcerpts: sourceExcerpts.length ? sourceExcerpts : null,
   });
+
+  const imagery = await loadVentureImagery(admin, kit);
 
   const ctx: CollateralCtx = {
     company,
@@ -288,7 +339,9 @@ async function buildCtx(
     voice,
     ad,
     copy,
+    imagery,
   };
+
   return { ctx, details };
 }
 
@@ -384,6 +437,17 @@ async function generateKind(
     return { kind, files: 2, qc: [] };
   }
 
+
+  // Copy gate. Every template falls back to canned lines ("Point headline",
+  // "Add your figure") when the copy pass fails, and a fully generic deck used
+  // to sail through QC. Kinds that carry written copy refuse to publish
+  // without it — the founder gets a retry, not a template.
+  const COPY_KINDS: CollateralKind[] = ["presentation", "proposal", "invoice", "notecard", "guidelines"];
+  if (COPY_KINDS.includes(kind) && !copyIsUsable(ctx.copy)) {
+    throw new Error(
+      "QUALITY_GATE_FAILED — we could not write your copy for this piece, so it would have published with placeholder text. Try again.",
+    );
+  }
 
   const { pages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx);
   // Fail loudly. Without a real TTF the rasteriser silently drops every line of
