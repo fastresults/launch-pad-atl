@@ -672,6 +672,10 @@ Deno.serve(async (req) => {
         : null,
       assignedAngle: arcWeek?.claim || null,
       usedClaims,
+      proof: arcWeek?.proof || null,
+      approach,
+      siblingHeadlines,
+
       ctaRung: arcWeek
         ? {
             rung: arcWeek.cta_rung,
