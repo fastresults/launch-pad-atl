@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ChevronLeft, ChevronRight, Copy, Download, ExternalLink, FileText, Loader2, Package, RotateCcw, Sparkles,
+  ChevronLeft, ChevronRight, Copy, Download, ExternalLink, FileText, Loader2, Package, RotateCcw, Sparkles, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -152,8 +152,8 @@ export function CollateralPreviewDialog({
             </div>
             <div className="flex items-center gap-2">
               {onClear && pages.length > 0 && (
-                <Button size="sm" variant="ghost" onClick={onClear} disabled={busy}>
-                  <RotateCcw className="mr-1 h-3 w-3" />Clear
+                <Button size="sm" variant="outline" onClick={onClear} disabled={busy} className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground">
+                  <Trash2 className="mr-1 h-3 w-3" />Delete
                 </Button>
               )}
               {onRegenerate && (
