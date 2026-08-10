@@ -1140,7 +1140,7 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
       return out;
     },
     onSuccess: () => {
-      toast.success("Brand style guide generated");
+      toast.success("Brand kit locked — style guide generated");
       qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
       setTimeout(() => previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 200);
     },
