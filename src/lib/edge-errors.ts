@@ -70,3 +70,18 @@ export function toastEdgeError(err: any, fallback?: string) {
   toast.error(edgeErrorMessage(err, fallback));
 }
 
+/**
+ * Build an Error from a 200 payload that reports failure (`{ ok: false }`),
+ * carrying `code`/`providers` so capacity walls keep their provider
+ * attribution instead of degrading to a bare message string.
+ */
+export function payloadError(payload: any, fallback = "Request failed"): Error {
+  const message = typeof payload?.error === "string" && payload.error ? payload.error : fallback;
+  return Object.assign(new Error(message), {
+    code: payload?.code,
+    providers: payload?.providers,
+    status: payload?.upstreamStatus ?? payload?.gatewayStatus,
+  });
+}
+
+
