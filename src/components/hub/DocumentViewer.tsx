@@ -24,7 +24,7 @@ import {
   BookmarkCheck,
 } from "lucide-react";
 import { toast } from "sonner";
-import { edgeErrorMessage } from "@/lib/edge-errors";
+import { edgeErrorMessage, payloadError } from "@/lib/edge-errors";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { createDocumentUploadUrl, finalizeDocument } from "@/lib/attendee.functions";
