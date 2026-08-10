@@ -615,6 +615,7 @@ async function runLayer(
         current_document_type: t.type,
         heartbeat_at: new Date().toISOString(),
       }).eq("id", jobId);
+      const stopHeartbeat = startHeartbeat(supabase, jobId);
       try {
         await generateOne(supabase, ctx, t.type, mode, dayContext);
         state.done++;
@@ -643,10 +644,12 @@ async function runLayer(
               .eq("snapshot_id", snapshotId).eq("document_type", t.type);
           }
         } catch { /* logging best-effort */ }
+      } finally {
+        stopHeartbeat();
       }
 
       await supabase.from("venture_generation_jobs").update({
-        progress_pct: Math.round((state.done / state.total) * 100),
+        progress_pct: await liveProgressPct(supabase, snapshotId, state),
         heartbeat_at: new Date().toISOString(),
       }).eq("id", jobId);
       if (state.fails >= 3) return;
