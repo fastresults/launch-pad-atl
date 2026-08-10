@@ -112,8 +112,10 @@ function Loading() {
 export default function App() {
   return (
     <Suspense fallback={<Loading />}>
+      <AiCapacityProvider>
       <ConfirmProvider>
       <ScrollToTop />
+
       <LandingOnlyBanner />
       <LandingOnlyGate>
       <Routes>
