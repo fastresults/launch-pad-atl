@@ -9,7 +9,7 @@
 import { PNG } from "npm:pngjs@7.0.0";
 import { Buffer } from "node:buffer";
 import type { PageMetrics, ResolvedSpec } from "./collateral-specs.ts";
-import { isDarkSurface } from "./color-spaces.ts";
+import { contrastRatio, isDarkSurface } from "./color-spaces.ts";
 
 export type QcVerdict = {
   ok: boolean;
