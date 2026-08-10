@@ -66,6 +66,17 @@ export function qcPage(
     }
   }
 
+  // Every specimen must be *visibly* on its tile. A variant labelled "reversed"
+  // that resolved to dark ink on a dark ground is the invisible-knockout bug.
+  for (const m of metrics.marks ?? []) {
+    if (!m.bg || !m.ink) continue;
+    if (contrastRatio(m.ink, m.bg) < 2.4) {
+      reasons.push(`A logo specimen was drawn in ${m.ink} on ${m.bg} — too little contrast to be visible.`);
+      break;
+    }
+  }
+
+
 
   if (metrics.overlaps?.length) {
     reasons.push(`Type collides on the page: ${metrics.overlaps.slice(0, 3).join("; ")}.`);
