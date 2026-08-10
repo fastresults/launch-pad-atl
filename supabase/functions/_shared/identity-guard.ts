@@ -65,8 +65,13 @@ export type IdentityCheck = {
   contrastTokensMissing?: boolean;
   /** PRD only: the surface ladder is absent or components have no surface. */
   surfaceSystemMissing?: boolean;
+  /** PRD only: the art direction was never derived from the actual mark. */
+  logoCraftMissing?: boolean;
+  /** PRD only: the copy echoes too few real facts from the venture brain. */
+  brainFactsThin?: boolean;
   ok: boolean;
 };
+
 
 
 /** Replace `{Company}` / `{COMPANY_NAME}` style placeholders with the real name. */
