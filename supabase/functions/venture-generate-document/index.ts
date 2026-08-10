@@ -639,8 +639,27 @@ Deno.serve(async (req) => {
       );
     }
     if (e instanceof GatewayError) {
-      return new Response(JSON.stringify({ ok: false, error: message, gatewayStatus: e.status }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const detail = String((e as any).detail ?? "").toLowerCase();
+      const workspaceCap = e.status === 403 && detail.includes("credit_limit_reached");
+      const code = e.status === 429
+        ? "RATE_LIMITED"
+        : workspaceCap
+          ? "AI_CREDIT_LIMIT_REACHED"
+          : e.status === 402
+            ? "PAYMENT_REQUIRED"
+            : undefined;
+      const body: Record<string, unknown> = { ok: false, error: message, gatewayStatus: e.status };
+      if (code) {
+        body.code = code;
+        body.providers = [
+          workspaceCap
+            ? capacityProvider("lovable", "document generation")
+            : capacityProvider("google", "document generation"),
+        ];
+      }
+      return new Response(JSON.stringify(body), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
     // F7: friendly 409 when the partial unique inflight index trips —
     // another worker is already generating this same document.
     if (/venture_documents_inflight_unique|duplicate key value/i.test(message)) {
