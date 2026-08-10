@@ -31,9 +31,32 @@ function normHex(raw: string): string | null {
   return null;
 }
 
-/** Artwork whose paint we cannot rewrite: pixels, gradients or pattern fills. */
+/** Artwork whose paint we cannot safely rewrite without flattening embedded media. */
 export function isUntintableSvg(svg: string): boolean {
-  return /<image\b/i.test(svg) || /(fill|stroke)\s*[=:]\s*["']?url\(/i.test(svg);
+  return /<image\b/i.test(svg) || /<pattern\b/i.test(svg);
+}
+
+const PAINT_RE = /(?:fill|stroke|stop-color)\s*[=:]\s*["']?\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]*\)|[a-zA-Z]+)/g;
+
+/** Every distinct material paint in the mark, never averaged together. */
+export function svgPaints(svg: string): string[] {
+  const source = stripBackgroundShapes(svg);
+  const paints: string[] = [];
+  const seen = new Set<string>();
+  let match: RegExpExecArray | null;
+  PAINT_RE.lastIndex = 0;
+  while ((match = PAINT_RE.exec(source))) {
+    const raw = match[1];
+    if (/^(none|transparent|url|currentcolor|inherit)$/i.test(raw)) continue;
+    const hex = normHex(raw);
+    if (!hex) continue;
+    const key = hex.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      paints.push(hex);
+    }
+  }
+  return paints;
 }
 
 /**
@@ -47,17 +70,7 @@ export function isUntintableSvg(svg: string): boolean {
  * its paint is dropped before averaging.
  */
 export function svgInkHex(svg: string): string | null {
-  const source = stripBackgroundShapes(svg);
-  const paints: string[] = [];
-  const re =
-    /(?:fill|stroke|stop-color)\s*[=:]\s*["']?\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]*\)|[a-zA-Z]+)/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(source))) {
-    const raw = m[1];
-    if (/^(none|transparent|url|currentcolor|inherit)$/i.test(raw)) continue;
-    const hex = normHex(raw);
-    if (hex) paints.push(hex);
-  }
+  const paints = svgPaints(svg);
   if (!paints.length) return null;
   // Drop paints that are effectively the page (pure white) unless that's all
   // there is — a white plate behind a navy mark should not read as white ink.
@@ -192,6 +205,28 @@ export function logoCandidates(logos: any[], surface: string): LogoCandidate[] {
 export function inkPasses(ink: string | null, surface: string): boolean {
   if (!ink) return false;
   return contrastRatio(ink, surface) >= LOGO_MIN_CONTRAST;
+}
+
+/** A multicolour mark passes only when every material paint remains visible. */
+export function svgPaintsPass(svg: string, surface: string): boolean {
+  const paints = svgPaints(svg);
+  return paints.length > 0 && paints.every((paint) => inkPasses(paint, surface));
+}
+
+/**
+ * Repair only failing SVG paints. Passing brand accents remain untouched, so a
+ * gold-and-navy mark becomes gold-and-white on dark rather than monochrome.
+ */
+export function repairSvgContrast(svg: string, surface: string): string {
+  const replacement = legibleInkFor(surface);
+  return svg.replace(
+    /((?:fill|stroke|stop-color)\s*[=:]\s*["']?\s*)(#[0-9a-fA-F]{3,6}|rgba?\([^)]*\)|[a-zA-Z]+)/g,
+    (whole, prefix: string, raw: string) => {
+      if (/^(none|transparent|url|currentcolor|inherit)$/i.test(raw)) return whole;
+      const hex = normHex(raw);
+      return hex && !inkPasses(hex, surface) ? `${prefix}${replacement}` : whole;
+    },
+  );
 }
 
 /** Rewrite every paint in an SVG to one legible ink. */

@@ -23,9 +23,9 @@ import {
   legibleInkFor,
   platedSvg,
   rasterInkHex,
+  repairSvgContrast,
   surfaceHex,
-  svgInkHex,
-  tintSvg,
+  svgPaintsPass,
   logoCandidates,
 } from "../_shared/logo-ink.ts";
 
@@ -103,8 +103,10 @@ Deno.serve(async (req) => {
 
         const isSvg = p.toLowerCase().endsWith(".svg");
         const text = isSvg ? new TextDecoder().decode(bytes) : "";
-        const ink = isSvg ? svgInkHex(text) : await rasterInkHex(bytes);
-        if (inkPasses(ink, surface)) {
+        const passes = isSvg
+          ? svgPaintsPass(text, surface)
+          : inkPasses(await rasterInkHex(bytes), surface);
+        if (passes) {
           return new Response(bytes, {
             headers: { ...corsHeaders, "Content-Type": contentTypeFor(p), "Cache-Control": CACHE },
           });
@@ -117,7 +119,7 @@ Deno.serve(async (req) => {
         const isSvg = fallback.path.toLowerCase().endsWith(".svg");
         const text = isSvg ? new TextDecoder().decode(fallback.bytes) : "";
         if (isSvg && !isUntintableSvg(text)) {
-          const svg = tintSvg(text, legibleInkFor(surface));
+          const svg = repairSvgContrast(text, surface);
           return new Response(svg, {
             headers: { ...corsHeaders, "Content-Type": "image/svg+xml", "Cache-Control": CACHE },
           });
