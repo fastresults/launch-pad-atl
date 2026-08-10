@@ -959,7 +959,10 @@ function presentation({ ctx, T, defs }: Args): Page[] {
 
   const rsCover = resolveSpec("slide-1-cover", W, H);
   const rsSlide = resolveSpec("slide-2-section", W, H);
-  T.setFloor(Math.min(rsCover.minType, rsSlide.minType), rsSlide.measureMax);
+  // The cover carries its own, larger type floor; every interior slide shares
+  // the running one. Taking the minimum of the two let 22px chrome onto a page
+  // whose standard is 26px.
+  T.setFloor(rsCover.minType, rsCover.measureMax);
   const coverBox = markBoxFor(ctx, rsCover, g.span(4), 0.65);
   const slideBox = markBoxFor(ctx, rsSlide, g.span(3), 0.6);
 
@@ -1017,6 +1020,8 @@ function presentation({ ctx, T, defs }: Args): Page[] {
       motif(ctx, g, invert ? coverInk : accent, "br"),
     ].join("")),
   });
+
+  T.setFloor(rsSlide.minType, rsSlide.measureMax);
 
   // ── 02 section divider ────────────────────────────────────────────────────
   const sectionStack = T.flow(g.M, H * 0.34, g.span(Math.round(ad.grid.columns * 0.72)));
