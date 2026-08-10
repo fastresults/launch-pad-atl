@@ -539,12 +539,52 @@ function dependencyLayers(types: any[]): any[][] {
 
 const CONCURRENCY = 6;
 
+type RunState = { done: number; total: number; fails: number; canceled: boolean; keys?: string[] };
+
+/**
+ * Truthful progress: count what's actually complete in the database for the
+ * documents this run covers, instead of counting work done inside this one
+ * worker. A resumed / retry-only run used to report a collapse in progress
+ * (e.g. "62 of 63 done" next to 37%).
+ */
+async function liveProgressPct(supabase: any, snapshotId: string, state: RunState): Promise<number> {
+  try {
+    let q = supabase
+      .from("venture_documents")
+      .select("id", { count: "exact", head: true })
+      .eq("snapshot_id", snapshotId)
+      .eq("status", "complete");
+    if (state.keys?.length) q = q.in("document_type", state.keys);
+    const { count } = await q;
+    const done = Math.min(state.total, Math.max(state.done, count ?? 0));
+    return state.total > 0 ? Math.round((done / state.total) * 100) : 0;
+  } catch {
+    return state.total > 0 ? Math.round((state.done / state.total) * 100) : 0;
+  }
+}
+
+/**
+ * Keep the job's heartbeat fresh *while* a single long document is being
+ * written. The website build brief can legitimately take three minutes; a
+ * heartbeat written only between documents made the watchdog kill healthy work.
+ */
+function startHeartbeat(supabase: any, jobId: string, everyMs = 20_000) {
+  const timer = setInterval(() => {
+    supabase
+      .from("venture_generation_jobs")
+      .update({ heartbeat_at: new Date().toISOString() })
+      .eq("id", jobId)
+      .then(() => {}, () => {});
+  }, everyMs);
+  return () => clearInterval(timer);
+}
+
 async function runLayer(
   supabase: any,
   ctx: VentureContext,
   jobId: string,
   layer: any[],
-  state: { done: number; total: number; fails: number; canceled: boolean },
+  state: RunState,
   mode: GenMode = "full",
   dayContext = "",
 ) {
@@ -575,6 +615,7 @@ async function runLayer(
         current_document_type: t.type,
         heartbeat_at: new Date().toISOString(),
       }).eq("id", jobId);
+      const stopHeartbeat = startHeartbeat(supabase, jobId);
       try {
         await generateOne(supabase, ctx, t.type, mode, dayContext);
         state.done++;
@@ -603,10 +644,12 @@ async function runLayer(
               .eq("snapshot_id", snapshotId).eq("document_type", t.type);
           }
         } catch { /* logging best-effort */ }
+      } finally {
+        stopHeartbeat();
       }
 
       await supabase.from("venture_generation_jobs").update({
-        progress_pct: Math.round((state.done / state.total) * 100),
+        progress_pct: await liveProgressPct(supabase, snapshotId, state),
         heartbeat_at: new Date().toISOString(),
       }).eq("id", jobId);
       if (state.fails >= 3) return;
@@ -631,7 +674,7 @@ async function retrySweep(
   ctx: VentureContext,
   jobId: string,
   types: any[],
-  state: { done: number; total: number; fails: number; canceled: boolean },
+  state: RunState,
 ): Promise<{ remaining: string[]; blocked: string[] }> {
   const snapshotId = ctx.snapshotId;
   const byKey = new Map(types.map((t) => [t.type, t]));
@@ -733,7 +776,7 @@ async function sprintSweep(
   ctx: VentureContext,
   jobId: string,
   types: any[],
-  state: { done: number; total: number; fails: number; canceled: boolean },
+  state: RunState,
   onlyDays?: number[] | null,
 ): Promise<{ dayGaps: { day: number; theme: string; missing: string[] }[] }> {
   const snapshotId = ctx.snapshotId;
@@ -867,7 +910,7 @@ async function runJob(
 
   const layers = dependencyLayers(types);
   const total = types.length;
-  const state = { done: 0, total, fails: 0, canceled: false };
+  const state: RunState = { done: 0, total, fails: 0, canceled: false, keys: types.map((t: any) => t.type) };
 
   const startedAt = new Date().toISOString();
   await supabase.from("venture_generation_jobs").update({
@@ -882,7 +925,7 @@ async function runJob(
     await supabase.from("venture_generation_jobs").update({
       status: "canceled",
       completed_at: new Date().toISOString(),
-      progress_pct: Math.round((state.done / total) * 100),
+      progress_pct: await liveProgressPct(supabase, snapshotId, state),
       current_document_type: null,
     }).eq("id", jobId);
   };

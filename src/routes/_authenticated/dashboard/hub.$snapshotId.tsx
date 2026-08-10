@@ -33,6 +33,7 @@ import {
   bulkGenerate,
   getActiveJob,
   cancelJob,
+  skipDocument,
   listFailures,
   listBlockedDocs,
 
@@ -992,6 +993,17 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Cancel failed"),
   });
 
+  const skip = useMutation({
+    mutationFn: (documentType: string) => skipDocument({ data: { snapshotId: snapshot.id, documentType } }),
+    onSuccess: () => {
+      toast.success("Skipped — the rest of your kit can continue.");
+      qc.invalidateQueries({ queryKey: ["hub"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Couldn't skip that asset"),
+  });
+
+
+
   const failuresQ = useQuery({
     queryKey: ["hub", "failures", snapshot.id],
     queryFn: () => listFailures({ data: { snapshotId: snapshot.id } }),
@@ -1046,6 +1058,14 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   const failures = (failuresQ.data ?? []).filter((f: any) => !blockedKeys.has(f.document_type));
   const retryRound = (job as any)?.retry_round ?? 0;
   const retryRemaining = (job as any)?.retry_remaining ?? 0;
+  // A run is only "working" while its heartbeat is fresh. Anything older than
+  // the watchdog window (or an explicitly paused job) is surfaced honestly
+  // instead of spinning a progress bar that will never move.
+  const heartbeatAgeMs = job?.heartbeat_at ? Date.now() - new Date(job.heartbeat_at).getTime() : null;
+  const jobStalled = jobRunning && heartbeatAgeMs !== null && heartbeatAgeMs > 6 * 60 * 1000;
+  const jobPaused = job?.status === "paused";
+  const jobNeedsAttention = jobPaused || jobStalled;
+
 
 
   useEffect(() => {
@@ -1132,7 +1152,25 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   let heroShowProgress = false;
   let heroDone = false;
 
-  if (jobRunning) {
+  if (jobNeedsAttention) {
+    heroTitle = "Paused — one asset needs another go";
+    heroSub = currentDocLabel
+      ? `${currentDocLabel} stopped part-way through. Resume it, or skip it and keep the rest of your kit moving.`
+      : "This run stopped part-way through. Resume it, or skip the stuck asset and keep going.";
+    heroShowProgress = true;
+    heroPrimary = {
+      label: "Resume",
+      onClick: () => bulk.mutate({ retryOnly: true }),
+      disabled: bulk.isPending,
+      loading: bulk.isPending,
+    };
+    if (job?.current_document_type) {
+      heroSecondary = {
+        label: skip.isPending ? "Skipping…" : "Skip this asset",
+        onClick: () => skip.mutate(job.current_document_type as string),
+      };
+    }
+  } else if (jobRunning) {
     heroTitle = "We're writing your assets…";
     heroSub = currentDocLabel
       ? `Working on: ${currentDocLabel}. You can leave this page — we'll keep going in the background.`
@@ -1187,11 +1225,10 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     }
   }
 
-  const pct = jobRunning
-    ? (job?.progress_pct ?? 0)
-    : total > 0
-      ? Math.round((completeCount / total) * 100)
-      : 0;
+  // Never show a percentage lower than what's actually on disk — a resumed run
+  // reports progress for its own slice of work, not the whole kit.
+  const docPct = total > 0 ? Math.round((completeCount / total) * 100) : 0;
+  const pct = jobRunning ? Math.max(docPct, job?.progress_pct ?? 0) : docPct;
 
   return (
     <div className="theme-dark-scope space-y-6 rounded-2xl bg-background p-4 text-foreground sm:p-5">
