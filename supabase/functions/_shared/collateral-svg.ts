@@ -1350,8 +1350,29 @@ function textBoxes(svg: string, T: TypeKit): { box: [number, number, number, num
  * first — a title with a rule through it, an address printed over a table
  * header. Report it by name so a page can be re-set instead of shipped.
  */
+/** Drop the artwork groups: letterforms inside a logo are not typeset copy, and
+ *  they sit under transforms this flat detector cannot resolve. */
+function withoutMarks(svg: string): string {
+  let out = "", i = 0;
+  for (;;) {
+    const start = svg.indexOf("<g data-mark-w", i);
+    if (start < 0) return out + svg.slice(i);
+    out += svg.slice(i, start);
+    let depth = 0, k = start;
+    while (k < svg.length) {
+      const g = svg.indexOf("<g", k), c = svg.indexOf("</g>", k);
+      if (c < 0) return out;
+      if (g >= 0 && g < c) { depth++; k = g + 2; continue; }
+      depth--; k = c + 4;
+      if (depth <= 0) break;
+    }
+    i = k;
+  }
+}
+
 function textOverlaps(svg: string, T: TypeKit): string[] {
-  const boxes = textBoxes(svg, T);
+  const boxes = textBoxes(withoutMarks(svg), T);
+
   const hits: string[] = [];
   for (let i = 0; i < boxes.length; i++) {
     for (let j = i + 1; j < boxes.length; j++) {
