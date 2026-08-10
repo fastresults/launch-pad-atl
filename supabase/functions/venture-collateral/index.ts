@@ -185,8 +185,12 @@ async function loadMarkArtwork(admin: any, path: string): Promise<string | null>
 /**
  * The venture's own imagery, inlined as data URIs so the rasteriser can draw
  * it. Collateral used to leave a grey box labelled "Image" on the deck while a
- * committed, art-directed mood board sat one table away. Two tiles is the
- * budget: each is a ~1MB PNG once base64'd.
+ * committed, art-directed mood board sat one table away.
+ *
+ * Mood board tiles are full-size generated PNGs (1–2MB). Embedded raw, resvg
+ * decodes that whole bitmap on every page raster and the worker runs out of
+ * CPU. Each tile is downscaled once here to well above its printed size, and
+ * every later pass decodes the small one.
  */
 async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
   const tiles = (Array.isArray(kit?.moodboard) ? kit.moodboard : [])
@@ -200,7 +204,9 @@ async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
       if (!bytes.length) continue;
       const ext = path.split(".").pop()?.toLowerCase();
       const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : "image/png";
-      out.push(`data:${mime};base64,${b64(bytes)}`);
+      const raw = `data:${mime};base64,${b64(bytes)}`;
+      const small = await downscaleDataUri(raw);
+      out.push(small ?? raw);
     } catch (e) {
       console.warn("[collateral imagery] skipped a tile:", (e as Error).message);
     }
@@ -208,6 +214,23 @@ async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
   console.log(`[collateral imagery] ${out.length} venture image(s) available to the templates`);
   return out;
 }
+
+/** One resvg pass that re-encodes an image at page-appropriate size. */
+async function downscaleDataUri(href: string, width = 900): Promise<string | null> {
+  try {
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
+      `width="${width}" height="${width}" viewBox="0 0 ${width} ${width}">` +
+      `<image x="0" y="0" width="${width}" height="${width}" preserveAspectRatio="xMidYMid slice" ` +
+      `xlink:href="${href}" href="${href}"/></svg>`;
+    const png = await rasterizeSvgToBytes(svg, width);
+    if (!png?.length || png.length >= href.length) return null;
+    return `data:image/png;base64,${b64(png)}`;
+  } catch {
+    return null;
+  }
+}
+
 
 
 
@@ -468,7 +491,11 @@ async function generateKind(
     // marks those duplicate resvg passes exceed the worker CPU allowance.
     // The stored preview is already suitable for both the library thumbnail
     // and detailed preview, so do not manufacture a second presentation image.
-    const bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 1100), undefined, fontBuffers);
+    // Ten-slide decks blew the worker CPU allowance at 1100px a page. QC reads
+    // ink coverage and contrast, both of which survive a smaller raster, so
+    // multi-page kinds review (and preview) at a lighter width.
+    const rasterWidth = Math.min(p.width, pages.length > 6 ? 760 : 1100);
+    const bytes = await rasterizeSvgToBytes(p.svg, rasterWidth, undefined, fontBuffers);
 
     // Quarantine in memory: nothing is promoted until every page in the kind
     // passes geometry and final-raster review.
