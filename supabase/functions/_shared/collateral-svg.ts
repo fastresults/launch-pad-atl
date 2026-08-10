@@ -147,11 +147,20 @@ export type CollateralCtx = {
   /** Traced vector mark (preferred) — inlined so the ink stays vector. */
   logoSvg?: string | null;
   /**
+   * The reversed / knockout artwork, used whenever a piece draws the mark on a
+   * dark ground. Sourced from the founder's "reversed" logo slot, else the
+   * generated knockout/mono variant. Absent for ventures that only have a
+   * primary mark — those fall back to a single-ink knockout of the primary.
+   */
+  logoSvgDark?: string | null;
+  symbolSvgDark?: string | null;
+  /**
    * Symbol isolated from a traced lockup. When present it is the artwork every
    * piece draws, and the company name is set in real type beside it instead of
    * shipping the tracer's polygon letterforms.
    */
   symbolSvg?: string | null;
+
 
   voice?: string | null;
   ad: ArtDirection;
@@ -356,20 +365,53 @@ function fillsIn(svg: string): string[] {
 /**
  * Inline the vector mark, scaled to fit a box, tinted to one ink colour.
  *
- * `bg` is the surface the mark lands on. It is not decoration: a traced mark is
- * often solid white, so dropping it on ivory paper — or tinting it with a pale
- * ink — produces the invisible ghost we shipped before. Any ink that fails to
- * separate from the surface is replaced with one that does.
+ * `bg` is the surface the mark lands on. It is not decoration: the light,
+ * full-colour mark on a dark brand ground is the bug this solves. A dark ground
+ * gets the reversed artwork when the venture has one; when it doesn't, the
+ * primary mark is knocked out to a single legible ink; and when the artwork
+ * cannot be recoloured at all (embedded raster, gradient-only fills) it is set
+ * on a light plate rather than left to vanish.
  */
+
+/** True when a surface is dark enough to demand the reversed mark. */
+function isDarkSurface(bg?: string | null): boolean {
+  return !!bg && lum(bg) < 0.35;
+}
+
+/** Artwork chosen for a surface, plus whether it is the reversed set. */
+function markSvgFor(ctx: CollateralCtx, bg?: string | null): { svg: string | null; dark: boolean } {
+  if (isDarkSurface(bg)) {
+    const reversed = ctx.symbolSvgDark || ctx.logoSvgDark;
+    if (reversed) return { svg: reversed, dark: true };
+  }
+  return { svg: ctx.symbolSvg || ctx.logoSvg || null, dark: false };
+}
+
 function markSvgOf(ctx: CollateralCtx): string | null {
-  return ctx.symbolSvg || ctx.logoSvg || null;
+  return markSvgFor(ctx, null).svg;
+}
+
+/** Artwork whose colour we cannot rewrite: pixels, or gradient/pattern paint. */
+function isUntintable(svg: string): boolean {
+  return /<image\b/i.test(svg) || /fill\s*[=:]\s*["']?url\(/i.test(svg);
+}
+
+/** Rewrite every paint in a fragment to one ink — attributes, inline style and CSS blocks. */
+function tint(inner: string, use: string): string {
+  return inner
+    .replace(/fill\s*=\s*["'](?!none)[^"']*["']/gi, `fill="${use}"`)
+    .replace(/stroke\s*=\s*["'](?!none)[^"']*["']/gi, `stroke="${use}"`)
+    .replace(/fill\s*:\s*(?!none)[^;"'}]+/gi, `fill:${use}`)
+    .replace(/stroke\s*:\s*(?!none)[^;"'}]+/gi, `stroke:${use}`)
+    .replace(/currentColor/gi, use);
 }
 
 function markAt(
   ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number,
   ink: string | null, bg?: string,
 ): string {
-  const svg = markSvgOf(ctx);
+  const picked = markSvgFor(ctx, bg);
+  const svg = picked.svg;
   if (!svg) return "";
   // Drop full-bleed background plates so the mark sits directly on the paper.
   let inner = stripSvgBackground(svg)
@@ -377,39 +419,54 @@ function markAt(
     .replace(/<\/svg>\s*$/i, "")
     .trim();
 
-  let use = ink;
-  if (bg) {
+  const untintable = isUntintable(inner);
+  const dark = isDarkSurface(bg);
+  let use = picked.dark ? null : ink;
+  let plate = false;
+
+  if (bg && !picked.dark) {
     const MIN = 2.4;
     if (use && contrast(use, bg) < MIN) use = inkOn(bg);
-    if (!use) {
-      // Untinted artwork: if nothing in it separates from the surface, knock it
-      // out rather than leaving an invisible mark.
+    if (!use && !untintable) {
+      // Untinted artwork: knock it out when the ground is dark, or when nothing
+      // in the artwork separates from the surface.
       const fills = fillsIn(inner);
       const visible = fills.some((f) => contrast(f === "white" ? "#ffffff" : f === "black" ? "#000000" : f, bg) >= MIN);
-      if (fills.length && !visible) use = inkOn(bg);
+      if (dark || (fills.length && !visible)) use = inkOn(bg);
     }
+    // Full-colour artwork we cannot recolour, on a dark ground, with no
+    // reversed slot to fall back on: give it a light plate to sit on.
+    if (untintable && dark) plate = true;
   }
-  if (use) {
-    inner = inner
-      .replace(/fill\s*=\s*["'](?!none)[^"']*["']/gi, `fill="${use}"`)
-      .replace(/stroke\s*=\s*["'](?!none)[^"']*["']/gi, `stroke="${use}"`);
-  }
+
+  if (use && !untintable) inner = tint(inner, use);
+
   // Scale and position by the artwork's INK box, never its file box: traced
   // marks carry the tracer's canvas padding, so fitting the file put roughly
   // half the requested height on the page as empty air.
   const box = inkBox(svg);
   const s = Math.min(boxW / box.w, boxH / box.h);
-  const dx = x + (boxW - box.w * s) / 2 - box.x * s;
-  const dy = y + (boxH - box.h * s) / 2 - box.y * s;
+  const drawnW = box.w * s;
+  const drawnH = box.h * s;
+  const dx = x + (boxW - drawnW) / 2 - box.x * s;
+  const dy = y + (boxH - drawnH) / 2 - box.y * s;
+
+  const pad = Math.round(Math.max(drawnW, drawnH) * 0.14);
+  const plateSvg = plate
+    ? `<rect x="${r(x + (boxW - drawnW) / 2 - pad)}" y="${r(y + (boxH - drawnH) / 2 - pad)}" width="${r(drawnW + pad * 2)}" height="${r(drawnH + pad * 2)}" rx="${r(pad * 0.6)}" fill="#ffffff" opacity="0.94"/>`
+    : "";
+
   // The drawn size is recorded on the group so QC can verify the mark landed
-  // inside the size band this piece's standard allows.
-  return `<g data-mark-w="${r(box.w * s)}" data-mark-h="${r(box.h * s)}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  // inside the size band this piece's standard allows; the surface and the
+  // artwork used are recorded so QC can catch a light mark on a dark ground.
+  return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${bg ?? ""}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
 
 
 function logoAspect(ctx: CollateralCtx): number {
   const svg = markSvgOf(ctx);
   return svg ? inkAspect(svg) : 1;
+
 }
 
 /** True when the artwork being drawn already contains the company name. */
@@ -1030,6 +1087,8 @@ function fallbackFor(family: string): string {
 function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: ResolvedSpec): PageMetrics {
   const markHs = [...svg.matchAll(/data-mark-h="([\d.]+)"/g)].map((m) => Number(m[1]));
   const markWs = [...svg.matchAll(/data-mark-w="([\d.]+)"/g)].map((m) => Number(m[1]));
+  const markArts = [...svg.matchAll(/data-mark-art="([^"]*)"/g)].map((m) => m[1]);
+  const markBgs = [...svg.matchAll(/data-mark-bg="([^"]*)"/g)].map((m) => m[1]);
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
   const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
   const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
@@ -1038,7 +1097,10 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
     page: name,
     markH: primaryMark,
     markW: idx >= 0 ? markWs[idx] : undefined,
+    markArt: idx >= 0 ? markArts[idx] : undefined,
+    markBg: idx >= 0 ? markBgs[idx] : undefined,
     markBand: isLockup(ctx) ? rs.lockupBand : rs.logoBand,
+
     safe: rs.safe,
     bleed: rs.bleed,
     minType: rs.minType,

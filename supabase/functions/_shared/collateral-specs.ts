@@ -280,6 +280,10 @@ export type PageMetrics = {
   markH?: number;
   markW?: number;
   markBand?: [number, number];
+  /** Which artwork the mark was drawn from: primary | reversed | knockout | plated. */
+  markArt?: string;
+  /** The surface the mark landed on, so QC can catch a light mark on a dark ground. */
+  markBg?: string;
   safe: number;
   bleed: number;
   minType: number;
@@ -287,3 +291,4 @@ export type PageMetrics = {
   smallestType?: number;
   longestLine?: number;
 };
+

@@ -57,6 +57,25 @@ export function qcPage(
     }
   }
 
+  // A full-colour, light-background mark drawn on a dark ground is the classic
+  // "wrong logo" failure — the reversed artwork or a knockout must be used.
+  if (metrics.markArt === "primary" && metrics.markBg) {
+    const m = /#?([0-9a-f]{6})/i.exec(metrics.markBg);
+    if (m) {
+      const n = parseInt(m[1], 16);
+      const l = [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+        .map((v) => {
+          const s = v / 255;
+          return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        })
+        .reduce((acc, c, i) => acc + c * [0.2126, 0.7152, 0.0722][i], 0);
+      if (l < 0.35) {
+        reasons.push("The light-background logo was drawn on a dark surface — use the reversed mark.");
+      }
+    }
+  }
+
+
   observed.textLines = metrics.textLines;
   if (metrics.textLines === 0 && rs.spec.page !== "design-tokens") {
     reasons.push("No type was set on the page.");
