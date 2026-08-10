@@ -866,16 +866,37 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.5)), 0.7).h;
   const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const metaTop = snap(ad, headBase + clearSpace(logoH) + step(ad, 2.5));
-  const tableTop = snap(ad, metaTop + step(ad, 9));
-  const rowH = step(ad, 1.8);
-  const rows = 7;
-  const totalsY = snap(ad, tableTop + rowH * (rows + 1.6));
 
   const fromLines = [d.legal_entity || ctx.company, d.person_name, d.email, d.phone, addressLine(d)].filter(Boolean).join("\n");
   const scope = ctx.copy?.proposal?.scope ?? [];
   const terms = isInvoice
     ? (d.payment_terms || ctx.copy?.invoice?.terms || "Payment terms: net 15. Late balances accrue 1.5% monthly.")
     : (ctx.copy?.proposal?.terms || "This proposal is valid for 30 days. Work begins on countersignature and receipt of the deposit.");
+
+  // Both meta columns are typeset through a measured cursor, so a five-line
+  // sender block with a wrapping street address reports its real bottom edge
+  // instead of being assumed to end nine steps down.
+  const metaW = g.span(Math.round(ad.grid.columns * 0.42));
+  const metaX2 = g.col(Math.round(ad.grid.columns * 0.55));
+  const fromCol = T.flow(g.M, metaTop - step(ad, -1.5), metaW);
+  fromCol.line(ctx.ad.type.caseLabels === "upper" ? "FROM" : "From", step(ad, -1.5), accent, { tracking: step(ad, -1.5) * ad.type.labelTracking, weight: 500 });
+  fromCol.block(fromLines, step(ad, -0.7), fg, { leading: 1.6, maxLines: 6, gap: step(ad, -0.2) });
+  const clientCol = T.flow(metaX2, metaTop - step(ad, -1.5), metaW);
+  clientCol.line(
+    (isInvoice ? "Bill to" : "Client")[ctx.ad.type.caseLabels === "upper" ? "toUpperCase" : "toString"](),
+    step(ad, -1.5), accent, { tracking: step(ad, -1.5) * ad.type.labelTracking, weight: 500 },
+  );
+  clientCol.block("Client name\nCompany\nEmail\nAddress", step(ad, -0.7), mix(fg, paper, 0.4), { leading: 1.6, maxLines: 6, gap: step(ad, -0.2) });
+
+  const metaBottom = Math.max(fromCol.bottom, clientCol.bottom);
+  const tableTop = snap(ad, Math.max(metaTop + step(ad, 7), metaBottom + step(ad, 3.4)));
+  const rowH = step(ad, 1.8);
+  const bodyTop = tableTop + step(ad, 0.2);
+  // Rows follow the content, and the table can never grow into the footer.
+  const footerTop = H - g.M - step(ad, 5.4);
+  const maxRows = Math.max(3, Math.floor((footerTop - step(ad, 2.6)) / rowH - bodyTop / rowH - 1.6));
+  const rows = Math.min(maxRows, isInvoice ? 6 : Math.min(9, Math.max(4, scope.length + 1)));
+  const totalsY = snap(ad, bodyTop + rowH * (rows + 1.6));
 
   const body = [
     surface(W, H, paper, ad.material.grain),
@@ -884,16 +905,14 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
     label(T, ctx, title, W - g.M, headBase - logoH * 0.35, step(ad, 1.8), primary, "end", g.span(4)),
     T.line(isInvoice ? "No. 0001" : "Prepared for", W - g.M, headBase + step(ad, -0.4), step(ad, -1), muted, { anchor: "end", maxWidth: g.span(4) }),
 
-    label(T, ctx, "From", g.M, metaTop, step(ad, -1.5), accent),
-    T.block(fromLines, g.M, metaTop + step(ad, 1.1), step(ad, -0.7), g.span(Math.round(ad.grid.columns * 0.42)), fg, { leading: 1.6, maxLines: 6 }).svg,
-    label(T, ctx, isInvoice ? "Bill to" : "Client", g.col(Math.round(ad.grid.columns * 0.55)), metaTop, step(ad, -1.5), accent),
-    T.block("Client name\nCompany\nEmail\nAddress", g.col(Math.round(ad.grid.columns * 0.55)), metaTop + step(ad, 1.1), step(ad, -0.7), g.span(Math.round(ad.grid.columns * 0.42)), mix(fg, paper, 0.4), { leading: 1.6, maxLines: 6 }).svg,
+    fromCol.svg(),
+    clientCol.svg(),
 
     `<rect x="${g.M}" y="${r(tableTop - step(ad, 1.5))}" width="${g.content}" height="${r(ad.ink.ruleWeight)}" fill="${primary}"/>`,
     ...cols.map((c, i) => label(T, ctx, c, colX[i], tableTop - step(ad, -0.2), step(ad, -1.4), primary, i === cols.length - 1 ? "end" : "start", g.span(3))),
-    `<rect x="${g.M}" y="${r(tableTop + step(ad, 0.2))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.65)}"/>`,
+    `<rect x="${g.M}" y="${r(bodyTop)}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.65)}"/>`,
     ...Array.from({ length: rows }, (_, i) => {
-      const y = tableTop + step(ad, 0.2) + (i + 1) * rowH;
+      const y = bodyTop + (i + 1) * rowH;
       const text = !isInvoice && scope[i]
         ? T.line(scope[i], g.M, y - rowH * 0.35, step(ad, -0.8), fg, { maxWidth: g.span(Math.round(ad.grid.columns * 0.5)) })
         : "";
@@ -907,8 +926,10 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
     T.block(terms, g.M, H - g.M - step(ad, 3.6), step(ad, -1.1), g.span(Math.round(ad.grid.columns * 0.7)), muted, { leading: 1.5, maxLines: 3 }).svg,
     d.tax_id ? T.line(`EIN ${d.tax_id}`, g.M, H - g.M - step(ad, 0.4), step(ad, -1.4), mix(fg, paper, 0.5), { maxWidth: g.span(4) }) : "",
     label(T, ctx, [d.website, d.email].filter(Boolean).join("   ·   "), W - g.M, H - g.M - step(ad, 0.4), step(ad, -1.4), muted, "end", g.span(6)),
-    motif(ctx, g, accent, "tr"),
+    // No corner motif here: all four corners are already spoken for (mark,
+    // title, terms, contact line). The ornament was striking through the title.
   ].join("");
+
   return [{ name: mode, svg: page(W, H, defs, body), width: W, height: H }];
 }
 
