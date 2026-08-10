@@ -26,6 +26,18 @@ const MAX_BYTES = 5 * 1024 * 1024;
 const isHex = (v: unknown) => typeof v === "string" && /^#?[0-9a-f]{3,8}$/i.test(v);
 const slotOf = (l: any) => l?.variant ?? "primary";
 
+/** Rough perceptual luminance so the brand tile picks the right mark. */
+function luminance(hex: string): number {
+  let h = hex.replace("#", "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (h.length < 6) return 0;
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+
 /** Legacy kits store uploads with no `variant` — read those as the primary slot. */
 export function logoSetFrom(logos: any): Record<string, any> {
   const list = Array.isArray(logos) ? logos.filter((l: any) => l?.url) : [];
