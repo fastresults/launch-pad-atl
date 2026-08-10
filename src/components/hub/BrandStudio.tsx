@@ -94,12 +94,24 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
                 <RotateCcw className="mr-1 h-3 w-3" />Reset
               </Button>
             )}
-            <Button size="sm" onClick={() => setOpen(true)}>
+            <Button size="sm" variant={kit && !locked ? "outline" : "default"} onClick={() => setOpen(true)}>
               <Sparkles className="mr-1 h-3 w-3" />
               {kit ? (locked ? "Edit brand" : "Resume wizard") : "Start brand wizard"}
             </Button>
+            {kit && !locked && (
+              <Button
+                size="sm"
+                onClick={() => (lockBlockedReason ? setOpen(true) : lockKit.mutate())}
+                disabled={lockKit.isPending}
+                title={lockBlockedReason ?? "Lock the brand kit and write the style guide"}
+              >
+                {lockKit.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Lock className="mr-1 h-3 w-3" />}
+                {lockKit.isPending ? "Locking…" : "Lock brand kit"}
+              </Button>
+            )}
           </>
         }
+
       />
       {expanded && (
         <div id="brand-studio-panel-body" className="space-y-6 rounded-2xl border border-white/10 bg-card p-5">
