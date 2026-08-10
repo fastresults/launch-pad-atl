@@ -552,17 +552,10 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
   const [moodboard, setMoodboard] = useState<any[]>(kit?.moodboard ?? []);
   const [refs, setRefs] = useState<string[]>(kit?.dna?._logoReferences ?? []);
 
-  const genMood = useMutation({
-    mutationFn: () => generateBrandAsset({ data: { snapshotId: snapshot.id, kind: "moodboard", count: 4 } }),
-    onSuccess: (out) => {
-      const fresh = (out.assets ?? []).filter((a: any) => a.ok);
-      const next = [...fresh, ...moodboard].slice(0, 8);
-      setMoodboard(next);
-      onSave({ moodboard: next });
-      toast.success(`${fresh.length} moodboard tiles generated`);
-    },
-    onError: (e: any) => toast.error(e.message),
+  const mood = useMoodboard(snapshot.id, {
+    onCommitted: (board) => { setMoodboard(board); },
   });
+
 
   const [logoPhase, setLogoPhase] = useState<"idle" | "brief" | "concepting" | "rendering" | "reviewing" | "drawing">("idle");
   const logoRunQ = useQuery({
