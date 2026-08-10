@@ -407,6 +407,29 @@ Deno.serve(async (req) => {
       .filter(Boolean)
       .slice(0, 6);
 
+    // The three ads in a week must argue the SAME claim three DIFFERENT ways.
+    const approachName = approachForIndex(postIndex);
+    const approach = { name: approachName, brief: APPROACH_BRIEF[approachName] };
+
+    // Headlines already written for this week — never paraphrase them.
+    let siblingHeadlines: string[] = [];
+    try {
+      const otherIds = weekPosts.map((p: any) => p.id).filter((id: string) => id && id !== post.id);
+      if (otherIds.length) {
+        const { data: siblingAds } = await admin
+          .from("venture_content_ads")
+          .select("last_headline")
+          .eq("snapshot_id", snapshotId)
+          .in("post_id", otherIds);
+        siblingHeadlines = Array.from(
+          new Set((siblingAds ?? []).map((a: any) => String(a.last_headline ?? "").trim()).filter(Boolean)),
+        ).slice(0, 6);
+      }
+    } catch (e) {
+      console.warn("[content-ad] sibling headlines unavailable", e);
+    }
+
+
     step("campaign card ready", {
       week: weekNo,
       grade: campaignCard?.grade ?? null,
