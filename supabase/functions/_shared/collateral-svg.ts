@@ -1155,19 +1155,30 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
 
   const voice = d.voice || ctx.voice || "Plain, specific, and confident. Short sentences. Name the outcome, not the process. No jargon, no hype, no exclamation marks.";
   const halfW = (g.content - g.gutter * 3) / 2;
+  const hVoice = head("Voice", "04");
+  const vf = T.flow(g.M, hVoice.bottom, g.span(Math.round(ad.grid.columns * 0.72)));
+  vf.block(voice, step(ad, 0.6), fg, { leading: 1.7, maxLines: 6 });
+  const panelTop = Math.max(H * 0.62, vf.bottom + step(ad, 2));
+  const panelH = Math.min(H * 0.22, H - g.M - panelTop);
+  const doF = T.flow(g.M + step(ad, 1.6), panelTop + step(ad, 1.2), halfW - step(ad, 3.2));
+  doF.line(ad.type.caseLabels === "upper" ? "DO" : "Do", step(ad, -0.4), accent, { tracking: step(ad, -0.4) * ad.type.labelTracking, weight: 500 })
+    .block(ctx.copy?.voiceDo || "Lead with the result. Use the customer's words. One idea per sentence.", step(ad, -0.7), fg, { gap: step(ad, 0.6), leading: 1.5, maxLines: 3 });
+  const dontX = g.M + halfW + g.gutter * 3 + step(ad, 1.6);
+  const dontF = T.flow(dontX, panelTop + step(ad, 1.2), halfW - step(ad, 3.2));
+  dontF.line(ad.type.caseLabels === "upper" ? "DON'T" : "Don't", step(ad, -0.4), muted, { tracking: step(ad, -0.4) * ad.type.labelTracking, weight: 500 })
+    .block(ctx.copy?.voiceDont || "Don't stack adjectives, borrow buzzwords, or promise what the product can't do yet.", step(ad, -0.7), fg, { gap: step(ad, 0.6), leading: 1.5, maxLines: 3 });
   pages.push({
     name: "guidelines-5-voice", width: W, height: H,
     svg: page(W, H, defs, [
-      head("Voice", "04"),
-      T.block(voice, g.M, top + step(ad, 1), step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.72)), fg, { leading: 1.7, maxLines: 6 }).svg,
-      `<rect x="${g.M}" y="${r(H * 0.66)}" width="${r(halfW)}" height="${r(H * 0.2)}" fill="${primary}" opacity="0.06" rx="${ad.material.radius}"/>`,
-      label(T, ctx, "Do", g.M + step(ad, 1.6), H * 0.66 + step(ad, 2.2), step(ad, -0.4), accent),
-      T.block(ctx.copy?.voiceDo || "Lead with the result. Use the customer's words. One idea per sentence.", g.M + step(ad, 1.6), H * 0.66 + step(ad, 4.2), step(ad, -0.7), halfW - step(ad, 3.2), fg, { leading: 1.5, maxLines: 3 }).svg,
-      `<rect x="${r(g.M + halfW + g.gutter * 3)}" y="${r(H * 0.66)}" width="${r(halfW)}" height="${r(H * 0.2)}" fill="${fg}" opacity="0.05" rx="${ad.material.radius}"/>`,
-      label(T, ctx, "Don't", g.M + halfW + g.gutter * 3 + step(ad, 1.6), H * 0.66 + step(ad, 2.2), step(ad, -0.4), muted),
-      T.block(ctx.copy?.voiceDont || "Don't stack adjectives, borrow buzzwords, or promise what the product can't do yet.", g.M + halfW + g.gutter * 3 + step(ad, 1.6), H * 0.66 + step(ad, 4.2), step(ad, -0.7), halfW - step(ad, 3.2), fg, { leading: 1.5, maxLines: 3 }).svg,
+      hVoice.svg,
+      vf.svg(),
+      `<rect x="${g.M}" y="${r(panelTop)}" width="${r(halfW)}" height="${r(panelH)}" fill="${primary}" opacity="0.06" rx="${ad.material.radius}"/>`,
+      `<rect x="${r(g.M + halfW + g.gutter * 3)}" y="${r(panelTop)}" width="${r(halfW)}" height="${r(panelH)}" fill="${fg}" opacity="0.05" rx="${ad.material.radius}"/>`,
+      doF.svg(),
+      dontF.svg(),
     ].join("")),
   });
+
 
   return pages;
 }
