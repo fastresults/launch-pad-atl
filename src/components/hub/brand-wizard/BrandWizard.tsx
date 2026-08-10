@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useWebsitePrd } from "@/components/hub/brand/use-website-prd";
+import { useMoodboard } from "@/components/hub/brand/use-moodboard";
 import { PrdExportActions } from "@/components/hub/brand/PrdExportActions";
 import { Loader2, ArrowLeft, ArrowRight, Sparkles, Lock, RefreshCw, Check, Copy, AlertTriangle, CircleCheck, ExternalLink, Trash2, Upload, Download, FileText } from "lucide-react";
 import { toast } from "sonner";
