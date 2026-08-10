@@ -1252,14 +1252,14 @@ function Step5Launch({
                       return (
                         <div
                           key={a.id}
-                          className="group flex items-center gap-2 rounded-lg border border-white/10 bg-background/30 p-2 transition hover:bg-white/5"
+                          className="group flex min-w-0 items-center gap-2 overflow-hidden rounded-lg border border-white/10 bg-background/30 p-2 transition hover:bg-white/5"
                         >
                           <button
                             type="button"
                             onClick={() => canPreview && setPreviewIdx(flatIdx)}
                             disabled={!canPreview}
                             title={canPreview ? "Click to preview" : "No preview available"}
-                            className="flex flex-1 items-center gap-2 text-left disabled:cursor-not-allowed"
+                            className="flex min-w-0 flex-1 items-center gap-2 text-left disabled:cursor-not-allowed"
                           >
                             <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-background/60">
                               {a.signed_url ? (
@@ -1284,7 +1284,7 @@ function Step5Launch({
                             onClick={(e) => { e.stopPropagation(); doDelete(a.id); }}
                             disabled={deletingId === a.id}
                             title="Delete ad"
-                            className="rounded p-1.5 text-muted-foreground opacity-60 transition hover:bg-destructive/10 hover:text-destructive hover:opacity-100 disabled:opacity-40"
+                            className="shrink-0 rounded p-1.5 text-muted-foreground opacity-60 transition hover:bg-destructive/10 hover:text-destructive hover:opacity-100 disabled:opacity-40"
                           >
                             {deletingId === a.id
                               ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
