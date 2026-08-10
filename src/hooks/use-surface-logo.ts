@@ -9,12 +9,16 @@ import { useEffect, useState } from "react";
  */
 export function useIsDarkSurface(): boolean {
   const [dark, setDark] = useState(
-    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
+    () => typeof document !== "undefined" && !document.documentElement.classList.contains("light"),
   );
 
   useEffect(() => {
     const el = document.documentElement;
-    const read = () => setDark(el.classList.contains("dark"));
+    // This app's theme contract is `light` when explicitly light; dark is the
+    // default and showcase pages are additionally dark-scoped. Looking for a
+    // nonexistent `dark` class made every scoped dark showcase choose the
+    // light-surface logo even while visibly painting a dark card.
+    const read = () => setDark(!el.classList.contains("light"));
     read();
     const obs = new MutationObserver(read);
     obs.observe(el, { attributes: true, attributeFilter: ["class"] });

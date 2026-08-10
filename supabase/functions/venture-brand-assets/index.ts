@@ -63,6 +63,7 @@ import {
   juryInstruction,
   parseJuryVerdict,
 } from "../_shared/logo-jury.ts";
+import { svgPaints, svgPaintsPass, DARK_SURFACE, LIGHT_SURFACE } from "../_shared/logo-ink.ts";
 
 
 const corsHeaders = {
@@ -1440,6 +1441,7 @@ Deno.serve(async (req) => {
         throw new Error("Only PNG, JPG, WebP or SVG files are supported.");
       }
       let bytes = decodeBase64(match[2]);
+      let contrastAudit: Record<string, unknown> | null = null;
       if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("That file is over 5 MB — please upload a smaller logo.");
       // Uploaded SVG is user-authored markup rendered inline elsewhere, so strip
       // scripts and inline event handlers before it ever reaches storage.
@@ -1449,6 +1451,14 @@ Deno.serve(async (req) => {
           .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
           .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
           .replace(/javascript:/gi, "");
+        const passesDark = svgPaintsPass(cleaned, DARK_SURFACE);
+        const passesLight = svgPaintsPass(cleaned, LIGHT_SURFACE);
+        contrastAudit = {
+          paints: svgPaints(cleaned),
+          passes_dark: passesDark,
+          passes_light: passesLight,
+          repair_available: !passesDark || !passesLight,
+        };
         bytes = new TextEncoder().encode(cleaned);
       }
       const ext = contentType.includes("svg") ? "svg" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : contentType.includes("webp") ? "webp" : "png";
@@ -1468,6 +1478,7 @@ Deno.serve(async (req) => {
         path,
         direction_name: filename,
         created_at: new Date().toISOString(),
+        contrast_audit: contrastAudit,
       };
 
       const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos, dna").eq("snapshot_id", snapshotId).maybeSingle();

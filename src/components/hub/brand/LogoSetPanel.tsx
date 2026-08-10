@@ -184,12 +184,14 @@ export function LogoSetPanel({
   const primaryColor = kit?.palette?.colors?.primary;
   const brandBg = isHex(primaryColor) ? primaryColor : "#101014";
   const alt = `${companyName ?? "Brand"} logo`;
-  // Each preview shows the mark that actually belongs on that ground. A single
-  // primary upload must not silently populate the dark and brand previews.
-  const lightMark = set.primary?.url ?? null;
-  const reversedMark = set.reversed?.url ?? null;
+  // The same server-side per-paint audit used by showcases drives approval
+  // previews too. A file labelled "reversed" is never blindly trusted.
+  const logoEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto`;
+  const hasMark = Boolean(set.primary?.url || set.reversed?.url || set.icon?.url || set.wordmark?.url);
+  const lightMark = hasMark ? `${logoEndpoint}?on=light&contrast=v2` : null;
+  const reversedMark = hasMark ? `${logoEndpoint}?on=dark&contrast=v2` : null;
   const brandIsDark = luminance(brandBg) < 0.5;
-  const brandMark = brandIsDark ? reversedMark : lightMark;
+  const brandMark = hasMark ? `${logoEndpoint}?on=${encodeURIComponent(brandBg)}&contrast=v2` : null;
 
 
   // Stored signed URLs expire after a week; re-sign on mount so an older
@@ -341,7 +343,7 @@ export function LogoSetPanel({
 
       <p className="text-[10px] leading-relaxed text-muted-foreground">
         Drop files anywhere here or click a slot to replace it. SVG is best — PNG, JPG and WebP work too, up to 5 MB.
-        Each preview shows its own upload: primary on light, reversed on dark.
+        Each preview audits every color in the mark and repairs only colors that fail on that surface.
 
       </p>
     </section>
