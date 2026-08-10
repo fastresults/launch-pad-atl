@@ -1173,10 +1173,12 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       splitHead.svg,
-      `<g transform="${balance(splitTop, Math.max(wellH, splitStack.bottom - splitTop))}">${splitStack.svg()}` +
-      `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(wellH)}" rx="${ad.material.radius}" fill="${primary}" opacity="0.08"/>`,
-      `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(ad.ink.ruleWeight * 3)}" fill="${accent}"/>`,
-      label(T, ctx, "Image", wellX + sp(1.2), splitTop + wellH - sp(1.2), sp(-1.0), mix(fg, paper, 0.45), "start", splitColW - sp(2.4)),
+      `<g transform="${balance(splitTop, Math.max(wellH, splitStack.bottom - splitTop))}">` +
+        splitStack.svg() +
+        `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(wellH)}" rx="${ad.material.radius}" fill="${primary}" opacity="0.08"/>` +
+        `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(ad.ink.ruleWeight * 3)}" fill="${accent}"/>` +
+        label(T, ctx, "Image", wellX + sp(1.2), splitTop + wellH - sp(1.2), sp(-1.0), mix(fg, paper, 0.45), "start", splitColW - sp(2.4)) +
+      `</g>`,
       chrome(6, paper, muted, mix(primary, paper, 0.3)),
     ].join("")),
   });
