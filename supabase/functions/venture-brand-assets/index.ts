@@ -1683,7 +1683,9 @@ Deno.serve(async (req) => {
       async function worker() {
         while (i < n) {
           const myIdx = i++;
-          const angle = kind === "moodboard" ? MOODBOARD_ANGLES[myIdx % MOODBOARD_ANGLES.length] : undefined;
+          const angle = kind === "moodboard"
+            ? MOODBOARD_ANGLES[(myIdx + angleOffset) % MOODBOARD_ANGLES.length]
+            : undefined;
           const prompt = buildPromptGeneric(kind, ctx, tokens, extra, angle);
           try {
             const b64 = await generateOne(prompt, preset.size);
@@ -1698,14 +1700,17 @@ Deno.serve(async (req) => {
     }
 
     // Persist into the brand kit so the live preview & guide pick them up.
+    // Batched 9-tile runs pass `defer: true` and commit once via moodboard_commit,
+    // so a half-finished run never overwrites the founder's existing board.
     try {
       const fresh = results.filter((r) => r?.ok).map((r) => ({ url: r.url, path: r.path }));
-      if (fresh.length && kind === "moodboard" && kit) {
+      if (fresh.length && kind === "moodboard" && kit && !defer) {
         const existing = Array.isArray((kit as any).moodboard) ? (kit as any).moodboard : [];
-        const next = [...fresh, ...existing].slice(0, 8);
+        const next = [...fresh, ...existing].slice(0, 9);
         await supabase.from("venture_brand_kits").update({ moodboard: next }).eq("snapshot_id", snapshotId);
       }
     } catch { /* non-fatal */ }
+
 
 
     return new Response(JSON.stringify({ ok: true, kind, assets: results }), {
