@@ -216,10 +216,17 @@ export async function buildPosterCopy(args: {
   assignedAngle?: string | null;
   /** Claims spent by earlier weeks — hard negative context. */
   usedClaims?: string[];
+  /** The week's proof: the concrete particular this flight is allowed to print. */
+  proof?: string | null;
+  /** Which of the week's three arguments this ad runs, plus its brief. */
+  approach?: { name: string; brief: string } | null;
+  /** Headlines already written for this week — never paraphrase them. */
+  siblingHeadlines?: string[];
   /** How hard this week is allowed to ask, plus the brief for that rung. */
   ctaRung?: { rung: string; brief: string; offer?: string | null } | null;
   post: { hook?: string | null; body?: string | null; cta?: string | null; pillar?: string | null; platform?: string | null };
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string } | null;
+
 
 }): Promise<PosterCopy> {
 
