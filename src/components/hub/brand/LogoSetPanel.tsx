@@ -301,9 +301,17 @@ export function LogoSetPanel({
           if (e.dataTransfer.files?.length) pickMany(e.dataTransfer.files);
         }}
       >
-        <MarkTile label="On light" background="#ffffff" src={lightMark} alt={alt} light compact={compact} />
-        <MarkTile label="On dark" background="#101014" src={darkMark} alt={alt} compact={compact} />
-        <MarkTile label="On brand" background={brandBg} src={darkMark} alt={alt} compact={compact} />
+        <MarkTile label="On light" background="#ffffff" src={lightMark} alt={alt} light compact={compact} empty="Upload a primary mark" />
+        <MarkTile label="On dark" background="#101014" src={reversedMark} alt={alt} compact={compact} empty="Upload a reversed mark" />
+        <MarkTile
+          label="On brand"
+          background={brandBg}
+          src={brandMark}
+          alt={alt}
+          compact={compact}
+          empty={brandIsDark ? "Upload a reversed mark" : "Upload a primary mark"}
+        />
+
       </div>
 
       <div className="grid grid-cols-4 gap-2">
