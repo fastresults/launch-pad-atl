@@ -82,6 +82,38 @@ async function generateOne(
 ) {
   const snapshotId = ctx.snapshotId;
   const snap = ctx.snap;
+
+  // Bulk generation is idempotent. A previously persisted artifact is the
+  // source of truth even if an interrupted retry left its status as
+  // "generating" or "failed". Never replace good content merely because a
+  // worker/watchdog was restarted; explicit single-asset regeneration uses a
+  // separate endpoint and remains the only path allowed to rewrite it.
+  const { data: persisted } = await supabase
+    .from("venture_documents")
+    .select("status, content, word_count, quality_score, version")
+    .eq("snapshot_id", snapshotId)
+    .eq("document_type", documentType)
+    .maybeSingle();
+  const hasPersistedArtifact =
+    typeof persisted?.content === "string" &&
+    persisted.content.trim().length > 0 &&
+    (persisted.status === "complete" ||
+      (Number(persisted.word_count ?? 0) > 0 &&
+        Number(persisted.version ?? 0) > 0 &&
+        persisted.quality_score !== null));
+  if (hasPersistedArtifact) {
+    if (persisted.status !== "complete") {
+      await supabase.from("venture_documents").update({
+        status: "complete",
+        last_error: null,
+        blocked_reason: null,
+      }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    }
+    await supabase.from("venture_generation_failures")
+      .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    return;
+  }
+
   const { data: type } = await supabase
     .from("venture_document_types")
     .select("*")
@@ -278,9 +310,16 @@ async function generateOne(
   // Record a failure once, replacing any earlier row for this doc so the UI
   // count reflects reality across retry rounds.
   const recordFailure = async (error: string) => {
-    await supabase.from("venture_documents")
+    const { data: failedRows } = await supabase.from("venture_documents")
       .update({ status: "failed", last_error: error.slice(0, 600) })
-      .eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", documentType)
+      .eq("status", "generating")
+      .is("content", null)
+      .select("id");
+    // A newer worker may already have completed this row. In that case this
+    // stale attempt owns nothing and must not publish a failure for the asset.
+    if (!failedRows?.length) return;
     await supabase.from("venture_generation_failures")
       .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
     await supabase.from("venture_generation_failures").insert({
@@ -577,6 +616,55 @@ function startHeartbeat(supabase: any, jobId: string, everyMs = 20_000) {
       .then(() => {}, () => {});
   }, everyMs);
   return () => clearInterval(timer);
+}
+
+/**
+ * Repair rows whose finished artifact survived but whose status was changed by
+ * an interrupted retry. This makes the database artifact authoritative and
+ * lets any later request close a ghost run without spending another AI call.
+ */
+async function reconcilePersistedArtifacts(supabase: any, snapshotId: string) {
+  const { data: rows } = await supabase
+    .from("venture_documents")
+    .select("id, document_type, status, content, word_count, quality_score, version")
+    .eq("snapshot_id", snapshotId)
+    .neq("status", "complete");
+  const recoverable = (rows ?? []).filter((row: any) =>
+    typeof row.content === "string" &&
+    row.content.trim().length > 0 &&
+    Number(row.word_count ?? 0) > 0 &&
+    Number(row.version ?? 0) > 0 &&
+    row.quality_score !== null
+  );
+  if (recoverable.length) {
+    await supabase.from("venture_documents").update({
+      status: "complete",
+      last_error: null,
+      blocked_reason: null,
+    }).in("id", recoverable.map((row: any) => row.id));
+    await supabase.from("venture_generation_failures")
+      .delete()
+      .eq("snapshot_id", snapshotId)
+      .in("document_type", recoverable.map((row: any) => row.document_type));
+  }
+
+  const { data: activeTypes } = await supabase
+    .from("venture_document_types")
+    .select("type")
+    .eq("active", true);
+  const keys = (activeTypes ?? []).map((row: any) => row.type);
+  if (!keys.length) return { recovered: recoverable.length, allDone: false };
+  const { data: finalRows } = await supabase
+    .from("venture_documents")
+    .select("document_type, status")
+    .eq("snapshot_id", snapshotId)
+    .in("document_type", keys);
+  const settled = new Set(
+    (finalRows ?? [])
+      .filter((row: any) => row.status === "complete" || row.status === "not_applicable")
+      .map((row: any) => row.document_type),
+  );
+  return { recovered: recoverable.length, allDone: keys.every((key: string) => settled.has(key)) };
 }
 
 async function runLayer(
@@ -927,7 +1015,7 @@ async function runJob(
       completed_at: new Date().toISOString(),
       progress_pct: await liveProgressPct(supabase, snapshotId, state),
       current_document_type: null,
-    }).eq("id", jobId);
+    }).eq("id", jobId).in("status", ["queued", "running", "paused"]);
   };
 
   // Stale blocks from an earlier run get re-evaluated (brand auto-derivation
@@ -1111,6 +1199,40 @@ Deno.serve(async (req) => {
 
     const dayOnlyArg = Array.isArray(daysArg) && daysArg.length > 0;
 
+    const reconciliation = await reconcilePersistedArtifacts(supabase, snapshotId);
+    if (reconciliation.allDone && !dayOnlyArg) {
+      const completedAt = new Date().toISOString();
+      const { data: activeJob } = await supabase
+        .from("venture_generation_jobs")
+        .select("id")
+        .eq("snapshot_id", snapshotId)
+        .in("status", ["queued", "running", "paused", "completed_with_blockers"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (activeJob?.id) {
+        await supabase.from("venture_generation_jobs").update({
+          status: "completed",
+          completed_at: completedAt,
+          heartbeat_at: completedAt,
+          progress_pct: 100,
+          current_document_type: null,
+          circuit_breaker_open: false,
+          retry_round: 0,
+          retry_remaining: 0,
+          error: null,
+          cancel_requested: true,
+        }).eq("id", activeJob.id);
+      }
+      await supabase.from("venture_snapshots").update({ status: "complete" }).eq("id", snapshotId);
+      return new Response(JSON.stringify({
+        ok: true,
+        jobId: activeJob?.id ?? null,
+        reconciled: reconciliation.recovered,
+        completed: true,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // Reuse a running job if there is one. Retry-only and day-only runs also
     // adopt a paused or blocked job instead of starting a fresh one.
     const reusableStatuses = retryArg || dayOnlyArg
@@ -1124,6 +1246,18 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    // Do not attach another external worker to a healthy in-flight job. This
+    // was the second half of the retry loop: the watchdog and browser could
+    // both launch runJob() for the same row. Internal watchdog calls are
+    // intentionally allowed because they have just claimed the stalled job.
+    if (existing?.status === "running" && !internal) {
+      return new Response(JSON.stringify({
+        ok: true,
+        jobId: existing.id,
+        alreadyRunning: true,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     let jobId = existing?.id as string | undefined;
     if (!jobId) {
