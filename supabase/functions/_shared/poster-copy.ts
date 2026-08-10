@@ -454,6 +454,10 @@ Source CTA: ${post.cta ?? ""}${
     headline: wrote ? ai.headline! : (ai.headline ? firstClause(ai.headline, cap) : fb.headline),
     ctaLine: suppressCta ? "" : (ai.ctaLine || fb.ctaLine),
     repeatsClaim: repeats,
+    approach: args.approach?.name ?? null,
+    specific: hasParticular(wrote ? (ai.headline ?? "") : fb.headline),
+    vagueness: vague,
+
 
     source: wrote ? "written" : "fallback",
     headlineIssue: issue,
