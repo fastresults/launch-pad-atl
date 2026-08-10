@@ -203,7 +203,10 @@ export function ShareSidebar({
                   className={cn("h-3.5 w-3.5 shrink-0 transition-transform", expanded && "rotate-90")}
                 />
                 <span className="truncate uppercase">{section.label}</span>
-                <span className="ml-auto text-[11px] tabular-nums text-muted-foreground/60">
+                <span className="ml-auto flex shrink-0 items-center gap-1.5 text-[11px] tabular-nums text-muted-foreground/60">
+                  {sectionHasMedia(section.items) && (
+                    <Images className="h-3.5 w-3.5" aria-hidden title="Includes images" />
+                  )}
                   {section.items.length}
                 </span>
               </button>
