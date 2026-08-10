@@ -273,10 +273,13 @@ headline — this is the whole job:
 - BANNED: article-title phrasing — "Tips for…", "Why X matters", "How to…", "Everything you need to know", "Navigating/Understanding/Exploring X", listicles, and "Topic: subtitle" constructions unless both halves are complete sentences.
 - No ellipsis, no trailing punctuation, no quotes, no emoji, no hashtags, no unbroken word over 18 characters.
 - Sentence case. Never shout. Do not repeat the kicker's words.
+- SPECIFIC, not general. Ogilvy's rule: the specific promise outsells the clever line. Where the brief gives you a number, a timeframe, a named thing or a real result, PRINT IT. A headline that could be lifted onto a competitor's poster without changing a word has failed.
+- BANNED vocabulary: proven, real, authentic, powerful, seamless, effortless, game-changing, next-level, world-class, innovative, unlock, elevate, transform, supercharge, leverage — and bare abstractions as the payoff word ("…that drives results", "…for real growth", "…with real impact").
 
 kicker — 1-4 words naming the AUDIENCE or the moment they are in, so the headline never has to.
 ctaLine — obey the CTA rung given below exactly. It sets how hard this ad is allowed to ask; an early-funnel ad that asks for a booking is wrong, and so is a late-funnel ad that only says "see how it works". MAX 42 characters, starts with a verb, no URL unless the source CTA has one. If the rung is "none", return an empty string.
 rationale — one sentence on why this line lands.
+
 
 No prose outside the JSON.`;
     const siblings = (args.siblingHooks ?? []).filter(Boolean).slice(0, 6);
