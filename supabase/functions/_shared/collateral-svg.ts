@@ -626,7 +626,7 @@ function label(T: TypeKit, ctx: CollateralCtx, text: string, x: number, y: numbe
 }
 
 function page(width: number, height: number, defs: string, body: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs>${defs}</defs>${body}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs>${defs}</defs>${body}</svg>`;
 }
 
 // ── templates ───────────────────────────────────────────────────────────────
@@ -1073,13 +1073,16 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   T.setFloor(rsSlide.minType, rsSlide.measureMax);
 
   // ── 02 section divider ────────────────────────────────────────────────────
-  const sectionStack = T.flow(g.M, H * 0.34, g.span(Math.round(ad.grid.columns * 0.72)));
+  // With a mood board panel on the right the copy column narrows, so nothing
+  // is ever set underneath the artwork.
+  const sectionCols = art[1] ? 0.46 : 0.72;
+  const sectionStack = T.flow(g.M, H * 0.34, g.span(Math.round(ad.grid.columns * sectionCols)));
   sectionStack.line("01", sp(0.6), accent, { tracking: sp(0.6) * ad.type.labelTracking, weight: 500 });
   sectionStack.line(deck.section || "Where we are today", sp(3.8), fg, {
     family: "head", weight: 700, gap: sp(1.1), tracking: sp(3.8) * ad.type.displayTracking,
   });
   sectionStack.block(deck.sectionSub || "One sentence that frames what this section proves.", sp(0.6), muted, {
-    leading: 1.5, maxLines: 2, gap: sp(1.0), width: g.span(Math.round(ad.grid.columns * 0.55)),
+    leading: 1.5, maxLines: 3, gap: sp(1.0), width: g.span(Math.round(ad.grid.columns * (art[1] ? 0.42 : 0.55))),
   });
   pages.push({
     name: "slide-2-section", width: W, height: H,
