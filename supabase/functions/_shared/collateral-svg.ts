@@ -946,6 +946,32 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   return [{ name: mode, svg: page(W, H, defs, body), width: W, height: H }];
 }
 
+/**
+ * A framed well that draws the venture's own artwork when there is any, and an
+ * art-directed graphic panel built from the brand palette when there is not.
+ * Never a grey box labelled "Image".
+ */
+function imageWell(
+  ctx: CollateralCtx,
+  href: string | null,
+  x: number, y: number, w: number, h: number,
+  opts: { radius: number; accent: string; primary: string; paper: string; ruleWeight: number },
+): string {
+  const id = `well${Math.round(x)}x${Math.round(y)}`;
+  const frame =
+    `<rect x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(opts.ruleWeight * 3)}" fill="${opts.accent}"/>`;
+  if (href) {
+    return `<clipPath id="${id}"><rect x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" rx="${opts.radius}"/></clipPath>` +
+      `<g clip-path="url(#${id})"><image x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" ` +
+      `preserveAspectRatio="xMidYMid slice" xlink:href="${href}" href="${href}"/></g>` + frame;
+  }
+  // No committed imagery: a tonal panel in the brand's own colours, not a placeholder.
+  return `<rect x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" rx="${opts.radius}" fill="${opts.primary}" opacity="0.1"/>` +
+    `<rect x="${r(x + w * 0.12)}" y="${r(y + h * 0.18)}" width="${r(w * 0.42)}" height="${r(h * 0.64)}" rx="${opts.radius}" fill="${opts.accent}" opacity="0.18"/>` +
+    `<circle cx="${r(x + w * 0.68)}" cy="${r(y + h * 0.42)}" r="${r(Math.min(w, h) * 0.16)}" fill="${opts.primary}" opacity="0.16"/>` +
+    frame;
+}
+
 function presentation({ ctx, T, defs }: Args): Page[] {
   const W = 1920, H = 1080;
   const ad = ctx.ad;
@@ -966,6 +992,8 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const agenda = (deck.agenda ?? []).slice(0, 6);
   const stats = (deck.stats ?? []).slice(0, 3);
   const steps = (deck.timeline ?? []).slice(0, 4);
+  // The venture's committed mood board — the deck is dressed in its own imagery.
+  const art = (ctx.imagery ?? []).filter(Boolean);
 
   const rsCover = resolveSpec("slide-1-cover", W, H);
   const rsSlide = resolveSpec("slide-2-section", W, H);
@@ -1058,6 +1086,11 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       `<rect x="0" y="0" width="${r(ad.ink.ruleWeight * 6)}" height="${H}" fill="${accent}"/>`,
+      art[1]
+        ? imageWell(ctx, art[1], W * 0.6, 0, W * 0.4, H, {
+          radius: 0, accent, primary, paper, ruleWeight: 0,
+        })
+        : "",
       sectionStack.svg(),
       chrome(2, paper, muted, mix(primary, paper, 0.25)),
     ].join("")),
@@ -1180,9 +1213,9 @@ function presentation({ ctx, T, defs }: Args): Page[] {
       splitHead.svg,
       `<g transform="${balance(splitTop, Math.max(wellH, splitStack.bottom - splitTop))}">` +
         splitStack.svg() +
-        `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(wellH)}" rx="${ad.material.radius}" fill="${primary}" opacity="0.08"/>` +
-        `<rect x="${r(wellX)}" y="${r(splitTop)}" width="${r(splitColW)}" height="${r(ad.ink.ruleWeight * 3)}" fill="${accent}"/>` +
-        label(T, ctx, "Image", wellX + sp(1.2), splitTop + wellH - sp(1.2), sp(-1.0), mix(fg, paper, 0.45), "start", splitColW - sp(2.4)) +
+        imageWell(ctx, art[0] ?? null, wellX, splitTop, splitColW, wellH, {
+          radius: ad.material.radius, accent, primary, paper, ruleWeight: ad.ink.ruleWeight,
+        }) +
       `</g>`,
       chrome(6, paper, muted, mix(primary, paper, 0.3)),
     ].join("")),
