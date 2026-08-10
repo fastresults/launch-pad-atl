@@ -230,10 +230,10 @@ Deno.serve(async (req) => {
     // and returns the one that clears contrast on the requested ground, so a
     // navy wordmark never lands on a navy hero again.
     const logoUrlOnDark = primaryLogo
-      ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto?on=dark`
+      ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto?on=dark&contrast=v2`
       : null;
     const logoUrlOnLight = primaryLogo
-      ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto?on=light`
+      ? `${SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto?on=light&contrast=v2`
       : null;
 
     const paletteColors: Record<string, string> =

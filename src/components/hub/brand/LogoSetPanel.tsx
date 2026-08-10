@@ -188,10 +188,10 @@ export function LogoSetPanel({
   // previews too. A file labelled "reversed" is never blindly trusted.
   const logoEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto`;
   const hasMark = Boolean(set.primary?.url || set.reversed?.url || set.icon?.url || set.wordmark?.url);
-  const lightMark = hasMark ? `${logoEndpoint}?on=light` : null;
-  const reversedMark = hasMark ? `${logoEndpoint}?on=dark` : null;
+  const lightMark = hasMark ? `${logoEndpoint}?on=light&contrast=v2` : null;
+  const reversedMark = hasMark ? `${logoEndpoint}?on=dark&contrast=v2` : null;
   const brandIsDark = luminance(brandBg) < 0.5;
-  const brandMark = hasMark ? `${logoEndpoint}?on=${encodeURIComponent(brandBg)}` : null;
+  const brandMark = hasMark ? `${logoEndpoint}?on=${encodeURIComponent(brandBg)}&contrast=v2` : null;
 
 
   // Stored signed URLs expire after a week; re-sign on mount so an older
