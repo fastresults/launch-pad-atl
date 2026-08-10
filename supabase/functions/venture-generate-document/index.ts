@@ -369,7 +369,7 @@ export async function generateOne(
   // The real artwork, as images — so the art direction is read off the mark
   // instead of inferred from hex strings.
   let visionImages: Awaited<ReturnType<typeof collectBrandVisionImages>> = [];
-  if (isPrd && phase !== "refine") {
+  if (isPrd) {
     try {
       visionImages = await collectBrandVisionImages(brandKit as Record<string, any> | null);
     } catch (e) {
