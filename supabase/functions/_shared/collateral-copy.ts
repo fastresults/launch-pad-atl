@@ -99,12 +99,39 @@ export async function writeCollateralCopy(input: {
         .filter((p: any) => p.title && p.body)
       : [];
 
+    const agenda = Array.isArray(parsed?.deck?.agenda)
+      ? parsed.deck.agenda.slice(0, 6).map((s: unknown) => str(s, 38)).filter(Boolean)
+      : [];
+
+    const stats = Array.isArray(parsed?.deck?.stats)
+      ? parsed.deck.stats.slice(0, 3)
+        .map((s: any) => ({ figure: str(s?.figure, 10) || "—", label: str(s?.label, 30), note: str(s?.note, 90) }))
+        .filter((s: any) => s.label)
+      : [];
+
+    const timeline = Array.isArray(parsed?.deck?.timeline)
+      ? parsed.deck.timeline.slice(0, 4)
+        .map((s: any) => ({ label: str(s?.label, 18), body: str(s?.body, 90) }))
+        .filter((s: any) => s.label && s.body)
+      : [];
+
     return {
       deck: {
         section: str(parsed?.deck?.section, 40),
         sectionSub: str(parsed?.deck?.sectionSub, 120),
         points,
         closing: str(parsed?.deck?.closing, 24),
+        agenda,
+        agendaSub: str(parsed?.deck?.agendaSub, 120),
+        statement: str(parsed?.deck?.statement, 110),
+        splitTitle: str(parsed?.deck?.splitTitle, 34),
+        splitBody: str(parsed?.deck?.splitBody, 280),
+        statsTitle: str(parsed?.deck?.statsTitle, 34),
+        stats,
+        timelineTitle: str(parsed?.deck?.timelineTitle, 34),
+        timeline,
+        quote: str(parsed?.deck?.quote, 120),
+        quoteAttribution: str(parsed?.deck?.quoteAttribution, 48),
       },
       proposal: {
         scope: Array.isArray(parsed?.proposal?.scope) ? parsed.proposal.scope.slice(0, 7).map((s: unknown) => str(s, 60)).filter(Boolean) : [],
