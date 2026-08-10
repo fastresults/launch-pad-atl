@@ -1277,38 +1277,57 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
   const { fg } = palette(ctx);
   const defs = `<style>${faces}</style>${grainDef(fg)}`;
   const T = makeType({ head: head?.bytes, body: bodyFont?.bytes });
-  const args: Args = { ctx, T, defs };
-
-  let pages: Page[];
-  switch (kind) {
-    case "business_card": pages = businessCard(args); break;
-    case "letterhead": pages = letterhead(args); break;
-    case "envelope": pages = envelope(args); break;
-    case "notecard": pages = notecard(args); break;
-    case "email_signature": pages = emailSignature(args); break;
-    case "invoice": pages = docTemplate(args, "invoice"); break;
-    case "proposal": pages = docTemplate(args, "proposal"); break;
-    case "presentation": pages = presentation(args); break;
-    case "guidelines": pages = guidelines(args); break;
-    default: pages = [];
-  }
 
   const headStack = `${heading}, ${fallbackFor(heading)}`;
   const bodyStack = `${body}, ${fallbackFor(body)}`;
-  pages = pages.map((p) => {
-    const rs = resolveSpec(p.name, p.width, p.height);
-    const svg = p.svg
-      .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
-      .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
-      // Backstop: any literal <text> written outside the type kit still obeys
-      // the piece's legal minimum. Fitted lines are already at or above it.
-      .replace(/font-size="([\d.]+)"/g, (m, v) => {
-        const n = Number(v);
-        return n && n < rs.minType ? `font-size="${Math.round(rs.minType * 10) / 10}"` : m;
-      })
-      .replace("<svg ", `<svg${printMeta(rs)} `);
-    return { ...p, svg, metrics: pageMetrics(ctx, p.name, svg, rs) };
-  });
+
+  const draw = (drawCtx: CollateralCtx): Page[] => {
+    const args: Args = { ctx: drawCtx, T, defs };
+    let raw: Page[];
+    switch (kind) {
+      case "business_card": raw = businessCard(args); break;
+      case "letterhead": raw = letterhead(args); break;
+      case "envelope": raw = envelope(args); break;
+      case "notecard": raw = notecard(args); break;
+      case "email_signature": raw = emailSignature(args); break;
+      case "invoice": raw = docTemplate(args, "invoice"); break;
+      case "proposal": raw = docTemplate(args, "proposal"); break;
+      case "presentation": raw = presentation(args); break;
+      case "guidelines": raw = guidelines(args); break;
+      default: raw = [];
+    }
+    return raw.map((p) => {
+      const rs = resolveSpec(p.name, p.width, p.height);
+      const svg = p.svg
+        .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
+        .replace(/font-family="BrandBody"/g, `font-family="${bodyStack}"`)
+        // Backstop: any literal <text> written outside the type kit still obeys
+        // the piece's legal minimum. Fitted lines are already at or above it.
+        .replace(/font-size="([\d.]+)"/g, (m, v) => {
+          const n = Number(v);
+          return n && n < rs.minType ? `font-size="${Math.round(rs.minType * 10) / 10}"` : m;
+        })
+        .replace("<svg ", `<svg${printMeta(rs)} `);
+      return { ...p, svg, metrics: pageMetrics(drawCtx, p.name, svg, rs, T) };
+    });
+  };
+
+  let pages = draw(ctx);
+  // A collision is a defect, not a taste call. If any page still has type on
+  // type, re-set the whole piece one notch smaller — the layout is measured,
+  // so a smaller scale resolves what a longer-than-expected string caused.
+  let attemptCtx = ctx;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const clashing = pages.filter((p) => (p.metrics?.overlaps?.length ?? 0) > 0);
+    if (!clashing.length) break;
+    console.warn("[collateral layout]", kind, "type collision, re-setting smaller:", clashing.map((p) => `${p.name}: ${p.metrics!.overlaps!.join("; ")}`).join(" | "));
+    attemptCtx = {
+      ...attemptCtx,
+      ad: { ...attemptCtx.ad, scale: { ...attemptCtx.ad.scale, base: attemptCtx.ad.scale.base * 0.92 } },
+    };
+    pages = draw(attemptCtx);
+  }
+
 
   const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
   return { pages, fontBuffers, fontsOk: fontBuffers.length > 0 };
