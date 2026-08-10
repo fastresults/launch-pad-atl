@@ -13,6 +13,7 @@ import { filterShowcaseContent } from "@/lib/share-content-filter";
 
 
 import { ImagePreviewDialog } from "@/components/share/ImagePreviewDialog";
+import { useIsDarkSurface } from "@/hooks/use-surface-logo";
 
 
 /**
@@ -63,6 +64,10 @@ export function ShareSection({
   exportSlot?: ReactNode;
 }) {
   const [lightbox, setLightbox] = useState<ShareImage | null>(null);
+  // A logo hero ships in both contrasts; the card follows the reader's theme.
+  const darkSurface = useIsDarkSurface();
+  const heroUrl =
+    (darkSurface ? item.heroImageOnDark : item.heroImageOnLight) ?? item.heroImageUrl ?? null;
 
 
   return (
@@ -104,10 +109,10 @@ export function ShareSection({
           />
         </TimelineBoundary>
 
-      ) : item.heroImageUrl ? (
+      ) : heroUrl ? (
         <div className="mb-10 flex justify-center rounded-2xl border border-border/60 bg-muted/10 p-3">
           <img
-            src={item.heroImageUrl}
+            src={heroUrl}
             alt={item.title}
             loading="lazy"
             className="max-h-[420px] w-auto max-w-full rounded-xl object-contain"

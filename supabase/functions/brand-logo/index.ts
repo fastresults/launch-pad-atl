@@ -26,7 +26,7 @@ import {
   surfaceHex,
   svgInkHex,
   tintSvg,
-  variantOrder,
+  logoCandidates,
 } from "../_shared/logo-ink.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -49,13 +49,6 @@ function contentTypeFor(path: string) {
 }
 
 const CACHE = "public, max-age=300, stale-while-revalidate=86400";
-
-function pathFor(primary: any, variant: string): string | null {
-  if (variant === "mark") {
-    return primary.svg_path ?? primary.path ?? primary.variants?.mark?.path ?? null;
-  }
-  return primary.variants?.[variant]?.path ?? null;
-}
 
 function toDataUri(bytes: Uint8Array, mime: string) {
   let bin = "";
@@ -99,12 +92,11 @@ Deno.serve(async (req) => {
     /* ---------- contrast-aware pick ---------- */
     if (variant === "auto") {
       const surface = surfaceHex(url.searchParams.get("on")) ?? "#FFFFFF";
-      const order = variantOrder(surface);
+      const candidates = logoCandidates(logos, surface);
 
       let fallback: { bytes: Uint8Array; path: string } | null = null;
-      for (const v of order) {
-        const p = pathFor(primary, v);
-        if (!p) continue;
+      for (const cand of candidates) {
+        const p = cand.path;
         const bytes = await download(p);
         if (!bytes) continue;
         if (!fallback) fallback = { bytes, path: p };
@@ -118,6 +110,7 @@ Deno.serve(async (req) => {
           });
         }
       }
+
 
       // Nothing stored is legible here. Recolour the vector, or plate the raster.
       if (fallback) {

@@ -72,6 +72,9 @@ export interface ShareItem {
   kind: "doc" | "gallery" | "timeline";
   body?: string | null;
   heroImageUrl?: string | null;
+  /** Contrast-checked variants of a logo hero; pick by the surface it lands on. */
+  heroImageOnDark?: string | null;
+  heroImageOnLight?: string | null;
   images?: ShareImage[];
   brandBoard?: ShareBrandBoard;
   metrics?: ShareMetric[];

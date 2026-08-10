@@ -58,6 +58,9 @@ type Item = {
   subtitle?: string | null;
   body?: string | null;
   heroImageUrl?: string | null;
+  /** Contrast-checked hero marks, so a logo hero never sinks into its card. */
+  heroImageOnDark?: string | null;
+  heroImageOnLight?: string | null;
   images?: {
     url: string; label?: string | null; width?: number | null; height?: number | null;
     /** Everything the preview modal needs to show the copy that ships with the image. */
@@ -295,6 +298,8 @@ Deno.serve(async (req) => {
           kind: "doc",
           body: null,
           heroImageUrl: logoUrl,
+          heroImageOnDark: logoUrlOnDark,
+          heroImageOnLight: logoUrlOnLight,
           brandBoard: {
             paletteName: kit.palette?.name ?? null,
             swatches,
@@ -490,6 +495,8 @@ Deno.serve(async (req) => {
           kind: "doc",
           body: snap.executive_summary,
           heroImageUrl: logoUrl,
+          heroImageOnDark: logoUrlOnDark,
+          heroImageOnLight: logoUrlOnLight,
           metrics: execMetrics,
         });
       }
@@ -516,6 +523,8 @@ Deno.serve(async (req) => {
         kind: "doc",
         body: glanceBody,
         heroImageUrl: snap.executive_summary ? null : logoUrl,
+        heroImageOnDark: snap.executive_summary ? null : logoUrlOnDark,
+        heroImageOnLight: snap.executive_summary ? null : logoUrlOnLight,
         metrics: glanceFacts,
       });
 

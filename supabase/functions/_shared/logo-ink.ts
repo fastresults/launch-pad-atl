@@ -40,12 +40,19 @@ export function isUntintableSvg(svg: string): boolean {
  * Dominant ink of an SVG: the average luminance of every paint that isn't
  * `none` or transparent, weighted equally. Good enough to tell a navy mark
  * from a white one, which is the only call we need to make.
+ *
+ * Paints declared in `<style>` blocks and gradient `stop-color`s count too —
+ * plenty of exported artwork carries no `fill=` attribute at all. A shape that
+ * covers the whole viewBox is the artwork's own background, not its ink, so
+ * its paint is dropped before averaging.
  */
 export function svgInkHex(svg: string): string | null {
+  const source = stripBackgroundShapes(svg);
   const paints: string[] = [];
-  const re = /(?:fill|stroke)\s*[=:]\s*["']?\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]*\)|[a-zA-Z]+)/g;
+  const re =
+    /(?:fill|stroke|stop-color)\s*[=:]\s*["']?\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]*\)|[a-zA-Z]+)/g;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(svg))) {
+  while ((m = re.exec(source))) {
     const raw = m[1];
     if (/^(none|transparent|url|currentcolor|inherit)$/i.test(raw)) continue;
     const hex = normHex(raw);
@@ -66,6 +73,31 @@ export function svgInkHex(svg: string): string | null {
   const to = (v: number) => Math.round(v / n).toString(16).padStart(2, "0");
   return `#${to(r)}${to(g)}${to(b)}`;
 }
+
+/**
+ * Remove full-bleed rects (and a full-canvas circle) — the artwork's ground.
+ * Measuring them as ink is what makes a reversed mark look "dark" and a light
+ * mark look "white".
+ */
+export function stripBackgroundShapes(svg: string): string {
+  const vb = /viewBox\s*=\s*["']\s*([-\d.]+)[,\s]+([-\d.]+)[,\s]+([-\d.]+)[,\s]+([-\d.]+)/i.exec(svg);
+  const w = vb ? Number(vb[3]) : Number(/\bwidth\s*=\s*["']([\d.]+)/i.exec(svg)?.[1] ?? 0);
+  const h = vb ? Number(vb[4]) : Number(/\bheight\s*=\s*["']([\d.]+)/i.exec(svg)?.[1] ?? 0);
+  if (!(w > 0 && h > 0)) return svg;
+  return svg.replace(/<rect\b[^>]*\/?>/gi, (tag) => {
+    const attrNum = (attr: string) => {
+      const raw = new RegExp(`\\b${attr}\\s*=\\s*["']([-\\d.]+)`, "i").exec(tag)?.[1];
+      return raw === undefined ? NaN : Number(raw);
+    };
+    const rw = attrNum("width");
+    const rh = attrNum("height");
+    const pct = /width\s*=\s*["']\s*100%/i.test(tag) && /height\s*=\s*["']\s*100%/i.test(tag);
+    const covers = pct || (rw >= w * 0.98 && rh >= h * 0.98);
+
+    return covers ? "" : tag;
+  });
+}
+
 
 /** Average ink of a raster, ignoring transparent pixels. */
 export async function rasterInkHex(bytes: Uint8Array): Promise<string | null> {
@@ -106,9 +138,56 @@ export function surfaceHex(on: string | null | undefined): string | null {
 export function variantOrder(surface: string): string[] {
   const dark = relLuminance(surface) < 0.35;
   return dark
-    ? ["knockout", "mono", "mark", "horizontal", "stacked"]
-    : ["mark", "horizontal", "stacked", "mono", "knockout"];
+    ? ["reversed", "knockout", "mono", "mark", "horizontal", "stacked", "icon"]
+    : ["mark", "primary", "horizontal", "stacked", "icon", "mono", "knockout", "reversed"];
 }
+
+export interface LogoCandidate {
+  /** Storage path of the artwork. */
+  path: string;
+  /** Which slot it came from — used only for ordering and debugging. */
+  variant: string;
+}
+
+/**
+ * Every mark a venture has, ordered best-first for a surface.
+ *
+ * Founders upload light and reversed artwork as *sibling entries* in the
+ * `logos` array (each carrying its own `variant`), while the generator writes
+ * `variants.knockout` / `variants.mono` inside a single entry. Both shapes are
+ * collected here so an uploaded reversed mark is never overlooked.
+ */
+export function logoCandidates(logos: any[], surface: string): LogoCandidate[] {
+  const out: LogoCandidate[] = [];
+  const seen = new Set<string>();
+  const add = (path: unknown, variant: string) => {
+    const p = typeof path === "string" ? path.trim() : "";
+    if (!p || seen.has(p)) return;
+    seen.add(p);
+    out.push({ path: p, variant });
+  };
+
+  for (const l of Array.isArray(logos) ? logos : []) {
+    if (!l || typeof l !== "object") continue;
+    const own = String(l.variant ?? (l.primary ? "primary" : "mark")).toLowerCase();
+    add(l.svg_path ?? l.path, own === "primary" ? "mark" : own);
+    const variants = l.variants && typeof l.variants === "object" ? l.variants : {};
+    for (const [name, v] of Object.entries(variants as Record<string, any>)) {
+      add(v?.path ?? v?.svg_path, String(name).toLowerCase());
+    }
+  }
+
+  const order = variantOrder(surface);
+  const rank = (v: string) => {
+    const i = order.indexOf(v === "primary" ? "mark" : v);
+    return i === -1 ? order.length : i;
+  };
+  return out
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => rank(a.c.variant) - rank(b.c.variant) || a.i - b.i)
+    .map(({ c }) => c);
+}
+
 
 export function inkPasses(ink: string | null, surface: string): boolean {
   if (!ink) return false;
