@@ -316,7 +316,7 @@ Deno.serve(async (req) => {
         out.providers = [
           out.code === "AI_CREDIT_LIMIT_REACHED"
             ? capacityProvider("lovable", "image generation")
-            : capacityProvider(e?.model ?? result?.modelUsed ?? null, "image generation"),
+            : capacityProvider(e?.model ?? null, "image generation"),
         ];
       }
       return json(out, 200);
