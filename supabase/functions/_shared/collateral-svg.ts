@@ -317,7 +317,67 @@ function makeType(fonts: Fonts) {
   const width = (t: string, size: number, family: "head" | "body" = "body", tracking = 0) =>
     measure(t, size, bytesFor(family), tracking);
 
-  return { line, block, width, setFloor };
+  /** The size a single line will actually be drawn at after shrink-to-fit. */
+  function lineSize(text: string, size: number, maxWidth?: number, o: LineOpts = {}): number {
+    const t = String(text ?? "").trim();
+    const family = o.family ?? "body";
+    const floor = min(o);
+    let s = Math.max(size, floor);
+    if (t && maxWidth) {
+      s = fitLine(t, {
+        size: s, maxWidth, bytes: bytesFor(family), tracking: o.tracking ?? 0, minSize: floor || undefined,
+      }).size;
+    }
+    return s;
+  }
+
+  /**
+   * A top-down cursor. Every element is placed under the *measured* bottom of
+   * the one before it, so a headline that shrank to fit — or a paragraph that
+   * ran to four lines instead of two — pushes what follows down instead of
+   * being written over. Fixed step offsets are what produced the collisions
+   * this replaces.
+   */
+  function flow(x: number, startY: number, boxWidth: number) {
+    let y = startY;
+    const parts: string[] = [];
+    const rest = (s: number) => s * 0.24; // descender + optical breathing room
+    const api = {
+      get y() { return y; },
+      get bottom() { return y; },
+      gap(px: number) { y += px; return api; },
+      line(text: string, size: number, fill: string, o: LineOpts & { gap?: number } = {}) {
+        const t = String(text ?? "").trim();
+        if (!t) return api;
+        const s = lineSize(t, size, boxWidth, o);
+        y += (o.gap ?? 0) + s;
+        parts.push(line(t, x, y, size, fill, { ...o, maxWidth: boxWidth }));
+        y += rest(s);
+        return api;
+      },
+      block(
+        text: string,
+        size: number,
+        fill: string,
+        o: Parameters<typeof block>[6] & { gap?: number; width?: number } = {},
+      ) {
+        const t = String(text ?? "").trim();
+        if (!t) return api;
+        const w = o.width ?? boxWidth;
+        const leading = o.leading ?? 1.5;
+        const probe = block(t, x, 0, size, w, fill, { ...o, leading });
+        y += (o.gap ?? 0) + probe.size;
+        parts.push(block(t, x, y, size, w, fill, { ...o, leading }).svg);
+        y += (probe.lines - 1) * probe.size * leading + rest(probe.size);
+        return api;
+      },
+      svg() { return parts.join(""); },
+    };
+    return api;
+  }
+
+  return { line, block, width, setFloor, lineSize, flow };
+
 }
 
 type TypeKit = ReturnType<typeof makeType>;
