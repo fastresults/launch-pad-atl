@@ -94,10 +94,40 @@ export function isUsableArc(a: any): a is CampaignArc {
   return !!a && Array.isArray(a.weeks) && a.weeks.length > 0 && typeof a.weeks[0]?.stage === "string";
 }
 
+/**
+ * After the eight-stage ladder is spent, a flight does NOT start shouting
+ * urgency every week. It re-enters the middle of the funnel for the audience
+ * that didn't convert: reframe, proof, objection, offer.
+ */
+const LADDER_REPEAT: ArcStage[] = ["reframe", "proof", "objection", "offer"];
+
+export function stageForPosition(i: number) {
+  if (i < STAGE_ORDER.length) return STAGE_ORDER[i];
+  const s = LADDER_REPEAT[(i - STAGE_ORDER.length) % LADDER_REPEAT.length];
+  return STAGE_ORDER.find((x) => x.stage === s)!;
+}
+
+/**
+ * The three ads inside one week must argue the SAME claim three DIFFERENT
+ * ways, not paraphrase each other. Each ad gets an approach by position.
+ */
+export type AdApproach = "claim" | "proof" | "edge";
+
+export const APPROACH_BRIEF: Record<AdApproach, string> = {
+  claim: "State the benefit flatly, as a promise the reader can hold you to. No hedging, no question.",
+  proof: "Lead with the hard particular — the number, the timeframe, the named result — and report it as news.",
+  edge: "Name the cost of the status quo, or answer the objection head-on. The tension does the work, not the promise.",
+};
+
+export function approachForIndex(index: number): AdApproach {
+  return (["claim", "proof", "edge"] as AdApproach[])[Math.abs(index) % 3];
+}
+
 /** A stage arc that works without an AI call — the shape is always right. */
 export function defaultCampaignArc(weekNumbers: number[]): CampaignArc {
   const weeks = weekNumbers.map((w, i) => {
-    const s = STAGE_ORDER[i % STAGE_ORDER.length];
+    const s = stageForPosition(i);
+
     return {
       week: w,
       stage: s.stage,
