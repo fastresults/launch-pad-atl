@@ -51,11 +51,12 @@ export function CollateralPieceCard({
         ) : (
           <span className="flex h-full w-full items-center justify-center bg-muted/10">
             <span className="flex items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/40 px-3 py-1.5 text-[11px] text-muted-foreground">
-              {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-              {busy ? "Generating…" : "Not generated"}
+              {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : generated ? <CheckCircle2 className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+              {busy ? "Generating…" : generated ? "Ready — open to read or download" : "Not generated"}
             </span>
           </span>
         )}
+
       </button>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3">
