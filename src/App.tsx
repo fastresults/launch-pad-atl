@@ -2,6 +2,8 @@ import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { AskConcierge } from "@/components/site/AskConcierge";
+import { AiCapacityProvider } from "@/components/system/AiCapacityProvider";
+
 import { ConfirmProvider } from "@/components/ui/confirm-dialog";
 import { LandingOnlyGate } from "@/components/site/LandingOnlyGate";
 import { LandingOnlyBanner } from "@/components/admin/LandingOnlyBanner";
