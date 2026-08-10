@@ -389,7 +389,7 @@ async function generateKind(
   // Fail loudly. Without a real TTF the rasteriser silently drops every line of
   // type, and we would store a "finished" page that is a logo on blank paper.
   if (!fontsOk) throw new Error("Brand fonts could not be loaded — refusing to render type-less pages");
-  let count = 0;
+  const candidates: Array<{ page: typeof pages[number]; bytes: Uint8Array; verdict: QcVerdict }> = [];
   const verdicts: QcVerdict[] = [];
   for (const p of pages) {
     const expectedText = (p.svg.match(/<text\b/g) || []).length;
@@ -404,16 +404,28 @@ async function generateKind(
     // marks those duplicate resvg passes exceed the worker CPU allowance.
     // The stored preview is already suitable for both the library thumbnail
     // and detailed preview, so do not manufacture a second presentation image.
-    let bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 1100), undefined, fontBuffers);
+    const bytes = await rasterizeSvgToBytes(p.svg, Math.min(p.width, 1100), undefined, fontBuffers);
 
-    // Quality control: the drawn geometry against this piece's print standard,
-    // plus the pixels that came out. A page that fails is still stored so the
-    // founder can see it, but it carries the reason and is reported back.
+    // Quarantine in memory: nothing is promoted until every page in the kind
+    // passes geometry and final-raster review.
     const verdict = qcPage(bytes ?? null, p.metrics ?? {
       page: p.name, safe: rs.safe, bleed: rs.bleed, minType: rs.minType, textLines: 0,
     }, rs);
     verdicts.push(verdict);
-    if (!verdict.ok) console.warn("[collateral qc]", p.name, verdict.reasons.join(" | "));
+    if (!verdict.ok) console.warn("[collateral qc blocked]", p.name, verdict.reasons.join(" | "));
+    if (bytes) candidates.push({ page: p, bytes, verdict });
+  }
+
+  const rejected = verdicts.filter((v) => !v.ok);
+  if (rejected.length || candidates.length !== pages.length) {
+    const detail = rejected.map((v) => `${v.page}: ${v.reasons.join("; ")}`).join(" | ");
+    throw new Error(`QUALITY_GATE_FAILED${detail ? ` — ${detail}` : " — one or more previews could not be rendered"}`);
+  }
+
+  // Promotion: only now may passing candidates replace approved files.
+  for (const candidate of candidates) {
+    const p = candidate.page;
+    const verdict = candidate.verdict;
 
     // Vector master, so a printer can scale it without loss.
     await store(admin, snapshotId, userId, kind, p.name, p.svg, "image/svg+xml", p.width, p.height, {
@@ -423,17 +435,12 @@ async function generateKind(
     });
     wrote.push(p.name);
 
-    if (bytes) {
-      await store(admin, snapshotId, userId, kind, `${p.name}-preview`, bytes, "image/png", p.width, p.height, {
+    await store(admin, snapshotId, userId, kind, `${p.name}-preview`, candidate.bytes, "image/png", p.width, p.height, {
         preview: true,
         archetype: ctx.ad.archetype,
         qc: verdict,
       });
-      wrote.push(`${p.name}-preview`);
-      bytes = null as unknown as Uint8Array;
-    }
-
-    count++;
+    wrote.push(`${p.name}-preview`);
   }
 
   if (kind === "email_signature") {
@@ -441,7 +448,7 @@ async function generateKind(
     wrote.push("email-signature-html");
   }
   await sweepKind(admin, snapshotId, kind, wrote);
-  return { kind, files: count, qc: verdicts };
+  return { kind, files: candidates.length, qc: verdicts };
 }
 
 
@@ -605,7 +612,7 @@ Deno.serve(async (req) => {
         (r.qc ?? []).filter((v: QcVerdict) => !v.ok).map((v: QcVerdict) => ({ kind: r.kind, page: v.page, reasons: v.reasons })),
       );
       return json({
-        ok: true,
+        ok: failed.length === 0,
         generated: done,
         failed,
         qcIssues,

@@ -90,7 +90,21 @@ export function relLuminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
+/** WCAG contrast ratio for two opaque sRGB colours. */
+export function contrastRatio(a: string, b: string): number {
+  const la = relLuminance(a);
+  const lb = relLuminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/** A surface is dark when normal dark ink can no longer remain comfortably visible. */
+export function isDarkSurface(hex?: string | null): boolean {
+  return !!hex && relLuminance(hex) < 0.35;
+}
+
 /** Pick black or white ink for legible type on a given background. */
 export function inkOn(hex: string): string {
-  return relLuminance(hex) > 0.45 ? "#111111" : "#FFFFFF";
+  const dark = "#111111";
+  const light = "#FFFFFF";
+  return contrastRatio(dark, hex) >= contrastRatio(light, hex) ? dark : light;
 }
