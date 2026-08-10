@@ -13,6 +13,11 @@ Rules:
 - Every line must be true to the venture described. No invented metrics, no client names.
 - Plain, specific, confident. No jargon, no hype, no exclamation marks.
 - Deck point headlines: 2-5 words. Deck point bodies: one sentence, max 18 words.
+- Agenda items: 2-5 words each, in the order a real meeting would run.
+- Stat figures must NOT be invented. If you do not have a real number, return "—" as the figure
+  and write the label and note as an instruction to the founder about what to put there.
+- Timeline steps: a short label (e.g. "Week 1") plus one sentence of what happens.
+- The quote must be a line the founder could truthfully say — never attributed to a fake customer.
 - Scope lines: a concrete deliverable, max 8 words each.
 - Never end mid-thought. Every line is a complete idea.
 Return strict JSON only.`;
@@ -50,6 +55,17 @@ export async function writeCollateralCopy(input: {
                     sectionSub: "one sentence framing what the section proves, max 16 words",
                     points: "array of exactly 3 objects: { title, body }",
                     closing: "2-3 words to close a deck, e.g. 'Let's build it'",
+                    agenda: "array of 4-6 agenda items, 2-5 words each",
+                    agendaSub: "one sentence saying what the meeting decides, max 16 words",
+                    statement: "the single strongest true sentence about this venture, max 14 words",
+                    splitTitle: "title for a how-it-works slide, 2-4 words",
+                    splitBody: "one short paragraph explaining how it works, max 45 words",
+                    statsTitle: "title for a numbers slide, 2-4 words",
+                    stats: "array of exactly 3 objects: { figure, label, note } — figure is '—' unless a real number was given",
+                    timelineTitle: "title for a process slide, 2-4 words",
+                    timeline: "array of exactly 4 objects: { label, body }",
+                    quote: "one sentence the founder could truthfully say, max 16 words",
+                    quoteAttribution: "the founder's name and title if known, else the company name",
                   },
                   proposal: {
                     scope: "array of 5 concrete scope lines this company would sell",
@@ -83,12 +99,39 @@ export async function writeCollateralCopy(input: {
         .filter((p: any) => p.title && p.body)
       : [];
 
+    const agenda = Array.isArray(parsed?.deck?.agenda)
+      ? parsed.deck.agenda.slice(0, 6).map((s: unknown) => str(s, 38)).filter(Boolean)
+      : [];
+
+    const stats = Array.isArray(parsed?.deck?.stats)
+      ? parsed.deck.stats.slice(0, 3)
+        .map((s: any) => ({ figure: str(s?.figure, 10) || "—", label: str(s?.label, 30), note: str(s?.note, 90) }))
+        .filter((s: any) => s.label)
+      : [];
+
+    const timeline = Array.isArray(parsed?.deck?.timeline)
+      ? parsed.deck.timeline.slice(0, 4)
+        .map((s: any) => ({ label: str(s?.label, 18), body: str(s?.body, 90) }))
+        .filter((s: any) => s.label && s.body)
+      : [];
+
     return {
       deck: {
         section: str(parsed?.deck?.section, 40),
         sectionSub: str(parsed?.deck?.sectionSub, 120),
         points,
         closing: str(parsed?.deck?.closing, 24),
+        agenda,
+        agendaSub: str(parsed?.deck?.agendaSub, 120),
+        statement: str(parsed?.deck?.statement, 110),
+        splitTitle: str(parsed?.deck?.splitTitle, 34),
+        splitBody: str(parsed?.deck?.splitBody, 280),
+        statsTitle: str(parsed?.deck?.statsTitle, 34),
+        stats,
+        timelineTitle: str(parsed?.deck?.timelineTitle, 34),
+        timeline,
+        quote: str(parsed?.deck?.quote, 120),
+        quoteAttribution: str(parsed?.deck?.quoteAttribution, 48),
       },
       proposal: {
         scope: Array.isArray(parsed?.proposal?.scope) ? parsed.proposal.scope.slice(0, 7).map((s: unknown) => str(s, 60)).filter(Boolean) : [],
