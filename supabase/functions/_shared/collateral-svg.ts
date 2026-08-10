@@ -1090,10 +1090,9 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   const cols = 3, rowsL = 2;
   const tGap = g.gutter * 2;
   const tileW = (g.content - tGap * (cols - 1)) / cols;
-  const footNote = step(ad, 3.2);
+  const footNote = step(ad, 6);
   const gridH = H - g.M - top - footNote;
   const tileH = (gridH - tGap * (rowsL - 1)) / rowsL;
-  const capBand = step(ad, 2.6);
   const artH = tileH - capBand;
   pages.push({
     name: "guidelines-2-logo", width: W, height: H,
