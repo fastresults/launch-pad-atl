@@ -1423,10 +1423,20 @@ Deno.serve(async (req) => {
       const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
       const dataUrl = typeof body?.dataUrl === "string" ? body.dataUrl : "";
       const filename = typeof body?.filename === "string" ? body.filename : "logo.png";
-      const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      // Some browsers/OSes hand over a file with no MIME type at all
+      // ("data:;base64,…"), so fall back to the filename extension.
+      const match = dataUrl.match(/^data:([^;,]*);base64,([\s\S]+)$/);
       if (!match) throw new Error("Upload a PNG, JPG, WebP or SVG file.");
-      const contentType = match[1];
-      if (!/^image\/(png|jpe?g|webp|svg\+xml)$/i.test(contentType)) {
+      const extHint = (filename.split(".").pop() ?? "").toLowerCase();
+      const byExt: Record<string, string> = {
+        png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+        webp: "image/webp", svg: "image/svg+xml",
+      };
+      const declared = (match[1] || "").toLowerCase();
+      const contentType = /^image\/(png|jpe?g|webp|svg\+xml)$/.test(declared)
+        ? declared
+        : byExt[extHint] ?? "";
+      if (!contentType) {
         throw new Error("Only PNG, JPG, WebP or SVG files are supported.");
       }
       let bytes = decodeBase64(match[2]);
