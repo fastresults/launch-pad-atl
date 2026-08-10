@@ -1,7 +1,49 @@
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
-import { ArrowUpRight, ChevronRight, ExternalLink, FileText, Route, Search, Sparkle } from "lucide-react";
+import { ArrowUpRight, ChevronRight, ExternalLink, FileText, Image as ImageIcon, Images, Route, Search, Sparkle } from "lucide-react";
+import { mediaHintForItem, sectionHasMedia, type MediaHint } from "@/components/share/share-media-hint";
+
+/** Small muted glyph marking rows whose preview contains pictures. */
+function MediaCue({
+  hint,
+  sheet,
+  active,
+}: {
+  hint: MediaHint;
+  sheet: boolean;
+  active: boolean;
+}) {
+  if (!hint) return null;
+  const size = sheet ? "h-4 w-4" : "h-3.5 w-3.5";
+  const tone = active ? "text-foreground/80" : "text-muted-foreground/60";
+  return (
+    <span
+      className={cn("ml-auto flex shrink-0 items-center gap-1", tone)}
+      title={hint.label}
+      aria-label={hint.label}
+    >
+      {hint.kind === "palette" ? (
+        <span className="flex items-center gap-0.5" aria-hidden>
+          {hint.colors.map((c, i) => (
+            <span
+              key={`${c}-${i}`}
+              className={cn("rounded-full", sheet ? "h-2.5 w-2.5" : "h-2 w-2")}
+              style={{ backgroundColor: c }}
+            />
+          ))}
+        </span>
+      ) : hint.kind === "images" ? (
+        <>
+          <Images className={size} aria-hidden />
+          <span className="text-[11px] tabular-nums">{hint.count}</span>
+        </>
+      ) : (
+        <ImageIcon className={size} aria-hidden />
+      )}
+    </span>
+  );
+}
 
 /** Sidebar key for the featured second-brain tool (not a payload asset). */
 export const BRAIN_KEY = "tool:brain";
