@@ -1223,11 +1223,13 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   ];
   const tlW = (g.content - g.gutter * 2 * (tlSet.length - 1)) / tlSet.length;
   const tlRuleY = tlHead.bottom + sp(2.2);
+  let tlBottom = tlRuleY;
   const tlStacks = tlSet.map((s, i) => {
     const x = g.M + i * (tlW + g.gutter * 2);
     const f = T.flow(x, tlRuleY + sp(1.0), tlW);
     f.line(s.label || `Step ${i + 1}`, sp(1.0), fg, { family: "head", weight: 700 });
     f.block(s.body || "", sp(-0.4), muted, { leading: 1.5, maxLines: 4, gap: sp(0.4) });
+    tlBottom = Math.max(tlBottom, f.bottom);
     return `<circle cx="${r(x + ad.ink.ruleWeight * 3)}" cy="${r(tlRuleY)}" r="${r(ad.ink.ruleWeight * 3)}" fill="${accent}"/>${f.svg()}`;
   });
   pages.push({
@@ -1235,8 +1237,10 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     svg: page(W, H, defs, [
       surface(W, H, paper, ad.material.grain),
       tlHead.svg,
-      `<rect x="${g.M}" y="${r(tlRuleY - ad.ink.hairline / 2)}" width="${r(g.content)}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.78)}"/>`,
-      tlStacks.join(""),
+      `<g transform="${balance(tlRuleY, tlBottom - tlRuleY)}">` +
+        `<rect x="${g.M}" y="${r(tlRuleY - ad.ink.hairline / 2)}" width="${r(g.content)}" height="${r(ad.ink.hairline)}" fill="${mix(fg, paper, 0.78)}"/>` +
+        tlStacks.join("") +
+      `</g>`,
       chrome(8, paper, muted, mix(primary, paper, 0.3)),
     ].join("")),
   });
@@ -1244,7 +1248,8 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   // ── 09 quote ──────────────────────────────────────────────────────────────
   const qGround = fg;
   const qInk = inkOn(qGround);
-  const qStack = T.flow(g.M, H * 0.3, g.span(Math.round(ad.grid.columns * 0.76)));
+  const qTop = H * 0.34;
+  const qStack = T.flow(g.M, qTop, g.span(Math.round(ad.grid.columns * 0.76)));
   qStack.block(
     `“${deck.quote || deck.statement || "The clearest offer wins."}”`,
     sp(2.4), qInk, { family: "head", weight: 700, leading: 1.25, maxLines: 4 },
@@ -1254,7 +1259,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     name: "slide-9-quote", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${qGround}"/>`,
-      `<rect x="${g.M}" y="${r(H * 0.3 - sp(2.4))}" width="${r(ad.ink.ruleWeight * 4)}" height="${r(sp(2.0))}" fill="${accent}"/>`,
+      `<rect x="${g.M}" y="${r(qTop - sp(2.4))}" width="${r(ad.ink.ruleWeight * 4)}" height="${r(sp(2.0))}" fill="${accent}"/>`,
       qStack.svg(),
       chrome(9, qGround, mix(qInk, qGround, 0.3), qInk),
     ].join("")),
