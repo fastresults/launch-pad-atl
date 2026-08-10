@@ -1207,7 +1207,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   });
 
 
-  const hColour = head("Colour", "02");
+  const hColour = head("Colour", "04");
   const cTop = hColour.bottom;
   const entries = Object.entries(ctx.colors ?? {}).slice(0, 8);
   const swGap = g.gutter * 2;
@@ -1238,7 +1238,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
     ].join("")),
   });
 
-  const hType = head("Typography", "03");
+  const hType = head("Typography", "05");
   const tf = T.flow(g.M, hType.bottom, g.span(Math.round(ad.grid.columns * 0.7)));
   tf.line(
     ad.type.caseLabels === "upper" ? (ctx.fonts?.heading || "Heading").toUpperCase() : (ctx.fonts?.heading || "Heading"),
@@ -1263,7 +1263,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
 
   const voice = d.voice || ctx.voice || "Plain, specific, and confident. Short sentences. Name the outcome, not the process. No jargon, no hype, no exclamation marks.";
   const halfW = (g.content - g.gutter * 3) / 2;
-  const hVoice = head("Voice", "04");
+  const hVoice = head("Voice", "06");
   const vf = T.flow(g.M, hVoice.bottom, g.span(Math.round(ad.grid.columns * 0.72)));
   vf.block(voice, step(ad, 0.6), fg, { leading: 1.7, maxLines: 6 });
   const panelTop = Math.max(H * 0.62, vf.bottom + step(ad, 2));
