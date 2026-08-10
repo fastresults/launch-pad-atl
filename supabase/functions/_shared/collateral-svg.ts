@@ -187,6 +187,11 @@ export type CollateralCtx = {
   voice?: string | null;
   ad: ArtDirection;
   copy?: CollateralCopy | null;
+  /**
+   * The venture's own art-directed imagery (committed mood board tiles),
+   * inlined as data URIs. Templates draw these instead of a grey box.
+   */
+  imagery?: string[] | null;
 };
 
 export const COLLATERAL_KINDS = [
