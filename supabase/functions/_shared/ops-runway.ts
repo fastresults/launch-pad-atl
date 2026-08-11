@@ -281,7 +281,7 @@ const POST_LAUNCH: [string, string, string, string, OpsCategory, OpsOwnerKind, 1
   ["ten-proposals", "Get ten proposals out", "Volume is the only cure for an unproven close rate.", "Ten proposals sent from the template and tracked in the pipeline.", "Strategy", "client", 15],
   ["close-rate", "Track the close rate", "You can't fix what you don't measure.", "Sent / won / lost recorded for every proposal, with a reason on each loss.", "Strategy", "client", 15],
   ["cash-reconcile", "Reconcile cash to invoices", "Invoiced is not collected.", "Every invoice matched to a deposit; overdue ones chased.", "Finance", "agency", 15],
-  ["first-close", "Complete the first monthly close", "The first close is where the books' real gaps show.", "Month closed in the books tool and a P&L reviewed.", "Finance", "agency", 15],
+  ["first-close", "Complete the first monthly close", "The first close is where the books' real gaps show.", "Month closed in QuickBooks and a P&L reviewed.", "Finance", "agency", 15],
   ["first-proof", "Capture the first case study", "One documented result outsells a page of claims.", "Before, what you did, and the number — published.", "Marketing", "agency", 15],
   ["sop-survives", "Run the delivery SOP on a real client", "A SOP untested by a real client is a guess.", "Order delivered following the SOP; the SOP updated with what broke.", "Operations", "client", 15],
   ["weekly-rhythm", "Install the weekly operating rhythm", "Rhythm is what separates a business from a burst of effort.", "Monday pipeline review and Friday five-numbers review both held twice.", "Operations", "client", 31],
