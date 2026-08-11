@@ -9,7 +9,7 @@ import CreativeSignoffBoard from "@/components/creative/CreativeSignoffBoard";
 import { Button } from "@/components/ui/button";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import {
-  addOpsNote, fetchOpsRunway, setClientEditing, setOpsOwner, setOpsProof, setOpsStatus,
+  addOpsNote, fetchOpsRunway, setClientEditing, setOpsOwner, setOpsProof, setOpsStatus, snoozeOpsTask,
   type OpsAuth,
 } from "@/lib/ops.functions";
 import type { OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
@@ -132,6 +132,7 @@ export default function HubOperationsPage() {
           onOwner={(id, o: OpsOwnerKind) => void run(id, () => setOpsOwner(auth, id, o))}
           onNote={(id, body) => void run(id, () => addOpsNote(auth, id, body))}
           onProof={(id, url) => void run(id, () => setOpsProof(auth, id, url))}
+          onSnooze={(id, days) => void run(id, () => snoozeOpsTask(auth, id, days))}
         />
       )}
     </div>
