@@ -120,7 +120,9 @@ export function ShareSidebar({
     ...(hasSummary
       ? [{ key: "overview:executive", label: "Executive summary", hint: "The venture in 300 words", icon: FileText }]
       : []),
+    { key: OUTRO_KEY, label: "Operationalize", hint: "Build it with Adam's team", icon: Hammer },
   ];
+
 
 
   const website = payload.venture.website?.trim() || null;
