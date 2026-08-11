@@ -12,7 +12,7 @@ import { FOUNDATION_DELIVERED } from "@/lib/ops-runway";
 import { EngageCoverage } from "@/components/ops/engage/EngageCoverage";
 import { EngageIntakeDialog } from "@/components/ops/engage/EngageIntakeDialog";
 import { OpsStageArt } from "@/components/ops/OpsStageArt";
-import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useDocumentTitle } from "@/lib/use-document-title";
 
 const PHONE = "929-234-7355";
 
