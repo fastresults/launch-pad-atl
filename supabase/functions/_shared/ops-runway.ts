@@ -11,7 +11,8 @@
 
 export type OpsCategory =
   | "Foundation" | "Strategy" | "Operations" | "Finance"
-  | "Governance" | "Brand" | "Marketing" | "Social & Content";
+  | "Governance" | "Brand" | "Marketing" | "Social & Content" | "Creative";
+
 
 export type OpsOwnerKind = "client" | "agency";
 
