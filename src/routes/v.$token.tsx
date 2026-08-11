@@ -13,6 +13,7 @@ import { ShareBrain } from "@/components/share/ShareBrain";
 import { SectionExportMenu } from "@/components/share/SectionExportMenu";
 import { buildFullDoc, buildSectionDoc } from "@/lib/share-export";
 import { SHARE_UI_VERSION } from "@/components/share/preview-copy";
+import { ShareOutroDialog } from "@/components/share/ShareOutroDialog";
 
 
 import { Button } from "@/components/ui/button";
