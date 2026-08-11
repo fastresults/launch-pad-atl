@@ -58,11 +58,12 @@ export function InvestmentCompare({
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* ---------------------------------------------------------- self */}
-        <div className="flex flex-col rounded-2xl border border-border/50 bg-card/30 p-5 sm:p-6">
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <div className="relative flex flex-col overflow-hidden rounded-2xl border border-border/50 bg-card/30 p-5 sm:p-6">
+          <OpsStageMasthead phase={1} className="w-[38%] opacity-[0.12]" />
+          <div className="relative flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             <Users className="h-3.5 w-3.5" /> You build it
           </div>
-          <h3 className="mt-2 text-lg font-semibold tracking-tight">Your team runs the list</h3>
+          <h3 className="relative mt-2 text-lg font-semibold tracking-tight">Your team runs the list</h3>
 
           <dl className="mt-5 space-y-3 text-sm">
             <Line label="Your hands-on hours" value={hours(inv.founderMinutes)} />
