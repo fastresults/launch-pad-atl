@@ -70,7 +70,7 @@ const AGENCY_SKILL: [RegExp, string][] = [
   [/offer|price|pricing|proposal/, "offer design and pricing — what the market will actually pay"],
   [/site|website|landing|prd/, "site architecture and conversion copy at studio standard"],
   [/art-direction|foundation-grade/, "art direction — the written point of view that turns a foundation set into work that looks bought, not generated"],
-  [/imagery|photograph|shoot|motion/, "art buying and production: owned imagery and motion shot to one light, crop and colour language"],
+  [/imagery|photograph|shoot|motion/, "the imagery standard: original art-directed frames replacing stock, held to one light, crop and colour language"],
   [/poster|template|format/, "the poster and ad system rebuilt to one hierarchy, so every format reads as the same brand"],
   [/brand|logo|collateral|guideline/, "brand system refinement and print-grade collateral, exported at bleed in the right colour profile"],
   [/campaign|ad|content|social|creative/, "campaign art direction and creative sign-off"],
