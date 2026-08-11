@@ -51,6 +51,10 @@ export const BRAIN_KEY = "tool:brain";
 /** The launch cadence rides at the top of the contents, not buried in Overview. */
 export const TIMELINE_KEY = "overview:timeline";
 
+/** Opens the "next step" consultation invitation instead of a document. */
+export const OUTRO_KEY = "tool:operationalize";
+
+
 
 /**
  * Table of contents for the public share page. With 60+ assets the list has to
