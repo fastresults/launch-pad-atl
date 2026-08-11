@@ -3577,6 +3577,50 @@ export type Database = {
           },
         ]
       }
+      venture_ops_platform_requests: {
+        Row: {
+          audience: string | null
+          contact: string | null
+          created_at: string
+          deadline: string | null
+          description: string
+          id: string
+          requested_by: string | null
+          snapshot_id: string
+          status: string
+        }
+        Insert: {
+          audience?: string | null
+          contact?: string | null
+          created_at?: string
+          deadline?: string | null
+          description: string
+          id?: string
+          requested_by?: string | null
+          snapshot_id: string
+          status?: string
+        }
+        Update: {
+          audience?: string | null
+          contact?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          id?: string
+          requested_by?: string | null
+          snapshot_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_ops_platform_requests_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venture_ops_state: {
         Row: {
           blended_rate_cents: number
