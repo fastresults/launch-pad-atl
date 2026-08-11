@@ -37,6 +37,7 @@ export function GuidedStep(props: GuidedStepProps) {
   const [stuckOpen, setStuckOpen] = useState(false);
   const [stuckNote, setStuckNote] = useState("");
   const [peek, setPeek] = useState(false);
+  const engaged = props.deliveryMode === "retained" || props.deliveryMode === "mixed";
 
   const queue = guidedQueue(tasks, viewerKind);
   const task = queue[0];
