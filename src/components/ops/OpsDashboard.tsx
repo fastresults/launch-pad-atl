@@ -12,6 +12,8 @@ import { OpsChecklist } from "./OpsChecklist";
 import { OpsTimeline } from "./OpsTimeline";
 import { OpsOnboarding } from "./OpsOnboarding";
 import { DeliveryModeGate } from "./DeliveryModeGate";
+import { DeliveryModeToggle } from "./DeliveryModeToggle";
+
 import { DeliveredRail } from "./DeliveredRail";
 import type { DeliveryHandlers } from "./DeliveryPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
