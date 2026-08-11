@@ -6,7 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { fetchSharePayload, trackShareView, type SharePayload } from "@/lib/venture-share.functions";
 import { useSurfaceLogo } from "@/hooks/use-surface-logo";
 import { OwnerAssetActions } from "@/components/share/OwnerAssetActions";
-import { ShareSidebar, BRAIN_KEY, TIMELINE_KEY } from "@/components/share/ShareSidebar";
+import { ShareSidebar, BRAIN_KEY, TIMELINE_KEY, OUTRO_KEY } from "@/components/share/ShareSidebar";
 import { decodeScenario, encodeScenario, type TimelineScenario } from "@/lib/venture-timeline";
 import { ShareSection } from "@/components/share/ShareSection";
 import { ShareBrain } from "@/components/share/ShareBrain";
@@ -64,24 +64,9 @@ export default function VentureSharePage() {
   );
   const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
-  /** The closing "next step" invitation — shown once, at the bottom of the read. */
+  /** The closing "next step" invitation — opened from the nav, never by scrolling. */
   const [outroOpen, setOutroOpen] = useState(false);
-  const outroShown = useRef(false);
-  const maybeOutro = (el: HTMLElement) => {
-    if (outroShown.current) return;
-    if (el.scrollHeight - el.scrollTop - el.clientHeight > 32) return;
-    try {
-      if (localStorage.getItem(`sl-share-outro:${token}`)) {
-        outroShown.current = true;
-        return;
-      }
-      localStorage.setItem(`sl-share-outro:${token}`, "1");
-    } catch {
-      /* private mode */
-    }
-    outroShown.current = true;
-    setOutroOpen(true);
-  };
+
   const touchX = useRef<number | null>(null);
   const touchY = useRef<number | null>(null);
 
@@ -182,6 +167,15 @@ export default function VentureSharePage() {
     `${window.location.pathname}${window.location.search}#${step ? `${key}/${step}` : key}`;
 
   const goTo = (key: string, step?: string | null) => {
+    if (key === OUTRO_KEY) {
+      // The invitation is a modal, not a document — the reading pane stays put.
+      setNavOpen(false);
+      setOutroOpen(true);
+      return;
+    }
+    // Reaching the operations chapter is the moment the "what's next" question lands.
+    const section = payload.sections.find((s) => s.items.some((i) => i.key === key));
+    if (section && /operation/i.test(`${section.key} ${section.label}`)) setOutroOpen(true);
     if (key === BRAIN_KEY && isMobile) {
       // The brain takes the whole phone screen instead of replacing the reading pane.
       setBrainOpen(true);
@@ -504,10 +498,7 @@ export default function VentureSharePage() {
 
             <main
               ref={paneRef}
-              onScroll={(e) => {
-                setCondensed(e.currentTarget.scrollTop > 24);
-                maybeOutro(e.currentTarget);
-              }}
+              onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 24)}
               onTouchStart={isMobile ? onTouchStart : undefined}
               onTouchEnd={isMobile ? onTouchEnd : undefined}
               className={`min-w-0 flex-1 overflow-y-auto ${

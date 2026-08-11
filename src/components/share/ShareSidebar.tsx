@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
-import { ArrowUpRight, ChevronRight, ExternalLink, FileText, Image as ImageIcon, Images, Route, Search, Sparkle } from "lucide-react";
+import { ArrowUpRight, ChevronRight, ExternalLink, FileText, Hammer, Image as ImageIcon, Images, Route, Search, Sparkle } from "lucide-react";
 import { mediaHintForItem, sectionHasMedia, type MediaHint } from "@/components/share/share-media-hint";
 
 /** Small muted glyph marking rows whose preview contains pictures. */
@@ -50,6 +50,10 @@ export const BRAIN_KEY = "tool:brain";
 
 /** The launch cadence rides at the top of the contents, not buried in Overview. */
 export const TIMELINE_KEY = "overview:timeline";
+
+/** Opens the "next step" consultation invitation instead of a document. */
+export const OUTRO_KEY = "tool:operationalize";
+
 
 
 /**
@@ -116,7 +120,9 @@ export function ShareSidebar({
     ...(hasSummary
       ? [{ key: "overview:executive", label: "Executive summary", hint: "The venture in 300 words", icon: FileText }]
       : []),
+    { key: OUTRO_KEY, label: "Operationalize", hint: "Build it with Adam's team", icon: Hammer },
   ];
+
 
 
   const website = payload.venture.website?.trim() || null;
