@@ -54,11 +54,18 @@ export async function fetchOpsRunway(auth: OpsAuth): Promise<OpsRunway> {
   };
 }
 
+/** Founder asks Startup Labs to run the runway on the retainer. */
+export const requestEngagement = (
+  auth: OpsAuth,
+  input: { name: string; email: string; phone?: string; startPref?: string; notes?: string },
+) => call(auth, { action: "request_engagement", ...input });
+
 /** Founder raises their hand for a platform build (marketplace, matching, booking…). */
 export const requestPlatformBuild = (
   auth: OpsAuth,
   input: { description: string; audience?: string; deadline?: string; contact?: string },
 ) => call(auth, { action: "request_platform_build", ...input });
+
 
 /** Agency moves a platform request along the pipeline. */
 export const setPlatformRequestStatus = (auth: OpsAuth, requestId: string, status: string) =>
