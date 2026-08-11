@@ -6,9 +6,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
-  STATUS_CLASS, dueForDay, isOverdue,
+  STATUS_CLASS, categoryLabel, dueForDay, isOverdue,
   type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
 } from "@/lib/ops-runway";
+
 import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
 import { OWNER_LABEL, estimateLabel, isSnoozed } from "@/lib/ops-guided";
 import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, minutesTip, ownerTip, statusTip, TIPS } from "@/lib/ops-criticality";
