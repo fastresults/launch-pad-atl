@@ -65,3 +65,62 @@ export const TIPS = {
     done: "Finished, with the result saved somewhere the team can find it.",
   } as Record<string, string>,
 };
+
+/** Per-lane framing, used as the lead-in for a step-specific tooltip. */
+const CATEGORY_ROLE: Record<string, string> = {
+  Strategy: "Strategy work — the decisions everything downstream gets built on.",
+  Legal: "Legal and entity work — what makes the business real and protected.",
+  Money: "Money plumbing — how cash comes in, gets tracked, and stays clean.",
+  Sales: "Sales machinery — how interest turns into signed, paid work.",
+  Marketing: "Demand work — how the right people find out you exist.",
+  Brand: "Brand work — how the business looks and sounds everywhere it shows up.",
+  Systems: "Systems work — the tools and automations that do the remembering for you.",
+  Run: "Delivery work — how the promise gets kept after someone pays.",
+  Rhythm: "Operating rhythm — the recurring habits that keep the business honest.",
+  Growth: "Growth work — what compounds once the basics hold.",
+};
+
+const firstLine = (t: OpsTask) => t.how?.[0] ?? t.done_when ?? "";
+
+/**
+ * A tooltip that actually describes THIS step: what the lane is for, what the
+ * step does, and the first concrete move. Never the same string twice.
+ */
+export function categoryTip(task: OpsTask): string {
+  const role = CATEGORY_ROLE[task.category] ?? `${task.category} work.`;
+  const what = task.why ? ` This step: ${task.why}` : "";
+  const first = firstLine(task);
+  return `${role}${what}${first ? ` Start by: ${first.replace(/^\w/, (c) => c.toLowerCase())}` : ""}`;
+}
+
+/** Criticality, said in terms of this specific step and what it holds up. */
+export function criticalityTip(task: OpsTask, all: OpsTask[] = []): string {
+  const meta = critMeta(task);
+  const gated = unlockedBy(task, all).map((t) => t.title);
+  const consequence = gated.length
+    ? ` Leave it and these stall: ${gated.slice(0, 3).join(", ")}.`
+    : meta.key === "required_to_operate"
+      ? " Leave it and you're operating exposed — no clean paperwork, no clean books."
+      : meta.key === "required_to_sell"
+        ? " Leave it and interest has nowhere to become revenue."
+        : " Safe to do after the essentials are holding.";
+  return `${task.title} is ${meta.label.toLowerCase()}.${consequence} ${meta.tip}`;
+}
+
+/** Owner line, named for the actual step. */
+export function ownerTip(task: OpsTask, mine: boolean): string {
+  return mine
+    ? `"${task.title}" is yours. Nobody else can close it out, and the steps behind it wait on you.`
+    : `"${task.title}" sits with Adam's team. You'll see it move without doing anything — nudge us if it stalls.`;
+}
+
+/** Time estimate, framed around this step's own work. */
+export function minutesTip(task: OpsTask, label: string): string {
+  const steps = task.how?.length ?? 0;
+  return `About ${label} of focused work${steps ? ` across ${steps} step${steps > 1 ? "s" : ""}` : ""} to finish "${task.title}". Done when: ${task.done_when}`;
+}
+
+/** Status, framed around this step. */
+export function statusTip(task: OpsTask, plain: string): string {
+  return `"${task.title}" — ${plain.toLowerCase()}. ${TIPS.status[task.status] ?? ""}`;
+}
