@@ -52,7 +52,12 @@ export interface OpsDashboardProps extends DeliveryHandlers {
   /** Who is executing this runway — null means the decision hasn't been made. */
   deliveryMode?: DeliveryMode | null;
   onDeliveryMode?: (mode: DeliveryMode) => void;
+  /** Opens the kickoff intake instead of silently flipping the mode. */
+  onCommitRetained?: () => void;
+  /** Latest retainer request, when the founder has already committed. */
+  engagement?: OpsEngagement | null;
   rateCents?: number | null;
+
   onRate?: (cents: number) => void;
   /** An existing platform-build request, when the founder has already raised one. */
   platformRequest?: PlatformRequest | null;
