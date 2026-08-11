@@ -139,6 +139,14 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       icon: Plus,
       hide: !hubVisible,
     },
+    {
+      key: "operations",
+      to: "/dashboard/operations",
+      label: "Operationalize",
+      tooltip: "The 90-day operating runway you and your team work from — legal, money, CRM, demand, rhythm — plus creative sign-off on every asset before it goes out.",
+      icon: Hammer,
+      hide: !hubVisible,
+    },
 
     {
       key: "files",
