@@ -3125,6 +3125,115 @@ export type Database = {
           },
         ]
       }
+      venture_creative_review_events: {
+        Row: {
+          actor_kind: string
+          actor_name: string | null
+          comment: string | null
+          created_at: string
+          from_state:
+            | Database["public"]["Enums"]["creative_review_state"]
+            | null
+          id: string
+          review_id: string
+          to_state: Database["public"]["Enums"]["creative_review_state"]
+        }
+        Insert: {
+          actor_kind: string
+          actor_name?: string | null
+          comment?: string | null
+          created_at?: string
+          from_state?:
+            | Database["public"]["Enums"]["creative_review_state"]
+            | null
+          id?: string
+          review_id: string
+          to_state: Database["public"]["Enums"]["creative_review_state"]
+        }
+        Update: {
+          actor_kind?: string
+          actor_name?: string | null
+          comment?: string | null
+          created_at?: string
+          from_state?:
+            | Database["public"]["Enums"]["creative_review_state"]
+            | null
+          id?: string
+          review_id?: string
+          to_state?: Database["public"]["Enums"]["creative_review_state"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_creative_review_events_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "venture_creative_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venture_creative_reviews: {
+        Row: {
+          asset_kind: string
+          asset_ref: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          label: string | null
+          last_comment: string | null
+          preview_path: string | null
+          published_at: string | null
+          snapshot_id: string
+          state: Database["public"]["Enums"]["creative_review_state"]
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_kind: string
+          asset_ref: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          label?: string | null
+          last_comment?: string | null
+          preview_path?: string | null
+          published_at?: string | null
+          snapshot_id: string
+          state?: Database["public"]["Enums"]["creative_review_state"]
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_kind?: string
+          asset_ref?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          label?: string | null
+          last_comment?: string | null
+          preview_path?: string | null
+          published_at?: string | null
+          snapshot_id?: string
+          state?: Database["public"]["Enums"]["creative_review_state"]
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_creative_reviews_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venture_document_types: {
         Row: {
           active: boolean
@@ -4607,6 +4716,12 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "admin" | "user"
+      creative_review_state:
+        | "draft"
+        | "in_review"
+        | "changes_requested"
+        | "approved"
+        | "ready_to_publish"
       deliverable_content_source: "ai" | "admin_override"
       deliverable_publish_status:
         | "unpublished"
@@ -4784,6 +4899,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "admin", "user"],
+      creative_review_state: [
+        "draft",
+        "in_review",
+        "changes_requested",
+        "approved",
+        "ready_to_publish",
+      ],
       deliverable_content_source: ["ai", "admin_override"],
       deliverable_publish_status: [
         "unpublished",

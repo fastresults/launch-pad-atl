@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { OpsDashboard } from "@/components/ops/OpsDashboard";
+import CreativeSignoffBoard from "@/components/creative/CreativeSignoffBoard";
 import {
   addOpsNote, fetchOpsRunway, setOpsOwner, setOpsProof, setOpsStatus, type OpsAuth,
 } from "@/lib/ops.functions";
@@ -25,6 +26,7 @@ export function ShareOpsRunway({
   const auth: OpsAuth = { kind: "share", token, password };
   const qc = useQueryClient();
   const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"runway" | "signoff">("runway");
 
   const q = useQuery({
     queryKey: ["venture-ops", token],
@@ -76,24 +78,46 @@ export function ShareOpsRunway({
 
   const data = q.data;
   return (
-    <OpsDashboard
-      tasks={data.tasks}
-      notes={data.notes}
-      startedAt={data.state?.runway_started_at}
-      canEdit={data.canEdit}
-      viewerKind="client"
-      busyTaskId={busyTaskId}
-      onStatus={(id, s: OpsStatus) => void run(id, () => setOpsStatus(auth, id, s))}
-      onOwner={(id, o: OpsOwnerKind) => void run(id, () => setOpsOwner(auth, id, o))}
-      onNote={(id, body) => void run(id, () => addOpsNote(auth, id, body))}
-      onProof={(id, url) => void run(id, () => setOpsProof(auth, id, url))}
-      assetTitle={(k) => titleByKey.get(k) ?? null}
-      onOpenAsset={(k) => {
-        const item = keyToItem.get(k);
-        if (item) onOpenAsset(item);
-      }}
-      onConsult={onConsult}
-    />
+    <div className="space-y-6">
+      <div className="flex gap-2">
+        {(["runway", "signoff"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+              tab === t
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t === "runway" ? "Operating runway" : "Creative sign-off"}
+          </button>
+        ))}
+      </div>
+
+      {tab === "signoff" ? (
+        <CreativeSignoffBoard auth={auth} />
+      ) : (
+        <OpsDashboard
+          tasks={data.tasks}
+          notes={data.notes}
+          startedAt={data.state?.runway_started_at}
+          canEdit={data.canEdit}
+          viewerKind="client"
+          busyTaskId={busyTaskId}
+          onStatus={(id, s: OpsStatus) => void run(id, () => setOpsStatus(auth, id, s))}
+          onOwner={(id, o: OpsOwnerKind) => void run(id, () => setOpsOwner(auth, id, o))}
+          onNote={(id, body) => void run(id, () => addOpsNote(auth, id, body))}
+          onProof={(id, url) => void run(id, () => setOpsProof(auth, id, url))}
+          assetTitle={(k) => titleByKey.get(k) ?? null}
+          onOpenAsset={(k) => {
+            const item = keyToItem.get(k);
+            if (item) onOpenAsset(item);
+          }}
+          onConsult={onConsult}
+        />
+      )}
+    </div>
   );
 }
 
