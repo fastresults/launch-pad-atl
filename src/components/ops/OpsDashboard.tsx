@@ -216,6 +216,17 @@ export function OpsDashboard(props: OpsDashboardProps) {
           />
         )}
 
+        {mode === "retained" && props.engagement && !startedAt && (
+          <div className="relative mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/[0.07] px-4 py-3 text-sm">
+            <Check className="h-4 w-4 text-primary" />
+            <span className="font-medium">Kickoff call being scheduled.</span>
+            <span className="text-muted-foreground">
+              Your request is in — Adam's team reaches out within one business day. The specialist steps
+              below are already assigned to us.
+            </span>
+          </div>
+        )}
+
 
 
         {(props.platformRequest || props.onPlatformRequest) && (
