@@ -42,7 +42,7 @@ function changeSummary(tasks: OpsTask[], mode: DeliveryMode) {
  * as two committed choices rather than a filter pill.
  */
 export function DeliveryModeToggle({
-  mode, tasks, onChange, disabled, className, variant = "pill", readOnly, onCompare,
+  mode, tasks, onChange, disabled, className, variant = "pill", readOnly, onCompare, engageHref,
 }: {
   mode: DeliveryMode;
   tasks: OpsTask[];
