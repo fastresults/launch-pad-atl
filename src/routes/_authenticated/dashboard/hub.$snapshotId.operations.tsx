@@ -70,26 +70,46 @@ export default function HubOperationsPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1">
-            <Link to={`/dashboard/hub/${snapshotId}`}>
-              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back to the venture
-            </Link>
-          </Button>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {venture.data?.company_name ?? "Venture"} · Operating runway
-          </h1>
+      <div className="sticky top-0 z-20 -mx-4 border-b border-border/40 bg-background/80 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <Button asChild variant="ghost" size="sm" className="-ml-2 mb-0.5 h-7 px-2 text-xs">
+              <Link to={`/dashboard/hub/${snapshotId}`}>
+                <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back to the venture
+              </Link>
+            </Button>
+            <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
+              {venture.data?.company_name ?? "Venture"} <span className="text-muted-foreground">· Operating runway</span>
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="inline-flex rounded-full border border-border/60 bg-card/60 p-0.5">
+              {(["runway", "signoff"] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`rounded-full px-3 py-1.5 text-xs transition-colors ${
+                    tab === t
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t === "runway" ? "Operating runway" : "Creative sign-off"}
+                </button>
+              ))}
+            </div>
+            {q.data?.state && (
+              <Button
+                variant="outline" size="sm"
+                disabled={toggleClientEditing.isPending}
+                onClick={() => toggleClientEditing.mutate(!(q.data.state?.client_can_edit ?? true))}
+              >
+                {q.data.state.client_can_edit ? "Make client read-only" : "Let the client edit"}
+              </Button>
+            )}
+          </div>
         </div>
-        {q.data?.state && (
-          <Button
-            variant="outline" size="sm"
-            disabled={toggleClientEditing.isPending}
-            onClick={() => toggleClientEditing.mutate(!(q.data.state?.client_can_edit ?? true))}
-          >
-            {q.data.state.client_can_edit ? "Make client read-only" : "Let the client edit"}
-          </Button>
-        )}
       </div>
 
       {q.isLoading && (
@@ -103,22 +123,6 @@ export default function HubOperationsPage() {
           {(q.error as Error)?.message ?? "Could not load this runway."}
         </p>
       )}
-
-      <div className="flex gap-2">
-        {(["runway", "signoff"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-              tab === t
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t === "runway" ? "Operating runway" : "Creative sign-off"}
-          </button>
-        ))}
-      </div>
 
       {tab === "signoff" && <CreativeSignoffBoard auth={auth} />}
 
