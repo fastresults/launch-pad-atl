@@ -265,16 +265,6 @@ Each has a starting price; Tracks are bespoke and scoped in a 20-min discovery c
 - Half-day workshop route: /build/content-engine
 - Done-for-you contact: /contact?service=content-engine
 
-### AI as your operating system
-- One-liner: Ten workflows rewired around AI, documented, and owned by your team — not by a vendor.
-- Deliverables:
-  - Workflow audit + ROI model
-  - 10 automations built, tested, and handed off
-- Pricing: From $4,500
-- Timeline: 30 days
-- Half-day workshop route: /build/ai-operating-system
-- Done-for-you contact: /contact?service=ai-operating-system
-
 ### Email, CRM, and automation
 - One-liner: The follow-up machine. CRM live, sequences written, deliverability fixed — for good.
 - Deliverables:
