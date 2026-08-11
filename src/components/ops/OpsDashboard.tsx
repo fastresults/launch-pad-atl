@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   currentRunwayDay, isOverdue, progressOf, FOUNDATION_DELIVERED,
-  type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask, type OpsUpdate,
+  type DeliveryMode, type OpsEngagement, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask, type OpsUpdate,
 } from "@/lib/ops-runway";
 import { activeStage, stageOf } from "@/lib/ops-guided";
 import { GuidedStep } from "./GuidedStep";
@@ -12,6 +12,8 @@ import { OpsChecklist } from "./OpsChecklist";
 import { OpsTimeline } from "./OpsTimeline";
 import { OpsOnboarding } from "./OpsOnboarding";
 import { DeliveryModeGate } from "./DeliveryModeGate";
+import { DeliveryGateOverlay } from "./DeliveryGateOverlay";
+
 import { DeliveryModeToggle } from "./DeliveryModeToggle";
 import { PlatformAddOn } from "./PlatformAddOn";
 import type { PlatformRequestInput } from "./PlatformRequestDialog";
@@ -50,7 +52,12 @@ export interface OpsDashboardProps extends DeliveryHandlers {
   /** Who is executing this runway — null means the decision hasn't been made. */
   deliveryMode?: DeliveryMode | null;
   onDeliveryMode?: (mode: DeliveryMode) => void;
+  /** Opens the kickoff intake instead of silently flipping the mode. */
+  onCommitRetained?: () => void;
+  /** Latest retainer request, when the founder has already committed. */
+  engagement?: OpsEngagement | null;
   rateCents?: number | null;
+
   onRate?: (cents: number) => void;
   /** An existing platform-build request, when the founder has already raised one. */
   platformRequest?: PlatformRequest | null;
@@ -120,7 +127,9 @@ export function OpsDashboard(props: OpsDashboardProps) {
   }
 
   // The decision comes before the list: who is actually going to do this work.
-  if ((!mode && props.onDeliveryMode) || gateOpen) {
+  const undecided = !mode && !!props.onDeliveryMode;
+
+  if (gateOpen) {
     return (
       <div className={cn("space-y-6", props.className)}>
         <DeliveryModeGate
@@ -134,17 +143,15 @@ export function OpsDashboard(props: OpsDashboardProps) {
           onPlatformRequest={props.onPlatformRequest}
           engageHref={props.engageHref}
         />
-        {gateOpen && (
-          <div className="text-center">
-            <Button variant="ghost" size="sm" onClick={() => setGateOpen(false)}>Back to the runway</Button>
-          </div>
-        )}
+        <div className="text-center">
+          <Button variant="ghost" size="sm" onClick={() => setGateOpen(false)}>Back to the runway</Button>
+        </div>
       </div>
     );
   }
 
+  const dashboard = (
 
-  return (
     <TooltipProvider delayDuration={120}>
     <div className={cn("space-y-6", props.className)}>
       <header className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 p-4 sm:p-5">
@@ -207,6 +214,17 @@ export function OpsDashboard(props: OpsDashboardProps) {
             onCompare={() => setGateOpen(true)}
             engageHref={props.engageHref}
           />
+        )}
+
+        {mode === "retained" && props.engagement && !startedAt && (
+          <div className="relative mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/[0.07] px-4 py-3 text-sm">
+            <Check className="h-4 w-4 text-primary" />
+            <span className="font-medium">Kickoff call being scheduled.</span>
+            <span className="text-muted-foreground">
+              Your request is in — Adam's team reaches out within one business day. The specialist steps
+              below are already assigned to us.
+            </span>
+          </div>
         )}
 
 
@@ -278,6 +296,39 @@ export function OpsDashboard(props: OpsDashboardProps) {
     </div>
     </TooltipProvider>
   );
+
+  if (!undecided) return dashboard;
+
+  // Locked peek: the real runway is visible but inert behind the decision.
+  return (
+    <div className={cn("relative", props.className)}>
+      <div
+        aria-hidden
+        className="pointer-events-none select-none opacity-40 blur-[6px] [filter:blur(6px)]"
+      >
+        {dashboard}
+      </div>
+      <div className="pointer-events-none absolute inset-0">
+        <div className="sticky top-6 px-2 pt-6 sm:px-4">
+          <div className="pointer-events-auto">
+            <DeliveryGateOverlay
+              tasks={tasks}
+              busy={!!props.busyTaskId}
+              readOnly={!canEdit}
+              engageHref={props.engageHref}
+              rateCents={props.rateCents}
+              onRate={props.onRate}
+              platformRequest={props.platformRequest}
+              onPlatformRequest={props.onPlatformRequest}
+              onSelf={() => chooseMode("self")}
+              onRetain={() => (props.onCommitRetained ? props.onCommitRetained() : chooseMode("retained"))}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
+
 
 export default OpsDashboard;

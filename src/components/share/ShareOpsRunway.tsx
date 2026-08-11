@@ -6,9 +6,10 @@ import { OpsDashboard } from "@/components/ops/OpsDashboard";
 import CreativeSignoffBoard from "@/components/creative/CreativeSignoffBoard";
 import {
   addOpsNote, dismissOpsIntro, fetchOpsRunway, requestOpsHandoff, reviewOpsWorkProduct,
-  requestPlatformBuild, setBlendedRate, setDeliveryMode, setOpsOwner, setOpsProof, setOpsStatus,
-  snoozeOpsTask, type OpsAuth,
+  requestPlatformBuild, requestEngagement, setBlendedRate, setDeliveryMode, setOpsOwner, setOpsProof,
+  setOpsStatus, snoozeOpsTask, type OpsAuth,
 } from "@/lib/ops.functions";
+import { EngageIntakeDialog } from "@/components/ops/engage/EngageIntakeDialog";
 import type { DeliveryMode, OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
 import type { SharePayload } from "@/lib/venture-share.functions";
 import { engagePath } from "@/lib/ops-engagement";
@@ -30,6 +31,7 @@ export function ShareOpsRunway({
   const qc = useQueryClient();
   const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
   const [tab, setTab] = useState<"runway" | "signoff">("runway");
+  const [engageOpen, setEngageOpen] = useState(false);
 
   const q = useQuery({
     queryKey: ["venture-ops", token],
@@ -110,6 +112,8 @@ export function ShareOpsRunway({
           deliveryMode={data.state?.delivery_mode ?? null}
           rateCents={data.state?.blended_rate_cents ?? null}
           platformRequest={data.platformRequest}
+          engagement={data.engagement}
+          onCommitRetained={() => setEngageOpen(true)}
           onPlatformRequest={async (input) => { await requestPlatformBuild(auth, input); refresh(); }}
           onDeliveryMode={(m: DeliveryMode) => void run("mode", () => setDeliveryMode(auth, m))}
           onRate={(cents) => void setBlendedRate(auth, cents).then(refresh).catch(() => undefined)}
@@ -135,6 +139,16 @@ export function ShareOpsRunway({
           onConsult={onConsult}
         />
       )}
+
+      <EngageIntakeDialog
+        open={engageOpen}
+        onOpenChange={setEngageOpen}
+        onSubmit={async (input) => {
+          await requestEngagement(auth, input);
+          await setDeliveryMode(auth, "retained");
+          refresh();
+        }}
+      />
     </div>
   );
 }

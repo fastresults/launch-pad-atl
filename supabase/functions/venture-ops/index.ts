@@ -210,12 +210,15 @@ async function notifyEngagementRequest(db: any, snapshotId: string, row: Record<
 
 
 async function loadRunway(db: any, snapshotId: string, viewerKind: "client" | "agency") {
-  const [{ data: tasks }, { data: state }, { data: rawUpdates }, { data: platform }] = await Promise.all([
+  const [{ data: tasks }, { data: state }, { data: rawUpdates }, { data: platform }, { data: engagement }] =
+    await Promise.all([
     db.from("venture_ops_tasks").select("*").eq("snapshot_id", snapshotId).order("sort_order"),
     db.from("venture_ops_state").select("*").eq("snapshot_id", snapshotId).maybeSingle(),
     db.from("venture_ops_updates").select("*").eq("snapshot_id", snapshotId).order("created_at"),
     db.from("venture_ops_platform_requests").select("*").eq("snapshot_id", snapshotId)
       .neq("status", "declined").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    db.from("venture_ops_engagements").select("id,status,created_at,name").eq("snapshot_id", snapshotId)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const ids = (tasks ?? []).map((t: any) => t.id);
   let notes: any[] = [];
@@ -224,8 +227,12 @@ async function loadRunway(db: any, snapshotId: string, viewerKind: "client" | "a
     notes = data ?? [];
   }
   const updates = (rawUpdates ?? []).filter((u: any) => viewerKind === "agency" || u.visible_to_client);
-  return { tasks: tasks ?? [], notes, updates, state: state ?? null, platformRequest: platform ?? null };
+  return {
+    tasks: tasks ?? [], notes, updates, state: state ?? null,
+    platformRequest: platform ?? null, engagement: engagement ?? null,
+  };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
