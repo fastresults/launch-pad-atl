@@ -40,3 +40,16 @@ The "25 ready-to-use AI prompts" asset is turned off as a founder deliverable. W
 - Edge functions: `_shared/deliverable-prompts.ts` (tool-stack prompt rewrite, prompt-library prompt removed, image-prompt sections stop naming Midjourney/Ideogram in founder-visible output), `_shared/ops-runway.ts`, `_shared/ops-guides.ts`, `_shared/launch-14day-plan.ts`, `venture-chatbot/knowledge.ts`.
 - Database: one migration updating `venture_document_types` — rename/redescribe `ai_tool_stack_recommendation`, deactivate `ai_prompt_library`, reword `ai_support_bot_setup`. Keys stay unchanged so existing generated assets and history keep working.
 - A repo-wide grep check at the end confirms no founder-facing string still says AI tool, AI stack, AI toolkit, AI assistant, ChatGPT, Claude, Midjourney, or Ideogram.
+
+---
+
+# Addition: heavy-lifting milestones on the decision gate
+
+At the point where the founder chooses self-build vs. Adam's team, add a **"The heavy lifting"** block between the mode cards and the cost comparison.
+
+- Pull the real milestone tasks from the runway (the ones already marked Milestone / Agency-led) and group them into 6–8 named heavy lifts: entity + compliance, books and payments, brand and creative sign-off, the live site, CRM and funnels, campaign launch, operating rhythm.
+- Each lift shows one line of what it actually takes (e.g. "GoHighLevel sub-account, A2P registration, 4 pipelines, 12 automations"), the hour range, and the skill it demands.
+- Two columns, same milestones on both sides: **You do it** shows what the founder must learn, source, and own (tools to buy, specialists to hire, hours off the business). **We do it** shows it as done, with the named specialist role and the delivered artifact.
+- A short closing line ties it to the numbers already on screen — same scope, one side costs hours and learning curve, the other is a fixed retainer.
+
+Concise, no hype: the contrast does the selling. Built as a new `HeavyLifting.tsx` in `src/components/ops/`, fed by the existing significance/leadership helpers, rendered inside the gate above `InvestmentCompare`.
