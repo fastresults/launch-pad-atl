@@ -9,6 +9,7 @@ import { OWNER_LABEL, estimateLabel, guidedQueue, stageOf, stepPosition } from "
 import { CRITICALITY, criticalityOf, criticalityTip, minutesTip, ownerTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
+import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
 
 export interface GuidedStepProps {
   tasks: OpsTask[];
@@ -86,6 +87,12 @@ export function GuidedStep(props: GuidedStepProps) {
           <InfoTip tip={ownerTip(task, !theirs)}>
             <span>{theirs ? `${OWNER_LABEL(task.owner_kind, viewerKind)} has this` : "This one's yours"}</span>
           </InfoTip>
+          {isMilestone(task) && (
+            <span className="rounded-full border border-primary/50 bg-primary/10 px-2 py-0.5 text-primary">Major move</span>
+          )}
+          <span className={cn("rounded-full border px-2 py-0.5 normal-case tracking-normal", LEAD_META[leadOf(task)].badge)}>
+            {LEAD_META[leadOf(task)].label}
+          </span>
           <InfoTip tip={criticalityTip(task, tasks)} className={cn("rounded-full border px-2 py-0.5 normal-case tracking-normal", crit.badge)}>
             <span>{crit.label}</span>
           </InfoTip>
@@ -93,6 +100,14 @@ export function GuidedStep(props: GuidedStepProps) {
 
         <h3 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">{task.title}</h3>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{task.why}</p>
+        {isMilestone(task) && (
+          <p className="mt-2 max-w-2xl rounded-xl border border-primary/25 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+            {milestoneNote(task, tasks)}
+            {leadOf(task) !== "founder" && (
+              <> <span className="font-medium text-foreground">Where our experience saves you:</span> {agencySkillNote(task)}.</>
+            )}
+          </p>
+        )}
 
         <div className="mt-3">
           <StepExplainer task={task} allTasks={tasks} />

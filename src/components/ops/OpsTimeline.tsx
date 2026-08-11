@@ -2,6 +2,7 @@ import { CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OPS_PHASES, progressOf, type OpsTask } from "@/lib/ops-runway";
 import { activeStage, stageOf } from "@/lib/ops-guided";
+import { milestoneProgress } from "@/lib/ops-significance";
 
 /**
  * A read-only arc of the whole 90 days. Not a tool — a map, so a first-time
@@ -20,6 +21,7 @@ export function OpsTimeline({ tasks, onJump }: { tasks: OpsTask[]; onJump?: (pha
         {OPS_PHASES.map((p) => {
           const all = tasks.filter((t) => t.phase === p.phase);
           const prog = progressOf(all);
+          const ms = milestoneProgress(all);
           const stage = stageOf(p.phase);
           const done = prog.pct === 100 && prog.total > 0;
           const active = p.phase === current && !done;
@@ -49,7 +51,10 @@ export function OpsTimeline({ tasks, onJump }: { tasks: OpsTask[]; onJump?: (pha
                     {stage.when} — {stage.name}
                     {active && <span className="ml-2 text-[11px] font-normal uppercase tracking-wide text-primary">You are here</span>}
                   </h3>
-                  <span className="text-[11px] tabular-nums text-muted-foreground">{prog.done}/{prog.total}</span>
+                  <span className="text-right text-[11px] tabular-nums text-muted-foreground">
+                    {ms.total > 0 && <span className="block text-foreground/80">{ms.done} of {ms.total} major moves</span>}
+                    {prog.done}/{prog.total} steps
+                  </span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{stage.promise}</p>
                 <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted/40">
