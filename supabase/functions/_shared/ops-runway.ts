@@ -330,7 +330,7 @@ export function buildOpsCatalog(): OpsCatalogTask[] {
         category: category ?? d.category,
         asset_keys: d.assetKeys,
         owner_kind: owner,
-        how: [], needs: [], minutes: null, criticality: "required_to_sell", unlocks: [], criticality: "required_to_sell", unlocks: [],
+        how: [], needs: [], minutes: null, criticality: "required_to_sell", unlocks: [],
       });
     }
 
