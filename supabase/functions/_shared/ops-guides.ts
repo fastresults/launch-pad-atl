@@ -4,6 +4,8 @@
 // unique across the catalog. Anything not listed falls back to `why` +
 // `done_when`, which already read well on their own.
 
+import type { OpsCriticality } from "./ops-guide-fallback.ts";
+
 export type OpsGuide = {
   /** 3–5 numbered steps a first-time founder can literally follow. */
   how: string[];
@@ -11,6 +13,10 @@ export type OpsGuide = {
   needs?: string[];
   /** Rough time on task, in minutes. */
   minutes?: number;
+  /** How badly the business needs this to actually run. Overrides the derived value. */
+  criticality?: OpsCriticality;
+  /** Slugs of later steps this one gates, so the founder sees the cost of skipping it. */
+  unlocks?: string[];
 };
 
 export const OPS_GUIDES: Record<string, OpsGuide> = {
