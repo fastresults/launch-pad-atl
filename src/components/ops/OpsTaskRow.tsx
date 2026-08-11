@@ -15,7 +15,7 @@ import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, minutesTip, ow
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
 import { OpsGlyph } from "./OpsGlyph";
-import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
+import { LEAD_META, isMilestone, leadOf, milestoneReason } from "@/lib/ops-significance";
 
 
 /** Plain-language status names. No underscores, no project-management dialect. */
