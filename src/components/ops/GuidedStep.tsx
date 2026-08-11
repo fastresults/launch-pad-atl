@@ -115,18 +115,18 @@ export function GuidedStep(props: GuidedStepProps) {
           <OpsGlyph category={task.category} plate plateClassName="h-12 w-12" className="h-6 w-6" />
           <div className="min-w-0">
             <h3 className="text-xl font-semibold tracking-tight sm:text-2xl">{task.title}</h3>
-            <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{task.category}</p>
+            <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{categoryLabel(task.category)}</p>
           </div>
         </div>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{task.why}</p>
-        {isMilestone(task) && (
+        {/* The badge above already says how critical it is — this block only
+            adds what it isn't saying: where the team's experience carries it. */}
+        {isMilestone(task) && leadOf(task) !== "founder" && (
           <p className="mt-2 max-w-2xl rounded-xl border border-primary/25 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
-            {milestoneNote(task, tasks)}
-            {leadOf(task) !== "founder" && (
-              <> <span className="font-medium text-foreground">Where our experience saves you:</span> {agencySkillNote(task)}.</>
-            )}
+            <span className="font-medium text-foreground">Where our experience saves you:</span> {agencySkillNote(task)}.
           </p>
         )}
+
 
         <div className="mt-3">
           <StepExplainer task={task} allTasks={tasks} />
