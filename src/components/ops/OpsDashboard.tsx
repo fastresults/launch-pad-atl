@@ -8,7 +8,7 @@ import {
   type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
 } from "@/lib/ops-runway";
 
-type Filter = "all" | "mine" | "agency" | "blocked" | "overdue" | "open";
+type Filter = "all" | "mine" | "agency" | "blocked" | "overdue" | "open" | "creative" | "growth";
 
 export interface OpsDashboardProps {
   tasks: OpsTask[];
