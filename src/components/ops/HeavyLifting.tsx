@@ -92,10 +92,20 @@ const slugOf = (t: OpsTask) =>
 
 export function HeavyLifting({ tasks }: { tasks: OpsTask[] }) {
   const rows = useMemo(() => {
+    // Each step counts once: first matching cluster claims it, so the totals
+    // here reconcile with the step count on the summary above.
+    const claimed = new Set<string>();
+    const bucket = new Map<string, OpsTask[]>();
+    for (const t of tasks) {
+      const slug = slugOf(t);
+      const c = CLUSTERS.find((x) => x.match.test(slug));
+      if (!c || claimed.has(t.task_key)) continue;
+      claimed.add(t.task_key);
+      bucket.set(c.key, [...(bucket.get(c.key) ?? []), t]);
+    }
     return CLUSTERS.map((c) => {
-      const hit = tasks.filter((t) => c.match.test(slugOf(t)));
-      const minutes = hit.reduce((s, t) => s + (t.minutes ?? 0), 0);
-      return { ...c, count: hit.length, minutes };
+      const hit = bucket.get(c.key) ?? [];
+      return { ...c, count: hit.length, minutes: hit.reduce((s, t) => s + (t.minutes ?? 0), 0) };
     })
       .filter((r) => r.count > 0)
       .sort((a, b) => b.minutes - a.minutes)
