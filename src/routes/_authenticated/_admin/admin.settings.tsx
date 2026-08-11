@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { getPublicSiteSettings, updateSiteSetting, DASHBOARD_NAV_KEYS, DEFAULT_DASHBOARD_NAV_VISIBILITY, type DashboardNavKey, type DashboardNavVisibility } from "@/lib/site-settings.functions";
-import { Home, Calendar, ClipboardList, ListChecks, Sparkles, FolderOpen, User } from "lucide-react";
+import { Home, Calendar, ClipboardList, ListChecks, Sparkles, FolderOpen, User, Hammer } from "lucide-react";
 import {
   adminSetBulkUnlockDefault,
   adminClearBulkUnlockDefault,
@@ -126,6 +126,7 @@ const NAV_META: Record<DashboardNavKey, { label: string; icon: typeof Home; help
   brief: { label: "Startup brief", icon: ClipboardList, helper: "The 10-question brief that feeds every deliverable." },
   deliverables: { label: "Deliverables", icon: ListChecks, helper: "Generate and view the 20 investor-ready documents." },
   hub: { label: "Ventures", icon: Sparkles, helper: "Concept explorer with a 50-document workspace per venture." },
+  operations: { label: "Operationalize", icon: Hammer, helper: "The 90-day operating runway and creative sign-off for each venture." },
   files: { label: "My files", icon: FolderOpen, helper: "Saved documents, uploads, brand media and PDFs." },
   profile: { label: "Founder profile", icon: User, helper: "Founder details, startup info and financial snapshot." },
 };
