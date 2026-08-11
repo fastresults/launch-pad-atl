@@ -64,6 +64,11 @@ export function OpsTaskRow(props: TaskRowProps) {
   const major = props.variant === "milestone" || (props.variant !== "supporting" && isMilestone(task));
   const lead = leadOf(task);
   const leadMeta = LEAD_META[lead];
+  // Managed delivery only shows once the venture has retained the team.
+  const engaged = props.deliveryMode === "retained" || props.deliveryMode === "mixed";
+  const managed = engaged && task.owner_kind === "agency";
+  const canHandoff = engaged && canEdit && !!props.onHandoff && task.owner_kind === "client" && !done;
+
 
   const links = (task.asset_keys ?? [])
     .map((k) => ({ key: k, label: props.assetTitle?.(k) ?? null }))
