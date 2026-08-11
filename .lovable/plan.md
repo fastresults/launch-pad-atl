@@ -81,7 +81,8 @@ A new **Delivered** rail on the client Operationalize page: reverse-chronologica
 ## Build order
 
 1. Migration + `venture-ops` actions.
-2. Gate + mode application (ownership rewrite).
-3. Client delivery rendering + Delivered rail.
-4. Agency delivery console (venture-scoped, then cross-venture queue).
-5. Approval loop and handoff requests.
+2. Cost math + the comparison gate UI.
+3. Mode application (ownership rewrite) and reversal control.
+4. Client delivery rendering + Delivered rail.
+5. Agency delivery console (venture-scoped, then cross-venture queue).
+6. Approval loop and handoff requests.
