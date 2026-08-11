@@ -128,12 +128,10 @@ export function OpsTaskRow(props: TaskRowProps) {
               done && "line-through",
             )}>{task.title}</span>
           </button>
-          {major && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              {milestoneNote(task, props.allTasks ?? [task])}
-              {lead !== "founder" && <> <span className="text-foreground/80">Where our experience saves you:</span> {agencySkillNote(task)}.</>}
-            </p>
+          {major && reason && (
+            <p className="mt-1 text-xs text-muted-foreground">{reason}</p>
           )}
+
 
 
 
