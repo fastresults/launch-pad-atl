@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,7 +19,13 @@ export default function HubOperationsPage() {
   const { snapshotId = "" } = useParams();
   const auth: OpsAuth = { kind: "hub", snapshotId };
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"runway" | "signoff">("runway");
+  const [params, setParams] = useSearchParams();
+  const tab: "runway" | "signoff" = params.get("tab") === "signoff" ? "signoff" : "runway";
+  const setTab = (t: "runway" | "signoff") => {
+    const next = new URLSearchParams(params);
+    if (t === "signoff") next.set("tab", "signoff"); else next.delete("tab");
+    setParams(next, { replace: true });
+  };
   const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
   useDocumentTitle("Operating runway");
 
