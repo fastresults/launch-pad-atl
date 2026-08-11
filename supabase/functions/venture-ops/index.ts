@@ -89,7 +89,7 @@ async function applyDeliveryMode(db: any, snapshotId: string, mode: string, star
 /** Create any catalog tasks this venture doesn't have yet, without touching progress. */
 async function seedRunway(db: any, snapshotId: string) {
   const { data: existing } = await db
-    .from("venture_ops_tasks").select("task_key, sort_order, how, minutes, criticality").eq("snapshot_id", snapshotId);
+    .from("venture_ops_tasks").select("task_key, sort_order, how, minutes, criticality, title, why, done_when").eq("snapshot_id", snapshotId);
   const rows = new Map<string, any>((existing ?? []).map((r: any) => [r.task_key, r]));
   const have = new Map<string, number>((existing ?? []).map((r: any) => [r.task_key, r.sort_order]));
   const catalog = buildOpsCatalog().map((t, i) => ({ ...t, sort_order: i }));
@@ -107,11 +107,12 @@ async function seedRunway(db: any, snapshotId: string) {
     const sameHow = (row.how?.length ?? 0) === t.how.length;
     const sameMin = (row.minutes ?? null) === t.minutes;
     const sameCrit = (row.criticality ?? null) === t.criticality;
-    return !(sameHow && sameMin && sameCrit);
+    const sameCopy = row.title === t.title && row.why === t.why && row.done_when === t.done_when;
+    return !(sameHow && sameMin && sameCrit && sameCopy);
   });
   for (const t of withGuides) {
     await db.from("venture_ops_tasks")
-      .update({ how: t.how, needs: t.needs, minutes: t.minutes, criticality: t.criticality, unlocks: t.unlocks })
+      .update({ how: t.how, needs: t.needs, minutes: t.minutes, criticality: t.criticality, unlocks: t.unlocks, title: t.title, why: t.why, done_when: t.done_when })
       .eq("snapshot_id", snapshotId).eq("task_key", t.task_key);
   }
   // When the catalog grows mid-flight, existing rows keep stale positions and the
