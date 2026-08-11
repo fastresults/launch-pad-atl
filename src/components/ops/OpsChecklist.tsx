@@ -46,20 +46,26 @@ export function OpsChecklist(props: OpsChecklistProps) {
     return m;
   }, [notes]);
 
-  const visible = tasks.filter((t) => {
-    if (lens === "mine") return t.owner_kind === viewerKind && t.status !== "done";
-    if (lens === "theirs") return t.owner_kind !== viewerKind && t.status !== "done";
-    if (lens === "open") return t.status !== "done" && !isSnoozed(t);
-    if (lens === "must") return criticalityOf(t) === "required_to_operate" && t.status !== "done";
-    if (lens === "sell") return criticalityOf(t) === "required_to_sell" && t.status !== "done";
-    if (lens === "stuck") return t.status === "blocked";
-    if (lens === "late") return isOverdue(t, startedAt) && t.status !== "done";
-    if (lens === "done") return t.status === "done";
+  const match = (t: OpsTask, l: Lens) => {
+    if (l === "mine") return t.owner_kind === viewerKind && t.status !== "done";
+    if (l === "theirs") return t.owner_kind !== viewerKind && t.status !== "done";
+    if (l === "open") return t.status !== "done" && !isSnoozed(t);
+    if (l === "major") return isMilestone(t) && t.status !== "done";
+    if (l === "welead") return leadOf(t) !== "founder" && t.status !== "done";
+    if (l === "must") return criticalityOf(t) === "required_to_operate" && t.status !== "done";
+    if (l === "sell") return criticalityOf(t) === "required_to_sell" && t.status !== "done";
+    if (l === "stuck") return t.status === "blocked";
+    if (l === "late") return isOverdue(t, startedAt) && t.status !== "done";
+    if (l === "done") return t.status === "done";
     return true;
-  });
+  };
+
+  const visible = tasks.filter((t) => match(t, lens));
 
   const LENSES: [Lens, string][] = [
     ["open", "Still to do"],
+    ["major", "Major moves"],
+    ["welead", "Where we lead"],
     ["must", CRITICALITY.required_to_operate.label],
     ["sell", CRITICALITY.required_to_sell.label],
     ["mine", viewerKind === "agency" ? "On Adam's team" : "On me"],
@@ -75,19 +81,16 @@ export function OpsChecklist(props: OpsChecklistProps) {
 
   return (
     <div className="space-y-5">
+      <p className="max-w-2xl text-xs text-muted-foreground">
+        The big cards are the <span className="text-foreground">major moves</span> — the ones that decide whether you launch.
+        Everything indented under them is a supporting errand. Steps marked
+        <span className="mx-1 rounded-full border border-primary/50 bg-primary/10 px-1.5 py-px text-primary">Adam's team leads</span>
+        are where our experience does the heavy lifting.
+      </p>
       <div className="flex flex-wrap items-center gap-1.5">
         {LENSES.map(([l, label]) => {
-          const count = tasks.filter((t) => {
-            if (l === "mine") return t.owner_kind === viewerKind && t.status !== "done";
-            if (l === "theirs") return t.owner_kind !== viewerKind && t.status !== "done";
-            if (l === "open") return t.status !== "done" && !isSnoozed(t);
-            if (l === "must") return criticalityOf(t) === "required_to_operate" && t.status !== "done";
-            if (l === "sell") return criticalityOf(t) === "required_to_sell" && t.status !== "done";
-            if (l === "stuck") return t.status === "blocked";
-            if (l === "late") return isOverdue(t, startedAt) && t.status !== "done";
-            if (l === "done") return t.status === "done";
-            return true;
-          }).length;
+          const count = tasks.filter((t) => match(t, l)).length;
+
           return (
             <button key={l} type="button" onClick={() => setLens(l)}
               className={cn("rounded-full border px-2.5 py-1 text-xs transition",
