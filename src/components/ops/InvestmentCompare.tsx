@@ -7,7 +7,7 @@ import { PlatformAddOn } from "./PlatformAddOn";
 import type { PlatformRequestInput } from "./PlatformRequestDialog";
 import { PLATFORM_COPY, type PlatformRequest } from "@/lib/ops-platform";
 import { OpsStageMasthead } from "./OpsStageArt";
-import type { DeliveryMode, OpsTask } from "@/lib/ops-runway";
+import { FOUNDATION_DELIVERED, type DeliveryMode, type OpsTask } from "@/lib/ops-runway";
 import {
   DEFAULT_RATE, RATE_CHOICES, RETAINER_DAYS, RETAINER_MONTHLY, RETAINER_MONTHS,
   computeInvestment, hours, money, rateLabel,
@@ -40,12 +40,27 @@ export function InvestmentCompare({
     <div className="space-y-6">
       <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 p-5 sm:p-6">
         <OpsStageMasthead phase={2} className="w-[46%]" />
-        <p className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Before you start</p>
-        <h2 className="relative mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+        <p className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+          Phase 2 of 2 · Foundation complete
+        </p>
+        <p className="relative mt-2 max-w-2xl text-sm text-foreground">
+          Your offer and pricing, brand system, site direction and copy, campaign arc and operating
+          assets are built and yours. Nothing ahead recreates them.
+        </p>
+        <div className="relative mt-3 flex flex-wrap items-center gap-1.5">
+          {FOUNDATION_DELIVERED.map((item) => (
+            <span key={item}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-[11px] text-muted-foreground">
+              <Check className="h-3 w-3 text-primary" />{item}
+            </span>
+          ))}
+        </div>
+
+        <h2 className="relative mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
           Who is going to actually do this work?
         </h2>
         <p className="relative mt-2 max-w-2xl text-sm text-muted-foreground">
-          There are {inv.taskCount} steps between the foundation you have and a business that runs —
+          There are {inv.taskCount} steps between the foundation you have and a startup that runs —
           {" "}{inv.specialistCount} of them are specialist work. Decide once, here, and the rest of this
           dashboard reshapes around your answer. You can change it later.
         </p>

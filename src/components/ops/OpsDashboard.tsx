@@ -3,7 +3,7 @@ import { Check, Compass, Hammer, ListChecks, Map as MapIcon, Phone, Scale } from
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  currentRunwayDay, isOverdue, progressOf,
+  currentRunwayDay, isOverdue, progressOf, FOUNDATION_DELIVERED,
   type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask, type OpsUpdate,
 } from "@/lib/ops-runway";
 import { activeStage, stageOf } from "@/lib/ops-guided";
@@ -69,14 +69,7 @@ const MODE_LABEL: Record<DeliveryMode, string> = {
   retained: "Adam's team is building this",
 };
 
-/** What the foundation already delivered — credited before the remaining work. */
-const FOUNDATION_DELIVERED = [
-  "Offer and pricing",
-  "Brand system",
-  "Site direction and copy",
-  "Campaign arc",
-  "Operating assets",
-];
+
 
 
 /**

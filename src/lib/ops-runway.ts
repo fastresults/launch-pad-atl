@@ -195,3 +195,12 @@ export function nextFive(tasks: OpsTask[]): OpsTask[] {
     .sort((a, b) => a.sort_order - b.sort_order)
     .slice(0, 5);
 }
+
+/** What the foundation already delivered — credited before any remaining work. */
+export const FOUNDATION_DELIVERED = [
+  "Offer and pricing",
+  "Brand system",
+  "Site direction and copy",
+  "Campaign arc",
+  "Operating assets",
+];
