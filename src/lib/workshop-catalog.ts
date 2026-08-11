@@ -201,7 +201,6 @@ const BUILD_ORDER = [
   "email-crm-automation",
   "social-presence",
   "content-engine",
-  "ai-operating-system",
   "legal-financial-ops",
 ];
 
