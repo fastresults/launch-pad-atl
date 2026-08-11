@@ -128,11 +128,52 @@ async function seedRunway(db: any, snapshotId: string) {
 }
 
 
+/** Tell Adam a founder wants a platform build. Best-effort — never gates the save. */
+async function notifyPlatformRequest(db: any, snapshotId: string, row: Record<string, unknown>) {
+  try {
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (!lovableKey || !resendKey) return;
+    const { data: snap } = await db
+      .from("venture_snapshots").select("company_name").eq("id", snapshotId).maybeSingle();
+    const venture = snap?.company_name || "Unknown venture";
+    const esc = (v: unknown) =>
+      String(v ?? "—").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const html = `
+      <div style="font-family:Arial,Helvetica,sans-serif;color:#111;line-height:1.6">
+        <h2 style="margin:0 0 12px">Platform build request</h2>
+        <p style="margin:0 0 16px">From the operating runway for <strong>${esc(venture)}</strong>.</p>
+        <p><strong>What it does:</strong><br/>${esc(row.description)}</p>
+        <p><strong>Who it's for:</strong> ${esc(row.audience)}</p>
+        <p><strong>Date driving it:</strong> ${esc(row.deadline)}</p>
+        <p><strong>Contact:</strong> ${esc(row.contact)}</p>
+      </div>`;
+    await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": resendKey,
+      },
+      body: JSON.stringify({
+        from: Deno.env.get("CONSULT_FROM") ?? "Startup Labs <notifications@3dayplan.com>",
+        to: [Deno.env.get("CONSULT_TO") ?? "fastresults@gmail.com"],
+        subject: `Platform build request — ${venture}`,
+        html,
+      }),
+    });
+  } catch (e) {
+    console.error("platform request notify failed", e);
+  }
+}
+
 async function loadRunway(db: any, snapshotId: string, viewerKind: "client" | "agency") {
-  const [{ data: tasks }, { data: state }, { data: rawUpdates }] = await Promise.all([
+  const [{ data: tasks }, { data: state }, { data: rawUpdates }, { data: platform }] = await Promise.all([
     db.from("venture_ops_tasks").select("*").eq("snapshot_id", snapshotId).order("sort_order"),
     db.from("venture_ops_state").select("*").eq("snapshot_id", snapshotId).maybeSingle(),
     db.from("venture_ops_updates").select("*").eq("snapshot_id", snapshotId).order("created_at"),
+    db.from("venture_ops_platform_requests").select("*").eq("snapshot_id", snapshotId)
+      .neq("status", "declined").order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   const ids = (tasks ?? []).map((t: any) => t.id);
   let notes: any[] = [];
@@ -141,7 +182,7 @@ async function loadRunway(db: any, snapshotId: string, viewerKind: "client" | "a
     notes = data ?? [];
   }
   const updates = (rawUpdates ?? []).filter((u: any) => viewerKind === "agency" || u.visible_to_client);
-  return { tasks: tasks ?? [], notes, updates, state: state ?? null };
+  return { tasks: tasks ?? [], notes, updates, state: state ?? null, platformRequest: platform ?? null };
 }
 
 Deno.serve(async (req) => {
@@ -242,6 +283,45 @@ Deno.serve(async (req) => {
           body: "Engagement started. Every specialist step now has an owner and a committed date.",
         });
       }
+      return json({ ok: true });
+    }
+
+    // ----------------------------------------------------- platform add-on
+    if (action === "request_platform_build") {
+      const description = typeof body?.description === "string" ? body.description.trim().slice(0, 2000) : "";
+      if (description.length < 5) return json({ error: "Tell us what the platform does." }, 400);
+      const row = {
+        snapshot_id: snapshotId,
+        description,
+        audience: typeof body?.audience === "string" ? body.audience.trim().slice(0, 300) || null : null,
+        deadline: typeof body?.deadline === "string" ? body.deadline.trim().slice(0, 120) || null : null,
+        contact: typeof body?.contact === "string" ? body.contact.trim().slice(0, 200) || null : null,
+        requested_by: viewerKind,
+        status: "new",
+      };
+      const { data: saved, error } = await db
+        .from("venture_ops_platform_requests").insert(row).select("*").maybeSingle();
+      if (error) return json({ error: error.message }, 400);
+      await db.from("venture_ops_updates").insert({
+        snapshot_id: snapshotId,
+        author_kind: viewerKind,
+        body: "Platform build requested — Startup Labs will reach out to book the build call.",
+        visible_to_client: true,
+      });
+      await notifyPlatformRequest(db, snapshotId, row);
+      return json({ ok: true, platformRequest: saved ?? null });
+    }
+
+    if (action === "set_platform_request_status" && viewerKind === "agency") {
+      const id = typeof body?.requestId === "string" ? body.requestId : "";
+      const status = String(body?.status ?? "");
+      if (!id) return json({ error: "Missing request" }, 400);
+      if (!["new", "scoping", "quoted", "won", "declined"].includes(status)) {
+        return json({ error: "Unknown status" }, 400);
+      }
+      const { error } = await db.from("venture_ops_platform_requests")
+        .update({ status }).eq("id", id).eq("snapshot_id", snapshotId);
+      if (error) return json({ error: error.message }, 400);
       return json({ ok: true });
     }
 
