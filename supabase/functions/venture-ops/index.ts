@@ -241,12 +241,44 @@ Deno.serve(async (req) => {
       await seedRunway(db, snapshotId);
       const payload = await loadRunway(db, snapshotId, viewerKind);
       clientCanEditFlag = payload.state?.client_can_edit !== false;
+      const { data: snapRow } = await db
+        .from("venture_snapshots").select("company_name").eq("id", snapshotId).maybeSingle();
       return json({
         ...payload,
+        ventureName: snapRow?.company_name ?? null,
         viewerKind,
         canEdit: viewerKind === "agency" ? true : clientCanEditFlag,
       });
     }
+
+    // ------------------------------------------------- retainer engagement
+    if (action === "request_engagement") {
+      const name = typeof body?.name === "string" ? body.name.trim().slice(0, 100) : "";
+      const email = typeof body?.email === "string" ? body.email.trim().slice(0, 255) : "";
+      if (!name) return json({ error: "Add your name." }, 400);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Add a valid email." }, 400);
+      const row = {
+        snapshot_id: snapshotId,
+        name,
+        email,
+        phone: typeof body?.phone === "string" ? body.phone.trim().slice(0, 32) || null : null,
+        start_pref: typeof body?.startPref === "string" ? body.startPref.trim().slice(0, 120) || null : null,
+        notes: typeof body?.notes === "string" ? body.notes.trim().slice(0, 2000) || null : null,
+        status: "new",
+      };
+      const { error } = await db.from("venture_ops_engagements").insert(row);
+      if (error) return json({ error: error.message }, 400);
+      await db.from("venture_ops_updates").insert({
+        snapshot_id: snapshotId,
+        author_kind: viewerKind,
+        author_name: name,
+        body: "Kickoff call requested — Startup Labs to run the operating runway.",
+        visible_to_client: true,
+      });
+      await notifyEngagementRequest(db, snapshotId, row);
+      return json({ ok: true });
+    }
+
 
     if (action === "dismiss_intro") {
       await db.from("venture_ops_state")
