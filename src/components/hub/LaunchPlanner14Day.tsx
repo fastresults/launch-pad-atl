@@ -222,7 +222,7 @@ export function LaunchPlanner14Day({
         ? "border-status-success/40 bg-status-success/10 hover:bg-status-success/15"
         : state === "partial"
           ? "border-primary/40 bg-primary/10 hover:bg-primary/15"
-          : "border-white/10 bg-card/60 hover:bg-card/80";
+          : "border-border bg-card/60 hover:bg-card/80";
     const ring = isOpen ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "";
     const attracting = !isOpen && attractOn && attractDay === day.day;
     const attractClass = attracting ? "animate-attract-pulse ring-2 ring-primary/50 ring-offset-2 ring-offset-background z-10" : "";
@@ -274,7 +274,7 @@ export function LaunchPlanner14Day({
     <div
       ref={attractContainerRef}
       onClickCapture={() => dismissAttract(true)}
-      className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-background via-card to-background p-6 shadow-sm"
+      className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-background via-card to-background p-6 shadow-sm"
     >
       <div className="absolute -left-20 -top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" aria-hidden />
       <div className="absolute -right-20 -bottom-20 h-56 w-56 rounded-full bg-fuchsia-500/10 blur-3xl" aria-hidden />
@@ -288,7 +288,7 @@ export function LaunchPlanner14Day({
               the exact assets you'll ship — and jump straight to them.
             </p>
           </div>
-          <div className="rounded-lg border border-white/10 bg-card/60 px-3 py-2 text-right">
+          <div className="rounded-lg border border-border bg-card/60 px-3 py-2 text-right">
             <div className="text-xs text-muted-foreground">Sprint progress</div>
             <div className="text-lg font-semibold">
               {daysComplete}<span className="text-muted-foreground">/14 days</span>
@@ -309,7 +309,7 @@ export function LaunchPlanner14Day({
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
               Foundation & Validation
             </span>
-            <div className="ml-2 h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" aria-hidden />
+            <div className="ml-2 h-px flex-1 bg-gradient-to-r from-foreground/10 to-transparent" aria-hidden />
           </div>
           <div className="grid grid-cols-7 gap-2">
             {daysWithState.slice(0, 7).map(renderTile)}
@@ -325,7 +325,7 @@ export function LaunchPlanner14Day({
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
               Build, Launch, Sell
             </span>
-            <div className="ml-2 h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" aria-hidden />
+            <div className="ml-2 h-px flex-1 bg-gradient-to-r from-foreground/10 to-transparent" aria-hidden />
           </div>
           <div className="grid grid-cols-7 gap-2">
             {daysWithState.slice(7, 14).map(renderTile)}
@@ -348,7 +348,7 @@ export function LaunchPlanner14Day({
                 className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 ${
                   optional
                     ? "border-dashed border-amber-400/30 bg-amber-500/5"
-                    : "border-white/5 bg-background/40"
+                    : "border-border bg-background/40"
                 }`}
               >
                 <div className="flex min-w-0 items-center gap-2">
@@ -453,7 +453,7 @@ export function LaunchPlanner14Day({
             .filter((g) => g.keys.length > 0);
 
           return (
-            <div className="mt-6 rounded-xl border border-white/10 bg-card/70 p-4">
+            <div className="mt-6 rounded-xl border border-border bg-card/70 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -516,7 +516,7 @@ export function LaunchPlanner14Day({
 
                     {availableKeys.length > 1 && (
                       <div
-                        className="inline-flex items-center gap-0.5 rounded-md border border-white/10 bg-background/40 p-0.5"
+                        className="inline-flex items-center gap-0.5 rounded-md border border-border bg-background/40 p-0.5"
                         role="group"
                         aria-label="Sort assets"
                       >
@@ -545,7 +545,7 @@ export function LaunchPlanner14Day({
 
               {availableKeys.length === 0 ? (
                 <ul className="mt-4">
-                  <li className="rounded-lg border border-dashed border-white/10 bg-background/30 px-3 py-4 text-center text-xs text-muted-foreground">
+                  <li className="rounded-lg border border-dashed border-border bg-background/30 px-3 py-4 text-center text-xs text-muted-foreground">
                     No assets mapped to this day yet.
                   </li>
                 </ul>
@@ -564,7 +564,7 @@ export function LaunchPlanner14Day({
                           <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                             {meta.label} <span className="text-muted-foreground/70">· {keys.length}</span>
                           </span>
-                          <div className="ml-2 h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" aria-hidden />
+                          <div className="ml-2 h-px flex-1 bg-gradient-to-r from-foreground/10 to-transparent" aria-hidden />
                         </div>
                         <ul className="space-y-2">{keys.map(renderRow)}</ul>
                       </div>

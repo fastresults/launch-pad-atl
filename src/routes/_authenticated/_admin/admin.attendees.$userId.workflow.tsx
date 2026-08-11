@@ -80,7 +80,7 @@ export default function AdminAttendeeWorkflow() {
                 const Icon = d.generated ? CheckCircle2 : d.deps_met ? Circle : Lock;
                 const tone = d.generated ? "text-green-500" : d.deps_met ? "text-foreground" : "text-muted-foreground";
                 return (
-                  <div key={d.key} className="rounded-xl border border-white/10 bg-card p-4">
+                  <div key={d.key} className="rounded-xl border border-border bg-card p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">

@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 function VentureRow({ s, mine }: { s: any; mine: boolean }) {
   return (
-    <div className="flex flex-col gap-2 border-t border-white/5 p-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+    <div className="flex flex-col gap-2 border-t border-border p-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Link to={`/dashboard/hub/${s.id}`} className="font-medium hover:underline">
@@ -25,7 +25,7 @@ function VentureRow({ s, mine }: { s: any; mine: boolean }) {
       <div className="flex shrink-0 items-center gap-3">
         <Link
           to={`/dashboard/hub/${s.id}`}
-          className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-card px-3 py-1.5 text-xs font-medium hover:bg-white/5"
+          className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted/40"
         >
           Open venture <ArrowRight className="h-3 w-3" />
         </Link>
@@ -59,25 +59,25 @@ export default function AdminHubPage() {
       <div className="flex flex-wrap gap-2">
         <Link
           to="/admin/hub/new"
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-card px-4 py-2 text-xs font-medium hover:bg-white/5"
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-medium hover:bg-muted/40"
         >
           <Plus className="h-3.5 w-3.5" /> New venture (admin only)
         </Link>
         <Link
           to="/dashboard/hub"
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-card px-4 py-2 text-xs font-medium hover:bg-white/5"
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-medium hover:bg-muted/40"
         >
           My ventures workspace <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-white/10 p-8 text-center text-sm text-muted-foreground">Loading…</div>
+        <div className="rounded-2xl border border-border p-8 text-center text-sm text-muted-foreground">Loading…</div>
       ) : (
         <>
           <section className="space-y-2">
             <h2 className="text-xs uppercase tracking-wide text-muted-foreground">My ventures</h2>
-            <div className="overflow-hidden rounded-2xl border border-white/10">
+            <div className="overflow-hidden rounded-2xl border border-border">
               {mine.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
                   You don't own a venture yet — create one above.
@@ -90,7 +90,7 @@ export default function AdminHubPage() {
 
           <section className="space-y-2">
             <h2 className="text-xs uppercase tracking-wide text-muted-foreground">All other ventures</h2>
-            <div className="overflow-hidden rounded-2xl border border-white/10">
+            <div className="overflow-hidden rounded-2xl border border-border">
               {others.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">No other ventures yet.</div>
               ) : (

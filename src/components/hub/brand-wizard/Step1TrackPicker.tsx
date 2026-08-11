@@ -23,7 +23,7 @@ export function Step1TrackPicker({
         <button
           onClick={() => onPick("existing")}
           className={`group rounded-xl border p-5 text-left transition hover:border-primary hover:bg-primary/5 ${
-            current === "existing" ? "border-primary bg-primary/5 ring-2 ring-primary/30" : "border-white/10 bg-card"
+            current === "existing" ? "border-primary bg-primary/5 ring-2 ring-primary/30" : "border-border bg-card"
           }`}
         >
           <div className="flex items-center gap-2 text-primary">
@@ -49,7 +49,7 @@ export function Step1TrackPicker({
         <button
           onClick={() => onPick("new")}
           className={`group rounded-xl border p-5 text-left transition hover:border-primary hover:bg-primary/5 ${
-            current === "new" ? "border-primary bg-primary/5 ring-2 ring-primary/30" : "border-white/10 bg-card"
+            current === "new" ? "border-primary bg-primary/5 ring-2 ring-primary/30" : "border-border bg-card"
           }`}
         >
           <div className="flex items-center gap-2 text-primary">

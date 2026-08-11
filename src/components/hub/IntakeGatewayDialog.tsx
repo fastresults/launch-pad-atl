@@ -503,7 +503,7 @@ export function IntakeGatewayDialog({ target, snapshotId, onClose, onSubmit }: P
                       <p className="text-xs italic text-muted-foreground">No rows yet.</p>
                     )}
                     {(v ?? []).map((row: any, idx: number) => (
-                      <div key={idx} className="flex items-end gap-2 rounded-md border border-white/10 bg-card/40 p-2">
+                      <div key={idx} className="flex items-end gap-2 rounded-md border border-border bg-card/40 p-2">
                         <div className="grid flex-1 gap-2" style={{ gridTemplateColumns: `repeat(${(f.columns ?? []).length}, minmax(0,1fr))` }}>
                           {(f.columns ?? []).map((c: any) => (
                             <div key={c.id}>

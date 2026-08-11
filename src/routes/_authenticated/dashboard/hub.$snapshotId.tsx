@@ -154,7 +154,7 @@ function Inner() {
       {step < 4 && <StepIndicator current={step} />}
 
       {!snap ? (
-        <div className="rounded-2xl border border-white/10 bg-card p-8 text-sm text-muted-foreground">Loading…</div>
+        <div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground">Loading…</div>
       ) : snap.status === "enriching" ? (
         <EnrichingStep snapshot={snap} onRetry={() => qc.invalidateQueries({ queryKey: ["hub"] })} />
       ) : snap.status === "review" ? (
@@ -179,7 +179,7 @@ function StepIndicator({ current }: { current: number }) {
           <li key={s.n} className={`flex items-center gap-1.5 rounded-full border px-3 py-1 ${
             active ? "border-foreground bg-foreground text-background"
             : done ? "border-status-success/40 bg-status-success/10 text-status-success"
-            : "border-white/10 text-muted-foreground"
+            : "border-border text-muted-foreground"
           }`}>
             <span className="font-semibold">{s.n}</span>
             <span>{s.label}</span>
@@ -204,7 +204,7 @@ function EnrichingStep({ snapshot, onRetry }: { snapshot: any; onRetry: () => vo
   });
 
   return (
-    <div className="space-y-5 rounded-2xl border border-white/10 bg-card p-6">
+    <div className="space-y-5 rounded-2xl border border-border bg-card p-6">
       <div>
         <h2 className="text-xl font-semibold">Enriching your venture</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -215,7 +215,7 @@ function EnrichingStep({ snapshot, onRetry }: { snapshot: any; onRetry: () => vo
       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
         {["scraping", "competitors", "market", "voice", "synthesis", "validation"].map((stage) => (
           <span key={stage} className={`rounded-full border px-2 py-0.5 ${
-            prog.stage === stage ? "border-foreground text-foreground" : "border-white/10"
+            prog.stage === stage ? "border-foreground text-foreground" : "border-border"
           }`}>{stage}</span>
         ))}
       </div>
@@ -449,7 +449,7 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
       {active === "lock" && (
         <div className="space-y-5">
           <ConceptStudio snapshot={snapshot} onChanged={onSaved} />
-          <details className="rounded-2xl border border-white/10 bg-card p-5">
+          <details className="rounded-2xl border border-border bg-card p-5">
             <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Where this came from — research sources
             </summary>
@@ -461,7 +461,7 @@ function ReviewStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => void 
       )}
 
       {/* Sticky CTA bar — always visible, explains exactly what's blocking continue. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <Button variant="ghost" onClick={goPrev} disabled={active === "setup"}>
             ← Back
@@ -581,7 +581,7 @@ function SourceRecoveryPanel({ snapshot, onSaved }: { snapshot: any; onSaved: ()
   const totalCount = sources.length;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-card/40 p-4">
+    <div className="rounded-2xl border border-border bg-card/40 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-foreground">Venture source library</h3>
@@ -689,7 +689,7 @@ function ReviewSubStepper({
   savingNow: boolean;
 }) {
   return (
-    <div className="sticky top-0 z-20 -mx-2 rounded-2xl border border-white/10 bg-background/80 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="sticky top-0 z-20 -mx-2 rounded-2xl border border-border bg-background/80 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <ol className="flex flex-wrap items-center gap-1.5 text-xs">
         {SUB_STEPS.map((s, i) => {
           const isActive = s.key === active;
@@ -704,7 +704,7 @@ function ReviewSubStepper({
                     ? "border-foreground bg-foreground text-background"
                     : isDone
                       ? "border-status-success/40 bg-status-success/10 text-status-success hover:border-status-success/60"
-                      : "border-white/10 text-muted-foreground hover:border-white/25"
+                      : "border-border text-muted-foreground hover:border-border"
                 }`}
               >
                 {isDone ? <CheckCircle2 className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
@@ -739,14 +739,14 @@ function SetupSubStep({ snapshot, onSaved }: { snapshot: any; onSaved: () => voi
   ];
 
   return (
-    <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-5">
+    <div className="space-y-3 rounded-2xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Founder & market</h3>
         <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit details</Button>
       </div>
       <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
         {rows.map((r) => (
-          <div key={r.label} className="flex items-center justify-between gap-3 border-b border-white/5 py-1.5 text-sm last:border-b-0">
+          <div key={r.label} className="flex items-center justify-between gap-3 border-b border-border py-1.5 text-sm last:border-b-0">
             <dt className="text-muted-foreground">{r.label}</dt>
             <dd className={`text-right ${r.missing ? "text-status-warning" : ""}`}>
               {r.missing && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-status-warning align-middle" />}
@@ -794,7 +794,7 @@ function FieldGroup({
       {contextChips && contextChips.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {contextChips.filter((c) => c.value).map((c) => (
-            <span key={c.label} className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground">
+            <span key={c.label} className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground">
               <span className="font-medium text-foreground/80">{c.label}:</span> {c.value}
             </span>
           ))}
@@ -845,10 +845,10 @@ function FieldGroup({
     </div>
   );
 
-  if (!heading) return <div className="rounded-2xl border border-white/10 bg-card p-5">{body}</div>;
+  if (!heading) return <div className="rounded-2xl border border-border bg-card p-5">{body}</div>;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-card p-5">
+    <div className="rounded-2xl border border-border bg-card p-5">
       <button type="button" onClick={() => setOpen((v) => !v)} className="mb-3 flex w-full items-center justify-between text-left">
         <span className="text-sm font-semibold">{heading}</span>
         <span className="text-xs text-muted-foreground">{open ? "Hide" : "Show"}</span>
@@ -1289,7 +1289,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
       {heroDone ? (
         <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} docs={docs} />
       ) : (
-        <div className="rounded-2xl border border-white/10 bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <h2 className="text-xl font-semibold">{heroTitle}</h2>
@@ -1535,7 +1535,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
               ? "border-status-success/40 bg-status-success/10 text-status-success"
               : active
                 ? "border-primary/50 bg-primary/10 text-foreground"
-                : "border-white/10 text-muted-foreground";
+                : "border-border text-muted-foreground";
             return (
               <span key={c.cat} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${tone}`}>
                 <span className="font-medium">{i + 1}. {c.cat}</span>
@@ -1636,7 +1636,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                 ? "Brand updated"
                 : "Concept updated";
               return (
-                <div key={t.type} id={`doc-${t.type}`} className={`scroll-mt-24 rounded-xl border bg-card p-4 transition-shadow ${stale ? "border-status-warning/40" : brandGated ? "border-primary/30" : "border-white/10"}`}>
+                <div key={t.type} id={`doc-${t.type}`} className={`scroll-mt-24 rounded-xl border bg-card p-4 transition-shadow ${stale ? "border-status-warning/40" : brandGated ? "border-primary/30" : "border-border"}`}>
                   <div className="flex items-start gap-2">
                     <Icon className={`mt-0.5 h-4 w-4 ${tone}`} />
                     <div className="min-w-0 flex-1">
@@ -1659,7 +1659,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
                           </Badge>
                         )}
                         {(d as any)?.status === "not_applicable" && (
-                          <Badge variant="outline" className="border-white/20 text-[10px] text-muted-foreground">
+                          <Badge variant="outline" className="border-border text-[10px] text-muted-foreground">
                             Doesn't apply to this venture
                           </Badge>
                         )}
@@ -1888,7 +1888,7 @@ function ResearchPanel({ snapshot }: { snapshot: any }) {
   const overall = Math.round(confidence.overall ?? 0);
 
   return (
-    <details open className="rounded-2xl border border-white/10 bg-card p-5">
+    <details open className="rounded-2xl border border-border bg-card p-5">
       <summary className="flex cursor-pointer items-center justify-between">
         <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Deep research
@@ -1913,7 +1913,7 @@ function ResearchPanel({ snapshot }: { snapshot: any }) {
             <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Competitors</h4>
             <ul className="space-y-2 text-sm">
               {competitors.slice(0, 5).map((c: any, i: number) => (
-                <li key={i} className="rounded-lg border border-white/10 p-2">
+                <li key={i} className="rounded-lg border border-border p-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium">{c.name || c.url}</span>
                     {c.url && <a href={c.url} target="_blank" rel="noreferrer" className="text-[11px] text-muted-foreground hover:text-foreground">↗</a>}
@@ -1943,7 +1943,7 @@ function ResearchPanel({ snapshot }: { snapshot: any }) {
             <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer voice</h4>
             <ul className="space-y-1.5 text-xs">
               {voice.slice(0, 4).map((v: any, i: number) => (
-                <li key={i} className="rounded border border-white/10 p-2">
+                <li key={i} className="rounded border border-border p-2">
                   <p className="italic text-muted-foreground">"{v.quote}"</p>
                   {v.source_url && <a href={v.source_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[11px] text-muted-foreground hover:text-foreground">{v.theme ?? "source"} ↗</a>}
                 </li>
@@ -2005,7 +2005,7 @@ function FounderMarketCard({ snapshot, onSaved }: { snapshot: any; onSaved: () =
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v as any }));
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+    <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Founder & market</h3>
         <Button size="sm" variant="outline" onClick={() => save.mutate()} disabled={save.isPending}>
@@ -2038,7 +2038,7 @@ function FounderMarketCard({ snapshot, onSaved }: { snapshot: any; onSaved: () =
                 type="button"
                 onClick={() => set("market_scope", s)}
                 className={`rounded-lg border px-2 py-1.5 text-xs capitalize transition ${
-                  form.market_scope === s ? "border-foreground bg-foreground text-background" : "border-white/10 hover:border-white/20"
+                  form.market_scope === s ? "border-foreground bg-foreground text-background" : "border-border hover:border-border"
                 }`}
               >{s}</button>
             ))}
@@ -2069,7 +2069,7 @@ function FounderMarketCard({ snapshot, onSaved }: { snapshot: any; onSaved: () =
                 className={`flex flex-col items-start gap-0.5 rounded-lg border p-2.5 text-left transition ${
                   selected
                     ? "border-primary bg-primary/10 ring-1 ring-primary"
-                    : "border-white/10 hover:border-white/25"
+                    : "border-border hover:border-border"
                 }`}
               >
                 <div className="text-xs font-medium">{t.label}</div>

@@ -175,7 +175,7 @@ export function ToolStackPanel({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-background via-card to-background p-6">
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-background via-card to-background p-6">
       <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" aria-hidden />
       <div className="relative">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -187,7 +187,7 @@ export function ToolStackPanel({
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="rounded-lg border border-white/10 bg-card/60 px-3 py-2 text-right">
+            <div className="rounded-lg border border-border bg-card/60 px-3 py-2 text-right">
               <div className="text-xs text-muted-foreground">Tools live</div>
               <div className="text-lg font-semibold">
                 {liveCount}<span className="text-muted-foreground">/{tools.length}</span>
@@ -208,7 +208,7 @@ export function ToolStackPanel({
                 <div
                   key={tool.key}
                   className={`flex flex-col gap-3 rounded-xl border p-3 ${
-                    isLive ? "border-status-success/40 bg-status-success/5" : "border-white/10 bg-background/40"
+                    isLive ? "border-status-success/40 bg-status-success/5" : "border-border bg-background/40"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -265,7 +265,7 @@ export function ToolStackPanel({
                             className={`rounded-full border px-2 py-0.5 text-[10px] font-medium transition-colors ${
                               reached
                                 ? "border-primary/50 bg-primary/15 text-foreground"
-                                : "border-white/10 text-muted-foreground hover:border-white/20"
+                                : "border-border text-muted-foreground hover:border-border"
                             }`}
                           >
                             {STEP_LABEL[s]}

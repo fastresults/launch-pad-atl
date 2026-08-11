@@ -97,8 +97,8 @@ function CodeBlock({ inline, className, children }: any) {
   }
   const lang = (className || "").replace("language-", "") || "text";
   return (
-    <div className="my-4 overflow-hidden rounded-lg border border-white/10 bg-background/60">
-      <div className="flex items-center justify-between border-b border-white/10 bg-muted/40 px-3 py-1.5">
+    <div className="my-4 overflow-hidden rounded-lg border border-border bg-background/60">
+      <div className="flex items-center justify-between border-b border-border bg-muted/40 px-3 py-1.5">
         <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           {lang}
         </span>
@@ -108,7 +108,7 @@ function CodeBlock({ inline, className, children }: any) {
             navigator.clipboard.writeText(txt);
             toast.success("Code copied");
           }}
-          className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-white/5 hover:text-foreground"
+          className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted/40 hover:text-foreground"
         >
           <Copy className="h-3 w-3" /> Copy
         </button>
@@ -232,15 +232,15 @@ function makeComponents(
     blockquote: Blockquote,
     code: CodeBlock,
     table: ({ children }: any) => (
-      <div className="my-4 overflow-x-auto rounded-lg border border-white/10">
+      <div className="my-4 overflow-x-auto rounded-lg border border-border">
         <table className="w-full border-collapse text-sm sm:min-w-[520px]">{children}</table>
       </div>
     ),
     thead: ({ children }: any) => (
-      <thead className="bg-muted/40 [&_th]:border-b [&_th]:border-white/10">{children}</thead>
+      <thead className="bg-muted/40 [&_th]:border-b [&_th]:border-border">{children}</thead>
     ),
     tbody: ({ children }: any) => (
-      <tbody className="[&_tr:nth-child(even)]:bg-muted/15 [&_tr]:border-b [&_tr]:border-white/5 [&_tr:last-child]:border-0">
+      <tbody className="[&_tr:nth-child(even)]:bg-muted/15 [&_tr]:border-b [&_tr]:border-border [&_tr:last-child]:border-0">
         {children}
       </tbody>
     ),
@@ -272,7 +272,7 @@ function makeComponents(
       );
     },
     img: ({ src, alt }: any) => (
-      <img src={src} alt={alt} className="my-6 max-w-full rounded-xl border border-white/10" />
+      <img src={src} alt={alt} className="my-6 max-w-full rounded-xl border border-border" />
     ),
   };
 }
@@ -919,7 +919,7 @@ export function DocumentViewer({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[88dvh] max-w-4xl flex-col gap-0 overflow-hidden p-0">
-        <div className="z-10 flex shrink-0 items-start justify-between gap-3 border-b border-white/10 bg-card/95 px-5 py-3 backdrop-blur">
+        <div className="z-10 flex shrink-0 items-start justify-between gap-3 border-b border-border bg-card/95 px-5 py-3 backdrop-blur">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-primary" />
@@ -936,7 +936,7 @@ export function DocumentViewer({
                 <button
                   type="button"
                   onClick={() => setTocOpen((v) => !v)}
-                  className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-white/5"
+                  className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted/40"
                 >
                   <List className="h-3 w-3" />
                   {tocOpen ? "Hide" : "Show"} contents ({headings.length})
@@ -1007,7 +1007,7 @@ export function DocumentViewer({
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-gradient-to-b from-background/40 to-transparent">
           <div className="mx-auto mt-4 max-w-[72ch] px-6">
-            <div className="group relative overflow-hidden rounded-lg ring-1 ring-white/10">
+            <div className="group relative overflow-hidden rounded-lg ring-1 ring-border">
               <AspectRatio ratio={16 / 9}>
                 {heroUrl && !heroError ? (
                   <img
@@ -1103,7 +1103,7 @@ export function DocumentViewer({
           </div>
 
           {tocOpen && headings.length >= 4 && (
-            <nav className="mx-auto mt-4 max-w-[72ch] rounded-lg border border-white/10 bg-card/60 px-4 py-3">
+            <nav className="mx-auto mt-4 max-w-[72ch] rounded-lg border border-border bg-card/60 px-4 py-3">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Contents
               </div>
@@ -1146,10 +1146,10 @@ export function DocumentViewer({
                         Paste this into Lovable, v0, Bolt or Cursor to scaffold the full multi-page site — brand tokens, components, motion, imagery and SEO all included.
                       </p>
                       <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                        <span className="rounded-md border border-white/10 bg-background/60 px-2 py-0.5">
+                        <span className="rounded-md border border-border bg-background/60 px-2 py-0.5">
                           ~{prdMasterPrompt.split(/\s+/).filter(Boolean).length.toLocaleString()} words
                         </span>
-                        <span className="rounded-md border border-white/10 bg-background/60 px-2 py-0.5">
+                        <span className="rounded-md border border-border bg-background/60 px-2 py-0.5">
                           ~{Math.max(1, Math.round(prdMasterPrompt.split(/\s+/).filter(Boolean).length / 220))} min read
                         </span>
                       </div>
@@ -1218,7 +1218,7 @@ export function DocumentViewer({
                       </span>
                     </div>
                     <pre
-                      className={`overflow-auto rounded-md border border-white/10 bg-background/80 p-3 text-[11.5px] leading-relaxed text-foreground/90 whitespace-pre-wrap ${prdPreviewExpanded ? "max-h-[80vh]" : "max-h-[420px]"}`}
+                      className={`overflow-auto rounded-md border border-border bg-background/80 p-3 text-[11.5px] leading-relaxed text-foreground/90 whitespace-pre-wrap ${prdPreviewExpanded ? "max-h-[80vh]" : "max-h-[420px]"}`}
                     >
                       {prdMasterPrompt}
                     </pre>
@@ -1333,7 +1333,7 @@ export function DocumentViewer({
               )}
 
               {assessment && (
-                <div className="mt-5 border-t border-white/10 pt-4">
+                <div className="mt-5 border-t border-border pt-4">
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={assessmentComponents}>
                     {normalizeMarkdown(assessment)}
                   </ReactMarkdown>

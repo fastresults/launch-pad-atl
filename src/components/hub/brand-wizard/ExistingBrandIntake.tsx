@@ -108,7 +108,7 @@ export function ExistingBrandIntake({
         <Label className="text-xs uppercase tracking-wide text-muted-foreground">Your logo · up to 4 files</Label>
         <label
           className={`flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors ${
-            dragOver ? "border-primary bg-primary/10" : "border-white/20 bg-background/40 hover:border-primary/50"
+            dragOver ? "border-primary bg-primary/10" : "border-border bg-background/40 hover:border-primary/50"
           }`}
           onDragOver={(e) => { e.preventDefault(); if (logos.length < 4) setDragOver(true); }}
           onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
@@ -132,7 +132,7 @@ export function ExistingBrandIntake({
         {logos.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {logos.map((l, i) => (
-              <div key={i} className="relative h-20 w-20 overflow-hidden rounded-lg border border-white/10 bg-white">
+              <div key={i} className="relative h-20 w-20 overflow-hidden rounded-lg border border-border bg-white">
                 <img src={l.dataUrl} className="h-full w-full object-contain" alt={l.filename} />
                 <button
                   onClick={() => setLogos((prev) => prev.filter((_, j) => j !== i))}

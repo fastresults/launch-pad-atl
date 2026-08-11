@@ -74,7 +74,7 @@ export default function WorkshopDayPage() {
           </div>
 
           {/* Card B — Fast venture path */}
-          <div className="flex flex-col rounded-2xl border border-white/10 bg-card p-5">
+          <div className="flex flex-col rounded-2xl border border-border bg-card p-5">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <Wand2 className="h-3.5 w-3.5" /> Fast venture path · head start
             </div>
@@ -83,7 +83,7 @@ export default function WorkshopDayPage() {
               Paste your site or describe your startup. We enrich it, generate every startup asset in order, and hand it back so you can walk in with something to react to — not a blank page.
             </p>
             <div className="mt-4">
-              <Link to="/dashboard/hub/new" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-background/50 px-4 py-2.5 text-sm font-medium hover:bg-white/5">
+              <Link to="/dashboard/hub/new" className="inline-flex items-center gap-2 rounded-xl border border-border bg-background/50 px-4 py-2.5 text-sm font-medium hover:bg-muted/40">
                 Spin up a venture <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -93,7 +93,7 @@ export default function WorkshopDayPage() {
 
       {/* Cohort card */}
       {cohort ? (
-        <div className="rounded-3xl border border-white/10 bg-card p-6 md:p-8">
+        <div className="rounded-3xl border border-border bg-card p-6 md:p-8">
           <div className="text-xs text-muted-foreground">You're in. Here's the where and when.</div>
           <div className="mt-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
             <Calendar className="h-4 w-4" /> {cohort.dateLabel}
@@ -104,12 +104,12 @@ export default function WorkshopDayPage() {
             <span>{cohort.venueName} · {cohort.venueAddress}, {cohort.venueCity}, {cohort.venueRegion} {cohort.venuePostal}</span>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
-            <a href={cohort.googleCalendarUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/10 bg-card px-4 py-2 text-sm hover:bg-white/5">Add to calendar</a>
-            <a href={cohort.mapsUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/10 bg-card px-4 py-2 text-sm hover:bg-white/5">Get directions</a>
+            <a href={cohort.googleCalendarUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-border bg-card px-4 py-2 text-sm hover:bg-muted/40">Add to calendar</a>
+            <a href={cohort.mapsUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-border bg-card px-4 py-2 text-sm hover:bg-muted/40">Get directions</a>
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/10 bg-card p-6 text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
           We haven't set your 14-Day Sprint start date yet. We'll let you know.
         </div>
       )}
@@ -124,7 +124,7 @@ export default function WorkshopDayPage() {
         </p>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {FRAMEWORK_STAGES.map((stage) => (
-            <div key={stage.number} className="rounded-2xl border border-white/10 bg-card p-5">
+            <div key={stage.number} className="rounded-2xl border border-border bg-card p-5">
               <div className="flex items-baseline justify-between gap-3">
                 <div className="text-xs font-semibold uppercase tracking-wider text-primary">
                   {stage.number} · {stage.name}
@@ -143,7 +143,7 @@ export default function WorkshopDayPage() {
                 {stage.items.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <li key={item.title} className="flex items-center gap-2 rounded-lg border border-white/5 bg-background/40 px-3 py-2 text-sm">
+                    <li key={item.title} className="flex items-center gap-2 rounded-lg border border-border bg-background/40 px-3 py-2 text-sm">
                       <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span className="truncate">{item.title}</span>
                     </li>
@@ -166,8 +166,8 @@ export default function WorkshopDayPage() {
                 b.kind === "break"
                   ? "border-emerald-500/20 bg-emerald-500/5"
                   : b.kind === "checkin" || b.kind === "close"
-                    ? "border-white/10 bg-background/40"
-                    : "border-white/10 bg-card"
+                    ? "border-border bg-background/40"
+                    : "border-border bg-card"
               }`}
             >
               <div className="flex items-center gap-2 text-sm font-mono tabular-nums text-muted-foreground w-24 shrink-0">
@@ -197,10 +197,10 @@ export default function WorkshopDayPage() {
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">Bring four things</h2>
         <ul className="space-y-2 text-sm">
-          <li className="rounded-xl border border-white/10 bg-card p-4">Your laptop and charger — you drive the thinking, your coach keeps you moving.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">A government-issued ID, so the legal setup for your startup is ready to file when you are.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">A rough idea we can sharpen into a real offer — sticky-note energy is welcome.</li>
-          <li className="rounded-xl border border-white/10 bg-card p-4">The one question you most want answered before you walk out.</li>
+          <li className="rounded-xl border border-border bg-card p-4">Your laptop and charger — you drive the thinking, your coach keeps you moving.</li>
+          <li className="rounded-xl border border-border bg-card p-4">A government-issued ID, so the legal setup for your startup is ready to file when you are.</li>
+          <li className="rounded-xl border border-border bg-card p-4">A rough idea we can sharpen into a real offer — sticky-note energy is welcome.</li>
+          <li className="rounded-xl border border-border bg-card p-4">The one question you most want answered before you walk out.</li>
         </ul>
         <p className="mt-3 text-xs text-muted-foreground">
           Nothing to pay on the day. Any state filings happen from home afterward — we'll walk you through exactly what to click.

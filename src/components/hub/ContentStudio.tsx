@@ -187,7 +187,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
   // ---- Gate ----
   if (kitQ.isLoading || docsQ.isLoading) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-card p-4 text-xs text-muted-foreground">
+      <div className="rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">
         Loading Content Studio…
       </div>
     );
@@ -210,13 +210,13 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           tagline="Turn planned posts into on-brand ads"
           accentVar="--status-info"
           badges={
-            <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
               <Lock className="h-3 w-3" /> Brand-gated
             </span>
           }
         />
         {expanded && (
-          <div className="rounded-2xl border border-white/10 bg-card p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground">
               Lock your Brand Wizard first — Content Studio uses your palette, typography and logo to
               keep every ad visually consistent with your channel covers.
@@ -245,7 +245,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           accentVar="--status-info"
         />
         {expanded && (
-          <div className="rounded-2xl border border-white/10 bg-card p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-xs text-muted-foreground">
               Generate your <b>90-Day Content Calendar</b> startup asset first — Content Studio turns
               each planned post into a 1:1 / 4:5 / 9:16 social ad using your locked brand kit.
@@ -279,7 +279,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
         }
       />
       {expanded && (
-      <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
 
 
       {step === 1 && (
@@ -406,7 +406,7 @@ function Step1Calendar({
       </div>
 
       {posts.length === 0 ? (
-        <div className="rounded-lg border border-white/10 bg-background/40 p-4 text-xs">
+        <div className="rounded-lg border border-border bg-background/40 p-4 text-xs">
           {parsing ? (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" /> Reading your 90-day content calendar…
@@ -424,7 +424,7 @@ function Step1Calendar({
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="rounded-lg border border-white/10 bg-background/40 p-3 text-xs">
+          <div className="rounded-lg border border-border bg-background/40 p-3 text-xs">
             <div className="flex items-center justify-between gap-2">
               <div>
                 <b>{posts.length}</b> posts across <b>{grouped.size}</b> week{grouped.size === 1 ? "" : "s"}.
@@ -437,7 +437,7 @@ function Step1Calendar({
           </div>
 
           {week1Posts.length > 0 && (
-            <div className="rounded-lg border border-white/10 bg-background/40 p-3">
+            <div className="rounded-lg border border-border bg-background/40 p-3">
               <div className="mb-2 flex items-center justify-between">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
                   Week {firstWeek} queue · {week1Posts.length} post{week1Posts.length === 1 ? "" : "s"}
@@ -446,8 +446,8 @@ function Step1Calendar({
               </div>
               <ul className="space-y-1.5">
                 {week1Posts.map((p, i) => (
-                  <li key={p.id} className="flex items-start gap-2 rounded-md border border-white/5 bg-background/40 p-2 text-[11px]">
-                    <span className="mt-0.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full border border-white/10 px-1 text-[10px] text-muted-foreground">
+                  <li key={p.id} className="flex items-start gap-2 rounded-md border border-border bg-background/40 p-2 text-[11px]">
+                    <span className="mt-0.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full border border-border px-1 text-[10px] text-muted-foreground">
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -524,7 +524,7 @@ function Step2Weeks({
               key={w}
               type="button"
               onClick={() => toggle(w)}
-              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition ${on ? "border-primary bg-primary/10 text-primary" : "border-white/10 bg-background/40 text-foreground hover:border-white/30"}`}
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition ${on ? "border-primary bg-primary/10 text-primary" : "border-border bg-background/40 text-foreground hover:border-foreground/25"}`}
             >
               {on && <Check className="h-3 w-3" />}
               Week {w} <span className="text-muted-foreground">· {count}</span>
@@ -573,7 +573,7 @@ function Step3Style({
             key={d.id}
             type="button"
             onClick={() => onDirection(d.id)}
-            className={`rounded-lg border p-3 text-left text-xs transition ${direction === d.id ? "border-primary bg-primary/10" : "border-white/10 bg-background/40 hover:border-white/30"}`}
+            className={`rounded-lg border p-3 text-left text-xs transition ${direction === d.id ? "border-primary bg-primary/10" : "border-border bg-background/40 hover:border-foreground/25"}`}
           >
             <div className="font-semibold">{d.label}</div>
           </button>
@@ -588,7 +588,7 @@ function Step3Style({
               key={l.id}
               type="button"
               onClick={() => onPosterLayout(l.id)}
-              className={`rounded-lg border p-3 text-left text-xs transition ${posterLayout === l.id ? "border-primary bg-primary/10" : "border-white/10 bg-background/40 hover:border-white/30"}`}
+              className={`rounded-lg border p-3 text-left text-xs transition ${posterLayout === l.id ? "border-primary bg-primary/10" : "border-border bg-background/40 hover:border-foreground/25"}`}
             >
               <div className="font-semibold">{l.label}</div>
               <div className="text-[10px] text-muted-foreground mt-0.5">{l.blurb}</div>
@@ -607,7 +607,7 @@ function Step3Style({
                 key={a.id}
                 type="button"
                 onClick={() => toggleAspect(a.id)}
-                className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-[11px] transition ${on ? "border-primary bg-primary/10 text-primary" : "border-white/10 bg-background/40 hover:border-white/30"}`}
+                className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-[11px] transition ${on ? "border-primary bg-primary/10 text-primary" : "border-border bg-background/40 hover:border-foreground/25"}`}
                 title={a.hint}
               >
                 {on && <Check className="h-3 w-3" />}
@@ -853,7 +853,7 @@ function Step4BuildAds({
       </div>
 
       {allWeeks.length > 1 && (
-        <div className="rounded-xl border border-white/10 bg-background/30 p-3">
+        <div className="rounded-xl border border-border bg-background/30 p-3">
           <p className="text-[11px] font-medium">Campaign arc — the flight builds one argument, week by week</p>
           <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
             {allWeeks.map((w) => {
@@ -903,7 +903,7 @@ function Step4BuildAds({
                 <AccordionItem
                   key={`w-${w}`}
                   value={`w-${w}`}
-                  className={`rounded-xl border ${isPending ? "border-dashed border-white/15 bg-background/20" : "border-white/10 bg-background/40"} px-3`}
+                  className={`rounded-xl border ${isPending ? "border-dashed border-border bg-background/20" : "border-border bg-background/40"} px-3`}
                 >
                   <AccordionTrigger className="py-2.5 hover:no-underline">
                     <div className="flex flex-1 items-center justify-between gap-2 pr-2">
@@ -991,12 +991,12 @@ function Step4BuildAds({
                           const err = errors[k];
                           const url = t.ad?.signed_url;
                           return (
-                            <li key={k} className="flex items-start gap-3 rounded-lg border border-white/5 bg-background/40 p-2 text-xs">
+                            <li key={k} className="flex items-start gap-3 rounded-lg border border-border bg-background/40 p-2 text-xs">
                               <button
                                 type="button"
                                 onClick={() => { if (url) setPreviewIdx(tasks.indexOf(t)); }}
                                 disabled={!url}
-                                className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border border-white/10 bg-muted/40 flex items-center justify-center ${url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
+                                className={`h-20 w-20 shrink-0 overflow-hidden rounded-md border border-border bg-muted/40 flex items-center justify-center ${url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
                               >
                                 {url ? (
                                   <AssetImage src={url} alt="ad preview" className="h-full w-full object-contain" />
@@ -1216,7 +1216,7 @@ function Step5Launch({
           Download individual creatives from the preview modal, then schedule them alongside your calendar posts.
         </p>
       </div>
-      <div className="rounded-lg border border-white/10 bg-background/40 p-3 text-xs">
+      <div className="rounded-lg border border-border bg-background/40 p-3 text-xs">
         <b>{scoped.length}</b> ad{scoped.length === 1 ? "" : "s"} produced across weeks {doneWeeks.join(", ") || "—"}.
       </div>
 
@@ -1233,7 +1233,7 @@ function Step5Launch({
               <AccordionItem
                 key={`done-w-${w}`}
                 value={`w-${w}`}
-                className="rounded-xl border border-white/10 bg-background/40 px-3"
+                className="rounded-xl border border-border bg-background/40 px-3"
               >
                 <AccordionTrigger className="py-2.5 hover:no-underline">
                   <div className="flex flex-1 items-center gap-2 pr-2">
@@ -1252,7 +1252,7 @@ function Step5Launch({
                       return (
                         <div
                           key={a.id}
-                          className="group flex min-w-0 items-center gap-2 overflow-hidden rounded-lg border border-white/10 bg-background/30 p-2 transition hover:bg-white/5"
+                          className="group flex min-w-0 items-center gap-2 overflow-hidden rounded-lg border border-border bg-background/30 p-2 transition hover:bg-muted/40"
                         >
                           <button
                             type="button"
@@ -1311,7 +1311,7 @@ function Step5Launch({
           {pendingWeeks.map((w) => {
             const wPosts = postsByWeek.get(w) ?? [];
             return (
-              <div key={`pending-${w}`} className="rounded-xl border border-dashed border-white/15 bg-background/20 p-3">
+              <div key={`pending-${w}`} className="rounded-xl border border-dashed border-border bg-background/20 p-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-[10px]">Week {w}</Badge>

@@ -161,7 +161,7 @@ export function ChannelSetupTab({
   return (
     <div className="space-y-3">
       {/* Brand identity strip */}
-      <div className="rounded-xl border border-white/10 bg-background/40 p-3">
+      <div className="rounded-xl border border-border bg-background/40 p-3">
         <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
           Brand identity (used across channels)
         </div>
@@ -197,7 +197,7 @@ export function ChannelSetupTab({
             <div
               key={spec.platform}
               className={`rounded-xl border bg-background/40 p-3 ${
-                skipped ? "border-white/5 opacity-70" : "border-white/10"
+                skipped ? "border-border opacity-70" : "border-border"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
@@ -214,7 +214,7 @@ export function ChannelSetupTab({
                       href={signup}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex h-7 items-center gap-1 rounded-md border border-white/10 px-2 text-[11px] hover:bg-white/5"
+                      className="inline-flex h-7 items-center gap-1 rounded-md border border-border px-2 text-[11px] hover:bg-muted/40"
                     >
                       Sign up <ExternalLink className="h-3 w-3" />
                     </a>
@@ -224,7 +224,7 @@ export function ChannelSetupTab({
                       href={edit}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex h-7 items-center gap-1 rounded-md border border-white/10 px-2 text-[11px] hover:bg-white/5"
+                      className="inline-flex h-7 items-center gap-1 rounded-md border border-border px-2 text-[11px] hover:bg-muted/40"
                     >
                       Edit profile <ExternalLink className="h-3 w-3" />
                     </a>
@@ -235,7 +235,7 @@ export function ChannelSetupTab({
               {/* Asset previews */}
               <div className="mt-3 grid grid-cols-[64px_1fr] gap-3">
                 <div className="space-y-1">
-                  <div className="h-16 w-16 overflow-hidden rounded-full border border-white/10 bg-muted/40">
+                  <div className="h-16 w-16 overflow-hidden rounded-full border border-border bg-muted/40">
                     {avatar?.signed_url ? (
                       <img src={avatar.signed_url} alt="" className="h-full w-full object-cover" />
                     ) : (
@@ -249,7 +249,7 @@ export function ChannelSetupTab({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <div className="aspect-[4/1] overflow-hidden rounded-md border border-white/10 bg-muted/40">
+                  <div className="aspect-[4/1] overflow-hidden rounded-md border border-border bg-muted/40">
                     {banner?.signed_url ? (
                       <img src={banner.signed_url} alt="" className="h-full w-full object-cover" />
                     ) : (
@@ -269,7 +269,7 @@ export function ChannelSetupTab({
                 {spec.assets.map((a) => (
                   <span
                     key={a.kind}
-                    className="rounded border border-white/10 bg-background/40 px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                    className="rounded border border-border bg-background/40 px-1.5 py-0.5 text-[10px] text-muted-foreground"
                     title={a.label}
                   >
                     {a.label}: {a.width}×{a.height}
@@ -290,7 +290,7 @@ export function ChannelSetupTab({
               </div>
 
               {/* Progress checklist */}
-              <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-white/5 pt-2 text-[11px]">
+              <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-2 text-[11px]">
                 <Stage
                   label="Created"
                   checked={!!prog?.account_created}
@@ -347,7 +347,7 @@ function FieldRow({
   multiline?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-white/5 bg-background/30 p-2">
+    <div className="rounded-lg border border-border bg-background/30 p-2">
       <div className="flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
         <button
@@ -380,7 +380,7 @@ function CopyLine({
   onCopy: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded border border-white/5 bg-background/30 px-2 py-1">
+    <div className="flex items-center gap-2 rounded border border-border bg-background/30 px-2 py-1">
       <span className="w-14 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">
         {label}
       </span>

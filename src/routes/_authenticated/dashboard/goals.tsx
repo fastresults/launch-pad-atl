@@ -45,12 +45,12 @@ export default function GoalsPage() {
         <p className="mt-1 text-sm text-muted-foreground">Plan what happens after your 14-Day Sprint.</p>
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
+      <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-center gap-3">
           <select
             value={horizon}
             onChange={(e) => setHorizon(Number(e.target.value) as 30 | 60 | 90)}
-            className="rounded-md border border-white/10 bg-background px-3 py-2 text-sm"
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
           >
             <option value={30}>30 days</option>
             <option value={60}>60 days</option>
@@ -64,11 +64,11 @@ export default function GoalsPage() {
 
       <div className="grid gap-6 md:grid-cols-3">
         {buckets.map((h) => (
-          <div key={h} className="rounded-2xl border border-white/10 bg-card p-4">
+          <div key={h} className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-3 text-sm font-medium">{h} days</div>
             <ul className="space-y-2">
               {(data?.goals ?? []).filter((g) => g.horizon === h).map((g) => (
-                <li key={g.id} className="rounded-lg border border-white/5 p-3 text-sm">
+                <li key={g.id} className="rounded-lg border border-border p-3 text-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="font-medium">{g.title}</div>

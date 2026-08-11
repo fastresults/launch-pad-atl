@@ -119,14 +119,14 @@ function LibraryInner() {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1.5 border-b border-white/5 pb-2">
+      <div className="flex flex-wrap gap-1.5 border-b border-border pb-2">
         <TabPill active={tab === "active"} onClick={() => setTab("active")} label="Active" count={buckets.active.length} />
         <TabPill active={tab === "favorites"} onClick={() => setTab("favorites")} label="Favorites" count={buckets.favorites.length} icon={<Star className="h-3 w-3" />} />
         <TabPill active={tab === "archived"} onClick={() => setTab("archived")} label="Archived" count={buckets.archived.length} icon={<Archive className="h-3 w-3" />} />
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-white/10 bg-card p-8 text-sm text-muted-foreground">Loading…</div>
+        <div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground">Loading…</div>
       ) : visible.length === 0 ? (
         <EmptyState tab={tab} />
       ) : (
@@ -193,12 +193,12 @@ function TabPill({
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
         active
           ? "bg-foreground text-background"
-          : "border border-white/10 bg-card text-muted-foreground hover:text-foreground"
+          : "border border-border bg-card text-muted-foreground hover:text-foreground"
       }`}
     >
       {icon}
       <span>{label}</span>
-      <span className={`rounded-full px-1.5 text-[10px] ${active ? "bg-background/20" : "bg-white/5"}`}>{count}</span>
+      <span className={`rounded-full px-1.5 text-[10px] ${active ? "bg-background/20" : "bg-muted/40"}`}>{count}</span>
     </button>
   );
 }
@@ -206,7 +206,7 @@ function TabPill({
 function EmptyState({ tab }: { tab: Tab }) {
   if (tab === "favorites") {
     return (
-      <div className="rounded-2xl border border-dashed border-white/15 bg-card/40 p-10 text-center">
+      <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
         <Star className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
         <h2 className="text-lg font-semibold">No favorites yet</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
@@ -217,7 +217,7 @@ function EmptyState({ tab }: { tab: Tab }) {
   }
   if (tab === "archived") {
     return (
-      <div className="rounded-2xl border border-dashed border-white/15 bg-card/40 p-10 text-center">
+      <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
         <Archive className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
         <h2 className="text-lg font-semibold">Nothing archived</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
@@ -227,7 +227,7 @@ function EmptyState({ tab }: { tab: Tab }) {
     );
   }
   return (
-    <div className="rounded-2xl border border-dashed border-white/15 bg-card/40 p-10 text-center">
+    <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
       <Sparkles className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
       <h2 className="text-xl font-semibold">Start your first startup</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
@@ -258,12 +258,12 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
   const tone = isFav
     ? "border-status-warning/40 bg-status-warning/5"
     : isArchived
-      ? "border-white/5 bg-card/60 opacity-80"
+      ? "border-border bg-card/60 opacity-80"
       : snapshot.status === "complete"
         ? "border-status-success/30 bg-status-success/5"
         : snapshot.status === "enriching" || snapshot.status === "generating"
           ? "border-status-warning/30 bg-status-warning/5"
-          : "border-white/10";
+          : "border-border";
 
   const favMut = useMutation({
     mutationFn: (next: boolean) => setFavorite({ data: { id: snapshot.id, is_favorite: next } }),
@@ -321,7 +321,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
   };
 
   return (
-    <div className={`group relative rounded-2xl border ${tone} bg-card p-5 transition hover:border-white/30`}>
+    <div className={`group relative rounded-2xl border ${tone} bg-card p-5 transition hover:border-foreground/25`}>
       {/* Card actions overlay */}
       <div className="absolute right-3 top-3 z-10 flex items-center gap-1" onClick={stop}>
         {!isArchived && (
@@ -329,7 +329,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
             type="button"
             aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
             onClick={(e) => { stop(e); favMut.mutate(!isFav); }}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-white/5 hover:text-status-warning"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted/40 hover:text-status-warning"
           >
             <Star className={`h-4 w-4 ${isFav ? "fill-status-warning text-status-warning" : ""}`} />
           </button>
@@ -340,7 +340,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
               type="button"
               aria-label="More actions"
               onClick={stop}
-              className="rounded-md p-1.5 text-muted-foreground hover:bg-white/5 hover:text-foreground"
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
@@ -439,7 +439,7 @@ function SnapshotCard({ snapshot, totalDocs, tab, isLast }: { snapshot: any; tot
                       <strong>Heads up:</strong> this is your last venture. Deleting it will also clear your Founder Brief, Profile intake, and Market answers so your next startup starts fresh.
                     </div>
                   )}
-                  <div className="rounded-lg border border-white/10 bg-muted/40 p-3 text-xs">
+                  <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs">
 
                     <div><span className="text-muted-foreground">Venture:</span> <span className="font-medium">{title}</span></div>
                     <div><span className="text-muted-foreground">Owner:</span> {snapshot.user_id}</div>

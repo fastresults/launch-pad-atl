@@ -193,7 +193,7 @@ export default function DocumentsPage() {
         "rounded-full border px-3 py-1 text-xs transition",
         ventureFilter === key
           ? "border-primary/40 bg-primary/10 text-primary"
-          : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground",
+          : "border-border text-muted-foreground hover:border-border hover:text-foreground",
       )}
     >
       {label}
@@ -209,12 +209,12 @@ export default function DocumentsPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-card p-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
         <UploadIcon className="h-4 w-4 text-muted-foreground" />
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value as typeof kind)}
-          className="rounded-md border border-white/10 bg-background px-3 py-2 text-sm"
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm"
         >
           {KINDS.filter((k) => k.key !== "deliverable").map((k) => (
             <option key={k.key} value={k.key}>
@@ -226,7 +226,7 @@ export default function DocumentsPage() {
           <select
             value={uploadSnapshotId}
             onChange={(e) => setUploadSnapshotId(e.target.value)}
-            className="rounded-md border border-white/10 bg-background px-3 py-2 text-sm"
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
             title="Save to which venture"
           >
             <option value="">Unassigned</option>
@@ -263,7 +263,7 @@ export default function DocumentsPage() {
               "rounded-full border px-3 py-1 text-xs transition",
               filter === f.key
                 ? "border-primary/40 bg-primary/10 text-primary"
-                : "border-white/10 text-muted-foreground hover:border-white/20 hover:text-foreground",
+                : "border-border text-muted-foreground hover:border-border hover:text-foreground",
             )}
           >
             {f.label}
@@ -271,9 +271,9 @@ export default function DocumentsPage() {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/10">
+      <div className="overflow-hidden rounded-2xl border border-border">
         <table className="w-full text-sm">
-          <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">File</th>
               <th className="px-4 py-3">Venture</th>
@@ -288,11 +288,11 @@ export default function DocumentsPage() {
               const generated = d.kind === "deliverable";
               const ventureName = d.snapshot_id ? ventureNameById.get(d.snapshot_id) : null;
               return (
-                <tr key={d.id} className="border-t border-white/5">
+                <tr key={d.id} className="border-t border-border">
                   <td className="px-4 py-3">{d.original_name}</td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {ventureName ? (
-                      <span className="inline-flex items-center rounded-full border border-white/10 px-2 py-0.5 text-[11px]">
+                      <span className="inline-flex items-center rounded-full border border-border px-2 py-0.5 text-[11px]">
                         {ventureName}
                       </span>
                     ) : (
@@ -305,7 +305,7 @@ export default function DocumentsPage() {
                         <Sparkles className="h-3 w-3" /> Generated
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
                         Uploaded
                       </span>
                     )}
@@ -341,7 +341,7 @@ export default function DocumentsPage() {
                         <PopoverContent align="end" className="w-56 p-1">
                           <button
                             type="button"
-                            className="block w-full rounded px-2 py-1.5 text-left text-xs hover:bg-white/5"
+                            className="block w-full rounded px-2 py-1.5 text-left text-xs hover:bg-muted/40"
                             onClick={() => move.mutate({ id: d.id, snapshotId: null })}
                           >
                             Unassigned
@@ -350,7 +350,7 @@ export default function DocumentsPage() {
                             <button
                               key={s.id}
                               type="button"
-                              className="block w-full rounded px-2 py-1.5 text-left text-xs hover:bg-white/5"
+                              className="block w-full rounded px-2 py-1.5 text-left text-xs hover:bg-muted/40"
                               onClick={() => move.mutate({ id: d.id, snapshotId: s.id })}
                             >
                               {s.company_name || "Untitled venture"}

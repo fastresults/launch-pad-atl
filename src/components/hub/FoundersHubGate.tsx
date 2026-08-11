@@ -17,7 +17,7 @@ export function FoundersHubGate({ children }: { children: ReactNode }) {
 
   if (!isAdmin && !foundersHubAccess) {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-white/10 bg-card p-8 text-center">
+      <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-8 text-center">
         <Lock className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
         <h1 className="text-2xl font-semibold tracking-tight">Founders Hub unlocks when your 14-Day Sprint begins</h1>
         <p className="mt-3 text-sm text-muted-foreground">

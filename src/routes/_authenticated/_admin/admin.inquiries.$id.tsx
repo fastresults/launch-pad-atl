@@ -82,7 +82,7 @@ export default function InquiryDetailPage() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back to inquiries
       </Link>
 
-      <div className="rounded-xl border border-white/10 p-5">
+      <div className="rounded-xl border border-border p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-xl font-semibold tracking-tight">{inq.subject}</h1>
@@ -130,7 +130,7 @@ export default function InquiryDetailPage() {
                 "rounded-lg border p-4",
                 outbound
                   ? "ml-8 border-primary/30 bg-primary/5"
-                  : "mr-8 border-white/10 bg-white/[0.02]",
+                  : "mr-8 border-border bg-white/[0.02]",
               )}
             >
               <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
@@ -145,7 +145,7 @@ export default function InquiryDetailPage() {
         })}
       </div>
 
-      <div className="rounded-xl border border-white/10 p-4">
+      <div className="rounded-xl border border-border p-4">
         <label className="mb-2 block text-sm font-medium">Reply</label>
         <Textarea
           value={reply}

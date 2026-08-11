@@ -153,7 +153,7 @@ export default function ApplicationDetailPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Left: full record */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-card p-6">
+          <div className="rounded-2xl border border-border bg-card p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight">{a.name}</h1>
@@ -213,7 +213,7 @@ export default function ApplicationDetailPage() {
 
         {/* Right: actions */}
         <div className="space-y-5">
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Status
             </h2>
@@ -257,7 +257,7 @@ export default function ApplicationDetailPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Promote to registration
             </h2>
@@ -292,7 +292,7 @@ export default function ApplicationDetailPage() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-card p-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Notes
             </h2>
@@ -320,7 +320,7 @@ export default function ApplicationDetailPage() {
                 <div
                   key={n.id}
                   className={cn(
-                    "rounded-lg border border-white/5 p-3 text-xs",
+                    "rounded-lg border border-border p-3 text-xs",
                     n.kind === "system"
                       ? "bg-white/[0.02] text-muted-foreground italic"
                       : "bg-white/[0.04]",
@@ -343,7 +343,7 @@ export default function ApplicationDetailPage() {
 
 function Section({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-card p-6">
+    <div className="rounded-2xl border border-border bg-card p-6">
       <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {title}
       </h2>

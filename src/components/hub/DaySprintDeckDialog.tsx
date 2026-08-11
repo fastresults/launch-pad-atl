@@ -74,7 +74,7 @@ function TrackChipSlide({ track }: { track: AssetTrack }) {
 
 function TimeChipSlide({ minutes, track }: { minutes: number; track: AssetTrack }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 slide-chrome font-medium text-white/80">
+    <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 slide-chrome font-medium text-muted-foreground">
       <Clock className="h-4 w-4" aria-hidden />
       {timeChipLabel(track, minutes)}
     </span>
@@ -154,12 +154,12 @@ export function DaySprintDeckDialog({
               Day {day.day} of 14 · Week {day.week} · {day.category}
             </div>
             <h1 className="slide-title-lg font-semibold tracking-tight">{day.theme}</h1>
-            <p className="slide-subtitle mt-10 text-white/80 max-w-[1300px]">{day.objective}</p>
+            <p className="slide-subtitle mt-10 text-muted-foreground max-w-[1300px]">{day.objective}</p>
             <div className="mt-14 flex flex-wrap items-center gap-4">
-              <span className="inline-flex items-center gap-3 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 slide-chrome font-semibold text-white">
+              <span className="inline-flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-3 slide-chrome font-semibold text-white">
                 <Clock className="h-5 w-5" /> ≈ {formatDuration(totals.total)} focused work
               </span>
-              <span className="inline-flex items-center gap-3 rounded-2xl border border-white/15 bg-white/5 px-5 py-3 slide-chrome text-white/80">
+              <span className="inline-flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-3 slide-chrome text-muted-foreground">
                 {orderedKeys.length} assets today
               </span>
             </div>
@@ -414,13 +414,13 @@ export function DaySprintDeckDialog({
         return (
           <SlideLayout stageKicker={KICKER} pageLabel="" variant="dark">
             <div className="max-w-[1500px]">
-              <div className="slide-kicker font-semibold text-white/60 mb-8 flex items-center gap-3">
+              <div className="slide-kicker font-semibold text-muted-foreground mb-8 flex items-center gap-3">
                 <Rocket className="h-5 w-5" /> Do this next
               </div>
               <h2 className="slide-title-lg font-semibold tracking-tight">
                 {firstT ? `Start with ${firstT.name}.` : "You're all caught up for today."}
               </h2>
-              <p className="slide-subtitle mt-8 text-white/70 max-w-[1200px]">
+              <p className="slide-subtitle mt-8 text-muted-foreground max-w-[1200px]">
                 Close this deck and jump straight to the asset — everything you need to complete today
                 is one click away.
               </p>
@@ -537,12 +537,12 @@ export function DaySprintDeckDialog({
             }`}
           >
             <span className="truncate text-sm font-medium">{deckTitle}</span>
-            <div className="flex items-center gap-3 text-xs text-white/70">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span>Slide {index + 1} / {slides.length}</span>
               <span className="hidden sm:inline opacity-60">←/→ navigate · F fullscreen · Esc close</span>
               <button
                 onClick={toggleFullscreen}
-                className="p-1.5 rounded-md hover:bg-white/10"
+                className="p-1.5 rounded-md hover:bg-muted"
                 aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
               >
                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -561,7 +561,7 @@ export function DaySprintDeckDialog({
           <button
             onClick={() => goto(index - 1)}
             disabled={index === 0}
-            className={`absolute left-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white disabled:opacity-20 transition-opacity duration-300 ${
+            className={`absolute left-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-muted hover:bg-muted text-white disabled:opacity-20 transition-opacity duration-300 ${
               chromeVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Previous slide"
@@ -571,7 +571,7 @@ export function DaySprintDeckDialog({
           <button
             onClick={() => goto(index + 1)}
             disabled={index >= slides.length - 1}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white disabled:opacity-20 transition-opacity duration-300 ${
+            className={`absolute right-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-muted hover:bg-muted text-white disabled:opacity-20 transition-opacity duration-300 ${
               chromeVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Next slide"
@@ -579,7 +579,7 @@ export function DaySprintDeckDialog({
             <ChevronRight className="h-6 w-6" />
           </button>
 
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-10">
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted z-10">
             <div
               className="h-full bg-primary transition-[width] duration-300"
               style={{ width: `${progress}%` }}
@@ -587,13 +587,13 @@ export function DaySprintDeckDialog({
           </div>
         </div>
 
-        <div className="hidden md:flex shrink-0 items-center gap-2 px-4 py-3 bg-neutral-950 border-t border-white/10 overflow-x-auto">
+        <div className="hidden md:flex shrink-0 items-center gap-2 px-4 py-3 bg-neutral-950 border-t border-border overflow-x-auto">
           {slides.map((s, i) => (
             <button
               key={s.id}
               onClick={() => goto(i)}
               className={`relative shrink-0 w-[160px] h-[90px] rounded-md overflow-hidden border-2 transition ${
-                i === index ? "border-primary ring-2 ring-primary/40" : "border-white/10 hover:border-white/30"
+                i === index ? "border-primary ring-2 ring-primary/40" : "border-border hover:border-foreground/25"
               }`}
               aria-label={`Go to slide ${i + 1}: ${s.title}`}
             >

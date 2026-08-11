@@ -167,7 +167,7 @@ export default function WorkflowDetail() {
       </div>
 
       {wf?.intake && wf.intake.length > 0 && (
-        <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
+        <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
           <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Quick intake</h2>
           {wf.intake.map((f) => (
             <VoiceField

@@ -59,7 +59,7 @@ export default function FilingPage() {
         </p>
       </div>
 
-      <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
+      <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">You</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {field("legal_first_name", "Legal first name")}
@@ -79,7 +79,7 @@ export default function FilingPage() {
         </div>
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
+      <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Address</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {field("address_line1", "Address line 1")}
@@ -91,7 +91,7 @@ export default function FilingPage() {
         </div>
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
+      <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Startup</h2>
         <div className="grid gap-4 md:grid-cols-2">
           {field("llc_name", "LLC name")}
