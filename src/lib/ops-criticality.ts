@@ -1,5 +1,5 @@
 // How badly the business needs a step — and the words we use to say so.
-import type { OpsTask } from "@/lib/ops-runway";
+import { categoryLabel, type OpsTask } from "@/lib/ops-runway";
 
 export type OpsCriticality = "required_to_operate" | "required_to_sell" | "growth";
 
