@@ -4,7 +4,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import type { OpsTask } from "@/lib/ops-runway";
+import { categoryLabel, type OpsTask } from "@/lib/ops-runway";
 import { estimateLabel } from "@/lib/ops-guided";
 import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, unlockedBy } from "@/lib/ops-criticality";
 
@@ -44,7 +44,7 @@ export function StepExplainer({
             <span className={cn("rounded-full border px-2 py-0.5 font-medium", crit.badge)}>
               {crit.label}
             </span>
-            <span className="text-muted-foreground">{task.category}</span>
+            <span className="text-muted-foreground">{categoryLabel(task.category)}</span>
             {est && (
               <span className="inline-flex items-center gap-1 text-muted-foreground">
                 <Clock className="h-3 w-3" /> {est}

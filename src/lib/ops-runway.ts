@@ -155,6 +155,27 @@ export const OPS_CATEGORY_DOT: Record<string, string> = {
   Creative: "bg-violet-400",
 };
 
+/**
+ * Founder-facing lane names. The seed categories are internal words, and
+ * "Foundation" in particular collides with the delivered foundation the
+ * runway header credits — so it is never shown raw on a step.
+ */
+export const OPS_CATEGORY_LABEL: Record<string, string> = {
+  Foundation: "Offer",
+  Governance: "Legal",
+  Finance: "Money",
+  Operations: "Systems",
+  Strategy: "Strategy",
+  Brand: "Brand",
+  Marketing: "Demand",
+  Creative: "Creative",
+  "Social & Content": "Content",
+};
+
+export const categoryLabel = (category: string) =>
+  OPS_CATEGORY_LABEL[category] ?? category;
+
+
 /** Categories that make up the creative sign-off thread. */
 export const OPS_CREATIVE_CATEGORIES = new Set(["Creative", "Brand"]);
 

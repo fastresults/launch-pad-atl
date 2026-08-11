@@ -6,16 +6,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
-  STATUS_CLASS, dueForDay, isOverdue,
+  STATUS_CLASS, categoryLabel, dueForDay, isOverdue,
   type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
 } from "@/lib/ops-runway";
+
 import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
 import { OWNER_LABEL, estimateLabel, isSnoozed } from "@/lib/ops-guided";
 import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, minutesTip, ownerTip, statusTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
 import { OpsGlyph } from "./OpsGlyph";
-import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
+import { LEAD_META, isMilestone, leadOf, milestoneReason } from "@/lib/ops-significance";
 
 
 /** Plain-language status names. No underscores, no project-management dialect. */
@@ -47,6 +48,11 @@ export interface TaskRowProps extends DeliveryHandlers {
   variant?: "milestone" | "supporting" | "auto";
   /** How this runway is being delivered — drives the managed-delivery block. */
   deliveryMode?: DeliveryMode | null;
+  /** The day header already names the lane — don't repeat it on every row. */
+  hideCategory?: boolean;
+  /** The same sentence was already said in this group; stay quiet. */
+  suppressReason?: boolean;
+
 }
 
 
@@ -65,6 +71,9 @@ export function OpsTaskRow(props: TaskRowProps) {
   const major = props.variant === "milestone" || (props.variant !== "supporting" && isMilestone(task));
   const lead = leadOf(task);
   const leadMeta = LEAD_META[lead];
+  // Specific before generic, and never the same sentence twice in a group.
+  const reason = props.suppressReason ? null : milestoneReason(task, props.allTasks ?? [task]);
+
   // Managed delivery only shows once the venture has retained the team.
   const engaged = props.deliveryMode === "retained";
   const managed = engaged && task.owner_kind === "agency";
@@ -79,7 +88,7 @@ export function OpsTaskRow(props: TaskRowProps) {
     <div className={cn(
       "rounded-xl border transition-colors",
       major
-        ? "border-border/70 bg-card/70 px-3.5 py-3 shadow-sm ring-1 ring-primary/10 sm:px-4"
+        ? "border-border/70 bg-card/70 px-3.5 py-3 shadow-sm sm:px-4"
         : "border-border/40 bg-card/25 px-3 py-2",
       done && "opacity-60",
       snoozed && "opacity-60",
@@ -128,28 +137,32 @@ export function OpsTaskRow(props: TaskRowProps) {
               done && "line-through",
             )}>{task.title}</span>
           </button>
-          {major && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              {milestoneNote(task, props.allTasks ?? [task])}
-              {lead !== "founder" && <> <span className="text-foreground/80">Where our experience saves you:</span> {agencySkillNote(task)}.</>}
-            </p>
+          {major && reason && (
+            <p className="mt-1 text-xs text-muted-foreground">{reason}</p>
           )}
 
 
 
+
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-            <InfoTip tip={categoryTip(task)}>
-              <span className="inline-flex items-center gap-1.5">
-                <OpsGlyph category={task.category} className="h-3.5 w-3.5" />
-                {task.category}
-              </span>
-            </InfoTip>
+            {!props.hideCategory && (
+              <InfoTip tip={categoryTip(task)}>
+                <span className="inline-flex items-center gap-1.5">
+                  <OpsGlyph category={task.category} className="h-3.5 w-3.5" />
+                  {categoryLabel(task.category)}
+                </span>
+              </InfoTip>
+            )}
             <InfoTip tip={criticalityTip(task, props.allTasks ?? [task])} className={cn("rounded-full border px-1.5 py-px", crit.badge)}>
               <span>{crit.short}</span>
             </InfoTip>
-            <InfoTip tip={ownerTip(task, task.owner_kind === viewerKind)}>
-              <span>{OWNER_LABEL(task.owner_kind, viewerKind)}</span>
-            </InfoTip>
+            {/* On a major move the lead badge above already names the owner. */}
+            {!major && (
+              <InfoTip tip={ownerTip(task, task.owner_kind === viewerKind)}>
+                <span>{OWNER_LABEL(task.owner_kind, viewerKind)}</span>
+              </InfoTip>
+            )}
+
             {!done && task.status !== "todo" && (
               <InfoTip tip={statusTip(task, PLAIN_STATUS[task.status])} className={cn("rounded-full border px-1.5 py-px", STATUS_CLASS[task.status])}>
                 <span>{PLAIN_STATUS[task.status]}</span>

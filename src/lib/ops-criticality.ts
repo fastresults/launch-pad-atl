@@ -1,5 +1,5 @@
 // How badly the business needs a step — and the words we use to say so.
-import type { OpsTask } from "@/lib/ops-runway";
+import { categoryLabel, type OpsTask } from "@/lib/ops-runway";
 
 export type OpsCriticality = "required_to_operate" | "required_to_sell" | "growth";
 
@@ -12,25 +12,27 @@ export const CRITICALITY: Record<OpsCriticality, {
 }> = {
   required_to_operate: {
     label: "Required to operate",
-    short: "Must have",
+    // One vocabulary everywhere: the chip and the explainer say the same words.
+    short: "Required to operate",
     tip: "Without this you are not legally or practically in business. Filing, banking, invoicing, contracts — skip one and something downstream stops working or exposes you.",
     badge: "border-destructive/50 bg-destructive/10 text-destructive",
     dot: "bg-destructive",
   },
   required_to_sell: {
     label: "Required to sell",
-    short: "Needed to sell",
+    short: "Required to sell",
     tip: "You can exist without this, but you cannot reliably take money. The offer, the price, the booking link, the pipeline — this is the machinery that turns interest into revenue.",
-    badge: "border-amber-400/50 bg-amber-400/10 text-amber-300",
-    dot: "bg-amber-400",
+    badge: "border-amber-500/50 bg-amber-400/10 text-amber-700 dark:text-amber-300",
+    dot: "bg-amber-500",
   },
   growth: {
     label: "Makes it grow",
-    short: "Growth",
+    short: "Makes it grow",
     tip: "An accelerator. Nothing breaks if it waits a week, but this is what compounds — content, retargeting, referrals, reviews, pricing discipline.",
-    badge: "border-sky-400/50 bg-sky-400/10 text-sky-300",
-    dot: "bg-sky-400",
+    badge: "border-sky-500/50 bg-sky-400/10 text-sky-700 dark:text-sky-300",
+    dot: "bg-sky-500",
   },
+
 };
 
 export const criticalityOf = (t: OpsTask): OpsCriticality =>
@@ -68,12 +70,16 @@ export const TIPS = {
 
 /** Per-lane framing, used as the lead-in for a step-specific tooltip. */
 const CATEGORY_ROLE: Record<string, string> = {
+  Offer: "Offer work — what you sell, what it costs, and why someone says yes.",
   Strategy: "Strategy work — the decisions everything downstream gets built on.",
   Legal: "Legal and entity work — what makes the business real and protected.",
   Money: "Money plumbing — how cash comes in, gets tracked, and stays clean.",
   Sales: "Sales machinery — how interest turns into signed, paid work.",
+  Demand: "Demand work — how the right people find out you exist.",
   Marketing: "Demand work — how the right people find out you exist.",
   Brand: "Brand work — how the business looks and sounds everywhere it shows up.",
+  Creative: "Creative work — the art direction that lifts the foundation set to agency grade.",
+  Content: "Content work — the posts and sends that keep you in front of buyers.",
   Systems: "Systems work — the tools and automations that do the remembering for you.",
   Run: "Delivery work — how the promise gets kept after someone pays.",
   Rhythm: "Operating rhythm — the recurring habits that keep the business honest.",
@@ -87,7 +93,9 @@ const firstLine = (t: OpsTask) => t.how?.[0] ?? t.done_when ?? "";
  * step does, and the first concrete move. Never the same string twice.
  */
 export function categoryTip(task: OpsTask): string {
-  const role = CATEGORY_ROLE[task.category] ?? `${task.category} work.`;
+  const lane = categoryLabel(task.category);
+  const role = CATEGORY_ROLE[lane] ?? `${lane} work.`;
+
   const what = task.why ? ` This step: ${task.why}` : "";
   const first = firstLine(task);
   return `${role}${what}${first ? ` Start by: ${first.replace(/^\w/, (c) => c.toLowerCase())}` : ""}`;
