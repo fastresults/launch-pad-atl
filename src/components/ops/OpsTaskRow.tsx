@@ -144,18 +144,24 @@ export function OpsTaskRow(props: TaskRowProps) {
 
 
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-            <InfoTip tip={categoryTip(task)}>
-              <span className="inline-flex items-center gap-1.5">
-                <OpsGlyph category={task.category} className="h-3.5 w-3.5" />
-                {task.category}
-              </span>
-            </InfoTip>
+            {!props.hideCategory && (
+              <InfoTip tip={categoryTip(task)}>
+                <span className="inline-flex items-center gap-1.5">
+                  <OpsGlyph category={task.category} className="h-3.5 w-3.5" />
+                  {categoryLabel(task.category)}
+                </span>
+              </InfoTip>
+            )}
             <InfoTip tip={criticalityTip(task, props.allTasks ?? [task])} className={cn("rounded-full border px-1.5 py-px", crit.badge)}>
               <span>{crit.short}</span>
             </InfoTip>
-            <InfoTip tip={ownerTip(task, task.owner_kind === viewerKind)}>
-              <span>{OWNER_LABEL(task.owner_kind, viewerKind)}</span>
-            </InfoTip>
+            {/* On a major move the lead badge above already names the owner. */}
+            {!major && (
+              <InfoTip tip={ownerTip(task, task.owner_kind === viewerKind)}>
+                <span>{OWNER_LABEL(task.owner_kind, viewerKind)}</span>
+              </InfoTip>
+            )}
+
             {!done && task.status !== "todo" && (
               <InfoTip tip={statusTip(task, PLAIN_STATUS[task.status])} className={cn("rounded-full border px-1.5 py-px", STATUS_CLASS[task.status])}>
                 <span>{PLAIN_STATUS[task.status]}</span>
