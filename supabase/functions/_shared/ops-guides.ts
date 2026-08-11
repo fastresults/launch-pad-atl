@@ -565,8 +565,480 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
   },
 };
 
+
+/**
+ * Second authoring pass: the steps that had no guide. Same shape, same rules —
+ * plain verbs, no jargon, and an honest read on how badly the business needs it.
+ */
+export const OPS_GUIDES_EXTRA: Record<string, OpsGuide> = {
+  // ── Strategy & proof ────────────────────────────────────────────────
+  wedge: {
+    how: [
+      "Name the one customer type you can win fastest — not the biggest market, the easiest yes.",
+      "Write the single sentence that makes them feel understood.",
+      "Kill every other audience from this quarter's plan. You can add them back later.",
+    ],
+    needs: ["What you heard from real buyers this week"],
+    minutes: 60,
+    criticality: "required_to_sell",
+    unlocks: ["outreach", "icp", "capture-funnel"],
+  },
+  evidence: {
+    how: [
+      "Collect anything real: a screenshot of a reply, a waitlist count, a paid deposit.",
+      "Write one line under each: what it proves about demand.",
+      "Put the three strongest on your site and in your outreach.",
+    ],
+    minutes: 45,
+    criticality: "required_to_sell",
+  },
+  "three-sources": {
+    how: [
+      "Pick three ways leads reach you — for example referrals, one channel, and direct outreach.",
+      "Write the weekly action that feeds each one.",
+      "If you can't name the action, the source isn't real yet. Replace it.",
+    ],
+    minutes: 45,
+    criticality: "required_to_sell",
+    unlocks: ["lead-sources", "funnel-read"],
+  },
+  "presell-live": {
+    how: [
+      "Publish the offer with a real price and a real way to say yes.",
+      "Send it to ten people who already know you.",
+      "Log every reply — yes, no, and the reason — in your CRM.",
+    ],
+    needs: ["Your priced offer", "A live booking or payment link"],
+    minutes: 90,
+    criticality: "required_to_sell",
+  },
+  "site-proof": {
+    how: [
+      "Add your strongest proof above the fold: a result, a name, or a number.",
+      "Check the page on a phone before you call it done.",
+      "Make sure every page has one obvious next action.",
+    ],
+    minutes: 60,
+    criticality: "required_to_sell",
+  },
+  "voice-adopted": {
+    how: [
+      "Read your last five posts and emails against the voice guide.",
+      "Fix anything that sounds like a different company.",
+      "Share the guide with anyone who writes on your behalf.",
+    ],
+    needs: ["Your brand voice guide"],
+    minutes: 45,
+    criticality: "growth",
+  },
+
+  // ── Legal & governance ──────────────────────────────────────────────
+  nda: {
+    how: [
+      "Use one mutual NDA template — don't collect variants.",
+      "Have a lawyer or a reputable template service review it once.",
+      "Store the signed copies in one folder named by counterparty.",
+    ],
+    minutes: 60,
+    criticality: "required_to_operate",
+    unlocks: ["contractor-agreement", "first-hire"],
+  },
+  "contractor-agreement": {
+    how: [
+      "Start from a standard independent-contractor agreement for your state.",
+      "Fill in scope, rate, payment terms, and who owns the work product — that last one matters most.",
+      "Send it for signature before any contractor starts, not after.",
+    ],
+    needs: ["Your entity name and address", "Your e-sign tool"],
+    minutes: 75,
+    criticality: "required_to_operate",
+    unlocks: ["first-hire"],
+  },
+  esign: {
+    how: [
+      "Pick one e-sign tool and connect it to your business email.",
+      "Upload your agreement and proposal as reusable templates.",
+      "Send yourself a test document and sign it end to end.",
+    ],
+    minutes: 45,
+    criticality: "required_to_operate",
+    unlocks: ["first-close"],
+  },
+  auth: {
+    how: [
+      "Decide who can log into what: site, CRM, books, bank.",
+      "Turn on two-factor everywhere money or customer data lives.",
+      "Put every credential in the password manager — never in a text message.",
+    ],
+    minutes: 60,
+    criticality: "required_to_operate",
+  },
+  "sales-tax": {
+    how: [
+      "Check whether your state taxes what you sell — services and products differ.",
+      "Register for a sales-tax permit if you owe it, before your first invoice.",
+      "Set the tax rate inside QuickBooks so invoices calculate it for you.",
+    ],
+    needs: ["Your EIN", "Your state revenue department login"],
+    minutes: 90,
+    criticality: "required_to_operate",
+    unlocks: ["cash-reconcile"],
+  },
+  "cash-reconcile": {
+    how: [
+      "Open QuickBooks and match every bank transaction to a category.",
+      "Chase anything unmatched the same day — that's where errors hide.",
+      "Do this weekly. Monthly means a bad afternoon instead of ten minutes.",
+    ],
+    needs: ["Bank feed connected to QuickBooks"],
+    minutes: 45,
+    criticality: "required_to_operate",
+  },
+
+  // ── CRM & pipeline ──────────────────────────────────────────────────
+  "crm-fields": {
+    how: [
+      "List the five things you actually need to know about a lead: source, offer, budget, timeline, next step.",
+      "Create exactly those custom fields in GoHighLevel. Resist adding more.",
+      "Make source and next step required so nothing goes dark.",
+    ],
+    needs: ["Your GoHighLevel sub-account"],
+    minutes: 45,
+    criticality: "required_to_sell",
+    unlocks: ["crm-automation", "crm-reporting", "lead-score"],
+  },
+  "pipeline-stages": {
+    how: [
+      "Name stages after what the buyer did, not what you did: Enquired, Call booked, Proposal out, Won, Lost.",
+      "Build them in GoHighLevel in that order.",
+      "Write the one action that moves a deal out of each stage.",
+    ],
+    minutes: 45,
+    criticality: "required_to_sell",
+    unlocks: ["crm-reporting", "close-rate", "funnel-read"],
+  },
+  "crm-automation": {
+    how: [
+      "Automate three things only: new lead gets an instant reply, booked call gets a reminder, lost deal gets tagged.",
+      "Build each as its own workflow so you can switch one off without breaking the rest.",
+      "Run a test lead through and watch every message land.",
+    ],
+    needs: ["Pipeline stages built", "Your booking link"],
+    minutes: 120,
+    criticality: "required_to_sell",
+    unlocks: ["nurture", "sequence"],
+  },
+  "crm-reporting": {
+    how: [
+      "Build one dashboard: leads this week, calls booked, proposals out, revenue won.",
+      "Set it as your CRM home screen.",
+      "Check it at the same time every week — Friday morning works.",
+    ],
+    minutes: 60,
+    criticality: "required_to_sell",
+    unlocks: ["funnel-read", "five-numbers"],
+  },
+  "forms-to-crm": {
+    how: [
+      "Point every form on your site at GoHighLevel — no orphan inboxes.",
+      "Submit each form yourself and confirm the contact appears with the right source tag.",
+      "Delete or redirect any old form that still emails you directly.",
+    ],
+    needs: ["Site admin access", "CRM form or webhook URL"],
+    minutes: 60,
+    criticality: "required_to_sell",
+    unlocks: ["lead-sources", "lead-score"],
+  },
+  "ghl-tags-lists": {
+    how: [
+      "Agree on a tag naming rule — source, offer, stage — and write it down.",
+      "Create the starting tags and nothing else.",
+      "Tag every existing contact before you import anyone new.",
+    ],
+    minutes: 60,
+    criticality: "required_to_sell",
+    unlocks: ["segments", "nurture"],
+  },
+  "ghl-audience-feed": {
+    how: [
+      "Connect GoHighLevel to your ad accounts so audiences update themselves.",
+      "Create one customer audience and one lead audience.",
+      "Confirm the sync ran before you spend anything on retargeting.",
+    ],
+    minutes: 60,
+    criticality: "growth",
+    unlocks: ["retargeting"],
+  },
+  segments: {
+    how: [
+      "Build three lists: never contacted, in conversation, past customers.",
+      "Write the one message each segment should get next.",
+      "Save them as smart lists so they update on their own.",
+    ],
+    minutes: 45,
+    criticality: "required_to_sell",
+    unlocks: ["nurture", "sequence"],
+  },
+  "list-hygiene": {
+    how: [
+      "Remove hard bounces and anyone who asked out — immediately, every time.",
+      "Merge duplicates by email address.",
+      "Set a monthly reminder to do it again.",
+    ],
+    minutes: 45,
+    criticality: "required_to_operate",
+  },
+  "lead-score": {
+    how: [
+      "Score on two things only: fit (are they your buyer) and intent (did they act).",
+      "Set the rules in GoHighLevel so scoring happens without you.",
+      "Agree the score at which you personally reach out.",
+    ],
+    minutes: 60,
+    criticality: "growth",
+  },
+  "lead-sources": {
+    how: [
+      "Make sure every contact record has a source — no blanks allowed.",
+      "Group sources into the three channels you actually run.",
+      "Review monthly and cut the channel that produces nothing.",
+    ],
+    minutes: 45,
+    criticality: "required_to_sell",
+  },
+  utm: {
+    how: [
+      "Agree one naming rule: source, medium, campaign, all lowercase.",
+      "Build every link with the same builder so nothing drifts.",
+      "Check that tagged clicks show up correctly in your CRM before you scale spend.",
+    ],
+    minutes: 45,
+    criticality: "growth",
+    unlocks: ["funnel-read", "lead-sources"],
+  },
+
+  // ── Funnel & campaign ───────────────────────────────────────────────
+  "capture-funnel": {
+    how: [
+      "One page, one promise, one field. Ask for the email and nothing else.",
+      "Deliver the thing they signed up for instantly, automatically.",
+      "Send yourself through it on a phone before you drive traffic.",
+    ],
+    needs: ["Your lead magnet", "CRM form connected"],
+    minutes: 120,
+    criticality: "required_to_sell",
+    unlocks: ["nurture", "ads-live", "retargeting"],
+  },
+  nurture: {
+    how: [
+      "Write five emails: welcome, the problem, your proof, the offer, the last call.",
+      "Space them across two weeks.",
+      "Load them into GoHighLevel and trigger from the capture form.",
+    ],
+    needs: ["Segments built", "Your proof and offer copy"],
+    minutes: 180,
+    criticality: "required_to_sell",
+  },
+  sequence: {
+    how: [
+      "Write the outreach sequence: first touch, value follow-up, direct ask, break-up.",
+      "Personalise the first line of each — everything else can be templated.",
+      "Cap it at four touches and then let it go.",
+    ],
+    minutes: 90,
+    criticality: "required_to_sell",
+    unlocks: ["first-close"],
+  },
+  "ads-live": {
+    how: [
+      "Start with one audience, one creative set, and a budget you'd be fine losing.",
+      "Point the ad at the capture funnel, never at the home page.",
+      "Give it seven days before you judge it.",
+    ],
+    needs: ["Capture funnel live", "Approved creative"],
+    minutes: 120,
+    criticality: "growth",
+  },
+  retargeting: {
+    how: [
+      "Confirm the pixel is firing on every page — check it, don't assume.",
+      "Build one audience of people who visited but didn't book.",
+      "Run a single reminder creative to them with a small daily budget.",
+    ],
+    minutes: 90,
+    criticality: "growth",
+  },
+  "funnel-read": {
+    how: [
+      "Write down four numbers: visitors, leads, calls, closes.",
+      "Find the biggest drop between two of them.",
+      "Fix only that one this week.",
+    ],
+    minutes: 45,
+    criticality: "growth",
+  },
+  "calendar-loaded": {
+    how: [
+      "Load the next four weeks of posts into the scheduler in one sitting.",
+      "Check that every post uses approved creative.",
+      "Leave two slots a week empty for whatever actually happens.",
+    ],
+    needs: ["Approved content calendar"],
+    minutes: 90,
+    criticality: "growth",
+  },
+
+  // ── Selling & delivering ────────────────────────────────────────────
+  "first-close": {
+    how: [
+      "Send the proposal the same day you have the conversation.",
+      "Follow up on day two and day five — most yeses live there.",
+      "The moment they agree, send the agreement and the invoice together.",
+    ],
+    needs: ["Proposal template", "E-sign set up", "QuickBooks invoicing ready"],
+    minutes: 120,
+    criticality: "required_to_sell",
+    unlocks: ["first-proof", "reviews"],
+  },
+  "close-rate": {
+    how: [
+      "Count proposals sent and deals won over the last 30 days.",
+      "Divide one by the other. That's your rate — write it down.",
+      "Read the two you lost and name the real reason.",
+    ],
+    minutes: 45,
+    criticality: "growth",
+  },
+  "first-proof": {
+    how: [
+      "Ask your first customer for the specific result, in their words and with a number.",
+      "Get written permission to use their name.",
+      "Put it on the site and into your outreach the same week.",
+    ],
+    minutes: 60,
+    criticality: "required_to_sell",
+    unlocks: ["reviews", "referral"],
+  },
+  reviews: {
+    how: [
+      "Ask every finished customer, once, with a direct link.",
+      "Ask on the day they're happiest — right after you delivered.",
+      "Reply to every review, good or bad.",
+    ],
+    minutes: 45,
+    criticality: "growth",
+  },
+  referral: {
+    how: [
+      "Decide what a referrer gets — cash, credit, or a genuine thank you.",
+      "Ask your happiest customer by name, not by broadcast.",
+      "Make the introduction email easy to forward.",
+    ],
+    minutes: 60,
+    criticality: "growth",
+  },
+  "onboarding-kit": {
+    how: [
+      "Write what happens in the first 48 hours after someone pays.",
+      "Turn it into one welcome email plus one kickoff checklist.",
+      "Automate the send so it never depends on you remembering.",
+    ],
+    minutes: 90,
+    criticality: "required_to_sell",
+    unlocks: ["delivery-sop", "support"],
+  },
+  "delivery-sop": {
+    how: [
+      "Write the steps you actually took delivering for your first customer.",
+      "Note who does each step and how long it took.",
+      "Save it where the next person could follow it without asking you.",
+    ],
+    minutes: 90,
+    criticality: "required_to_operate",
+    unlocks: ["sop-survives", "first-hire"],
+  },
+  "sop-survives": {
+    how: [
+      "Have someone else run the process using only the written steps.",
+      "Write down every question they had to ask you.",
+      "Answer those in the document. That's the whole test.",
+    ],
+    minutes: 90,
+    criticality: "required_to_operate",
+  },
+  support: {
+    how: [
+      "Publish one place customers get help — an inbox or a form, not four channels.",
+      "Set the response time you can actually keep and say it out loud.",
+      "Route it into the CRM so nothing sits unread.",
+    ],
+    minutes: 60,
+    criticality: "required_to_operate",
+  },
+  recording: {
+    how: [
+      "Turn on call recording with consent stated at the top of every call.",
+      "Save recordings against the deal in the CRM.",
+      "Re-listen to one lost call a week — it's the cheapest sales training there is.",
+    ],
+    minutes: 30,
+    criticality: "growth",
+  },
+
+  // ── Creative & brand upkeep ─────────────────────────────────────────
+  "creative-refresh": {
+    how: [
+      "Rank live creative by results and find the bottom third.",
+      "Rebuild those from the brand kit — new image, same message discipline.",
+      "Log the before and after numbers so you know it worked.",
+    ],
+    minutes: 120,
+    criticality: "growth",
+  },
+  "brand-audit": {
+    how: [
+      "List every live surface: site, socials, decks, invoices, email signature.",
+      "Check each against the style system — logo, colour, type, tone.",
+      "Fix what's off or write down why the exception stays.",
+    ],
+    needs: ["Your style system export"],
+    minutes: 90,
+    criticality: "growth",
+  },
+
+  // ── Compounding ─────────────────────────────────────────────────────
+  "pricing-review": {
+    how: [
+      "Look at what you charged versus what it cost you to deliver.",
+      "Raise the price on the next new customer, not the existing ones.",
+      "Write the new price down and use it without apologising.",
+    ],
+    minutes: 60,
+    criticality: "growth",
+  },
+  "first-hire": {
+    how: [
+      "Name the job by the outcome you want off your plate, not a title.",
+      "Give them the written SOP on day one — if you can't, you're not ready to hire.",
+      "Start on a paid trial project with a signed contractor agreement.",
+    ],
+    needs: ["Delivery SOP written", "Contractor agreement ready"],
+    minutes: 180,
+    criticality: "growth",
+  },
+  "quarter-plan": {
+    how: [
+      "Pick one number to move over the next 90 days.",
+      "Name the three things you'll do to move it and the things you'll stop.",
+      "Put the review date on the calendar now.",
+    ],
+    minutes: 90,
+    criticality: "growth",
+  },
+};
+
 /** Look up the guide for a catalog task_key like "day-9.qbo-company" or "post.first-close". */
 export function guideFor(taskKey: string): OpsGuide | null {
   const slug = taskKey.includes(".") ? taskKey.slice(taskKey.indexOf(".") + 1) : taskKey;
-  return OPS_GUIDES[slug] ?? null;
+  return OPS_GUIDES[slug] ?? OPS_GUIDES_EXTRA[slug] ?? null;
 }
