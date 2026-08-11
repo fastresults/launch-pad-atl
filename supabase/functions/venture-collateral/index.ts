@@ -261,7 +261,36 @@ async function buildCtx(
     const { data: file } = await admin.storage.from(BUCKET).download(svgPath);
     if (file) logoSvg = await file.text();
   }
+  // Uploaded marks are often PNGs. Rather than blocking the whole deliverable
+  // set, vectorise the raster once, store it beside the original and reuse it.
+  if (!logoSvg) {
+    const rasterPath = primaryLogo?.path && /\.(png|jpe?g|webp)$/i.test(String(primaryLogo.path))
+      ? String(primaryLogo.path)
+      : null;
+    if (rasterPath) {
+      try {
+        const { data: file } = await admin.storage.from(BUCKET).download(rasterPath);
+        if (file) {
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          const traced = await traceLogo(bytes, { colors });
+          if (traced.traced && traced.svg.includes("<path")) {
+            logoSvg = traced.svg;
+            const outPath = rasterPath.replace(/\.[a-z0-9]+$/i, "") + "-traced.svg";
+            await admin.storage.from(BUCKET).upload(outPath, new Blob([traced.svg], { type: "image/svg+xml" }), {
+              upsert: true,
+              contentType: "image/svg+xml",
+            });
+            const nextLogos = logos.map((l) => (l === primaryLogo ? { ...l, svg_path: outPath } : l));
+            await admin.from("venture_brand_kits").update({ logos: nextLogos }).eq("snapshot_id", snapshotId);
+          }
+        }
+      } catch (e) {
+        console.warn("collateral auto-trace failed", (e as Error).message);
+      }
+    }
+  }
   if (!logoSvg) throw new Error("NO_VECTOR_LOGO");
+
 
   // The reversed mark — what every dark ground (deck cover, guidelines cover,
   // closing slide) must draw. Founder's "reversed" slot first, then the
