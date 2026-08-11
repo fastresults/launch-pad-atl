@@ -173,6 +173,13 @@ const DAYS: Day[] = [
       ["email", "Set up business email", "Gmail-address outreach halves your reply rate.", "you@yourdomain sends and receives.", "agency"],
       ["auth", "Authenticate the sending domain", "Without SPF/DKIM your launch email is spam.", "SPF, DKIM, and DMARC pass on a test send.", "agency"],
       ["analytics", "Fire real events", "You can't improve a funnel you can't see.", "GA4 and pixels record a real form submit and a real purchase event.", "agency"],
+      ["utm", "Set the UTM and attribution convention", "Links without a convention report nothing you can act on.", "A written naming scheme every campaign link follows, visible in analytics and the CRM.", "agency"],
+      ["lead-magnet", "Build the lead magnet", "Cold traffic won't buy, but it will trade an email address.", "The asset exists, is gated behind a form, and is delivered automatically.", "client"],
+      ["capture-funnel", "Publish the capture funnel", "A form with nowhere to go is a dead end.", "Landing page, form, thank-you page, and delivery email all tested end to end.", "agency"],
+      ["forms-to-crm", "Wire the forms into the CRM", "Leads that land in an inbox get lost.", "A test submission creates a CRM record with its source tag attached.", "agency"],
+      ["nurture", "Turn on the welcome sequence", "Most subscribers never hear from you twice — that's the whole leak.", "Five nurture emails written and sending automatically to new subscribers.", "agency"],
+      ["retargeting", "Stand up the retargeting audience", "The people who already looked are the cheapest to reach again.", "Site and list audiences built in the ad platform and populating.", "agency"],
+
     ],
   },
   {
