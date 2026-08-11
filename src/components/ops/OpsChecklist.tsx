@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { OPS_PHASES, isOverdue, progressOf, type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask } from "@/lib/ops-runway";
+import { OPS_PHASES, categoryLabel, isOverdue, progressOf, type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask } from "@/lib/ops-runway";
 import { OpsTaskRow } from "./OpsTaskRow";
 import type { DeliveryHandlers } from "./DeliveryPanel";
 import { activeStage, isSnoozed, stageOf } from "@/lib/ops-guided";
@@ -10,7 +10,7 @@ import { InfoTip } from "./InfoTip";
 import { CRITICALITY } from "@/lib/ops-criticality";
 import { OpsStageArt } from "./OpsStageArt";
 import { OpsGlyph } from "./OpsGlyph";
-import { groupByMilestone, isMilestone, leadOf, milestoneProgress } from "@/lib/ops-significance";
+import { dayAgencyNote, dayLeadSummary, dedupeReasons, groupByMilestone, isMilestone, leadOf, milestoneProgress } from "@/lib/ops-significance";
 
 type Lens = "all" | "mine" | "theirs" | "open" | "major" | "welead" | "must" | "sell" | "stuck" | "late" | "done";
 
