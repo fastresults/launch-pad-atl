@@ -510,7 +510,16 @@ export default function VentureSharePage() {
             >
 
 
-              {brainActive ? (
+              {opsActive ? (
+                <ShareOpsRunway
+                  token={token}
+                  password={submitted}
+                  payload={payload}
+                  onOpenAsset={(k) => goTo(k)}
+                  onConsult={() => setOutroOpen(true)}
+                />
+              ) : brainActive ? (
+
                 <ShareBrain
                   token={token}
                   password={submitted}
