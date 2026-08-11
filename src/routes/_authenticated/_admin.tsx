@@ -27,7 +27,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <ThemeProvider>
+    <ThemeProvider forced="light">
       <SidebarProvider>
         <AdminSidebar />
         <SidebarInset>
