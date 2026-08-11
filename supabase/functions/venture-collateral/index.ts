@@ -264,20 +264,38 @@ async function buildCtx(
     if (file) logoSvg = await file.text();
   }
   // Uploaded marks are often PNGs. Rather than blocking the whole deliverable
-  // set, vectorise the raster once, store it beside the original and reuse it.
+  // set, vectorise the raster ONCE, store it beside the original and reuse it.
+  // The trace runs on a 384px re-encode — tracing a full-resolution export
+  // exhausts the edge worker's CPU/memory budget (WORKER_RESOURCE_LIMIT).
   if (!logoSvg) {
     const rasterPath = primaryLogo?.path && /\.(png|jpe?g|webp)$/i.test(String(primaryLogo.path))
       ? String(primaryLogo.path)
       : null;
-    if (rasterPath) {
+    const outPath = rasterPath ? rasterPath.replace(/\.[a-z0-9]+$/i, "") + "-traced.svg" : null;
+    if (outPath) {
+      // Already traced on a previous run? Reuse it — never re-trace.
+      const { data: cached } = await admin.storage.from(BUCKET).download(outPath);
+      if (cached) logoSvg = await cached.text();
+    }
+    if (!logoSvg && rasterPath && outPath) {
       try {
         const { data: file } = await admin.storage.from(BUCKET).download(rasterPath);
         if (file) {
-          const bytes = new Uint8Array(await file.arrayBuffer());
-          const traced = await traceLogo(bytes, { colors });
+          const raw = new Uint8Array(await file.arrayBuffer());
+          const ext = rasterPath.split(".").pop()?.toLowerCase();
+          const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : "image/png";
+          const W = 384;
+          const small = await rasterizeSvgToBytes(
+            `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
+              `width="${W}" height="${W}" viewBox="0 0 ${W} ${W}">` +
+              `<rect width="${W}" height="${W}" fill="#ffffff"/>` +
+              `<image x="0" y="0" width="${W}" height="${W}" preserveAspectRatio="xMidYMid meet" ` +
+              `xlink:href="data:${mime};base64,${b64(raw)}" href="data:${mime};base64,${b64(raw)}"/></svg>`,
+            W,
+          );
+          const traced = await traceLogo(small?.length ? small : raw, { colors });
           if (traced.traced && traced.svg.includes("<path")) {
             logoSvg = traced.svg;
-            const outPath = rasterPath.replace(/\.[a-z0-9]+$/i, "") + "-traced.svg";
             await admin.storage.from(BUCKET).upload(outPath, new Blob([traced.svg], { type: "image/svg+xml" }), {
               upsert: true,
               contentType: "image/svg+xml",
@@ -291,6 +309,7 @@ async function buildCtx(
       }
     }
   }
+
   if (!logoSvg) throw new Error("NO_VECTOR_LOGO");
 
 
