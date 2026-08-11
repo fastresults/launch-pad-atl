@@ -10,6 +10,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { buildPublishGate } from "../_shared/creative-registry.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -140,6 +141,14 @@ Deno.serve(async (req) => {
     const snapshotId: string = share.snapshot_id;
     const excluded = new Set<string>(share.excluded_keys ?? []);
 
+    // Creative sign-off gate. Once the studio starts running creative through
+    // review, only "ready to publish" pieces reach the client link. Ventures
+    // that never used sign-off are unaffected.
+    const gate = buildPublishGate(
+      (await admin.from("venture_creative_reviews").select("asset_kind, asset_ref, state")
+        .eq("snapshot_id", snapshotId)).data ?? [],
+    );
+
     const [snapRes, typesRes, docsRes, kitRes, collRes, socialRes, adsRes, postsRes] = await Promise.all([
       admin.from("venture_snapshots").select("*").eq("id", snapshotId).maybeSingle(),
       admin.from("venture_document_types").select("type,name,description,category,sort_order").eq("active", true),
@@ -260,8 +269,9 @@ Deno.serve(async (req) => {
 
         // Logo variants: every stored mark, signed so the reader can see them.
         const logoImages: { url: string; label?: string | null }[] = [];
-        for (const l of logos) {
+        for (const [li, l] of logos.entries()) {
           const p = l?.preview_path ?? l?.svg_path ?? l?.path;
+          if (!gate.allows("logo", String(l?.id ?? p ?? `logo-${li}`))) continue;
           const url = await sign(BUCKET, p);
           if (url) logoImages.push({ url, label: l?.label ?? l?.name ?? (l?.primary ? "Primary mark" : "Variant") });
         }
@@ -373,6 +383,7 @@ Deno.serve(async (req) => {
         for (const [base, slot] of byBase) {
           const pick = slot.display ?? slot.source;
           if (!pick) continue;
+          if (!gate.allows("collateral", base)) continue;
           const url = await sign(BUCKET, pick.storage_path);
           if (!url) continue;
           const label = base.replace(/[-_]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -427,6 +438,7 @@ Deno.serve(async (req) => {
     if (socialAssets.length && !excluded.has("cat:Social & Content") && !excluded.has("social:kit")) {
       const images = [];
       for (const s of socialAssets) {
+        if (!gate.allows("social", String(s.id))) continue;
         const url = await sign(BUCKET, s.storage_path);
         if (url) images.push({
           url, label: `${s.platform} · ${s.asset_kind}`, width: s.width, height: s.height,
@@ -460,6 +472,7 @@ Deno.serve(async (req) => {
         if (excluded.has(key)) continue;
         const images = [];
         for (const a of byWeek.get(week)!) {
+          if (!gate.allows("content_ad", String(a.id))) continue;
           const url = await sign(BUCKET, a.storage_path);
           if (!url) continue;
           const p: any = postById.get(a.post_id);

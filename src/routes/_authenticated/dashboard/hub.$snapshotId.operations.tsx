@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { OpsDashboard } from "@/components/ops/OpsDashboard";
+import CreativeSignoffBoard from "@/components/creative/CreativeSignoffBoard";
 import { Button } from "@/components/ui/button";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import {
@@ -18,6 +19,7 @@ export default function HubOperationsPage() {
   const { snapshotId = "" } = useParams();
   const auth: OpsAuth = { kind: "hub", snapshotId };
   const qc = useQueryClient();
+  const [tab, setTab] = useState<"runway" | "signoff">("runway");
   const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
   useDocumentTitle("Operating runway");
 
@@ -94,7 +96,25 @@ export default function HubOperationsPage() {
         </p>
       )}
 
-      {q.data && (
+      <div className="flex gap-2">
+        {(["runway", "signoff"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+              tab === t
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t === "runway" ? "Operating runway" : "Creative sign-off"}
+          </button>
+        ))}
+      </div>
+
+      {tab === "signoff" && <CreativeSignoffBoard auth={auth} />}
+
+      {tab === "runway" && q.data && (
         <OpsDashboard
           tasks={q.data.tasks}
           notes={q.data.notes}
