@@ -167,6 +167,15 @@ export default function VentureSharePage() {
     `${window.location.pathname}${window.location.search}#${step ? `${key}/${step}` : key}`;
 
   const goTo = (key: string, step?: string | null) => {
+    if (key === OUTRO_KEY) {
+      // The invitation is a modal, not a document — the reading pane stays put.
+      setNavOpen(false);
+      setOutroOpen(true);
+      return;
+    }
+    // Reaching the operations chapter is the moment the "what's next" question lands.
+    const section = payload.sections.find((s) => s.items.some((i) => i.key === key));
+    if (section && /operation/i.test(`${section.key} ${section.label}`)) setOutroOpen(true);
     if (key === BRAIN_KEY && isMobile) {
       // The brain takes the whole phone screen instead of replacing the reading pane.
       setBrainOpen(true);
