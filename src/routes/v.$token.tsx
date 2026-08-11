@@ -140,6 +140,9 @@ export default function VentureSharePage() {
   const brainActive = activeKey === BRAIN_KEY;
 
   const timelineActive = activeKey === TIMELINE_KEY;
+  /** Operationalize is a working dashboard in the reading pane, not a modal. */
+  const opsActive = activeKey === OUTRO_KEY;
+
   const activeIndex = items.findIndex((i) => i.key === activeKey);
   const activeItem = activeIndex >= 0 ? items[activeIndex] : null;
   const activeSection = payload?.sections.find((s) => s.items.some((i) => i.key === activeKey));
