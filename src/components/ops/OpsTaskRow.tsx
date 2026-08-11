@@ -47,6 +47,11 @@ export interface TaskRowProps extends DeliveryHandlers {
   variant?: "milestone" | "supporting" | "auto";
   /** How this runway is being delivered — drives the managed-delivery block. */
   deliveryMode?: DeliveryMode | null;
+  /** The day header already names the lane — don't repeat it on every row. */
+  hideCategory?: boolean;
+  /** The same sentence was already said in this group; stay quiet. */
+  suppressReason?: boolean;
+
 }
 
 
