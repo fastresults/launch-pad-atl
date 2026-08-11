@@ -184,6 +184,23 @@ export function OpsTaskRow(props: TaskRowProps) {
                 <span className="text-muted-foreground">{task.done_when}</span>
               </p>
 
+              {managed && (
+                <DeliveryPanel
+                  task={task} viewerKind={viewerKind} busy={busy}
+                  onAssign={props.onAssign} onCommittedDate={props.onCommittedDate}
+                  onDeliveryStatus={props.onDeliveryStatus} onWorkProduct={props.onWorkProduct}
+                  onReview={props.onReview}
+                />
+              )}
+
+              {!managed && canHandoff && (
+                <Button size="sm" variant="outline" disabled={busy}
+                  onClick={() => props.onHandoff?.(task.id)}>
+                  Ask Adam's team to take this
+                </Button>
+              )}
+
+
               {canEdit && (
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Button size="sm" variant={done ? "secondary" : "default"}
