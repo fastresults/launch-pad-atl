@@ -44,14 +44,16 @@ Every row carries: the day or window it belongs to, why it matters in one line, 
 ## Technical details
 
 - New `src/components/share/OperateRunway.tsx` — presentational; takes the payload so it can resolve asset links, and a `token` for progress storage.
-- New `src/components/share/operate-runway.ts` — the track/wave/item data as a typed constant, plus `assetKeyFor(item)` mapping items to showcase asset keys, and small helpers for progress math. Pure data + pure functions, unit-testable alongside `preview-copy.test.ts`.
-- `src/routes/v.$token.tsx`: in `goTo`, remove both the `OUTRO_KEY → setOutroOpen(true)` branch and the "operations section opens the modal" side effect. `OUTRO_KEY` becomes a normal active key that renders `<OperateRunway />` in place of `<ShareSection />`, same as `BRAIN_KEY`/`TIMELINE_KEY` are special-cased today.
+- New `src/components/share/operate-runway.ts` — builds Phases 1–2 by mapping over `LAUNCH_14DAY_PLAN` from `src/lib/launch-14day-plan.ts` (day, theme, objective, `doneWhen`, `assetKeys`, `category` dot from `CATEGORY_DOT`), attaches the per-day sub-steps as a keyed `SUBSTEPS: Record<number, Substep[]>`, and declares Phases 3–4 as a typed `POST_LAUNCH` constant. Pure data + pure functions (progress math, `assetKeyFor`), unit-tested alongside `preview-copy.test.ts` — including a test that every `LAUNCH_14DAY_PLAN` day appears exactly once.
+- Asset link chips resolve `assetKeys` against the share payload's items; unknown keys are silently skipped, matching the existing timeline behaviour.
+- Category dots reuse `CATEGORY_DOT` so the runway is visually continuous with the Launch Cadence view (`TIMELINE_KEY`) rather than a separate design language.
+- `src/routes/v.$token.tsx`: in `goTo`, remove both the `OUTRO_KEY → setOutroOpen(true)` branch and the "operations section opens the modal" side effect. `OUTRO_KEY` becomes a normal active key that renders `<OperateRunway />` in place of `<ShareSection />`, same as `BRAIN_KEY`/`TIMELINE_KEY` are special-cased today. A day row can deep-link into the timeline via the existing `goTo(TIMELINE_KEY, step)` signature.
 - `src/components/share/MobileReader.tsx`: same special-case so the phone path matches.
-- `ShareSidebar.tsx`: keep `OUTRO_KEY` pinned, relabel hint to "22 steps to launch" and swap the icon to a checklist glyph.
+- `ShareSidebar.tsx`: keep `OUTRO_KEY` pinned, relabel hint to "After launch: the 90-day runway" and swap the icon to a checklist glyph.
 - `ShareOutroDialog.tsx` is unchanged and reused — opened only from the runway's footer button.
-- Progress: `localStorage` key `sl-operate:<token>` holding `{ [itemId]: { done, owner?, due? } }`. No schema changes.
-- Entity/legal items respect `resolveEntityState` where the venture already has legal setup progress, so a founder who has formed already sees those rows pre-checked rather than being told to do it again.
-- Export: reuse `share-export.ts` by feeding the runway a markdown serialization of its current state.
+- Progress: `localStorage` key `sl-operate:<token>` holding `{ [stepId]: { done, owner?, due? } }`, where `stepId` is `day-8` / `day-8.ein` / `post-30.first-close` so sub-steps roll up into their day.
+- Entity/legal sub-steps respect `resolveEntityState` where the venture already has legal setup progress, so a founder who has formed already sees those rows pre-checked rather than being told to do it again.
+- Export: reuse `share-export.ts` by feeding the runway a markdown serialization of its current state (phase headings, day numbers, checked state).
 
 ## Not included
 
