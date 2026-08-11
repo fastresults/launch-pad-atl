@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger,
@@ -22,7 +21,7 @@ import { getPublicSiteSettings, DEFAULT_DASHBOARD_NAV_VISIBILITY, type Dashboard
 
 export default function DashboardLayout() {
   return (
-    <ThemeProvider>
+    <ThemeProvider forced="light">
       <SidebarProvider defaultOpen={true}>
         <DashboardShell />
       </SidebarProvider>
@@ -46,14 +45,13 @@ function DashboardShell() {
 
       <div className="flex flex-1 flex-col min-w-0">
         <RoomClock state={state} />
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-white/5 bg-background/80 px-4 backdrop-blur md:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
           <SidebarTrigger />
           <div className="ml-auto flex items-center gap-3">
             {isAdmin && (
               <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground">Admin</Link>
             )}
             <span className="hidden text-sm text-muted-foreground sm:inline">{user?.email}</span>
-            <ThemeToggle />
             <Button variant="outline" size="sm" onClick={signOut}>Sign out</Button>
           </div>
         </header>

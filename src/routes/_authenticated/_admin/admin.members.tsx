@@ -130,7 +130,7 @@ export default function AdminMembersPage() {
         </div>
 
         <TabsContent value={tab} className="mt-4">
-          <div className="overflow-hidden rounded-2xl border border-white/10">
+          <div className="overflow-hidden rounded-2xl border border-border">
             {q.isLoading ? (
               <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>
             ) : (q.data?.members ?? []).length === 0 ? (
@@ -143,7 +143,7 @@ export default function AdminMembersPage() {
                 return (
                   <div
                     key={m.user_id}
-                    className="flex flex-col gap-3 border-t border-white/5 p-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 border-t border-border p-4 first:border-t-0 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">

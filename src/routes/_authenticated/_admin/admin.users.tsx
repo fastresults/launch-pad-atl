@@ -62,9 +62,9 @@ export default function UsersPage() {
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-white/10">
+        <div className="overflow-hidden rounded-2xl border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Email</th>
@@ -79,7 +79,7 @@ export default function UsersPage() {
                 const isSuper = u.roles.includes("super_admin");
                 const isRowAdmin = u.roles.includes("admin");
                 return (
-                  <tr key={u.user_id} className="border-t border-white/5">
+                  <tr key={u.user_id} className="border-t border-border">
                     <td className="px-4 py-3">{u.display_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                     <td className="px-4 py-3">
@@ -96,7 +96,7 @@ export default function UsersPage() {
                     </td>
                     <td className="px-4 py-3">
                       {u.roles.map((r) => (
-                        <span key={r} className="mr-1 rounded-full bg-white/10 px-2 py-0.5 text-xs">
+                        <span key={r} className="mr-1 rounded-full bg-muted px-2 py-0.5 text-xs">
                           {r}
                         </span>
                       ))}

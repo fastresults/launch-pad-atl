@@ -177,7 +177,7 @@ export default function LegalSetupPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-card/50 p-4 text-xs text-muted-foreground">
+      <div className="rounded-xl border border-border bg-card/50 p-4 text-xs text-muted-foreground">
         <strong className="text-foreground">Not legal advice.</strong> This is a step-by-step
         guide for the standard {state.name} LLC formation and IRS EIN application. For unusual
         situations — foreign founders, multiple entity structures, professional-license
@@ -219,7 +219,7 @@ function StepBlock({
   return (
     <AccordionItem
       value={`step-${step.n}`}
-      className={`rounded-2xl border ${done ? "border-status-success/40 bg-status-success/5" : "border-white/10 bg-card"} px-4`}
+      className={`rounded-2xl border ${done ? "border-status-success/40 bg-status-success/5" : "border-border bg-card"} px-4`}
     >
       <AccordionTrigger className="py-4 hover:no-underline">
         <div className="flex flex-1 items-center gap-3 pr-2 text-left">
@@ -339,7 +339,7 @@ function EntityChoicePanel({
   }, [progress?.entity_choice]);
   const rec = recommendEntity({ hasCofounders: false, stateCode: state.code });
   return (
-    <div className="rounded-xl border border-white/10 bg-background/40 p-4">
+    <div className="rounded-xl border border-border bg-background/40 p-4">
       <div className="mb-2 flex items-start gap-2 text-xs">
         <Sparkles className="h-3.5 w-3.5 flex-none text-primary mt-0.5" />
         <span className="font-medium">Our recommendation:</span>
@@ -361,7 +361,7 @@ function EntityChoicePanel({
           <label
             key={opt.v}
             className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
-              choice === opt.v ? "border-primary bg-primary/5" : "border-white/10"
+              choice === opt.v ? "border-primary bg-primary/5" : "border-border"
             }`}
           >
             <RadioGroupItem value={opt.v} className="mt-0.5" />
@@ -397,7 +397,7 @@ function NameCheckPanel({
     ? `I reserved this name ($${state.nameReservationFeeUsd}, optional)`
     : `${state.name} does not offer name reservation`;
   return (
-    <div className="grid gap-3 rounded-xl border border-white/10 bg-background/40 p-4 sm:grid-cols-2">
+    <div className="grid gap-3 rounded-xl border border-border bg-background/40 p-4 sm:grid-cols-2">
       <div>
         <Label className="text-xs">Proposed LLC name</Label>
         <Input
@@ -457,7 +457,7 @@ function RegisteredAgentPanel({
     setService(progress?.registered_agent_service || "");
   }, [progress?.registered_agent_choice, progress?.registered_agent_name, progress?.registered_agent_service, defaultAgent]);
   return (
-    <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+    <div className="space-y-3 rounded-xl border border-border bg-background/40 p-4">
       <p className="text-xs text-muted-foreground">{state.registeredAgentRules}</p>
       <RadioGroup
         value={choice}
@@ -475,7 +475,7 @@ function RegisteredAgentPanel({
           <label
             key={opt.v}
             className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
-              choice === opt.v ? "border-primary bg-primary/5" : "border-white/10"
+              choice === opt.v ? "border-primary bg-primary/5" : "border-border"
             }`}
           >
             <RadioGroupItem value={opt.v} className="mt-0.5" />
@@ -539,7 +539,7 @@ function ArticlesPanel({
     ["File with", `${state.filingAgency} · ${state.filingAgencyAddress}${state.filingAgencyPhone ? ` · ${state.filingAgencyPhone}` : ""}`],
   ];
   return (
-    <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+    <div className="space-y-3 rounded-xl border border-border bg-background/40 p-4">
       <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         Field-by-field crib sheet (from your Filing Info)
       </div>
@@ -597,7 +597,7 @@ function EinPanel({
   const [ein, setEin] = useState(progress?.ein || "");
   useEffect(() => setEin(progress?.ein || ""), [progress?.ein]);
   return (
-    <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+    <div className="space-y-3 rounded-xl border border-border bg-background/40 p-4">
       <ol className="ml-4 list-decimal space-y-1 text-xs text-muted-foreground">
         <li>Open the IRS EIN online application (Mon–Fri, 7am–10pm ET).</li>
         <li>Legal structure → <strong>Limited Liability Company</strong> → number of members → state <strong>{state.name}</strong>.</li>
@@ -647,7 +647,7 @@ function OperatingAgreementPanel({
   });
   const md = progress?.operating_agreement_markdown;
   return (
-    <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+    <div className="space-y-3 rounded-xl border border-border bg-background/40 p-4">
       <Button onClick={() => gen.mutate()} disabled={gen.isPending} size="sm">
         {gen.isPending ? (
           <>
@@ -660,7 +660,7 @@ function OperatingAgreementPanel({
         )}
       </Button>
       {md && (
-        <div className="max-h-96 overflow-y-auto rounded-lg border border-white/10 bg-background/60 p-4">
+        <div className="max-h-96 overflow-y-auto rounded-lg border border-border bg-background/60 p-4">
           <RichMarkdown>{md}</RichMarkdown>
         </div>
       )}
@@ -676,7 +676,7 @@ function OperatingAgreementPanel({
 function PostFormationPanel({ state }: { state: ReturnType<typeof getStateByCode> }) {
   if (!state.annualReport.required) {
     return (
-      <div className="rounded-xl border border-white/10 bg-background/40 p-4 text-xs text-muted-foreground">
+      <div className="rounded-xl border border-border bg-background/40 p-4 text-xs text-muted-foreground">
         <strong className="text-foreground">{state.name}</strong> does not require an annual
         report for LLCs. Confirm on the {state.filingAgency} site and keep an eye on any
         franchise or business-privilege tax that may still apply.
@@ -684,7 +684,7 @@ function PostFormationPanel({ state }: { state: ReturnType<typeof getStateByCode
     );
   }
   return (
-    <div className="rounded-xl border border-white/10 bg-background/40 p-4 text-xs text-muted-foreground">
+    <div className="rounded-xl border border-border bg-background/40 p-4 text-xs text-muted-foreground">
       File your <strong className="text-foreground">{state.name} {state.annualReport.label}</strong> —
       {" "}${state.annualReport.feeUsd}, {state.annualReport.dueRule}. Skip it and the state may
       administratively dissolve your LLC. Filing portal:{" "}

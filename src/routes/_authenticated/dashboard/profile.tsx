@@ -240,7 +240,7 @@ export default function ProfilePage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-white/10 bg-card p-6">
+    <section className="space-y-4 rounded-2xl border border-border bg-card p-6">
       <h2 className="text-lg font-medium">{title}</h2>
       <div className="space-y-4">{children}</div>
     </section>

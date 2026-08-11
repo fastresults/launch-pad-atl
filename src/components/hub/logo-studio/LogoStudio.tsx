@@ -309,7 +309,7 @@ export default function LogoStudio({
 
   if (existing.isLoading) {
     return (
-      <section className="flex items-center gap-2 rounded-xl border border-white/10 bg-background/40 p-6 text-sm text-muted-foreground">
+      <section className="flex items-center gap-2 rounded-xl border border-border bg-background/40 p-6 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Opening the studio…
       </section>
     );
@@ -317,7 +317,7 @@ export default function LogoStudio({
 
   if (!session) {
     return (
-      <section className="space-y-4 rounded-xl border border-white/10 bg-background/40 p-6">
+      <section className="space-y-4 rounded-xl border border-border bg-background/40 p-6">
         <div className="space-y-1">
           <h3 className="text-sm font-semibold">Logo Studio</h3>
           <p className="text-xs leading-relaxed text-muted-foreground">
@@ -338,7 +338,7 @@ export default function LogoStudio({
   /* ------------------------------ describe ------------------------------ */
 
   const describePane = (
-    <section className="space-y-6 rounded-xl border border-white/10 bg-background/40 p-6">
+    <section className="space-y-6 rounded-xl border border-border bg-background/40 p-6">
       <div className="space-y-1">
         <h3 className="text-sm font-semibold">Describe the mark you want</h3>
         <p className="text-xs text-muted-foreground">
@@ -366,7 +366,7 @@ export default function LogoStudio({
               className={`rounded-lg border px-3 py-2 text-left text-xs transition ${
                 markType === t.value
                   ? "border-primary/60 bg-primary/10 text-foreground"
-                  : "border-white/10 text-muted-foreground hover:border-white/25"
+                  : "border-border text-muted-foreground hover:border-border"
               }`}
             >
               <span className="block font-medium">{t.label}</span>
@@ -402,7 +402,7 @@ export default function LogoStudio({
       <Field label="Never do this">
         <div className="flex flex-wrap gap-2">
           {avoid.map((a) => (
-            <span key={a} className="inline-flex items-center gap-1 rounded-full border border-white/15 px-2.5 py-1 text-[11px]">
+            <span key={a} className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px]">
               {a}
               <button type="button" onClick={() => setAvoid((prev) => prev.filter((x) => x !== a))}>
                 <X className="h-3 w-3 opacity-60" />
@@ -449,13 +449,13 @@ export default function LogoStudio({
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") fileRef.current?.click(); }}
           className={`rounded-xl border border-dashed p-3 transition ${
-            dragging ? "border-primary/60 bg-primary/5" : "border-white/15 hover:border-white/30"
+            dragging ? "border-primary/60 bg-primary/5" : "border-border hover:border-foreground/25"
           }`}
         >
           <div className="flex flex-wrap gap-2">
             {references.map((r) => (
               <div key={r.path ?? r.url} className="relative" onClick={(e) => e.stopPropagation()}>
-                <img src={r.url} alt={r.label ?? "Inspiration"} className="h-20 w-20 rounded-lg border border-white/10 object-cover" />
+                <img src={r.url} alt={r.label ?? "Inspiration"} className="h-20 w-20 rounded-lg border border-border object-cover" />
                 <span className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/60 px-1 py-0.5 text-center text-[9px] uppercase tracking-wide text-white">
                   {r.reason}
                 </span>
@@ -469,7 +469,7 @@ export default function LogoStudio({
               </div>
             ))}
             {references.length < 5 && (
-              <div className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-white/20 text-[10px] text-muted-foreground">
+              <div className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-[10px] text-muted-foreground">
                 {uploadReference.isPending
                   ? <Loader2 className="h-4 w-4 animate-spin" />
                   : <ImagePlus className="h-4 w-4" />}
@@ -493,7 +493,7 @@ export default function LogoStudio({
               type="button"
               onClick={() => setRefReason(r)}
               className={`rounded-full border px-2 py-0.5 ${
-                refReason === r ? "border-primary/60 bg-primary/10 text-foreground" : "border-white/10"
+                refReason === r ? "border-primary/60 bg-primary/10 text-foreground" : "border-border"
               }`}
             >
               {r}
@@ -540,7 +540,7 @@ export default function LogoStudio({
   /* ------------------------------ direction ------------------------------ */
 
   const directionPane = direction && (
-    <section className="space-y-5 rounded-xl border border-white/10 bg-background/40 p-6">
+    <section className="space-y-5 rounded-xl border border-border bg-background/40 p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-sm font-semibold">{direction.headline}</h3>
         <div className="flex gap-1.5">
@@ -550,7 +550,7 @@ export default function LogoStudio({
               <span
                 key={`${hex}-${i}`}
                 title={["dominant", "secondary", "accent"][i]}
-                className="h-5 w-5 rounded-full border border-white/20"
+                className="h-5 w-5 rounded-full border border-border"
                 style={{ background: hex }}
               />
             ))}
@@ -569,14 +569,14 @@ export default function LogoStudio({
       {direction.attributes?.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {direction.attributes.map((a) => (
-            <span key={a} className="rounded-full border border-white/15 px-2.5 py-0.5 text-[11px]">{a}</span>
+            <span key={a} className="rounded-full border border-border px-2.5 py-0.5 text-[11px]">{a}</span>
           ))}
         </div>
       )}
 
       <div className="grid gap-3 sm:grid-cols-3">
         {direction.concepts.map((c) => (
-          <div key={c.id} className="space-y-1 rounded-lg border border-white/10 p-3">
+          <div key={c.id} className="space-y-1 rounded-lg border border-border p-3">
             <p className="text-xs font-semibold">{c.title}</p>
             <p className="text-[11px] leading-relaxed text-muted-foreground">{c.idea}</p>
             <p className="text-[11px] italic text-muted-foreground/80">Second read — {c.second_read}</p>
@@ -588,7 +588,7 @@ export default function LogoStudio({
         <p className="text-[11px] text-muted-foreground">Never: {direction.avoid.join(" · ")}</p>
       )}
 
-      <div className="space-y-2 border-t border-white/10 pt-4">
+      <div className="space-y-2 border-t border-border pt-4">
         <Textarea
           value={directionNote}
           onChange={(e) => setDirectionNote(e.target.value)}
@@ -618,10 +618,10 @@ export default function LogoStudio({
   /* ------------------------------ marks ------------------------------ */
 
   const markCard = (m: Mark, compact = false) => (
-    <div key={m.id} className="space-y-2 rounded-xl border border-white/10 bg-background/40 p-3">
+    <div key={m.id} className="space-y-2 rounded-xl border border-border bg-background/40 p-3">
       {m.url
         ? <img src={m.url} alt={m.title} className="aspect-square w-full rounded-lg bg-white object-contain" />
-        : <div className="aspect-square w-full rounded-lg bg-white/5" />}
+        : <div className="aspect-square w-full rounded-lg bg-muted/40" />}
       <div className="space-y-1">
         <p className="text-xs font-semibold">{m.title}</p>
         {!compact && <p className="text-[11px] leading-relaxed text-muted-foreground">{m.idea}</p>}
@@ -688,7 +688,7 @@ export default function LogoStudio({
   /* ------------------------------ approved ------------------------------ */
 
   const approvedPane = session.status !== "intake" && session.vector_svg && (
-    <section className="space-y-4 rounded-xl border border-white/10 bg-background/40 p-6">
+    <section className="space-y-4 rounded-xl border border-border bg-background/40 p-6">
       <h3 className="text-sm font-semibold">
         {session.traced ? "Vectored in your brand colours" : "Saved — tracing fell back to a raster"}
       </h3>
@@ -712,7 +712,7 @@ export default function LogoStudio({
     <div className="space-y-6">
       {session.status === "intake" || !direction ? describePane : null}
       {direction && session.status !== "intake" && (
-        <details className="rounded-xl border border-white/10 bg-background/20 p-4" open={false}>
+        <details className="rounded-xl border border-border bg-background/20 p-4" open={false}>
           <summary className="cursor-pointer text-xs font-semibold text-muted-foreground">Edit your description</summary>
           <div className="pt-4">{describePane}</div>
         </details>

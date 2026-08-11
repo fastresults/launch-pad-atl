@@ -40,7 +40,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+      <div className="flex items-center justify-between border-b border-border pb-2">
         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Live brand preview</div>
         <div className="text-[10px] text-muted-foreground">
           {lastSaved ? `Auto-saved · ${lastSaved.toLocaleTimeString()}` : "Auto-saves as you build"}
@@ -50,7 +50,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
       <div className="space-y-4 overflow-y-auto pr-1">
         {/* Hero band */}
         <div
-          className="rounded-xl border border-white/10 p-5"
+          className="rounded-xl border border-border p-5"
           style={{ background: bg, color: fg }}
         >
           <div className="text-[10px] uppercase tracking-widest opacity-60">{snapshot?.industry || "Brand"}</div>
@@ -82,7 +82,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
               {moods.length > 0 && (
                 <div className="mb-2 flex flex-wrap gap-1">
                   {moods.map((m: string, i: number) => (
-                    <span key={i} className="rounded-full border border-white/15 bg-card px-2 py-0.5 text-[10px]">{m}</span>
+                    <span key={i} className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px]">{m}</span>
                   ))}
                 </div>
               )}
@@ -92,7 +92,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
                   return (
                     <div key={a.key}>
                       <div className="flex justify-between text-[9px] text-muted-foreground"><span>{a.left}</span><span>{a.right}</span></div>
-                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                         <div className="h-full rounded-full bg-primary" style={{ width: `${v}%` }} />
                       </div>
                     </div>
@@ -111,7 +111,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
             <>
               <div className="grid grid-cols-3 gap-2">
                 {Object.entries(palette).map(([k, v]: any) => (
-                  <div key={k} className="rounded-md border border-white/10 bg-card p-1.5">
+                  <div key={k} className="rounded-md border border-border bg-card p-1.5">
                     <div className="h-8 w-full rounded" style={{ background: v }} />
                     <div className="mt-1 flex items-center justify-between text-[9px]">
                       <span className="font-mono uppercase">{k}</span>
@@ -132,7 +132,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
           {!heading ? (
             <Placeholder>Pick a font pairing in Step 3.</Placeholder>
           ) : (
-            <div className="space-y-1.5 rounded-md border border-white/10 bg-card p-3">
+            <div className="space-y-1.5 rounded-md border border-border bg-card p-3">
               <div style={{ fontFamily: `'${heading}', system-ui`, fontWeight: headingWeight, fontSize: 26, lineHeight: 1.1 }}>Heading 01</div>
               <div style={{ fontFamily: `'${heading}', system-ui`, fontWeight: headingWeight, fontSize: 18, lineHeight: 1.2 }}>Heading 02</div>
               <div style={{ fontFamily: `'${body}', system-ui`, fontWeight: bodyWeight, fontSize: 13, lineHeight: 1.55 }}>
@@ -154,7 +154,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
               {moodboard.length > 0 && (
                 <div className="grid grid-cols-2 gap-1.5">
                   {moodboard.slice(0, 4).map((m: any, i: number) => (
-                    <div key={i} className="aspect-square overflow-hidden rounded-md border border-white/10 bg-background/40">
+                    <div key={i} className="aspect-square overflow-hidden rounded-md border border-border bg-background/40">
                       {m?.url && <img src={m.url} className="h-full w-full object-cover" />}
                     </div>
                   ))}
@@ -165,7 +165,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
                   <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Inspirations</div>
                   <div className="flex flex-wrap gap-1.5">
                     {kit.dna._logoReferences.slice(0, 3).map((src: string, i: number) => (
-                      <div key={i} className="h-12 w-12 overflow-hidden rounded border border-white/10 bg-background">
+                      <div key={i} className="h-12 w-12 overflow-hidden rounded border border-border bg-background">
                         <img src={src} className="h-full w-full object-contain" />
                       </div>
                     ))}
@@ -173,7 +173,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
                 </div>
               )}
               {primaryLogo?.url && (
-                <div className="mt-2 flex items-center gap-2 rounded-md border border-white/10 bg-card p-2">
+                <div className="mt-2 flex items-center gap-2 rounded-md border border-border bg-card p-2">
                   <img src={primaryLogo.url} className="h-12 w-12 rounded object-contain" />
                   <div className="text-[10px] text-muted-foreground">Primary logo</div>
                 </div>
@@ -194,7 +194,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
                   return (
                     <div key={a.key}>
                       <div className="flex justify-between text-[9px] text-muted-foreground"><span>{a.left}</span><span>{a.right}</span></div>
-                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                         <div className="h-full rounded-full" style={{ width: `${v}%`, background: accent }} />
                       </div>
                     </div>
@@ -202,7 +202,7 @@ export function LiveBrandPreview({ kit, snapshot }: { kit: any; snapshot: any })
                 })}
               </div>
               {voiceRules && (
-                <div className="mt-2 rounded-md border border-white/10 bg-card p-2 text-[11px] text-muted-foreground">
+                <div className="mt-2 rounded-md border border-border bg-card p-2 text-[11px] text-muted-foreground">
                   {voiceRules}
                 </div>
               )}
@@ -233,7 +233,7 @@ function Section({ title, children }: any) {
 
 function Placeholder({ children }: any) {
   return (
-    <div className="rounded-md border border-dashed border-white/10 bg-card/40 p-3 text-[11px] italic text-muted-foreground">
+    <div className="rounded-md border border-dashed border-border bg-card/40 p-3 text-[11px] italic text-muted-foreground">
       {children}
     </div>
   );

@@ -153,7 +153,7 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
   return (
     <div className="space-y-5">
       {/* Value banner — one clear statement of what the founder gets */}
-      <div className="rounded-xl border border-white/10 bg-background/40 p-4">
+      <div className="rounded-xl border border-border bg-background/40 p-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-sm font-semibold">
@@ -212,7 +212,7 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
         const doneInTier = tier.kinds.filter((k) => (byKind[k.kind] ?? []).length > 0).length;
         return (
           <div key={tier.tier} className="space-y-3">
-            <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 pb-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-2">
               <div className="min-w-0">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground/80">{tier.label}</div>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">{tier.blurb}</p>

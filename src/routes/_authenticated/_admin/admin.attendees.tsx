@@ -19,9 +19,9 @@ export default function AttendeesPage() {
 
       {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
 
-      <div className="overflow-hidden rounded-2xl border border-white/10">
+      <div className="overflow-hidden rounded-2xl border border-border">
         <table className="w-full text-sm">
-          <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Email</th>
@@ -33,7 +33,7 @@ export default function AttendeesPage() {
           </thead>
           <tbody>
             {(data?.attendees ?? []).map((a) => (
-              <tr key={a.user_id} className="border-t border-white/5 hover:bg-white/[0.02]">
+              <tr key={a.user_id} className="border-t border-border hover:bg-muted/60">
                 <td className="px-4 py-3">
                   <Link to={`/admin/attendees/${a.user_id}`} className="hover:underline">
                     {a.display_name ?? "—"}

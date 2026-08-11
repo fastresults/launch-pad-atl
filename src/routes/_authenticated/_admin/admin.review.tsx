@@ -19,9 +19,9 @@ export default function ReviewPage() {
 
       {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
 
-      <div className="overflow-hidden rounded-2xl border border-white/10">
+      <div className="overflow-hidden rounded-2xl border border-border">
         <table className="w-full text-sm">
-          <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Attendee</th>
               <th className="px-4 py-3">Deliverable</th>
@@ -35,7 +35,7 @@ export default function ReviewPage() {
               const t = r.deliverable_types as { label?: string; stage_label?: string | null } | null;
               const p = (r as { profile?: { email?: string; display_name?: string } | null }).profile;
               return (
-                <tr key={r.id} className="border-t border-white/5">
+                <tr key={r.id} className="border-t border-border">
                   <td className="px-4 py-3">{p?.display_name ?? p?.email ?? r.user_id.slice(0, 8)}</td>
                   <td className="px-4 py-3">{t?.label ?? r.deliverable_key}</td>
                   <td className="px-4 py-3 text-muted-foreground">{t?.stage_label ?? "—"}</td>

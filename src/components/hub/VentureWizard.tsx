@@ -64,22 +64,22 @@ export function StepStrip({
                 isActive
                   ? "border-primary bg-primary/15 text-primary"
                   : locked
-                    ? "cursor-not-allowed border-white/10 text-muted-foreground/50"
+                    ? "cursor-not-allowed border-border text-muted-foreground/50"
                     : done
                       ? "border-status-success/40 bg-status-success/10 text-status-success hover:bg-status-success/20"
-                      : "border-white/15 text-muted-foreground hover:text-foreground"
+                      : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
               <span
                 className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] ${
-                  isActive ? "bg-primary/25" : done ? "bg-status-success/20" : "bg-white/10"
+                  isActive ? "bg-primary/25" : done ? "bg-status-success/20" : "bg-muted"
                 }`}
               >
                 {locked ? <Lock className="h-2.5 w-2.5" /> : done ? <Check className="h-2.5 w-2.5" /> : s.n}
               </span>
               {s.label}
             </button>
-            {i < steps.length - 1 && <span className="h-px w-4 bg-white/15" aria-hidden />}
+            {i < steps.length - 1 && <span className="h-px w-4 bg-muted" aria-hidden />}
           </div>
         );
       })}
@@ -125,7 +125,7 @@ export function StepShell({
       ref={innerRef}
       aria-labelledby={`step-${n}-title`}
       className={`scroll-mt-24 rounded-2xl border bg-card p-6 transition ${
-        active ? "border-primary/40 shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]" : "border-white/10"
+        active ? "border-primary/40 shadow-[0_0_0_1px_hsl(var(--primary)/0.15)]" : "border-border"
       } ${locked ? "opacity-55" : ""} ${active ? "space-y-4" : "space-y-2"}`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -194,7 +194,7 @@ export function StepNav({
   nextSlot?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         {onBack ? (
           <Button type="button" variant="ghost" size="sm" onClick={onBack}>

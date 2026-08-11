@@ -118,7 +118,8 @@
 }
 
 :root.light {
-  --background: oklch(0.99 0 0);
+  /* Page surface for Admin + Dashboard: light grey so white cards lift off it. */
+  --background: #ececec;
   --foreground: oklch(0.18 0.02 280);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.18 0.02 280);
@@ -128,16 +129,18 @@
   --primary: oklch(0.58 0.28 290);
   --primary-foreground: oklch(0.99 0 0);
 
-  --secondary: oklch(0.96 0.01 280);
+  /* Recessed fills sit just under the page grey so filled rows still read. */
+  --secondary: oklch(0.92 0.004 280);
   --secondary-foreground: oklch(0.18 0.02 280);
-  --muted: oklch(0.96 0.01 280);
+  --muted: oklch(0.92 0.004 280);
   --muted-foreground: oklch(0.45 0.02 270);
-  --accent: oklch(0.94 0.02 290);
+  --accent: oklch(0.9 0.02 290);
   --accent-foreground: oklch(0.18 0.02 280);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.18 0.02 280 / 12%);
-  --input: oklch(0.18 0.02 280 / 15%);
+  /* Firmer hairlines: 12% disappears against grey. */
+  --border: oklch(0.18 0.02 280 / 18%);
+  --input: oklch(0.18 0.02 280 / 22%);
   --ring: oklch(0.58 0.28 290);
 
   --status-success: oklch(0.42 0.14 155);

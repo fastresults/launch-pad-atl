@@ -116,11 +116,11 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
       {!locked && (
         <div className="space-y-1 px-2 text-center">
           <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/10" />
+            <div className="h-px flex-1 bg-muted" />
             <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               Two AI studios before you lock
             </span>
-            <div className="h-px flex-1 bg-white/10" />
+            <div className="h-px flex-1 bg-muted" />
           </div>
           <p className="text-[11px] text-muted-foreground">
             Sharpen the wording, then optionally stress-test the idea.
@@ -186,7 +186,7 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
         </div>
 
         {!locked && (
-          <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-3">
+          <div className="space-y-3 rounded-xl border border-border bg-background/40 p-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Refine & innovate</div>
             <Textarea rows={2} placeholder="Optional hint — e.g. 'challenge our pricing model', 'serve underserved segment X'"
               value={innovatePrompt} onChange={(e) => setInnovatePrompt(e.target.value)} />
@@ -208,7 +208,7 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
                 <div className="text-xs font-medium text-muted-foreground">Alternative angles</div>
                 <div className="grid gap-2">
                   {ideas.map((idea, i) => (
-                    <div key={i} className="rounded-lg border border-white/10 bg-card p-3">
+                    <div key={i} className="rounded-lg border border-border bg-card p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="text-sm font-medium">{idea.title}</div>
                         <Button size="sm" variant="outline" className="h-7 text-xs"
@@ -234,7 +234,7 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
             )}
 
             {critique && (
-              <div className="rounded-lg border border-white/10 bg-card p-3">
+              <div className="rounded-lg border border-border bg-card p-3">
                 <div className="text-xs font-medium text-muted-foreground">Red-team findings</div>
                 <ul className="mt-1 list-disc space-y-1 pl-4 text-xs">
                   {(critique.weaknesses ?? []).map((w: any, i: number) => (
@@ -263,9 +263,9 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
       {/* ───────── DIVIDER ───────── */}
       {!locked && (
         <div className="flex items-center gap-3 px-2">
-          <div className="h-px flex-1 bg-white/10" />
+          <div className="h-px flex-1 bg-muted" />
           <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Optional deep pass</span>
-          <div className="h-px flex-1 bg-white/10" />
+          <div className="h-px flex-1 bg-muted" />
         </div>
       )}
 
@@ -274,13 +274,13 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
 
       {/* ───────── DIVIDER ───────── */}
       <div className="flex items-center gap-3 px-2">
-        <div className="h-px flex-1 bg-white/10" />
+        <div className="h-px flex-1 bg-muted" />
         <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Ready?</span>
-        <div className="h-px flex-1 bg-white/10" />
+        <div className="h-px flex-1 bg-muted" />
       </div>
 
       {/* ───────── LOCK & CONTINUE ───────── */}
-      <div className="rounded-2xl border border-white/10 bg-card p-4">
+      <div className="rounded-2xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <button onClick={() => setShowHistory((v) => !v)} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
@@ -302,9 +302,9 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
         </div>
 
         {showHistory && iterations.length > 0 && (
-          <div className="mt-3 max-h-60 space-y-1.5 overflow-y-auto rounded-lg border border-white/10 bg-background/40 p-2 text-xs">
+          <div className="mt-3 max-h-60 space-y-1.5 overflow-y-auto rounded-lg border border-border bg-background/40 p-2 text-xs">
             {iterations.map((it: any) => (
-              <div key={it.id} className="rounded border border-white/5 bg-card p-2">
+              <div key={it.id} className="rounded border border-border bg-card p-2">
                 <div className="flex justify-between text-[10px] text-muted-foreground">
                   <span className="font-mono">{it.kind}</span>
                   <span>{new Date(it.created_at).toLocaleString()}</span>
@@ -325,7 +325,7 @@ export function ConceptStudio({ snapshot, onChanged }: { snapshot: any; onChange
 function scoreColor(combined: number) {
   if (combined >= 160) return "bg-status-success/15 text-status-success border-status-success/40";
   if (combined >= 130) return "bg-status-warning/15 text-status-warning border-status-warning/40";
-  return "bg-white/10 text-muted-foreground border-white/10";
+  return "bg-muted text-muted-foreground border-border";
 }
 
 function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onApplied: (s: string, v: string) => Promise<void>; onChanged: () => void }) {
@@ -415,7 +415,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
             const id = `e${i}`;
             const open = expanded === id;
             return (
-              <div key={id} className="rounded-lg border border-white/10 bg-card p-3">
+              <div key={id} className="rounded-lg border border-border bg-card p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -439,7 +439,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                 </div>
 
                 {open && (
-                  <div className="mt-2 space-y-2 border-t border-white/5 pt-2 text-[11px]">
+                  <div className="mt-2 space-y-2 border-t border-border pt-2 text-[11px]">
                     {card.first_30_days?.length > 0 && (
                       <div>
                         <div className="font-medium text-muted-foreground">First 30 days</div>
@@ -458,7 +458,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
                     )}
                     <div className="grid grid-cols-2 gap-2">
                       {["viability", "attractiveness"].map((dim) => (
-                        <div key={dim} className="rounded border border-white/5 p-1.5">
+                        <div key={dim} className="rounded border border-border p-1.5">
                           <div className="text-[10px] font-medium uppercase text-muted-foreground">{dim}</div>
                           {Object.entries(card[dim] ?? {}).filter(([k]) => k !== "total").map(([k, v]: any) => (
                             <div key={k} className="flex justify-between gap-1">
@@ -494,11 +494,11 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
       )}
 
       {saved.filter((s: any) => s.status === "saved").length > 0 && (
-        <details className="rounded-lg border border-white/10 bg-background/40 p-2 text-xs">
+        <details className="rounded-lg border border-border bg-background/40 p-2 text-xs">
           <summary className="cursor-pointer font-medium text-muted-foreground">Saved for later ({saved.filter((s: any) => s.status === "saved").length})</summary>
           <div className="mt-2 space-y-1.5">
             {saved.filter((s: any) => s.status === "saved").map((s: any) => (
-              <div key={s.id} className="flex items-start justify-between gap-2 rounded border border-white/5 p-1.5">
+              <div key={s.id} className="flex items-start justify-between gap-2 rounded border border-border p-1.5">
                 <div className="min-w-0 flex-1 text-[11px]">
                   <div className="font-medium">{s.card.title}</div>
                   <div className="line-clamp-2 text-muted-foreground">{s.card.summary}</div>

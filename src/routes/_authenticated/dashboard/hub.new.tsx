@@ -1081,7 +1081,7 @@ function Inner() {
                         className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition ${
                           isPattern
                             ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
-                            : "border-white/20 bg-background/60 text-muted-foreground hover:text-foreground"
+                            : "border-border bg-background/60 text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         {isPattern ? "Pattern" : "Mine"}
@@ -1113,7 +1113,7 @@ function Inner() {
             {/* Explicit, opt-in reuse of another venture's material. Copies —
                 never moves — so the other venture keeps its Second Brain. */}
             {otherVentures.length > 0 && (
-              <div className="rounded-xl border border-white/10 bg-background/40 p-3">
+              <div className="rounded-xl border border-border bg-background/40 p-3">
                 <button
                   type="button"
                   onClick={() => setOtherVenturesOpen((v) => !v)}
@@ -1146,7 +1146,7 @@ function Inner() {
                               type="button"
                               disabled={copyingId === row.id}
                               onClick={() => copyFromVenture(row)}
-                              className="inline-flex max-w-[280px] items-center gap-2 rounded-full border border-white/15 bg-background/60 px-3 py-1.5 text-xs transition hover:border-primary/40 hover:bg-primary/10 disabled:opacity-60"
+                              className="inline-flex max-w-[280px] items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1.5 text-xs transition hover:border-primary/40 hover:bg-primary/10 disabled:opacity-60"
                             >
                               {copyingId === row.id ? (
                                 <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
@@ -1169,7 +1169,7 @@ function Inner() {
 
 
             {/* Anything else? */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background/40 p-3">
               <div className="text-sm">
                 <span className="font-medium">Anything else you want to add to memory?</span>{" "}
                 <span className="text-muted-foreground">
@@ -1194,7 +1194,7 @@ function Inner() {
         )}
 
         {memoryEmpty && inactiveMemoryChips.length > 0 && !addMoreOpen && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-background/40 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background/40 p-3">
             <div className="text-sm">
               <span className="font-medium">
                 {isReturningFounder
@@ -1222,7 +1222,7 @@ function Inner() {
         )}
 
         {showCollectionUI && inactiveMemoryChips.length > 0 && addMoreOpen && (
-          <div className="space-y-2 rounded-xl border border-white/10 bg-background/40 p-3">
+          <div className="space-y-2 rounded-xl border border-border bg-background/40 p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-medium">Saved library sources</div>
               <div className="flex items-center gap-3">
@@ -1268,7 +1268,7 @@ function Inner() {
                           ? `Couldn't read · from ${originLabel}`
                           : `Processing… · from ${originLabel}`
                     }
-                    className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-white/10 bg-background/40 px-3 py-1.5 text-xs opacity-80 transition hover:opacity-100"
+                    className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1.5 text-xs opacity-80 transition hover:opacity-100"
                   >
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${ready ? "bg-muted-foreground/40" : "bg-status-danger"}`} />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -1281,7 +1281,7 @@ function Inner() {
                         className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition ${
                           isPattern
                             ? "border-primary/30 bg-primary/5 text-primary/80 hover:bg-primary/10"
-                            : "border-white/20 bg-background/60 text-muted-foreground hover:text-foreground"
+                            : "border-border bg-background/60 text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         {isPattern ? "Pattern" : "Mine"}
@@ -1351,7 +1351,7 @@ function Inner() {
               }}
               onClick={() => fileInputRef.current?.click()}
               className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center transition ${
-                dragOver ? "border-primary bg-primary/5" : "border-white/15 hover:border-white/30"
+                dragOver ? "border-primary bg-primary/5" : "border-border hover:border-foreground/25"
               }`}
             >
               <Upload className="h-6 w-6 text-muted-foreground" />
@@ -1383,7 +1383,7 @@ function Inner() {
                 {files.map((f) => (
                   <li
                     key={f.id}
-                    className="flex items-center gap-2 rounded-lg border border-white/10 bg-card px-3 py-2 text-sm"
+                    className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm"
                   >
                     <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate">{f.name}</span>
@@ -1454,7 +1454,7 @@ function Inner() {
                       className={`rounded-lg border-2 px-3 py-2.5 text-left text-sm transition ${
                         active
                           ? "border-primary bg-primary/10 shadow-sm"
-                          : "border-white/10 bg-background/40 hover:border-white/30"
+                          : "border-border bg-background/40 hover:border-foreground/25"
                       }`}
                     >
                       <div className="flex items-center gap-2 font-medium">
@@ -1508,7 +1508,7 @@ function Inner() {
             {scrapedUrls.length > 0 && (
               <ul className="space-y-1.5">
                 {scrapedUrls.map((u) => (
-                  <li key={u.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-card px-3 py-2 text-sm">
+                  <li key={u.id} className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm">
                     <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate">
                       <span className="font-medium">{u.title || u.url}</span>
@@ -1518,7 +1518,7 @@ function Inner() {
                       className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                         u.intent === "pattern"
                           ? "border-primary/40 bg-primary/10 text-primary"
-                          : "border-white/20 bg-background/60 text-muted-foreground"
+                          : "border-border bg-background/60 text-muted-foreground"
                       }`}
                     >
                       {u.intent === "pattern" ? "Pattern" : "Mine"}
@@ -1552,7 +1552,7 @@ function Inner() {
 
         {/* Speak tab */}
         {showCollectionUI && intakeTab === "speak" && (
-          <div className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4 text-center">
+          <div className="space-y-3 rounded-xl border border-border bg-background/40 p-4 text-center">
             <p className="text-sm text-muted-foreground">
               Tap and tell us what you're building — 30 seconds is plenty. We'll transcribe it into your concept.
             </p>
@@ -1857,7 +1857,7 @@ function Inner() {
                         type="button"
                         onClick={() => setMarketScope(s)}
                         className={`rounded-lg border px-2 py-1.5 text-xs capitalize transition ${
-                          marketScope === s ? "border-foreground bg-foreground text-background" : "border-white/10 hover:border-white/20"
+                          marketScope === s ? "border-foreground bg-foreground text-background" : "border-border hover:border-border"
                         }`}
                       >
                         {s}
@@ -1890,7 +1890,7 @@ function Inner() {
             </div>
 
             {/* Company + differentiation */}
-            <div className="space-y-3 border-t border-white/10 pt-5">
+            <div className="space-y-3 border-t border-border pt-5">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Company</h3>
               <div className="grid gap-2">
                 <Label htmlFor="company">
@@ -2047,7 +2047,7 @@ function Inner() {
       >
 
         {showTrackHelp && (
-          <p className="rounded-md bg-white/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="rounded-md bg-muted/40 p-3 text-[11px] leading-relaxed text-muted-foreground">
             Built primarily for <strong>Main Street founders</strong> — first-time owners opening a café, salon, trade, local service, indie product, or small e-commerce brand. Pick a different track only if you're building something materially different (venture-track SaaS, marketplace, deep tech).
           </p>
         )}
@@ -2063,7 +2063,7 @@ function Inner() {
                 className={`group relative flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition ${
                   selected
                     ? "border-primary bg-primary/10 ring-1 ring-primary"
-                    : "border-white/10 hover:border-white/25 hover:bg-white/[0.02]"
+                    : "border-border hover:border-border hover:bg-muted/60"
                 }`}
               >
                 {isDefault && (
@@ -2080,7 +2080,7 @@ function Inner() {
       </StepShell>
 
       {/* Sticky CTA bar */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           {blockingStep ? (
             <button

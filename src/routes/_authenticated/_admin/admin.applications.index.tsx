@@ -208,7 +208,7 @@ export default function ApplicationsListPage() {
                 "rounded-full border px-3 py-1 text-xs transition",
                 active
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-white/10 bg-white/5 text-muted-foreground hover:bg-white/10",
+                  : "border-border bg-muted/40 text-muted-foreground hover:bg-muted",
               )}
             >
               {opt.label} <span className="ml-1 opacity-70">{n}</span>
@@ -251,9 +251,9 @@ export default function ApplicationsListPage() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-white/10">
+      <div className="overflow-hidden rounded-2xl border border-border">
         <table className="w-full text-sm">
-          <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="w-10 px-4 py-3">
                 <Checkbox
@@ -285,7 +285,7 @@ export default function ApplicationsListPage() {
                 <tr
                   key={a.id}
                   className={cn(
-                    "border-t border-white/5 align-top hover:bg-white/5",
+                    "border-t border-border align-top hover:bg-muted/40",
                     checked && "bg-primary/5",
                   )}
                 >

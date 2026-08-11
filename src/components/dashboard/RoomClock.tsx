@@ -17,7 +17,7 @@ export function RoomClock({ state }: { state: WorkshopState }) {
             ? "border-emerald-500/30 bg-emerald-500/10"
             : isClose
               ? "border-primary/40 bg-primary/10"
-              : "border-white/10 bg-background/85"
+              : "border-border bg-background/85"
       }`}
     >
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5 md:px-6 text-sm">

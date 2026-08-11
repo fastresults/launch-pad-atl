@@ -270,7 +270,7 @@ export default function WorkflowPage() {
       )}
 
       {imageEligible.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between gap-3 text-sm">
             <div className="flex items-center gap-2 font-medium">
               <ImageIcon className="h-4 w-4 text-muted-foreground" />
@@ -419,7 +419,7 @@ export default function WorkflowPage() {
                 ? "text-foreground"
                 : "text-muted-foreground";
               return (
-                <div key={d.key} className="rounded-xl border border-white/10 bg-card p-4">
+                <div key={d.key} className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -493,7 +493,7 @@ export default function WorkflowPage() {
       {recent && recent.steps && recent.steps.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">Recent activity</h2>
-          <ul className="space-y-1 rounded-xl border border-white/10 bg-card p-4 text-xs">
+          <ul className="space-y-1 rounded-xl border border-border bg-card p-4 text-xs">
             {recent.steps.slice(0, 12).map((s: any, i: number) => (
               <li key={i} className="flex items-center justify-between gap-2">
                 <span className="truncate">{s.deliverable_key}</span>

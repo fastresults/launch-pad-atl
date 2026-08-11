@@ -7,7 +7,7 @@ export function HelpFab() {
       <Popover>
         <PopoverTrigger asChild>
           <button
-            className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-card shadow-lg hover:bg-card/80 transition"
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card shadow-lg hover:bg-card/80 transition"
             aria-label="Need help?"
           >
             <HelpCircle className="h-5 w-5" />

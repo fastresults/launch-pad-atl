@@ -58,7 +58,7 @@ export default function InquiriesListPage() {
                 "rounded-full border px-3 py-1.5 text-xs transition",
                 active
                   ? "border-primary bg-primary/10 text-primary"
-                  : "border-white/10 text-muted-foreground hover:text-foreground",
+                  : "border-border text-muted-foreground hover:text-foreground",
               )}
             >
               {f.label}
@@ -77,7 +77,7 @@ export default function InquiriesListPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-white/10">
+      <div className="overflow-hidden rounded-lg border border-border">
         {q.isLoading ? (
           <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>
         ) : rows.length === 0 ? (
@@ -86,7 +86,7 @@ export default function InquiriesListPage() {
           </div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-2.5 font-medium">From</th>
                 <th className="px-4 py-2.5 font-medium">Subject</th>
@@ -98,7 +98,7 @@ export default function InquiriesListPage() {
               {rows.map((r) => (
                 <tr
                   key={r.id}
-                  className="border-t border-white/5 hover:bg-white/5"
+                  className="border-t border-border hover:bg-muted/40"
                 >
                   <td className="px-4 py-3">
                     <Link

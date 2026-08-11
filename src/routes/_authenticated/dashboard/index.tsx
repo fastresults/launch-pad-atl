@@ -106,7 +106,7 @@ function BeforeMode({
       </div>
 
       {/* Workshop countdown card */}
-      <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8">
+      <div className="rounded-3xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
           <Calendar className="h-4 w-4" /> Your 14-Day Sprint
         </div>
@@ -121,7 +121,7 @@ function BeforeMode({
             href={cohort.googleCalendarUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center rounded-lg border border-white/10 bg-card px-4 py-2 text-sm hover:bg-white/5"
+            className="inline-flex items-center rounded-lg border border-border bg-card px-4 py-2 text-sm hover:bg-muted/40"
           >
             Add to calendar
           </a>
@@ -129,7 +129,7 @@ function BeforeMode({
             href={cohort.mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center rounded-lg border border-white/10 bg-card px-4 py-2 text-sm hover:bg-white/5"
+            className="inline-flex items-center rounded-lg border border-border bg-card px-4 py-2 text-sm hover:bg-muted/40"
           >
             Get directions
           </a>
@@ -229,7 +229,7 @@ function DuringMode({ state, generated, total }: { state: WorkshopState; generat
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <Link
             to="/dashboard/workflow"
-            className="rounded-xl border border-white/10 bg-card p-4 hover:border-primary/30 transition"
+            className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition"
           >
             <div className="text-sm font-medium">Open this stage's questions</div>
             <div className="mt-1 text-xs text-muted-foreground">
@@ -237,7 +237,7 @@ function DuringMode({ state, generated, total }: { state: WorkshopState; generat
             </div>
           </Link>
           <button
-            className="rounded-xl border border-white/10 bg-card p-4 hover:border-amber-500/40 transition text-left"
+            className="rounded-xl border border-border bg-card p-4 hover:border-amber-500/40 transition text-left"
             onClick={() => toast.success("Instructor notified. They'll be right over.")}
           >
             <div className="flex items-center gap-2 text-sm font-medium">
@@ -276,7 +276,7 @@ function RecentlyFinished() {
           <Link
             key={d.key}
             to={`/dashboard/workflow/${d.key}`}
-            className="rounded-xl border border-white/10 bg-card p-4 hover:border-primary/30 transition"
+            className="rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition"
           >
             <div className="flex items-center gap-2 text-emerald-500">
               <CheckCircle2 className="h-4 w-4" />
@@ -385,7 +385,7 @@ function WalkOutPreview() {
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {stages.map((n) => (
-          <div key={n} className="rounded-xl border border-white/10 bg-card p-4 opacity-80">
+          <div key={n} className="rounded-xl border border-border bg-card p-4 opacity-80">
             <div className="text-xs text-muted-foreground">Pillar {n}</div>
             <div className="mt-1 font-medium">{FRIENDLY_STAGE[n].title}</div>
             <div className="mt-1 text-xs text-muted-foreground">{FRIENDLY_STAGE[n].subtitle}</div>

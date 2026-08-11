@@ -145,27 +145,27 @@ export default function AdminDeckEditorPage() {
               </DeckOverridesProvider>
             </div>
           </div>
-          <div className="flex items-center justify-between gap-3 border-t border-white/10 bg-neutral-950 px-4 py-2 text-white">
+          <div className="flex items-center justify-between gap-3 border-t border-border bg-neutral-950 px-4 py-2 text-white">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => gotoSlide(index - 1)}
               disabled={index === 0}
-              className="text-white hover:bg-white/10"
+              className="text-white hover:bg-muted"
             >
               <ChevronLeft className="h-4 w-4 mr-1" /> Prev
             </Button>
             <div className="text-sm">
               <span className="font-medium">{index + 1}</span>
-              <span className="text-white/50"> / {deck.slides.length}</span>
-              <span className="ml-3 text-white/70">{slide.title}</span>
+              <span className="text-muted-foreground"> / {deck.slides.length}</span>
+              <span className="ml-3 text-muted-foreground">{slide.title}</span>
             </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => gotoSlide(index + 1)}
               disabled={index === deck.slides.length - 1}
-              className="text-white hover:bg-white/10"
+              className="text-white hover:bg-muted"
             >
               Next <ChevronRight className="h-4 w-4 ml-1" />
             </Button>

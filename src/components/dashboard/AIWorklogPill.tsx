@@ -38,7 +38,7 @@ export function AIWorklogPill() {
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-sm">
       {open && (
-        <div className="mb-2 rounded-2xl border border-white/10 bg-card/95 backdrop-blur p-4 shadow-lg">
+        <div className="mb-2 rounded-2xl border border-border bg-card/95 backdrop-blur p-4 shadow-lg">
           {inFlight.length > 0 && (
             <>
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Working on</div>
@@ -69,7 +69,7 @@ export function AIWorklogPill() {
       )}
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-2 rounded-full border border-white/10 bg-card/95 backdrop-blur px-4 py-2.5 text-sm shadow-lg hover:bg-card transition ${pulse ? "ring-2 ring-primary/50" : ""}`}
+        className={`flex items-center gap-2 rounded-full border border-border bg-card/95 backdrop-blur px-4 py-2.5 text-sm shadow-lg hover:bg-card transition ${pulse ? "ring-2 ring-primary/50" : ""}`}
       >
         <Sparkle className={`h-4 w-4 text-primary ${inFlight.length > 0 ? "animate-pulse" : ""}`} />
         <span>{headline}</span>

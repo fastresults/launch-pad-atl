@@ -88,14 +88,14 @@ export function CoverArtTab({
   return (
     <div className="space-y-4">
       {/* Brand strip */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-background/40 p-2 text-xs">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background/40 p-2 text-xs">
         <span className="text-muted-foreground">Locked to brand:</span>
         <div className="flex items-center gap-1">
           {Object.entries(palette).slice(0, 6).map(([k, v]: any) => (
             <span
               key={k}
               title={`${k}: ${v}`}
-              className="h-4 w-4 rounded-full border border-white/20"
+              className="h-4 w-4 rounded-full border border-border"
               style={{ background: v }}
             />
           ))}
@@ -113,7 +113,7 @@ export function CoverArtTab({
       ) : (
         <div className="space-y-3">
           {platforms.map((p) => (
-            <div key={p.platform} className="rounded-xl border border-white/10 bg-background/40 p-3">
+            <div key={p.platform} className="rounded-xl border border-border bg-background/40 p-3">
               <div className="mb-2 flex items-center justify-between">
                 <h4 className="text-sm font-semibold">{p.label}</h4>
                 <Badge variant="outline" className="text-[10px]">{p.assets.length} assets</Badge>
@@ -122,7 +122,7 @@ export function CoverArtTab({
                 {p.assets.map((a) => {
                   const existing = assetsFor(p.platform, a.kind);
                   return (
-                    <div key={a.kind} className="rounded-lg border border-white/5 bg-background/30 p-2">
+                    <div key={a.kind} className="rounded-lg border border-border bg-background/30 p-2">
                       <div className="mb-1.5 flex items-center justify-between">
                         <div className="text-xs">
                           <span className="font-medium text-foreground">{a.label}</span>
@@ -137,7 +137,7 @@ export function CoverArtTab({
                           const isBusy = !!busy[k];
                           const match = existing.find((x) => x.art_direction === d.id);
                           return (
-                            <div key={d.id} className="rounded-md border border-white/10 bg-background/40 p-1.5">
+                            <div key={d.id} className="rounded-md border border-border bg-background/40 p-1.5">
                               <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
                                 <span className="font-medium text-foreground">{d.label}</span>
                                 {match?.is_selected && (
@@ -145,7 +145,7 @@ export function CoverArtTab({
                                 )}
                               </div>
                               <div
-                                className="relative overflow-hidden rounded border border-white/5 bg-muted/30"
+                                className="relative overflow-hidden rounded border border-border bg-muted/30"
                                 style={{ aspectRatio: `${a.width} / ${a.height}` }}
                               >
                                 {match?.signed_url ? (

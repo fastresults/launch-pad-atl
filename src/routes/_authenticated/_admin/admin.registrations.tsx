@@ -45,9 +45,9 @@ export default function RegistrationsPage() {
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-white/10">
+        <div className="overflow-hidden rounded-2xl border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Name</th>
@@ -61,7 +61,7 @@ export default function RegistrationsPage() {
             </thead>
             <tbody>
               {(data?.registrations ?? []).map((r) => (
-                <tr key={r.id} className="border-t border-white/5 align-top">
+                <tr key={r.id} className="border-t border-border align-top">
                   <td className="px-4 py-3 text-muted-foreground">
                     {new Date(r.created_at).toLocaleDateString()}
                   </td>

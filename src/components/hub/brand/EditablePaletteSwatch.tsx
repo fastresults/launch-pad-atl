@@ -41,7 +41,7 @@ export function EditablePaletteSwatch({
 
   const triggerCls = fill
     ? "group absolute inset-0 h-full w-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
-    : `group relative ${sizeCls} rounded border border-white/20 hover:ring-2 hover:ring-primary/40 focus:outline-none focus:ring-2 focus:ring-primary`;
+    : `group relative ${sizeCls} rounded border border-border hover:ring-2 hover:ring-primary/40 focus:outline-none focus:ring-2 focus:ring-primary`;
 
   return (
     <div className={fill ? "contents" : "inline-flex items-center gap-1"}>
@@ -85,7 +85,7 @@ export function EditablePaletteSwatch({
 
           <div className="flex items-center gap-2">
             <div
-              className="h-9 w-10 shrink-0 rounded border border-white/10"
+              className="h-9 w-10 shrink-0 rounded border border-border"
               style={{ background: draft }}
               aria-hidden
             />

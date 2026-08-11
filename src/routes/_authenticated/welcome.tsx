@@ -84,7 +84,7 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+      <header className="flex items-center justify-between border-b border-border px-6 py-4">
         <Link to="/" className="text-sm font-semibold tracking-tight">
           Atlanta Startup Sprint
         </Link>
@@ -105,7 +105,7 @@ export default function WelcomePage() {
         </div>
 
         {existing ? (
-          <div className="space-y-6 rounded-2xl border border-white/10 bg-card p-6">
+          <div className="space-y-6 rounded-2xl border border-border bg-card p-6">
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground">
                 Status
@@ -126,7 +126,7 @@ export default function WelcomePage() {
             {existing.supporting_info && (
               <ReadRow label="Supporting info" value={existing.supporting_info} />
             )}
-            <div className="border-t border-white/10 pt-6">
+            <div className="border-t border-border pt-6">
               <div className="text-sm text-muted-foreground">
                 Want to skip the wait?{" "}
                 <Link to="/register" className="text-foreground underline">
@@ -139,7 +139,7 @@ export default function WelcomePage() {
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="space-y-6 rounded-2xl border border-white/10 bg-card p-6"
+            className="space-y-6 rounded-2xl border border-border bg-card p-6"
           >
             <div className="space-y-2">
               <Label>What kind of startup are you building?</Label>

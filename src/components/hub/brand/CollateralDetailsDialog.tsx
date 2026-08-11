@@ -106,7 +106,7 @@ export function CollateralDetailsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="theme-dark-scope flex max-h-[88vh] max-w-3xl flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="shrink-0 border-b border-white/10 p-5">
+        <DialogHeader className="shrink-0 border-b border-border p-5">
           <DialogTitle className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-primary" />
             Confirm your details
@@ -216,7 +216,7 @@ export function CollateralDetailsDialog({
           )}
         </div>
 
-        <DialogFooter className="shrink-0 flex-row items-center justify-between gap-2 border-t border-white/10 bg-background/95 p-4">
+        <DialogFooter className="shrink-0 flex-row items-center justify-between gap-2 border-t border-border bg-background/95 p-4">
           <span className="text-[11px] text-muted-foreground">
             {q.data?.verifiedAt
               ? `Last confirmed ${new Date(q.data.verifiedAt).toLocaleDateString()}`

@@ -23,8 +23,8 @@ export type SectionHeaderProps = {
 const STATUS_META: Record<SectionHeaderProps["status"], { label: string; className: string; Icon: typeof CheckCircle2 }> = {
   complete: { label: "Complete", className: "border-status-success/40 bg-status-success/10 text-status-success", Icon: CheckCircle2 },
   in_progress: { label: "In progress", className: "border-primary/40 bg-primary/10 text-primary", Icon: Circle },
-  not_started: { label: "Not started", className: "border-white/10 bg-transparent text-muted-foreground", Icon: Circle },
-  locked: { label: "Locked", className: "border-white/10 bg-transparent text-muted-foreground", Icon: Lock },
+  not_started: { label: "Not started", className: "border-border bg-transparent text-muted-foreground", Icon: Circle },
+  locked: { label: "Locked", className: "border-border bg-transparent text-muted-foreground", Icon: Lock },
   generating: { label: "Writing…", className: "border-primary/40 bg-primary/10 text-primary", Icon: Loader2 },
 };
 
@@ -115,7 +115,7 @@ export function SectionHeader({
 
       {/* Middle: progress + status */}
       <div className="flex items-center gap-3">
-        <div className="hidden h-1.5 w-28 overflow-hidden rounded-full bg-white/10 md:block" aria-hidden>
+        <div className="hidden h-1.5 w-28 overflow-hidden rounded-full bg-muted md:block" aria-hidden>
           <div className="h-full rounded-full transition-all" style={progressFillStyle} />
         </div>
         <Badge

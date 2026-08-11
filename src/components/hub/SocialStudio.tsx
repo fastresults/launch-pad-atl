@@ -64,7 +64,7 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
         accentVar="--status-tip"
         badges={
           !locked ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">
               <Lock className="h-3 w-3" /> Brand-gated
             </span>
           ) : null
@@ -83,7 +83,7 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
         }
       />
       {expanded && (
-      <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-4">
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
 
       {!locked && <SocialStudioGate snapshot={snapshot} kit={kit} />}
 
@@ -113,10 +113,10 @@ export function SocialStudio({ snapshot }: { snapshot: any }) {
                     </div>
                     <div className="grid gap-1.5 md:grid-cols-2">
                       {weeks.slice(0, 4).map((w) => (
-                        <details key={w.title} className="rounded-lg border border-white/10 bg-background/40 p-2 text-xs">
+                        <details key={w.title} className="rounded-lg border border-border bg-background/40 p-2 text-xs">
                           <summary className="cursor-pointer font-medium">{w.title}</summary>
-                          <div className="mt-1.5 max-h-72 overflow-auto rounded-md border border-white/5 bg-background/40 p-2">
-                            <div className="prose prose-invert prose-sm max-w-none text-[11px] [&_table]:my-0 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-white/10 [&_th]:bg-white/5 [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_td]:border [&_td]:border-white/10 [&_td]:px-2 [&_td]:py-1 [&_td]:align-top [&_p]:my-1">
+                          <div className="mt-1.5 max-h-72 overflow-auto rounded-md border border-border bg-background/40 p-2">
+                            <div className="prose prose-invert prose-sm max-w-none text-[11px] [&_table]:my-0 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:bg-muted/40 [&_th]:px-2 [&_th]:py-1 [&_th]:text-left [&_td]:border [&_td]:border-border [&_td]:px-2 [&_td]:py-1 [&_td]:align-top [&_p]:my-1">
                               <ReactMarkdown remarkPlugins={[remarkGfm]}>{w.body}</ReactMarkdown>
                             </div>
                           </div>

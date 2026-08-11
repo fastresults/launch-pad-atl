@@ -38,13 +38,13 @@ export function CollateralPieceCard({
   const generated = fileCount > 0;
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-white/10 bg-background/40 transition hover:border-white/20">
+    <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-background/40 transition hover:border-border">
       <button
         type="button"
         onClick={generated ? onPreview : onGenerate}
         disabled={!generated && disabled}
         aria-label={generated ? `Preview ${label}` : `Generate ${label}`}
-        className={`group relative block aspect-[16/10] w-full overflow-hidden border-b border-white/10 disabled:cursor-not-allowed ${preview ? "bg-white" : "bg-background/60"}`}
+        className={`group relative block aspect-[16/10] w-full overflow-hidden border-b border-border disabled:cursor-not-allowed ${preview ? "bg-white" : "bg-background/60"}`}
       >
         {preview ? (
           <img src={preview} alt={label} className="h-full w-full rounded-lg object-contain p-2 transition group-hover:scale-[1.02]" loading="lazy" />

@@ -123,7 +123,7 @@ export function SocialAutopilot({
   return (
     <div className="space-y-4">
       {/* Stepper */}
-      <div className="rounded-2xl border border-white/10 bg-card p-3">
+      <div className="rounded-2xl border border-border bg-card p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-[11px]">
             {STEPS.map((s, i) => {
@@ -140,7 +140,7 @@ export function SocialAutopilot({
                         ? "border-primary bg-primary text-primary-foreground"
                         : done
                         ? "border-status-success/40 bg-status-success/15 text-status-success"
-                        : "border-white/10 text-muted-foreground"
+                        : "border-border text-muted-foreground"
                     }`}
                   >
                     {done ? <Check className="h-3 w-3" /> : s.id}
@@ -165,7 +165,7 @@ export function SocialAutopilot({
 
       {/* Step body */}
       {progressQ.isLoading ? (
-        <div className="rounded-2xl border border-white/10 bg-card p-8 text-center">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center">
           <Loader2 className="mx-auto h-4 w-4 animate-spin text-muted-foreground" />
         </div>
       ) : step === 1 ? (
@@ -235,7 +235,7 @@ function Step1Goals({ goals, onContinue }: { goals: SocialGoals; onContinue: (g:
   const valid = objectives.length > 0;
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+    <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
       <header>
         <h3 className="text-base font-semibold">Tell us about your goals</h3>
         <p className="text-xs text-muted-foreground">Three quick questions. We'll handle the rest.</p>
@@ -256,7 +256,7 @@ function Step1Goals({ goals, onContinue }: { goals: SocialGoals; onContinue: (g:
                   )
                 }
                 className={`rounded-full border px-3 py-1 text-xs ${
-                  on ? "border-primary bg-primary/15 text-foreground" : "border-white/10 text-muted-foreground hover:text-foreground"
+                  on ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {on && <Check className="mr-1 -mt-0.5 inline h-3 w-3" />}
@@ -288,7 +288,7 @@ function Step1Goals({ goals, onContinue }: { goals: SocialGoals; onContinue: (g:
               type="button"
               onClick={() => setCamera(c.id)}
               className={`rounded-full border px-3 py-1 text-xs ${
-                camera === c.id ? "border-primary bg-primary/15" : "border-white/10 text-muted-foreground hover:text-foreground"
+                camera === c.id ? "border-primary bg-primary/15" : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
               {c.label}
@@ -340,7 +340,7 @@ function Step2BuildPlan({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+    <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
       <header>
         <h3 className="text-base font-semibold">Building your social plan</h3>
         <p className="text-xs text-muted-foreground">
@@ -357,7 +357,7 @@ function Step2BuildPlan({
           return (
             <li
               key={i.type}
-              className="flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-background/40 px-3 py-2 text-xs"
+              className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background/40 px-3 py-2 text-xs"
             >
               <div className="flex items-center gap-2">
                 {done ? (
@@ -434,7 +434,7 @@ function Step3Channels({
   const tooMany = picks.length > 3;
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+    <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
       <header>
         <h3 className="text-base font-semibold">Where will you show up?</h3>
         <p className="text-xs text-muted-foreground">We've pre-picked what fits you best. Toggle to change.</p>
@@ -452,7 +452,7 @@ function Step3Channels({
                 setPicks((prev) => prev.includes(r.name) ? prev.filter((x) => x !== r.name) : [...prev, r.name])
               }
               className={`rounded-xl border p-3 text-left text-xs transition ${
-                on ? "border-primary bg-primary/10" : "border-white/10 bg-background/40 hover:border-white/20"
+                on ? "border-primary bg-primary/10" : "border-border bg-background/40 hover:border-border"
               } ${skip && !on ? "opacity-60" : ""}`}
             >
               <div className="flex items-center justify-between">
@@ -564,7 +564,7 @@ function Step4Style({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+    <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
       <header className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-base font-semibold">Pick a look</h3>
@@ -594,7 +594,7 @@ function Step4Style({
             <div
               key={d.id}
               className={`group relative overflow-hidden rounded-xl border transition ${
-                on ? "border-primary ring-2 ring-primary/40" : "border-white/10 hover:border-white/20"
+                on ? "border-primary ring-2 ring-primary/40" : "border-border hover:border-border"
               }`}
             >
               <button
@@ -982,7 +982,7 @@ function Step5BuildKit({
 
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+    <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
       <header className="flex items-center justify-between gap-2">
         <div>
           <h3 className="text-base font-semibold">Generating your channel kits</h3>
@@ -1046,7 +1046,7 @@ function Step5BuildKit({
                 <AccordionItem
                   key={platform}
                   value={platform}
-                  className="rounded-xl border border-white/10 bg-background/30 border-b"
+                  className="rounded-xl border border-border bg-background/30 border-b"
                 >
                   <AccordionTrigger className="px-3 py-2 hover:no-underline">
                     <div className="flex flex-1 items-center justify-between gap-2 pr-2">
@@ -1066,7 +1066,7 @@ function Step5BuildKit({
                       </Badge>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="border-t border-white/5 pb-0 pt-0">
+                  <AccordionContent className="border-t border-border pb-0 pt-0">
                     <div className="flex justify-end gap-1.5 px-2 pt-2">
                       <Button
                         size="sm"
@@ -1108,14 +1108,14 @@ function Step5BuildKit({
                         const dims = assetDims(platform, t.asset);
                         return (
                           <li key={k}
-                            className="flex flex-col gap-2 rounded-lg border border-white/5 bg-background/40 p-2 text-xs sm:flex-row sm:items-center">
+                            className="flex flex-col gap-2 rounded-lg border border-border bg-background/40 p-2 text-xs sm:flex-row sm:items-center">
                             <div className="flex items-start gap-3">
                               <button
                                 type="button"
                                 onClick={() => { if (t.signed_url) setPreviewIdx(tasks.indexOf(t)); }}
                                 disabled={!t.signed_url}
                                 title={t.signed_url ? `${platformLabel(platform)} — ${aLabel} (preview)` : undefined}
-                                className={`${frameClass} overflow-hidden border border-white/10 bg-muted/40 flex items-center justify-center relative ${t.signed_url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
+                                className={`${frameClass} overflow-hidden border border-border bg-muted/40 flex items-center justify-center relative ${t.signed_url ? "cursor-zoom-in hover:ring-2 hover:ring-primary/40" : ""}`}
                               >
                                 {t.signed_url ? (
                                   <img src={t.signed_url} alt={`${platformLabel(platform)} ${aLabel}`} className="h-full w-full object-cover" />
@@ -1162,9 +1162,9 @@ function Step5BuildKit({
                                 </div>
                                 {t.canvas_plan && (
                                   <div className="mt-1 flex items-center gap-0.5" title={`surface ${t.canvas_plan.surface} · ink ${t.canvas_plan.ink} · accent ${t.canvas_plan.accent}`}>
-                                    <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.surface }} />
-                                    <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.ink }} />
-                                    <span className="h-2.5 w-2.5 rounded-sm border border-white/20" style={{ background: t.canvas_plan.accent }} />
+                                    <span className="h-2.5 w-2.5 rounded-sm border border-border" style={{ background: t.canvas_plan.surface }} />
+                                    <span className="h-2.5 w-2.5 rounded-sm border border-border" style={{ background: t.canvas_plan.ink }} />
+                                    <span className="h-2.5 w-2.5 rounded-sm border border-border" style={{ background: t.canvas_plan.accent }} />
                                   </div>
                                 )}
                               </div>
@@ -1175,14 +1175,14 @@ function Step5BuildKit({
                                   type="button"
                                   onClick={() => setPreviewIdx(tasks.indexOf(t))}
                                   title="Preview"
-                                  className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5"
+                                  className="inline-flex h-6 items-center rounded border border-border px-1.5 text-[10px] hover:bg-muted/40"
                                 >
                                   <Eye className="mr-1 h-3 w-3" /> Preview
                                 </button>
                               )}
                               {t.signed_url && (
                                 <a href={t.signed_url} download
-                                   className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5">
+                                   className="inline-flex h-6 items-center rounded border border-border px-1.5 text-[10px] hover:bg-muted/40">
                                   Download
                                 </a>
                               )}
@@ -1500,7 +1500,7 @@ function Step6Launch({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-card p-5">
+    <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
       <header className="flex items-center justify-between gap-2">
         <div>
           <h3 className="text-base font-semibold">You're ready to launch</h3>
@@ -1551,7 +1551,7 @@ function Step6Launch({
           const live = !!launchStatus[p]?.live;
           const firstPost = extractFirstPost(launchMd, p);
           return (
-            <div key={p} className={`rounded-xl border bg-background/40 p-3 ${live ? "border-status-success/30" : "border-white/10"}`}>
+            <div key={p} className={`rounded-xl border bg-background/40 p-3 ${live ? "border-status-success/30" : "border-border"}`}>
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold">{p}</h4>
                 {live && <Check className="h-4 w-4 text-status-success" />}
@@ -1564,7 +1564,7 @@ function Step6Launch({
                     onClick={() => avatar?.signed_url && setPreviewId(avatar.id)}
                     disabled={!avatar?.signed_url}
                     title={avatar?.signed_url ? `Preview ${p} avatar` : undefined}
-                    className="group relative h-14 w-14 overflow-hidden rounded-full border border-white/10 bg-muted/40 transition hover:border-primary disabled:cursor-default"
+                    className="group relative h-14 w-14 overflow-hidden rounded-full border border-border bg-muted/40 transition hover:border-primary disabled:cursor-default"
                   >
                     {avatar?.signed_url
                       ? <img src={avatar.signed_url} alt={`${p} avatar`} className="h-full w-full object-cover transition group-hover:scale-105" />
@@ -1580,7 +1580,7 @@ function Step6Launch({
                     onClick={() => cover?.signed_url && setPreviewId(cover.id)}
                     disabled={!cover?.signed_url}
                     title={cover?.signed_url ? `Preview ${p} ${coverLabel.toLowerCase()}` : undefined}
-                    className="group relative block aspect-[4/1] w-full overflow-hidden rounded-md border border-white/10 bg-muted/40 transition hover:border-primary disabled:cursor-default"
+                    className="group relative block aspect-[4/1] w-full overflow-hidden rounded-md border border-border bg-muted/40 transition hover:border-primary disabled:cursor-default"
                   >
                     {cover?.signed_url
                       ? <img src={cover.signed_url} alt={`${p} ${coverLabel}`} className="h-full w-full object-cover transition group-hover:scale-[1.03]" />
@@ -1603,12 +1603,12 @@ function Step6Launch({
                   {regenerating[`${p}:all`] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate {p}
                 </Button>
                 {avatar?.signed_url && (
-                  <a href={avatar.signed_url} download className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5">
+                  <a href={avatar.signed_url} download className="inline-flex h-6 items-center rounded border border-border px-1.5 text-[10px] hover:bg-muted/40">
                     Download avatar
                   </a>
                 )}
                 {cover?.signed_url && (
-                  <a href={cover.signed_url} download className="inline-flex h-6 items-center rounded border border-white/10 px-1.5 text-[10px] hover:bg-white/5">
+                  <a href={cover.signed_url} download className="inline-flex h-6 items-center rounded border border-border px-1.5 text-[10px] hover:bg-muted/40">
                     Download cover
                   </a>
                 )}
@@ -1631,7 +1631,7 @@ function Step6Launch({
               </div>
 
               {firstPost && (
-                <details className="mt-2 rounded border border-white/5 bg-background/30 p-2 text-[11px]">
+                <details className="mt-2 rounded border border-border bg-background/30 p-2 text-[11px]">
                   <summary className="cursor-pointer font-medium">First post</summary>
                   <pre className="mt-1 whitespace-pre-wrap text-muted-foreground">{firstPost}</pre>
                   <Button size="sm" variant="ghost" className="mt-1 h-6 text-[10px]" onClick={() => copy(firstPost, "Post copied")}>
@@ -1640,9 +1640,9 @@ function Step6Launch({
                 </details>
               )}
 
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-white/5 pt-2">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
                 <a href={SIGNUP_URLS[p] || "#"} target="_blank" rel="noreferrer"
-                   className="inline-flex h-6 items-center gap-1 rounded border border-white/10 px-2 text-[10px] hover:bg-white/5">
+                   className="inline-flex h-6 items-center gap-1 rounded border border-border px-2 text-[10px] hover:bg-muted/40">
                   Open {p} <ExternalLink className="h-3 w-3" />
                 </a>
                 <label className="inline-flex cursor-pointer items-center gap-1.5 text-[11px]">
@@ -1695,7 +1695,7 @@ function Step6Launch({
 
 function Row({ label, value, onCopy }: { label: string; value: string; onCopy: () => void }) {
   return (
-    <div className="flex items-center gap-2 rounded border border-white/5 bg-background/30 px-2 py-1">
+    <div className="flex items-center gap-2 rounded border border-border bg-background/30 px-2 py-1">
       <span className="w-12 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
       <span className="flex-1 truncate">{value}</span>
       <button type="button" onClick={onCopy} className="text-muted-foreground hover:text-foreground" title="Copy">

@@ -46,7 +46,7 @@ const STATUS_STYLES: Record<string, string> = {
   complete: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
   generating: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30",
   failed: "bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/30",
-  pending: "bg-muted text-muted-foreground border-white/10",
+  pending: "bg-muted text-muted-foreground border-border",
 };
 
 const SUGGESTIONS = [
@@ -231,7 +231,7 @@ export default function DeliverablesPage() {
       </div>
 
       {allDocs.length > 0 && (
-        <div className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
+        <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Ask or search your startup assets</span>
@@ -280,7 +280,7 @@ export default function DeliverablesPage() {
                   setQuery(s);
                   runAsk(s);
                 }}
-                className="rounded-full border border-white/10 px-2.5 py-1 text-[11px] text-muted-foreground hover:border-foreground hover:text-foreground"
+                className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:border-foreground hover:text-foreground"
               >
                 {s}
               </button>
@@ -290,7 +290,7 @@ export default function DeliverablesPage() {
       )}
 
       {(askLoading || askAnswer || askError) && (
-        <div className="rounded-2xl border border-white/10 bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5" /> AI answer
             {askAnswer && <span className="ml-2 normal-case text-muted-foreground/70">· {askAnswer.question}</span>}
@@ -309,14 +309,14 @@ export default function DeliverablesPage() {
                 {askAnswer.answer}
               </div>
               {askAnswer.citations.length > 0 && (
-                <div className="mt-4 border-t border-white/10 pt-3">
+                <div className="mt-4 border-t border-border pt-3">
                   <div className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">Sources</div>
                   <div className="flex flex-wrap gap-2">
                     {askAnswer.citations.map((c) => (
                       <button
                         key={c.index}
                         onClick={() => openCitation(c)}
-                        className="rounded-lg border border-white/10 bg-background px-2.5 py-1.5 text-left text-xs hover:border-foreground"
+                        className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-left text-xs hover:border-foreground"
                         title={c.snippet}
                       >
                         <span className="font-medium">[{c.index}]</span> {c.document_name}
@@ -339,7 +339,7 @@ export default function DeliverablesPage() {
               className={`rounded-full border px-3 py-1 text-xs ${
                 filter === f
                   ? "border-foreground bg-foreground text-background"
-                  : "border-white/10 text-muted-foreground hover:text-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
               {f === "all" ? "All" : f === "ready" ? "Ready" : "In progress"}
@@ -349,7 +349,7 @@ export default function DeliverablesPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="rounded-full border border-white/10 bg-background px-3 py-1 text-xs text-muted-foreground"
+              className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground"
             >
               <option value="all">All categories</option>
               {categories.map((c) => (
@@ -363,7 +363,7 @@ export default function DeliverablesPage() {
             <select
               value={snapFilter}
               onChange={(e) => setSnapFilter(e.target.value)}
-              className="rounded-full border border-white/10 bg-background px-3 py-1 text-xs text-muted-foreground"
+              className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground"
             >
               <option value="all">All ventures</option>
               {snapshots.map((s) => (
@@ -376,7 +376,7 @@ export default function DeliverablesPage() {
           <select
             value={updatedFilter}
             onChange={(e) => setUpdatedFilter(e.target.value as any)}
-            className="rounded-full border border-white/10 bg-background px-3 py-1 text-xs text-muted-foreground"
+            className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground"
           >
             <option value="all">Any time</option>
             <option value="7d">Updated · 7 days</option>
@@ -385,7 +385,7 @@ export default function DeliverablesPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="rounded-full border border-white/10 bg-background px-3 py-1 text-xs text-muted-foreground"
+            className="rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground"
           >
             <option value="relevance">Sort: Relevance</option>
             <option value="updated">Sort: Recently updated</option>
@@ -402,7 +402,7 @@ export default function DeliverablesPage() {
       {isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
 
       {!isLoading && allDocs.length === 0 && (
-        <div className="rounded-2xl border border-white/10 bg-card p-10 text-center">
+        <div className="rounded-2xl border border-border bg-card p-10 text-center">
           <FileText className="mx-auto h-10 w-10 text-muted-foreground" />
           <h2 className="mt-3 text-lg font-medium">No startup assets yet</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -417,7 +417,7 @@ export default function DeliverablesPage() {
       )}
 
       {!isLoading && allDocs.length > 0 && sortedDocs.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-white/15 bg-card/50 p-8 text-center">
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">
           <p className="text-sm text-muted-foreground">
             No matches for "{debouncedQuery}". Try Ask AI for a synthesized answer across all your docs.
           </p>
@@ -430,7 +430,7 @@ export default function DeliverablesPage() {
           if (docs.length === 0) return null;
           return (
             <section key={s.id} className="space-y-4">
-              <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
+              <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
                 <div>
                   <h2 className="text-xl font-semibold tracking-tight">
                     {s.company_name ?? "Untitled venture"}
@@ -455,7 +455,7 @@ export default function DeliverablesPage() {
                   return (
                     <article
                       key={d.id}
-                      className="flex flex-col rounded-xl border border-white/10 bg-card p-4 transition hover:border-white/20"
+                      className="flex flex-col rounded-xl border border-border bg-card p-4 transition hover:border-border"
                     >
                       <div className="flex items-start justify-between gap-2">
                         {d._category && (

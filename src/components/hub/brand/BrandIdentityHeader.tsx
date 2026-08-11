@@ -156,7 +156,7 @@ function Swatch({
         <EditablePaletteSwatch tokenKey={tokenKey} value={value} fill onChange={(hex) => onChange(tokenKey, hex)} />
         {pairValue && (
           <span
-            className="pointer-events-none absolute bottom-1 right-1 h-3 w-3 rounded-full border border-white/50 shadow-sm"
+            className="pointer-events-none absolute bottom-1 right-1 h-3 w-3 rounded-full border border-foreground/25 shadow-sm"
             style={{ background: pairValue }}
             aria-hidden
           />

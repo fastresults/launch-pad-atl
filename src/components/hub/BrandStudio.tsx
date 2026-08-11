@@ -129,9 +129,9 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
 
       />
       {expanded && (
-        <div id="brand-studio-panel-body" className="space-y-6 rounded-2xl border border-white/10 bg-card p-5">
+        <div id="brand-studio-panel-body" className="space-y-6 rounded-2xl border border-border bg-card p-5">
           {!kit && (
-            <div className="rounded-xl border border-dashed border-white/15 bg-background/40 p-5 text-center">
+            <div className="rounded-xl border border-dashed border-border bg-background/40 p-5 text-center">
               <p className="text-sm font-medium">Your identity, locked in five steps</p>
               <p className="mx-auto mt-1 max-w-xl text-xs leading-relaxed text-muted-foreground">
                 Brand DNA → palette → typography → moodboard &amp; logo → voice &amp; style guide. You pick the direction at
@@ -162,14 +162,14 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
 
           {kit && (
             <>
-              <div className="border-t border-white/10" />
+              <div className="border-t border-border" />
               <BrandBoardSections
                 board={kitToBrandBoard(kit)}
                 blocks={["mood", "dna", "voice", "ctas"]}
                 onImageClick={(url, caption) => setLightbox({ url, caption })}
                 emptyHint="Mood board, brand DNA, voice and calls to action appear here once you complete steps 3–5 of the brand wizard."
               />
-              <div className="border-t border-white/10" />
+              <div className="border-t border-border" />
             </>
           )}
 
@@ -178,7 +178,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
               className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 ${
                 websitePrd.stale || !websitePrd.exists
                   ? "border-status-warning/40 bg-status-warning/5"
-                  : "border-white/10 bg-background/40"
+                  : "border-border bg-background/40"
               }`}
             >
               <div className="min-w-0">
@@ -226,7 +226,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
       <BrandWizard snapshot={snapshot} open={open} onOpenChange={setOpen} />
 
       <Dialog open={!!lightbox} onOpenChange={(v) => !v && setLightbox(null)}>
-        <DialogContent className="max-w-3xl border-white/10 bg-card p-3">
+        <DialogContent className="max-w-3xl border-border bg-card p-3">
           <DialogTitle className="sr-only">{lightbox?.caption ?? "Mood board reference"}</DialogTitle>
           {lightbox && (
             <figure className="space-y-2">

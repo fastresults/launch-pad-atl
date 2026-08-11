@@ -21,7 +21,7 @@ export default function FilesIndex() {
           <Link
             key={s.to}
             to={s.to}
-            className="rounded-2xl border border-white/10 bg-card p-5 hover:border-primary/30 transition"
+            className="rounded-2xl border border-border bg-card p-5 hover:border-primary/30 transition"
           >
             <s.icon className="h-5 w-5 text-primary" />
             <div className="mt-3 font-medium">{s.label}</div>

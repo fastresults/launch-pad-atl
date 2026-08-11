@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useAuth } from "@/hooks/use-auth";
 import {
   ADMIN_GROUPS,
@@ -185,7 +184,6 @@ export function AdminSidebar() {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={signOut} title="Sign out">
               <LogOut className="h-4 w-4" />
             </Button>

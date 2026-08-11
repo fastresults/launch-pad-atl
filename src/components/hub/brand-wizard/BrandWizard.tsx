@@ -86,7 +86,7 @@ export function BrandWizard({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="theme-dark-scope flex h-[92dvh] max-h-[92dvh] max-w-7xl flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="shrink-0 border-b border-white/10 px-6 py-4">
+        <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             Brand Wizard — {snapshot.company_name || "Your venture"}
@@ -113,7 +113,7 @@ export function BrandWizard({
                       ? "border-primary bg-primary/10 text-foreground"
                       : done
                       ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-300"
-                      : "border-white/10 bg-card text-muted-foreground hover:border-white/20"
+                      : "border-border bg-card text-muted-foreground hover:border-border"
                   }`}
                 >
                   <span className="mr-1 font-mono">{n}</span>
@@ -122,7 +122,7 @@ export function BrandWizard({
               );
             })}
           </div>
-          <div className="mt-3 rounded-lg border border-white/10 bg-card/40 p-3">
+          <div className="mt-3 rounded-lg border border-border bg-card/40 p-3">
             <LogoSetPanel
               snapshotId={snapshotId}
               kit={kit}
@@ -164,7 +164,7 @@ export function BrandWizard({
               </>
             )}
           </div>
-          <aside className="hidden min-h-0 overflow-y-auto border-l border-white/10 bg-background/40 px-4 py-4 lg:block">
+          <aside className="hidden min-h-0 overflow-y-auto border-l border-border bg-background/40 px-4 py-4 lg:block">
             <LiveBrandPreview kit={kit} snapshot={snapshot} />
           </aside>
         </div>
@@ -318,7 +318,7 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
           <div className="mt-2 flex gap-1.5">
             {Object.entries(chosen.colors ?? {}).map(([k, v]: any) => (
               <div key={k} className="flex-1">
-                <div className="h-6 rounded border border-white/10" style={{ background: v }} />
+                <div className="h-6 rounded border border-border" style={{ background: v }} />
                 <div className="mt-0.5 text-[8px] font-mono text-muted-foreground">{k}</div>
               </div>
             ))}
@@ -329,9 +329,9 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
             <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Contrast pairings</div>
             <div className="grid gap-1.5 sm:grid-cols-2">
               {(chosen.contrast?.pairings ?? []).map((p: any) => (
-                <div key={p.label} className="flex items-center justify-between rounded-md border border-white/10 px-2 py-1.5 text-[11px]">
+                <div key={p.label} className="flex items-center justify-between rounded-md border border-border px-2 py-1.5 text-[11px]">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="inline-block h-4 w-7 rounded border border-white/10" style={{ background: p.bg }}>
+                    <span className="inline-block h-4 w-7 rounded border border-border" style={{ background: p.bg }}>
                       <span className="block h-full w-full text-center text-[9px] font-semibold leading-4" style={{ color: p.fg }}>Aa</span>
                     </span>
                     <span className="truncate text-muted-foreground">{p.label}</span>
@@ -349,7 +349,7 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
               </div>
             )}
             {chosen.audit?.length > 0 && (
-              <details className="rounded-md border border-white/10 px-2 py-1.5 text-[10px] text-muted-foreground">
+              <details className="rounded-md border border-border px-2 py-1.5 text-[10px] text-muted-foreground">
                 <summary className="cursor-pointer">{chosen.audit.length} auto-adjustment{chosen.audit.length === 1 ? "" : "s"} applied</summary>
                 <ul className="mt-1 space-y-0.5 pl-3">
                   {chosen.audit.map((a: any, i: number) => (
@@ -382,7 +382,7 @@ function StepPalette({ snapshot, kit, onSave, onBack, onNext }: any) {
               <button
                 key={`${opt.name}-${i}`}
                 onClick={() => choose(opt)}
-                className={`relative rounded-xl border p-4 text-left transition ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
+                className={`relative rounded-xl border p-4 text-left transition ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-foreground/25"}`}
                 style={{ background: opt.colors.bg, color: opt.colors.fg }}
               >
                 {isPicked && (
@@ -503,7 +503,7 @@ function StepTypography({ snapshot, kit, onSave, onBack, onNext }: any) {
               <button
                 key={`${opt.name}-${i}`}
                 onClick={() => choose(opt)}
-                className={`relative rounded-xl border p-5 text-left transition bg-card ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-white/10 hover:border-white/30"}`}
+                className={`relative rounded-xl border p-5 text-left transition bg-card ${isPicked ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-foreground/25"}`}
               >
                 {isPicked && (
                   <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
@@ -937,13 +937,13 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
         {moodboard.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             {moodboard.map((a, i) => (
-              <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-white/10 bg-background/40">
+              <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border bg-background/40">
                 {a.url && <img src={a.url} className="aspect-square w-full object-cover" />}
               </a>
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-white/10 p-6 text-center text-xs text-muted-foreground">No mood board yet. Generate to see nine art-directed tiles here.</div>
+          <div className="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground">No mood board yet. Generate to see nine art-directed tiles here.</div>
         )}
 
       </section>
@@ -964,7 +964,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
         <label
           className={`flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors ${
-            dragOver ? "border-primary bg-primary/10" : "border-white/20 bg-background/40 hover:border-primary/50"
+            dragOver ? "border-primary bg-primary/10" : "border-border bg-background/40 hover:border-primary/50"
           }`}
           onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (refs.length < 3) setDragOver(true); }}
           onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); if (refs.length < 3) setDragOver(true); }}
@@ -990,7 +990,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
         {refs.length > 0 && (
           <div className="flex flex-wrap items-center gap-3">
             {refs.map((src, i) => (
-              <div key={i} className="relative h-20 w-20 overflow-hidden rounded-lg border border-white/10 bg-background">
+              <div key={i} className="relative h-20 w-20 overflow-hidden rounded-lg border border-border bg-background">
                 <img src={src} className="h-full w-full object-contain" />
                 <button onClick={() => removeRef(i)} className="absolute right-0 top-0 rounded-bl bg-black/60 px-1 text-xs text-white hover:bg-black/80">×</button>
               </div>
@@ -1022,7 +1022,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
 
       {/* YOUR OWN MARK */}
-      <section className="space-y-3 rounded-xl border border-white/10 bg-background/40 p-4">
+      <section className="space-y-3 rounded-xl border border-border bg-background/40 p-4">
         <div>
           <h3 className="text-sm font-semibold">Already have a logo?</h3>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -1030,7 +1030,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-white/20 px-3 py-2 text-xs hover:border-primary/60">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border px-3 py-2 text-xs hover:border-primary/60">
             <input
               type="file"
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
@@ -1062,7 +1062,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
       </section>
 
       {/* WEBSITE PRD — brand-infused */}
-      <section className={`space-y-3 rounded-xl border p-4 ${!prdBlockedReason ? "border-primary/40 bg-primary/5" : "border-white/10 bg-background/40"}`}>
+      <section className={`space-y-3 rounded-xl border p-4 ${!prdBlockedReason ? "border-primary/40 bg-primary/5" : "border-border bg-background/40"}`}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
@@ -1086,8 +1086,8 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
 
 
         {prd?.content ? (
-          <div className="overflow-hidden rounded-lg border border-white/10 bg-card">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
+          <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3 py-2">
               <div className="text-[11px] text-muted-foreground">
                 {prd.content.split(/\s+/).filter(Boolean).length} words
                 {prd.updated_at ? ` · updated ${new Date(prd.updated_at).toLocaleString()}` : ""}
@@ -1106,7 +1106,7 @@ function StepMoodboard({ snapshot, kit, onSave, onBack, onNext }: any) {
             </pre>
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-white/10 p-4 text-center text-xs text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
             No website PRD yet. Regenerate to produce one with your brand baked in.
           </div>
         )}
@@ -1224,7 +1224,7 @@ function StepReview({ snapshot, kit, onSave, onBack, onDone }: any) {
         <Textarea className="mt-3" placeholder="Custom rules (optional) — e.g. always use 'startup', never 'business'." value={voice.rules} onChange={(e) => setVoice((x: any) => ({ ...x, rules: e.target.value }))} />
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-card p-4">
+      <div className="rounded-xl border border-border bg-card p-4">
         <div className="text-xs uppercase tracking-wide text-muted-foreground">Review</div>
         <div className="mt-2 grid gap-3 md:grid-cols-2">
           <div>

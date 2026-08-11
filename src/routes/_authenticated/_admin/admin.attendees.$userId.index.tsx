@@ -95,14 +95,14 @@ export default function AttendeeDetail() {
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">Documents</h2>
-        <div className="overflow-hidden rounded-2xl border border-white/10">
+        <div className="overflow-hidden rounded-2xl border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr><th className="px-4 py-3">File</th><th className="px-4 py-3">Kind</th></tr>
             </thead>
             <tbody>
               {data.documents.map((d) => (
-                <tr key={d.id} className="border-t border-white/5">
+                <tr key={d.id} className="border-t border-border">
                   <td className="px-4 py-3">{d.original_name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{d.kind}</td>
                 </tr>
@@ -117,9 +117,9 @@ export default function AttendeeDetail() {
 
       <section>
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">Deliverables</h2>
-        <div className="overflow-hidden rounded-2xl border border-white/10">
+        <div className="overflow-hidden rounded-2xl border border-border">
           <table className="w-full text-sm">
-            <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Deliverable</th>
                 <th className="px-4 py-3">Review</th>
@@ -132,7 +132,7 @@ export default function AttendeeDetail() {
               {data.deliverables.map((d) => {
                 const t = d.deliverable_types as { label?: string } | null;
                 return (
-                  <tr key={d.id} className="border-t border-white/5">
+                  <tr key={d.id} className="border-t border-border">
                     <td className="px-4 py-3">{t?.label ?? d.deliverable_key}</td>
                     <td className="px-4 py-3"><Pill v={d.review_status} /></td>
                     <td className="px-4 py-3"><Pill v={d.publish_status} /></td>
@@ -164,7 +164,7 @@ export default function AttendeeDetail() {
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">Recent pipeline runs</h2>
         <ul className="space-y-2 text-sm">
           {data.runs.map((r) => (
-            <li key={r.id} className="rounded-lg border border-white/10 bg-card px-4 py-2">
+            <li key={r.id} className="rounded-lg border border-border bg-card px-4 py-2">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-xs">{r.id.slice(0, 8)}</span>
                 <Pill v={r.status} />
@@ -184,7 +184,7 @@ export default function AttendeeDetail() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-card p-5">
+    <div className="rounded-2xl border border-border bg-card p-5">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-1 text-lg font-medium">{value}</div>
     </div>
@@ -192,5 +192,5 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 function Pill({ v }: { v: string }) {
-  return <span className="rounded-full bg-white/5 px-2 py-1 text-xs">{v}</span>;
+  return <span className="rounded-full bg-muted/40 px-2 py-1 text-xs">{v}</span>;
 }

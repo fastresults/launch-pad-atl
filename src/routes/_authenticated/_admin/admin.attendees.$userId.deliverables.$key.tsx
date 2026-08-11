@@ -123,7 +123,7 @@ export default function DeliverableEditor() {
         </div>
       </div>
 
-      <section className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
+      <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Content (JSON)</h2>
           <div className="flex gap-2">
@@ -139,7 +139,7 @@ export default function DeliverableEditor() {
         <Textarea value={json} onChange={(e) => setJson(e.target.value)} rows={20} className="font-mono text-xs" />
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
+      <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Review</h2>
         <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Reviewer notes (optional)" rows={3} />
         <div className="flex flex-wrap gap-2">
@@ -149,7 +149,7 @@ export default function DeliverableEditor() {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-2xl border border-white/10 bg-card p-4">
+      <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">Publish</h2>
         <p className="text-xs text-muted-foreground">Approved deliverables can be published immediately or scheduled.</p>
         <div className="flex flex-wrap items-center gap-2">
@@ -187,7 +187,7 @@ export default function DeliverableEditor() {
         <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">History</h2>
         <ul className="space-y-2 text-sm">
           {(revs?.revisions ?? []).map((r) => (
-            <li key={r.id} className="rounded-lg border border-white/10 bg-card px-4 py-2 text-xs">
+            <li key={r.id} className="rounded-lg border border-border bg-card px-4 py-2 text-xs">
               <div className="flex items-center justify-between">
                 <span>{r.action} · <span className="text-muted-foreground">{r.source}</span></span>
                 <span className="text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span>
@@ -203,5 +203,5 @@ export default function DeliverableEditor() {
 }
 
 function Pill({ v }: { v: string }) {
-  return <span className="rounded-full bg-white/5 px-2 py-1 text-xs">{v}</span>;
+  return <span className="rounded-full bg-muted/40 px-2 py-1 text-xs">{v}</span>;
 }

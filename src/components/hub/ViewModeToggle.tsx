@@ -13,7 +13,7 @@ export function ViewModeToggle({
     <div
       role="tablist"
       aria-label="View mode"
-      className="inline-flex items-center rounded-full border border-white/10 bg-card/60 p-0.5 text-xs"
+      className="inline-flex items-center rounded-full border border-border bg-card/60 p-0.5 text-xs"
     >
       <button
         type="button"
