@@ -1,61 +1,105 @@
-# Operationalize: from foundation to a running business
+# Operations Dashboard: from foundation to a running business
 
-Today the "Operationalize" item in the showcase sidebar opens the consultation modal. That's a sales prompt, not an answer. Replace it with a real destination: an **Operating Runway** — a sequenced checklist and workflow the founder works through after receiving the foundation. The consultation offer stays, but it sits at the end as the "or have Adam's team run this" option.
+Today the "Operationalize" item in the showcase sidebar opens the consultation modal. That's a sales prompt, not an answer. Replace it with an **Operations Dashboard** — a shared, persistent workspace that the founder *or* Adam's team actually works out of to deliver the real activities of standing up the business: accounting, legal execution, CRM, funnels, lead gen, proposals, delivery.
+
+It is one dataset with two front doors:
+
+- **Client view** — inside the shareable link (`/v/:token`), no login, the founder works their own runway.
+- **Agency view** — inside the hub (`/dashboard/hub/:snapshotId/operations`), where the team assigns owners, updates status, adds notes, and delivers on the client's behalf.
+
+Both read and write the same rows, so when the agency marks "EIN issued", the client's link shows it immediately.
 
 ## The arc: the Launch Cadence, continued
 
-The showcase already tells the founder a 14-day story — the Launch Cadence (`LAUNCH_14DAY_PLAN`), Day 1 "Lock the concept" through Day 14 "Launch day + proof + growth loops". The runway does not invent a second story. It uses the same arc, same day numbers, same themes and "done when" lines, and then extends it past Day 14 into the part nobody covers: actually running the business.
+The showcase already tells the founder a 14-day story — the Launch Cadence (`LAUNCH_14DAY_PLAN`), Day 1 "Lock the concept" through Day 14 "Launch day + proof + growth loops". The dashboard does not invent a second story. It uses the same arc, same day numbers, same themes and "done when" lines, then extends past Day 14 into the part nobody covers: actually running the business.
 
 ```text
-Days 1–7   Week 1 — Prove it      (concept, offer, buyers, demand, wedge, sales machine, voice)
-Days 8–14  Week 2 — Wire it       (legal, money, domain, site, ops, content, launch)
-Days 15–30 Week 3–4 — Run it      (post-launch: the operating system)
-Days 31–90 Quarter 1 — Compound   (rhythm, proof, first hire, first close)
+Days 1–7   Phase 1 — Prove it    (concept, offer, buyers, demand, wedge, sales machine, voice)
+Days 8–14  Phase 2 — Wire it     (legal, money, domain, site, ops, content, launch)
+Days 15–30 Phase 3 — Run it      (first proposals, first cash, first close, first proof)
+Days 31–90 Phase 4 — Compound    (rhythm, dashboard, pricing, first hire, next quarter)
 ```
 
-**Phase 1 — Week 1 · Prove it (Days 1–7).** Straight from the cadence, one checklist row per day, carrying that day's theme, objective and `doneWhen` verbatim, with the day's `assetKeys` resolved into link chips to the assets already sitting in this showcase. Founder checks a day off only when the `doneWhen` is literally true — e.g. Day 4 is not done until a paid deposit or five written commitments exist.
+**Phase 1 · Prove it (Days 1–7)** — one task group per cadence day, carrying that day's theme, objective and `doneWhen` verbatim, with the day's `assetKeys` resolved into link chips to assets already in this showcase. A day is done only when its `doneWhen` is literally true (Day 4 isn't done until a paid deposit or five written commitments exist).
 
-**Phase 2 — Week 2 · Wire it (Days 8–14).** Same treatment, and this is where the operational spine lands: entity + ToS/Privacy/Refund + insurance (Day 8), Stripe + business bank + books (Day 9), domain/email/GA4 (Day 10), site + brand pack (Day 11), fulfillment SOP + support bot + automations (Day 12), content calendar + operating cadence (Day 13), ads + reviews + referral + first paying customer (Day 14).
+**Phase 2 · Wire it (Days 8–14)** — the operational spine. The cadence gives the theme; the dashboard adds the administrative reality as individually trackable tasks:
 
-Because the cadence gives the *theme* but not the *administrative reality*, each of these days expands into sub-steps the founder can tick individually — this is the detail the shareable link is missing today:
+- **Day 8 · Legal + entity** — entity filed · EIN issued · registered agent · operating agreement · MSA / services agreement + SOW template · NDA · contractor agreement · ToS + Privacy live · GL insurance bound (E&O or trades rider as applicable). "Sent for signature" and "returned executed" are separate tasks — a contract that went out is not a contract that came back.
+- **Day 9 · Money infrastructure** — business bank + card · personal spend separated · payment processor live with a real test charge · chart of accounts · bank feed connected · sales-tax posture decided · bookkeeping cadence named (weekly reconcile, monthly close, who owns it)
+- **Day 10 · Domain, email, tracking** — domain + DNS · business email · GA4 + pixels firing real events · sending domain authenticated (SPF/DKIM)
+- **Day 11 · Site + brand pack** — site live at the domain with logo, favicon, OG image, one call to action
+- **Day 12 · Ops + CRM + proposals** — CRM pipeline stages with one owner per stage · proposal template built from the priced offer · e-sign connected · invoicing with deposit and late terms · onboarding kit (welcome email, kickoff agenda, asset request list) · delivery SOP · support inbox with a response-time promise
+- **Day 13 · Demand engine** — three lead sources with a weekly quota each · outbound list built and the first 25 messages actually sent · 5-touch follow-up sequence scheduled · booking link wired into the CRM · content calendar loaded from the brand kit
+- **Day 14 · Launch** — ads live · reviews/testimonials captured · referral link out · first paying customer logged
 
-- Day 8 → entity filed · EIN issued · registered agent · operating agreement signed · MSA / services agreement + SOW template · NDA · contractor agreement · ToS + Privacy live on the site · GL insurance bound (E&O or trades rider where applicable). Sent-for-signature and returned are separate ticks — a contract that went out is not a contract that came back.
-- Day 9 → business bank + card opened · personal spend separated · payment processor live with a real test charge · chart of accounts set · bank feed connected · sales-tax posture decided · bookkeeping cadence named (weekly reconcile, monthly close, who does it)
-- Day 10 → domain + DNS · business email · GA4 + pixels firing real events · email marketing sender authenticated (SPF/DKIM)
-- Day 12 → CRM pipeline stages with one owner per stage · proposal template built from the priced offer · e-sign tool connected · invoicing + deposit + late-payment terms · onboarding kit (welcome email, kickoff agenda, asset request list) · delivery SOP
-- Day 13 → three lead sources chosen with a weekly quota each · outbound list built and the first 25 messages actually sent · 5-touch follow-up sequence scheduled · booking link wired into the CRM
+**Phase 3 · Run it (Days 15–30)** — first 10 proposals out, close rate tracked, cash collected vs. invoiced reconciled, first monthly close completed, first testimonial captured, delivery SOP survives contact with a real client.
 
-**Phase 3 — Days 15–30 · Run it.** The first orders arrive and the system either holds or it doesn't: first 10 proposals out the door, close-rate tracked, cash-collected vs. invoiced reconciled, first monthly close completed with an accountant's eyes on it, support inbox with a response-time promise, testimonial captured from customer #1.
+**Phase 4 · Compound (Days 31–90)** — weekly operating rhythm installed (Monday pipeline, Friday five numbers, monthly close), one dashboard with CAC / close rate / cash on hand / pipeline value / MRR-or-backlog, pricing revisited against real win-loss, first hire or contractor scoped with a 30-day scorecard, Q2 plan written.
 
-**Phase 4 — Days 31–90 · Compound.** Weekly operating rhythm installed (Monday pipeline review, Friday five numbers, monthly close), one dashboard with CAC / close rate / cash on hand / pipeline value / MRR-or-backlog, content cadence sustained from the brand kit, pricing revisited against real win/loss, first hire or contractor scoped with a 30-day scorecard, and a quarterly plan written for Q2.
+## What the dashboard looks like
 
-Every row carries: the day or window it belongs to, why it matters in one line, what "done" looks like, an owner field, and link chips into the showcase assets that already answer it. Phases 1–2 are generated from `LAUNCH_14DAY_PLAN` so the runway can never drift from the timeline the founder already saw; Phases 3–4 are the new post-launch extension.
+**Top band.** Overall progress ring, plus a bar per phase. Three live counters: *blocked*, *due this week*, *waiting on client*. A "current day" marker derived from the runway start date so the founder always knows if they're ahead or behind.
 
+**Filter row.** All / Mine / Agency / Blocked / Overdue, plus phase and category filters using the existing `CATEGORY_DOT` colors so it reads continuously with the Launch Cadence view.
 
-## What the viewer sees
+**Task rows.** Grouped by phase, then by day. Each task carries:
+- status: `todo · in progress · waiting on client · blocked · done`
+- owner: `client` or `agency` (agency view can also name a person)
+- due date, defaulted from the day offset against the runway start
+- a one-line why and a "done when" acceptance line
+- link chips into the showcase assets that already answer it
+- a note thread (short comments) and an attachment/link field for proof — the filing receipt, the signed MSA, the Stripe dashboard link
 
-- Clicking **Operationalize** in the sidebar (desktop) or bottom nav (mobile) opens a full reading-pane view — not a modal.
-- Header: "Your foundation is drafted. Here's what turns it into a business." Progress ring for the whole runway, plus a bar per phase (Week 1, Week 2, Days 15–30, Days 31–90).
-- Four collapsible phases; inside each, one row per day (or window) showing the cadence theme, objective, "done when", a category dot, sub-step checkboxes, an optional owner/date, and link chips to the related assets.
-- Week 1 and Week 2 rows are visibly the same days the founder saw in the Launch Cadence, so the runway reads as the continuation of that timeline, not a new list.
-- Checking items persists locally per share token, so a founder can come back to it. Progress never leaves their browser (no login on a share link).
-- Sticky footer bar: **Request an operations consultation** (opens the existing modal with the form) and **Call 929-234-7355**. The modal is also still reachable, just never auto-opened.
-- Export: the runway exports to PDF/Word through the existing section export menu, with checked state included.
+**Right rail.** "Next five actions" — the highest-priority unblocked tasks, so nobody has to decide what to do next. Below it, the consultation CTA: **Request an operations consultation** (opens the existing `ShareOutroDialog` form) and **Call 929-234-7355**.
+
+**Agency extras (hub only).** Bulk assign, bulk status change, a per-client rollup on the hub index showing progress and blocked count, and a "hand back to client" toggle per task.
+
+**Export.** The whole runway exports to PDF/Word through the existing export path, with status, owner, and dates — a status report the agency can send without rewriting anything.
 
 ## Technical details
 
-- New `src/components/share/OperateRunway.tsx` — presentational; takes the payload so it can resolve asset links, and a `token` for progress storage.
-- New `src/components/share/operate-runway.ts` — builds Phases 1–2 by mapping over `LAUNCH_14DAY_PLAN` from `src/lib/launch-14day-plan.ts` (day, theme, objective, `doneWhen`, `assetKeys`, `category` dot from `CATEGORY_DOT`), attaches the per-day sub-steps as a keyed `SUBSTEPS: Record<number, Substep[]>`, and declares Phases 3–4 as a typed `POST_LAUNCH` constant. Pure data + pure functions (progress math, `assetKeyFor`), unit-tested alongside `preview-copy.test.ts` — including a test that every `LAUNCH_14DAY_PLAN` day appears exactly once.
-- Asset link chips resolve `assetKeys` against the share payload's items; unknown keys are silently skipped, matching the existing timeline behaviour.
-- Category dots reuse `CATEGORY_DOT` so the runway is visually continuous with the Launch Cadence view (`TIMELINE_KEY`) rather than a separate design language.
-- `src/routes/v.$token.tsx`: in `goTo`, remove both the `OUTRO_KEY → setOutroOpen(true)` branch and the "operations section opens the modal" side effect. `OUTRO_KEY` becomes a normal active key that renders `<OperateRunway />` in place of `<ShareSection />`, same as `BRAIN_KEY`/`TIMELINE_KEY` are special-cased today. A day row can deep-link into the timeline via the existing `goTo(TIMELINE_KEY, step)` signature.
-- `src/components/share/MobileReader.tsx`: same special-case so the phone path matches.
-- `ShareSidebar.tsx`: keep `OUTRO_KEY` pinned, relabel hint to "After launch: the 90-day runway" and swap the icon to a checklist glyph.
-- `ShareOutroDialog.tsx` is unchanged and reused — opened only from the runway's footer button.
-- Progress: `localStorage` key `sl-operate:<token>` holding `{ [stepId]: { done, owner?, due? } }`, where `stepId` is `day-8` / `day-8.ein` / `post-30.first-close` so sub-steps roll up into their day.
-- Entity/legal sub-steps respect `resolveEntityState` where the venture already has legal setup progress, so a founder who has formed already sees those rows pre-checked rather than being told to do it again.
-- Export: reuse `share-export.ts` by feeding the runway a markdown serialization of its current state (phase headings, day numbers, checked state).
+### Data
 
-## Not included
+Two new tables, both keyed to the venture snapshot:
 
-Nothing is written back to the database and no email fires on checkbox changes. Say the word if you'd rather have the runway state stored per venture so it shows up in the founder's dashboard too — that's a table plus RLS and a natural second step.
+- `venture_ops_tasks` — `id`, `snapshot_id` (FK `venture_snapshots`), `phase`, `day`, `task_key` (stable slug like `day-8.ein`), `title`, `why`, `done_when`, `category`, `asset_keys text[]`, `status`, `owner_kind` (`client` | `agency`), `owner_name`, `due_at`, `sort_order`, `completed_at`, `proof_url`, timestamps. Unique on `(snapshot_id, task_key)`.
+- `venture_ops_notes` — `id`, `task_id` (FK, cascade), `author_kind` (`client` | `agency`), `author_name`, `body`, `created_at`.
+- A `runway_started_at` column on the ops state (small `venture_ops_state` row or reuse the snapshot) anchors due-date math.
+
+Migration order per the platform rule: `CREATE TABLE` → `GRANT` (`authenticated` full, `service_role` all, no `anon`) → `ENABLE ROW LEVEL SECURITY` → policies. Policies scope to the snapshot owner plus `has_role(auth.uid(), 'admin')` / `'super_admin'` for the agency. No `anon` access — the public share link never touches these tables directly.
+
+### Seeding
+
+`supabase/functions/_shared/ops-runway.ts` builds the canonical task list: Phases 1–2 generated by mapping `LAUNCH_14DAY_PLAN` (day, theme, objective, `doneWhen`, `assetKeys`, `category`) and attaching the per-day sub-tasks; Phases 3–4 from a `POST_LAUNCH` constant. A `seedOpsRunway(snapshotId)` upsert on `task_key` creates missing tasks without touching existing status — so the catalog can grow later and existing clients pick up new tasks without losing progress. Seeding runs lazily the first time either view is opened. A mirrored client copy lives at `src/lib/ops-runway.ts` for labels and ordering, with a unit test asserting every `LAUNCH_14DAY_PLAN` day appears exactly once.
+
+### Client (share link) access
+
+The share link is unauthenticated, so it cannot hit the tables directly. Extend the existing public share edge function family with `supabase/functions/venture-ops/index.ts`:
+- Validates body with zod, requires the share `token` (and share password where the share is protected), resolves it to a snapshot through `venture_shares`, then reads/writes with the service role.
+- Actions: `list`, `set_status`, `set_owner`, `set_due`, `add_note`, `set_proof`. Writes made through the token are always recorded as `author_kind: 'client'`.
+- Respects the share's existing expiry/revocation checks; CORS headers on every response.
+- Client helpers live in `src/lib/venture-share.functions.ts` next to `requestConsultation`.
+
+If the share is view-only the dashboard renders read-only with a "Ask for edit access" note — worth confirming whether client-side editing should be on by default.
+
+### UI
+
+- `src/components/ops/OpsDashboard.tsx` — the shared dashboard, driven by props (`tasks`, `onUpdate`, `canEdit`, `viewerKind`), so both front doors render identical UI.
+- `src/components/ops/OpsTaskRow.tsx`, `OpsFilters.tsx`, `OpsNextFive.tsx` — small focused pieces. Progress uses the existing `ProgressRing`.
+- Share side: `src/routes/v.$token.tsx` — in `goTo`, drop the `OUTRO_KEY → setOutroOpen(true)` branch and the "operations section opens the modal" side effect. `OUTRO_KEY` becomes a normal active key that renders `<OpsDashboard />` in the reading pane, the same way `BRAIN_KEY` / `TIMELINE_KEY` are special-cased. Mirrored in `src/components/share/MobileReader.tsx`; on phones the dashboard collapses to a single-column card list with the filter row as a sticky segmented control.
+- `ShareSidebar.tsx` — keep `OUTRO_KEY` pinned, relabel the hint to "Your 90-day operating runway", swap to a checklist glyph, and show `x/y` complete.
+- Agency side: new route `src/routes/_authenticated/dashboard/hub/$snapshotId/operations.tsx` reading through the authenticated Supabase client, plus a link from the hub nav and a progress rollup chip on the hub index.
+- `ShareOutroDialog.tsx` is unchanged and reused — opened only from the dashboard's CTA, never auto-opened.
+- Legal/entity tasks respect `resolveEntityState`, so a founder who has already formed sees those tasks pre-completed rather than being told to do it again.
+
+## Suggested build order
+
+1. Migration + `ops-runway.ts` catalog + seeding (no UI).
+2. `OpsDashboard` rendered read-only in the share link, replacing the modal trigger.
+3. `venture-ops` edge function + client writes (status, owner, due, notes).
+4. Agency route in the hub, with assignment and bulk actions.
+5. Export, next-five rail, and the rollup chips.
+
+## Open question
+
+Client-side editing is on by default in this plan. If you'd rather the founder see a read-only status board while only the agency drives the work, that's a one-flag change — say which you want before step 3.
