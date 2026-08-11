@@ -72,8 +72,13 @@ const DAYS: Day[] = [
     category: "Strategy",
     subs: [
       ["crm-live", "Stand up the CRM", "A list in a spreadsheet is not a pipeline.", "CRM account live with stages created and the First-50 imported.", "agency"],
+      ["crm-fields", "Configure the CRM fields", "Data you don't capture on day one can't be reported on in month three.", "Source, segment, deal value, next step, and close date are required fields on every record.", "agency"],
+      ["lead-sources", "Define and tag the lead sources", "Untagged leads make channel spend unreadable.", "Every record carries a source tag from a fixed, written list of channels.", "agency"],
+      ["segments", "Build the working lists", "One giant list gets one generic message.", "Contacts segmented into ICP tier, warm vs. cold, industry, and geography.", "client"],
+      ["lead-score", "Write the qualified-lead rule", "Without a definition, everything looks like a lead.", "One paragraph defining a qualified lead, applied as a CRM filter or score.", "client"],
       ["angles", "Write one angle per prospect", "Generic outreach is why week-three founders quit.", "Every one of the 50 rows has a reason-to-reach-out.", "client"],
     ],
+
   },
   {
     day: 4, theme: "Validate demand",
