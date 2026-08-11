@@ -25,7 +25,7 @@ export default function HubOperationsPage() {
     queryKey: ["hub-ops-venture", snapshotId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("venture_snapshots").select("id, business_name").eq("id", snapshotId).maybeSingle();
+        .from("venture_snapshots").select("id, company_name").eq("id", snapshotId).maybeSingle();
       return data;
     },
     enabled: !!snapshotId,
@@ -68,7 +68,7 @@ export default function HubOperationsPage() {
             </Link>
           </Button>
           <h1 className="text-2xl font-semibold tracking-tight">
-            {venture.data?.business_name ?? "Venture"} · Operating runway
+            {venture.data?.company_name ?? "Venture"} · Operating runway
           </h1>
         </div>
         {q.data?.state && (
