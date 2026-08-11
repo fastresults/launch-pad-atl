@@ -127,10 +127,11 @@ async function seedRunway(db: any, snapshotId: string) {
 }
 
 
-async function loadRunway(db: any, snapshotId: string) {
-  const [{ data: tasks }, { data: state }] = await Promise.all([
+async function loadRunway(db: any, snapshotId: string, viewerKind: "client" | "agency") {
+  const [{ data: tasks }, { data: state }, { data: rawUpdates }] = await Promise.all([
     db.from("venture_ops_tasks").select("*").eq("snapshot_id", snapshotId).order("sort_order"),
     db.from("venture_ops_state").select("*").eq("snapshot_id", snapshotId).maybeSingle(),
+    db.from("venture_ops_updates").select("*").eq("snapshot_id", snapshotId).order("created_at"),
   ]);
   const ids = (tasks ?? []).map((t: any) => t.id);
   let notes: any[] = [];
@@ -138,7 +139,8 @@ async function loadRunway(db: any, snapshotId: string) {
     const { data } = await db.from("venture_ops_notes").select("*").in("task_id", ids).order("created_at");
     notes = data ?? [];
   }
-  return { tasks: tasks ?? [], notes, state: state ?? null };
+  const updates = (rawUpdates ?? []).filter((u: any) => viewerKind === "agency" || u.visible_to_client);
+  return { tasks: tasks ?? [], notes, updates, state: state ?? null };
 }
 
 Deno.serve(async (req) => {
