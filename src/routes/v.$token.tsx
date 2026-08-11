@@ -13,6 +13,7 @@ import { ShareBrain } from "@/components/share/ShareBrain";
 import { SectionExportMenu } from "@/components/share/SectionExportMenu";
 import { buildFullDoc, buildSectionDoc } from "@/lib/share-export";
 import { SHARE_UI_VERSION } from "@/components/share/preview-copy";
+import { ShareOutroDialog } from "@/components/share/ShareOutroDialog";
 
 
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,24 @@ export default function VentureSharePage() {
   );
   const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
+  /** The closing "next step" invitation — shown once, at the bottom of the read. */
+  const [outroOpen, setOutroOpen] = useState(false);
+  const outroShown = useRef(false);
+  const maybeOutro = (el: HTMLElement) => {
+    if (outroShown.current) return;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight > 32) return;
+    try {
+      if (localStorage.getItem(`sl-share-outro:${token}`)) {
+        outroShown.current = true;
+        return;
+      }
+      localStorage.setItem(`sl-share-outro:${token}`, "1");
+    } catch {
+      /* private mode */
+    }
+    outroShown.current = true;
+    setOutroOpen(true);
+  };
   const touchX = useRef<number | null>(null);
   const touchY = useRef<number | null>(null);
 
@@ -485,7 +504,10 @@ export default function VentureSharePage() {
 
             <main
               ref={paneRef}
-              onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 24)}
+              onScroll={(e) => {
+                setCondensed(e.currentTarget.scrollTop > 24);
+                maybeOutro(e.currentTarget);
+              }}
               onTouchStart={isMobile ? onTouchStart : undefined}
               onTouchEnd={isMobile ? onTouchEnd : undefined}
               className={`min-w-0 flex-1 overflow-y-auto ${
@@ -718,8 +740,11 @@ export default function VentureSharePage() {
             </>
           )}
 
+          <ShareOutroDialog open={outroOpen} onOpenChange={setOutroOpen} token={token} />
+
         </div>
       )}
+
 
     </div>
   );

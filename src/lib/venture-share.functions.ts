@@ -350,3 +350,20 @@ export async function askShareChat(
   return String(body?.reply ?? "");
 }
 
+/** Showcase viewer asks Adam's team for an operational consultation. */
+export async function requestConsultation(input: {
+  token: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message?: string;
+}): Promise<void> {
+  const res = await fetch(`${FUNCTIONS_BASE}/share-consult-request`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body?.error ?? "We couldn't send that just now.");
+}
+
