@@ -121,7 +121,11 @@ const DAYS: Day[] = [
     category: "Brand",
     subs: [
       ["voice-adopted", "Put the voice to work", "A voice guide nobody applies is decoration.", "Site copy, outbound scripts, and social captions all pass the voice guide.", "agency"],
+      ["logo-signoff", "Approve the final logo lockup", "Everything printed and published inherits this decision — changing it later is expensive.", "Primary, stacked, and one-color marks signed off with clear-space rules written down.", "client", "Creative"],
+      ["color-type-lock", "Lock the color and type system", "Near-miss colors and substitute fonts are what make a brand look homemade.", "Hex, CMYK/Pantone equivalents, and the licensed or web-embedded fonts are fixed and documented.", "agency", "Creative"],
+      ["style-system", "Publish the style system to the team", "Anyone touching a surface needs the rules without asking.", "The venture style guide is exported and shared with everyone who makes anything.", "agency", "Creative"],
     ],
+
   },
   {
     day: 8, theme: "Legal + entity",
