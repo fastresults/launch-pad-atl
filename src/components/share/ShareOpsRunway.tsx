@@ -103,7 +103,14 @@ export function ShareOpsRunway({
         <OpsDashboard
           tasks={data.tasks}
           notes={data.notes}
+          updates={data.updates}
           startedAt={data.state?.runway_started_at}
+          deliveryMode={data.state?.delivery_mode ?? null}
+          rateCents={data.state?.blended_rate_cents ?? null}
+          onDeliveryMode={(m: DeliveryMode) => void run("mode", () => setDeliveryMode(auth, m))}
+          onRate={(cents) => void setBlendedRate(auth, cents).then(refresh).catch(() => undefined)}
+          onHandoff={(id) => void run(id, () => requestOpsHandoff(auth, id))}
+          onReview={(id, review, note) => void run(id, () => reviewOpsWorkProduct(auth, id, review, note))}
           canEdit={data.canEdit}
           viewerKind="client"
           busyTaskId={busyTaskId}
