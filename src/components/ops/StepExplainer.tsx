@@ -6,7 +6,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { OpsTask } from "@/lib/ops-runway";
 import { estimateLabel } from "@/lib/ops-guided";
-import { CRITICALITY, criticalityOf, unlockedBy } from "@/lib/ops-criticality";
+import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, unlockedBy } from "@/lib/ops-criticality";
 
 /**
  * The "why this matters" panel. Every step has one — no exceptions — so a
@@ -60,7 +60,8 @@ export function StepExplainer({
             <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5" /> How critical is it
             </h4>
-            <p className="mt-1.5 text-muted-foreground">{crit.tip}</p>
+            <p className="mt-1.5 text-muted-foreground">{criticalityTip(task, allTasks)}</p>
+            <p className="mt-2 text-muted-foreground">{categoryTip(task)}</p>
           </section>
 
           {(task.needs?.length ?? 0) > 0 && (
