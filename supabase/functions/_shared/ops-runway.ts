@@ -205,6 +205,9 @@ const DAYS: Day[] = [
     category: "Operations",
     subs: [
       ["pipeline-stages", "Define the pipeline stages", "Deals stall in stages nobody owns.", "Stages named, entry criteria written, one owner per stage.", "agency"],
+      ["crm-automation", "Turn on task and reminder automation", "Deals die from silence, not objections.", "No deal can sit untouched past the number of days you set — the CRM chases you.", "agency"],
+      ["crm-reporting", "Build the pipeline reporting view", "If you can't see it by source, you'll spend blind.", "One saved view showing pipeline by stage, by source, and by owner.", "agency"],
+
       ["proposal", "Build the proposal template", "Bespoke proposals per deal is how founders lose a week.", "Proposal template generated from the priced offer, ready to send.", "agency"],
       ["esign", "Connect e-signature", "Chasing PDFs adds days to every close.", "A test proposal signed electronically end to end.", "agency"],
       ["invoicing", "Turn on invoicing terms", "Unclear terms are why founders get paid late.", "Invoice template live with deposit, net terms, and a late fee.", "client"],
