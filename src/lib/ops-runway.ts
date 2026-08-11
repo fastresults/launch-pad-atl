@@ -6,7 +6,7 @@ export type OpsStatus = "todo" | "in_progress" | "waiting_client" | "blocked" | 
 export type OpsOwnerKind = "client" | "agency";
 
 /** How this venture's runway gets executed. Null until the founder chooses. */
-export type DeliveryMode = "self" | "retained" | "mixed";
+export type DeliveryMode = "self" | "retained";
 export type DeliveryStatus = "not_started" | "in_progress" | "in_review" | "delivered" | "blocked";
 export type ReviewState = "none" | "pending" | "approved" | "changes_requested";
 

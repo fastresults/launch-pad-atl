@@ -61,7 +61,6 @@ const VIEWS: [ViewMode, string, typeof Compass][] = [
 const MODE_LABEL: Record<DeliveryMode, string> = {
   self: "You're building this",
   retained: "Adam's team is building this",
-  mixed: "Split between you and Adam's team",
 };
 
 
@@ -83,7 +82,9 @@ export function OpsDashboard(props: OpsDashboardProps) {
   const stage = stageOf(stagePhase);
   const stuck = tasks.filter((t) => t.status === "blocked").length;
   const late = tasks.filter((t) => isOverdue(t, startedAt) && t.status !== "done").length;
-  const mode = props.deliveryMode ?? null;
+  const raw = props.deliveryMode ?? null;
+  // Legacy hybrid rows read as self-build; the product only has two modes now.
+  const mode: DeliveryMode | null = raw === "retained" ? "retained" : raw ? "self" : null;
 
   const shared = useMemo(() => ({
     tasks, notes, startedAt, canEdit, viewerKind,

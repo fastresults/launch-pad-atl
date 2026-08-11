@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Hammer, Split, Users } from "lucide-react";
+import { Hammer, Users } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -10,7 +10,6 @@ import type { DeliveryMode, OpsTask } from "@/lib/ops-runway";
 
 const OPTIONS: { mode: DeliveryMode; label: string; icon: typeof Hammer }[] = [
   { mode: "self", label: "I'm building it", icon: Hammer },
-  { mode: "mixed", label: "Split", icon: Split },
   { mode: "retained", label: "Startup Labs builds it", icon: Users },
 ];
 
@@ -86,7 +85,6 @@ export function DeliveryModeToggle({
             <AlertDialogTitle>
               {pending === "retained" && "Hand the specialist work to Startup Labs?"}
               {pending === "self" && "Take every step back onto your side?"}
-              {pending === "mixed" && "Split it step by step?"}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm">
@@ -95,8 +93,6 @@ export function DeliveryModeToggle({
                     "Adam's team picks up the specialist steps with a named owner and a committed date. You keep the approvals and the calls only you can make."}
                   {pending === "self" &&
                     "Every step moves to you. Any owner names and committed dates on team-led steps get cleared."}
-                  {pending === "mixed" &&
-                    "Ownership stays exactly as it is now — you reassign one step at a time from each row."}
                 </p>
                 {summary && (summary.toAgency > 0 || summary.toYou > 0) && (
                   <p className="text-muted-foreground">
