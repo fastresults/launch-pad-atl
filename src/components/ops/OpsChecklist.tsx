@@ -7,8 +7,10 @@ import { activeStage, isSnoozed, stageOf } from "@/lib/ops-guided";
 import { criticalityOf } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { CRITICALITY } from "@/lib/ops-criticality";
+import { groupByMilestone, isMilestone, leadOf, milestoneProgress } from "@/lib/ops-significance";
 
-type Lens = "all" | "mine" | "theirs" | "open" | "must" | "sell" | "stuck" | "late" | "done";
+type Lens = "all" | "mine" | "theirs" | "open" | "major" | "welead" | "must" | "sell" | "stuck" | "late" | "done";
+
 
 export interface OpsChecklistProps {
   tasks: OpsTask[];
@@ -44,20 +46,26 @@ export function OpsChecklist(props: OpsChecklistProps) {
     return m;
   }, [notes]);
 
-  const visible = tasks.filter((t) => {
-    if (lens === "mine") return t.owner_kind === viewerKind && t.status !== "done";
-    if (lens === "theirs") return t.owner_kind !== viewerKind && t.status !== "done";
-    if (lens === "open") return t.status !== "done" && !isSnoozed(t);
-    if (lens === "must") return criticalityOf(t) === "required_to_operate" && t.status !== "done";
-    if (lens === "sell") return criticalityOf(t) === "required_to_sell" && t.status !== "done";
-    if (lens === "stuck") return t.status === "blocked";
-    if (lens === "late") return isOverdue(t, startedAt) && t.status !== "done";
-    if (lens === "done") return t.status === "done";
+  const match = (t: OpsTask, l: Lens) => {
+    if (l === "mine") return t.owner_kind === viewerKind && t.status !== "done";
+    if (l === "theirs") return t.owner_kind !== viewerKind && t.status !== "done";
+    if (l === "open") return t.status !== "done" && !isSnoozed(t);
+    if (l === "major") return isMilestone(t) && t.status !== "done";
+    if (l === "welead") return leadOf(t) !== "founder" && t.status !== "done";
+    if (l === "must") return criticalityOf(t) === "required_to_operate" && t.status !== "done";
+    if (l === "sell") return criticalityOf(t) === "required_to_sell" && t.status !== "done";
+    if (l === "stuck") return t.status === "blocked";
+    if (l === "late") return isOverdue(t, startedAt) && t.status !== "done";
+    if (l === "done") return t.status === "done";
     return true;
-  });
+  };
+
+  const visible = tasks.filter((t) => match(t, lens));
 
   const LENSES: [Lens, string][] = [
     ["open", "Still to do"],
+    ["major", "Major moves"],
+    ["welead", "Where we lead"],
     ["must", CRITICALITY.required_to_operate.label],
     ["sell", CRITICALITY.required_to_sell.label],
     ["mine", viewerKind === "agency" ? "On Adam's team" : "On me"],
@@ -73,19 +81,16 @@ export function OpsChecklist(props: OpsChecklistProps) {
 
   return (
     <div className="space-y-5">
+      <p className="max-w-2xl text-xs text-muted-foreground">
+        The big cards are the <span className="text-foreground">major moves</span> — the ones that decide whether you launch.
+        Everything indented under them is a supporting errand. Steps marked
+        <span className="mx-1 rounded-full border border-primary/50 bg-primary/10 px-1.5 py-px text-primary">Adam's team leads</span>
+        are where our experience does the heavy lifting.
+      </p>
       <div className="flex flex-wrap items-center gap-1.5">
         {LENSES.map(([l, label]) => {
-          const count = tasks.filter((t) => {
-            if (l === "mine") return t.owner_kind === viewerKind && t.status !== "done";
-            if (l === "theirs") return t.owner_kind !== viewerKind && t.status !== "done";
-            if (l === "open") return t.status !== "done" && !isSnoozed(t);
-            if (l === "must") return criticalityOf(t) === "required_to_operate" && t.status !== "done";
-            if (l === "sell") return criticalityOf(t) === "required_to_sell" && t.status !== "done";
-            if (l === "stuck") return t.status === "blocked";
-            if (l === "late") return isOverdue(t, startedAt) && t.status !== "done";
-            if (l === "done") return t.status === "done";
-            return true;
-          }).length;
+          const count = tasks.filter((t) => match(t, l)).length;
+
           return (
             <button key={l} type="button" onClick={() => setLens(l)}
               className={cn("rounded-full border px-2.5 py-1 text-xs transition",
@@ -101,6 +106,7 @@ export function OpsChecklist(props: OpsChecklistProps) {
         const rows = visible.filter((t) => t.phase === p.phase);
         if (!all.length) return null;
         const prog = progressOf(all);
+        const ms = milestoneProgress(all);
         const stage = stageOf(p.phase);
         const expanded = openStages.includes(p.phase);
         const days = Array.from(new Set(rows.map((t) => t.day))).sort((a, b) => a - b);
@@ -122,26 +128,47 @@ export function OpsChecklist(props: OpsChecklistProps) {
                   <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${prog.pct}%` }} />
                 </div>
               </div>
-              <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{prog.done}/{prog.total}</span>
+              <span className="shrink-0 text-right text-[11px] tabular-nums text-muted-foreground">
+                {ms.total > 0 && <span className="block text-foreground/80">{ms.done} of {ms.total} major moves</span>}
+                {prog.done}/{prog.total} steps
+              </span>
             </button>
 
             {expanded && (
               <div className="space-y-4 border-t border-border/40 px-3 py-3 sm:px-4">
                 {days.map((d) => (
-                  <div key={d} className="space-y-1.5">
+                  <div key={d} className="space-y-2">
                     <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{dayLabel(d)}</div>
-                    {rows.filter((t) => t.day === d).map((t) => (
-                      <OpsTaskRow
-                        key={t.id} task={t} notes={notesFor.get(t.id) ?? []}
-                        canEdit={canEdit} viewerKind={viewerKind} startedAt={startedAt}
-                        busy={props.busyTaskId === t.id}
-                        onStatus={props.onStatus} onOwner={props.onOwner}
-                        onNote={props.onNote} onProof={props.onProof} onSnooze={props.onSnooze}
-                        onOpenAsset={props.onOpenAsset} assetTitle={props.assetTitle} allTasks={tasks}
-                      />
-                    ))}
+                    {groupByMilestone(rows.filter((t) => t.day === d)).map((g, gi) => {
+                      const row = (t: OpsTask, variant: "milestone" | "supporting") => (
+                        <OpsTaskRow
+                          key={t.id} task={t} notes={notesFor.get(t.id) ?? []}
+                          canEdit={canEdit} viewerKind={viewerKind} startedAt={startedAt}
+                          busy={props.busyTaskId === t.id} variant={variant}
+                          onStatus={props.onStatus} onOwner={props.onOwner}
+                          onNote={props.onNote} onProof={props.onProof} onSnooze={props.onSnooze}
+                          onOpenAsset={props.onOpenAsset} assetTitle={props.assetTitle} allTasks={tasks}
+                        />
+                      );
+                      return (
+                        <div key={g.milestone?.id ?? `g${gi}`} className="space-y-1.5">
+                          {g.milestone && row(g.milestone, "milestone")}
+                          {g.supporting.length > 0 && (
+                            <div className={cn("space-y-1", g.milestone && "ml-3 border-l border-border/40 pl-3 sm:ml-4 sm:pl-4")}>
+                              {g.milestone && (
+                                <p className="pt-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                                  Supporting steps
+                                </p>
+                              )}
+                              {g.supporting.map((t) => row(t, "supporting"))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
+
                 {!rows.length && (
                   <p className="py-3 text-center text-xs text-muted-foreground">Nothing here under this filter.</p>
                 )}

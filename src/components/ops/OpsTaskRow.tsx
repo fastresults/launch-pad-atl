@@ -13,6 +13,8 @@ import { OWNER_LABEL, estimateLabel, isSnoozed } from "@/lib/ops-guided";
 import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, minutesTip, ownerTip, statusTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
+import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
+
 
 /** Plain-language status names. No underscores, no project-management dialect. */
 export const PLAIN_STATUS: Record<OpsStatus, string> = {
@@ -39,7 +41,10 @@ export interface TaskRowProps {
   assetTitle?: (key: string) => string | null;
   /** Full task list, so the explainer can name what this step unlocks. */
   allTasks?: OpsTask[];
+  /** "milestone" renders the big-move treatment; "supporting" the quiet one. */
+  variant?: "milestone" | "supporting" | "auto";
 }
+
 
 /** One step in the checklist: a real checkbox, plain words, detail on demand. */
 export function OpsTaskRow(props: TaskRowProps) {
@@ -52,6 +57,9 @@ export function OpsTaskRow(props: TaskRowProps) {
   const done = task.status === "done";
   const est = estimateLabel(task.minutes);
   const crit = CRITICALITY[criticalityOf(task)];
+  const major = props.variant === "milestone" || (props.variant !== "supporting" && isMilestone(task));
+  const lead = leadOf(task);
+  const leadMeta = LEAD_META[lead];
 
   const links = (task.asset_keys ?? [])
     .map((k) => ({ key: k, label: props.assetTitle?.(k) ?? null }))
@@ -59,7 +67,10 @@ export function OpsTaskRow(props: TaskRowProps) {
 
   return (
     <div className={cn(
-      "rounded-xl border border-border/50 bg-card/40 px-3 py-2.5 transition-colors",
+      "rounded-xl border transition-colors",
+      major
+        ? "border-border/70 bg-card/70 px-3.5 py-3 shadow-sm ring-1 ring-primary/10 sm:px-4"
+        : "border-border/40 bg-card/25 px-3 py-2",
       done && "opacity-60",
       snoozed && "opacity-60",
       overdue && !done && "border-destructive/40",
@@ -77,16 +88,35 @@ export function OpsTaskRow(props: TaskRowProps) {
           )}
         >
           {busy
-            ? <Loader2 className="h-4 w-4 animate-spin" />
-            : done ? <CheckCircle2 className="h-4 w-4" />
-            : task.status === "blocked" ? <AlertTriangle className="h-4 w-4 text-destructive" />
-            : <Circle className="h-4 w-4" />}
+            ? <Loader2 className={cn("animate-spin", major ? "h-4 w-4" : "h-3.5 w-3.5")} />
+            : done ? <CheckCircle2 className={cn(major ? "h-4 w-4" : "h-3.5 w-3.5")} />
+            : task.status === "blocked" ? <AlertTriangle className={cn("text-destructive", major ? "h-4 w-4" : "h-3.5 w-3.5")} />
+            : <Circle className={cn(major ? "h-4 w-4" : "h-3.5 w-3.5")} />}
         </button>
 
         <div className="min-w-0 flex-1">
+          {major && (
+            <div className="mb-1 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+              <span>Major move</span>
+              <span className={cn("rounded-full border px-1.5 py-px text-[10px] font-medium normal-case tracking-normal", leadMeta.badge)}>
+                {leadMeta.label}
+              </span>
+            </div>
+          )}
           <button type="button" onClick={() => setOpen((o) => !o)} className="block w-full text-left">
-            <span className={cn("text-sm font-medium", done && "line-through")}>{task.title}</span>
+            <span className={cn(
+              major ? "text-[15px] font-semibold tracking-tight" : "text-[13px] font-medium text-foreground/90",
+              done && "line-through",
+            )}>{task.title}</span>
           </button>
+          {major && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {milestoneNote(task, props.allTasks ?? [task])}
+              {lead !== "founder" && <> <span className="text-foreground/80">Where our experience saves you:</span> {agencySkillNote(task)}.</>}
+            </p>
+          )}
+
+
 
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
             <InfoTip tip={categoryTip(task)}>
