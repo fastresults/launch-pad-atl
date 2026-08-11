@@ -66,18 +66,26 @@ const DAYS: Day[] = [
   },
   {
     day: 3, theme: "Name your buyers, load the CRM",
-    objective: "Get specific about who buys and land the First-50 into a real CRM.",
+    objective: "Get specific about who buys and land the First-50 into GoHighLevel.",
     doneWhen: "50 named prospects in a live pipeline with an angle each.",
     assetKeys: ["customer_personas", "first_50_warm_list", "crm_pipeline_starter"],
     category: "Strategy",
     subs: [
-      ["crm-live", "Stand up the CRM", "A list in a spreadsheet is not a pipeline.", "CRM account live with stages created and the First-50 imported.", "agency"],
+      ["crm-live", "Stand up the CRM (GoHighLevel)", "A list in a spreadsheet is not a pipeline.", "GoHighLevel account live with stages created and the First-50 imported.", "agency"],
+      ["ghl-subaccount", "Create the GoHighLevel sub-account", "Everything else hangs off a correctly configured sub-account.", "Sub-account created from the agency snapshot with business profile, timezone, and users set.", "agency"],
+      ["ghl-pipeline", "Build the opportunity pipeline in GoHighLevel", "Deals stall in stages nobody defined.", "Pipeline created with named stages, written entry criteria, and one owner per stage.", "agency"],
+      ["ghl-custom-fields", "Add the GoHighLevel custom fields", "Data you don't capture on day one can't be reported on in month three.", "Source, segment, deal value, next step, and close date exist as custom fields and are required.", "agency"],
+      ["ghl-tags-lists", "Set the tags and smart lists", "One giant list gets one generic message.", "Smart lists saved for ICP tier, warm vs. cold, industry, and geography.", "agency"],
+      ["ghl-import-first50", "Import the First-50 into GoHighLevel", "The list only counts once it's in the system that chases it.", "All 50 contacts imported with source tags attached and no duplicates.", "agency"],
+      ["ghl-a2p", "Complete A2P 10DLC registration and buy the number", "Unregistered numbers get their texts silently dropped.", "Brand and campaign approved, number purchased, and a test SMS delivered.", "agency"],
+      ["ghl-email-domain", "Connect the sending domain in GoHighLevel", "Unauthenticated GHL email lands in spam.", "LC Email domain connected with SPF, DKIM, and DMARC passing on a test send.", "agency"],
       ["crm-fields", "Configure the CRM fields", "Data you don't capture on day one can't be reported on in month three.", "Source, segment, deal value, next step, and close date are required fields on every record.", "agency"],
       ["lead-sources", "Define and tag the lead sources", "Untagged leads make channel spend unreadable.", "Every record carries a source tag from a fixed, written list of channels.", "agency"],
       ["segments", "Build the working lists", "One giant list gets one generic message.", "Contacts segmented into ICP tier, warm vs. cold, industry, and geography.", "client"],
-      ["lead-score", "Write the qualified-lead rule", "Without a definition, everything looks like a lead.", "One paragraph defining a qualified lead, applied as a CRM filter or score.", "client"],
+      ["lead-score", "Write the qualified-lead rule", "Without a definition, everything looks like a lead.", "One paragraph defining a qualified lead, applied as a GoHighLevel smart list or score.", "client"],
       ["angles", "Write one angle per prospect", "Generic outreach is why week-three founders quit.", "Every one of the 50 rows has a reason-to-reach-out.", "client"],
     ],
+
 
   },
   {
@@ -148,19 +156,28 @@ const DAYS: Day[] = [
   },
   {
     day: 9, theme: "Money infrastructure",
-    objective: "Wire checkout, bank, and books so revenue can actually land.",
-    doneWhen: "One live Stripe link + business bank + books tool connected.",
+    objective: "Wire checkout, bank, and QuickBooks so revenue can actually land.",
+    doneWhen: "One live Stripe link + business bank + QuickBooks Online connected.",
     assetKeys: ["payments_checkout_setup", "business_bank_books_starter"],
     category: "Finance",
     subs: [
       ["bank", "Open the business bank + card", "Commingled money destroys the books and the liability shield.", "Account open, debit card received, online banking active.", "client"],
       ["separate-spend", "Separate personal spend", "Every mixed transaction costs you at tax time.", "All business spend runs on the business card only.", "client"],
       ["processor", "Take a real test charge", "Untested checkout fails on the first real customer.", "A live payment processed end to end and refunded.", "agency"],
-      ["coa", "Set the chart of accounts", "Categories decided later never get backfilled.", "Books tool set up with your revenue and expense categories.", "agency"],
-      ["bank-feed", "Connect the bank feed", "Manual entry is the reason books go stale in week three.", "Transactions syncing automatically into the books tool.", "agency"],
+      ["qbo-company", "Create the QuickBooks Online company file", "The file's setup choices are painful to change after the first close.", "Company created with legal name, EIN, fiscal year, and accounting method set.", "agency"],
+      ["qbo-bank-feed", "Connect the bank and card feeds in QuickBooks", "Manual entry is the reason books go stale in week three.", "Both accounts connected and transactions syncing automatically.", "agency"],
+      ["qbo-coa", "Finalize the chart of accounts in QuickBooks", "Categories decided later never get backfilled.", "Revenue and expense accounts match this venture's actual categories.", "agency"],
+      ["qbo-bank-rules", "Set the QuickBooks bank rules", "Recurring spend shouldn't need a human every week.", "Rules categorize the recurring vendors automatically on the next sync.", "agency"],
+      ["qbo-items", "Set the products and services items", "Unmapped items make revenue reporting useless.", "Every line on the priced offer sheet exists as a QuickBooks item mapped to an income account.", "agency"],
+      ["qbo-invoice", "Brand the QuickBooks invoice template", "A generic invoice reads as a side project.", "Logo, deposit, net terms, and late fee set — one test invoice sent.", "agency"],
+      ["qbo-payments", "Turn on QuickBooks Payments", "An invoice you can't pay in one click gets paid late.", "Card and ACH enabled; one live test payment received and refunded.", "agency"],
+      ["qbo-sales-tax", "Configure sales tax in QuickBooks", "Nexus surprises are expensive and retroactive.", "Nexus answer written, rates configured, and registration filed if required.", "client"],
+      ["qbo-users", "Add the accountant and set the close cadence", "Unowned books are no books.", "Accountant/bookkeeper invited; weekly reconcile day and monthly close date on the calendar.", "client"],
+      ["qbo-baseline", "Run the first reconciliation and save the baseline", "You can't spot drift without a starting point.", "First reconciliation complete; P&L and Balance Sheet exported as the baseline.", "agency"],
       ["sales-tax", "Decide the sales-tax posture", "Nexus surprises are expensive and retroactive.", "Written answer on where you collect, and registration filed if required.", "client"],
       ["book-cadence", "Name the bookkeeping cadence", "Unowned books are no books.", "Weekly reconcile day, monthly close date, and the named owner.", "client"],
     ],
+
   },
   {
     day: 10, theme: "Domain, email, tracking",
@@ -179,6 +196,13 @@ const DAYS: Day[] = [
       ["forms-to-crm", "Wire the forms into the CRM", "Leads that land in an inbox get lost.", "A test submission creates a CRM record with its source tag attached.", "agency"],
       ["nurture", "Turn on the welcome sequence", "Most subscribers never hear from you twice — that's the whole leak.", "Five nurture emails written and sending automatically to new subscribers.", "agency"],
       ["retargeting", "Stand up the retargeting audience", "The people who already looked are the cheapest to reach again.", "Site and list audiences built in the ad platform and populating.", "agency"],
+      ["ghl-funnel", "Build the lead magnet funnel in GoHighLevel", "A funnel spread across four tools breaks at the seams.", "Landing page, form, thank-you page, and delivery email all built in GoHighLevel and tested end to end.", "agency"],
+      ["ghl-form-mapping", "Map the GoHighLevel form to contact + opportunity", "A submission that doesn't create a deal isn't a lead.", "A test submission creates a contact and an opportunity with source and UTM written to the record.", "agency"],
+      ["ghl-nurture-workflow", "Turn on the GoHighLevel nurture workflow", "Most subscribers never hear from you twice — that's the whole leak.", "Five-email workflow live with its trigger and exit conditions written down.", "agency"],
+      ["ghl-attribution", "Confirm UTM attribution in GoHighLevel", "Attribution you never verified is attribution you can't trust.", "A tagged test link shows the correct source on the contact record and in reporting.", "agency"],
+      ["ghl-audience-feed", "Feed the retargeting audience from GoHighLevel", "The people who already looked are the cheapest to reach again.", "GoHighLevel page traffic and list synced into the ad platform audience.", "agency"],
+
+
 
     ],
   },
@@ -207,6 +231,14 @@ const DAYS: Day[] = [
       ["pipeline-stages", "Define the pipeline stages", "Deals stall in stages nobody owns.", "Stages named, entry criteria written, one owner per stage.", "agency"],
       ["crm-automation", "Turn on task and reminder automation", "Deals die from silence, not objections.", "No deal can sit untouched past the number of days you set — the CRM chases you.", "agency"],
       ["crm-reporting", "Build the pipeline reporting view", "If you can't see it by source, you'll spend blind.", "One saved view showing pipeline by stage, by source, and by owner.", "agency"],
+      ["ghl-stale-automation", "Turn on stale-opportunity automation in GoHighLevel", "Deals die from silence, not objections.", "A workflow reassigns or flags any opportunity untouched past the number of days you set.", "agency"],
+      ["ghl-calendar", "Connect the GoHighLevel booking calendar", "Every extra scheduling email costs you a percentage of the close.", "Calendar live with availability, reminders, and round-robin owner assignment.", "agency"],
+      ["ghl-missed-call", "Set missed-call text-back and conversation routing", "An unanswered call is a lead handed to a competitor.", "A missed call auto-sends a text and the reply lands in a routed conversation inbox.", "agency"],
+      ["ghl-dashboard", "Build the GoHighLevel reporting dashboard", "If you can't see it by source, you'll spend blind.", "Dashboard shows pipeline by stage, by source, and by owner.", "agency"],
+      ["ghl-proposal-esign", "Publish the GoHighLevel proposal and e-signature path", "Chasing PDFs adds days to every close.", "A test proposal sent from GoHighLevel and signed electronically end to end.", "agency"],
+      ["ghl-to-qbo", "Connect closed-won to QuickBooks invoicing", "Re-keying deals into the books is how revenue goes missing.", "One test deal moved to closed-won produces a QuickBooks invoice with no manual re-entry — native, Zapier, or a written SOP.", "agency", "Finance"],
+
+
 
       ["proposal", "Build the proposal template", "Bespoke proposals per deal is how founders lose a week.", "Proposal template generated from the priced offer, ready to send.", "agency"],
       ["esign", "Connect e-signature", "Chasing PDFs adds days to every close.", "A test proposal signed electronically end to end.", "agency"],
@@ -249,7 +281,7 @@ const POST_LAUNCH: [string, string, string, string, OpsCategory, OpsOwnerKind, 1
   ["ten-proposals", "Get ten proposals out", "Volume is the only cure for an unproven close rate.", "Ten proposals sent from the template and tracked in the pipeline.", "Strategy", "client", 15],
   ["close-rate", "Track the close rate", "You can't fix what you don't measure.", "Sent / won / lost recorded for every proposal, with a reason on each loss.", "Strategy", "client", 15],
   ["cash-reconcile", "Reconcile cash to invoices", "Invoiced is not collected.", "Every invoice matched to a deposit; overdue ones chased.", "Finance", "agency", 15],
-  ["first-close", "Complete the first monthly close", "The first close is where the books' real gaps show.", "Month closed in the books tool and a P&L reviewed.", "Finance", "agency", 15],
+  ["first-close", "Complete the first monthly close", "The first close is where the books' real gaps show.", "Month closed in QuickBooks and a P&L reviewed.", "Finance", "agency", 15],
   ["first-proof", "Capture the first case study", "One documented result outsells a page of claims.", "Before, what you did, and the number — published.", "Marketing", "agency", 15],
   ["sop-survives", "Run the delivery SOP on a real client", "A SOP untested by a real client is a guess.", "Order delivered following the SOP; the SOP updated with what broke.", "Operations", "client", 15],
   ["weekly-rhythm", "Install the weekly operating rhythm", "Rhythm is what separates a business from a burst of effort.", "Monday pipeline review and Friday five-numbers review both held twice.", "Operations", "client", 31],
