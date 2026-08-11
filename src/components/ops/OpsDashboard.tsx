@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   currentRunwayDay, isOverdue, progressOf, FOUNDATION_DELIVERED,
-  type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask, type OpsUpdate,
+  type DeliveryMode, type OpsEngagement, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask, type OpsUpdate,
 } from "@/lib/ops-runway";
 import { activeStage, stageOf } from "@/lib/ops-guided";
 import { GuidedStep } from "./GuidedStep";
