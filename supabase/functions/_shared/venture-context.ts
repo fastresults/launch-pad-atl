@@ -293,7 +293,7 @@ export function brandKitBlock(kit: BrandKitRow | null, snapshotId?: string): str
   const heading = kit.typography?.heading?.family;
   const body = kit.typography?.body?.family;
   if (heading || body) {
-    const fams = [heading, body].filter(Boolean).map((f: string) => `family=${f.replace(/\s+/g, "+")}:wght@400;500;600;700`);
+    
     lines.push(`- Fonts: headings "${heading ?? body}", body "${body ?? heading}".`);
     lines.push(`  Web font source: Google Fonts, weights 400/500/600/700 (${[heading, body].filter(Boolean).join(", ")}). Name the fonts in prose — never paste font-import, <style> or <head> markup into the document body.`);
   }

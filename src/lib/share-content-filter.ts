@@ -21,7 +21,7 @@ function headingLevel(line: string): number | null {
 
 export function filterShowcaseContent(md?: string | null): string {
   if (!md) return "";
-  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const lines = stripEmbeddedMarkup(md).split("\n");
   const out: string[] = [];
   let i = 0;
 
