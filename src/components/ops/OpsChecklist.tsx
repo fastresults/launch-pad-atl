@@ -4,8 +4,11 @@ import { cn } from "@/lib/utils";
 import { OPS_PHASES, isOverdue, progressOf, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask } from "@/lib/ops-runway";
 import { OpsTaskRow } from "./OpsTaskRow";
 import { activeStage, isSnoozed, stageOf } from "@/lib/ops-guided";
+import { criticalityOf } from "@/lib/ops-criticality";
+import { InfoTip } from "./InfoTip";
+import { CRITICALITY } from "@/lib/ops-criticality";
 
-type Lens = "all" | "mine" | "theirs" | "open" | "stuck" | "late" | "done";
+type Lens = "all" | "mine" | "theirs" | "open" | "must" | "sell" | "stuck" | "late" | "done";
 
 export interface OpsChecklistProps {
   tasks: OpsTask[];
@@ -45,6 +48,8 @@ export function OpsChecklist(props: OpsChecklistProps) {
     if (lens === "mine") return t.owner_kind === viewerKind && t.status !== "done";
     if (lens === "theirs") return t.owner_kind !== viewerKind && t.status !== "done";
     if (lens === "open") return t.status !== "done" && !isSnoozed(t);
+    if (lens === "must") return criticalityOf(t) === "required_to_operate" && t.status !== "done";
+    if (lens === "sell") return criticalityOf(t) === "required_to_sell" && t.status !== "done";
     if (lens === "stuck") return t.status === "blocked";
     if (lens === "late") return isOverdue(t, startedAt) && t.status !== "done";
     if (lens === "done") return t.status === "done";
@@ -53,6 +58,8 @@ export function OpsChecklist(props: OpsChecklistProps) {
 
   const LENSES: [Lens, string][] = [
     ["open", "Still to do"],
+    ["must", CRITICALITY.required_to_operate.label],
+    ["sell", CRITICALITY.required_to_sell.label],
     ["mine", viewerKind === "agency" ? "On Adam's team" : "On me"],
     ["theirs", viewerKind === "agency" ? "On the founder" : "On Adam's team"],
     ["stuck", "Stuck"],
@@ -72,6 +79,8 @@ export function OpsChecklist(props: OpsChecklistProps) {
             if (l === "mine") return t.owner_kind === viewerKind && t.status !== "done";
             if (l === "theirs") return t.owner_kind !== viewerKind && t.status !== "done";
             if (l === "open") return t.status !== "done" && !isSnoozed(t);
+            if (l === "must") return criticalityOf(t) === "required_to_operate" && t.status !== "done";
+            if (l === "sell") return criticalityOf(t) === "required_to_sell" && t.status !== "done";
             if (l === "stuck") return t.status === "blocked";
             if (l === "late") return isOverdue(t, startedAt) && t.status !== "done";
             if (l === "done") return t.status === "done";
@@ -103,7 +112,9 @@ export function OpsChecklist(props: OpsChecklistProps) {
               <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", !expanded && "-rotate-90")} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <h3 className="text-sm font-semibold tracking-tight">{stage.when} — {stage.name}</h3>
+                  <InfoTip tip={stage.promise}>
+                    <h3 className="text-sm font-semibold tracking-tight">{stage.when} — {stage.name}</h3>
+                  </InfoTip>
                   {prog.pct === 100 && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
                 </div>
                 <p className="mt-0.5 text-xs text-muted-foreground">{stage.promise}</p>
@@ -126,7 +137,7 @@ export function OpsChecklist(props: OpsChecklistProps) {
                         busy={props.busyTaskId === t.id}
                         onStatus={props.onStatus} onOwner={props.onOwner}
                         onNote={props.onNote} onProof={props.onProof} onSnooze={props.onSnooze}
-                        onOpenAsset={props.onOpenAsset} assetTitle={props.assetTitle}
+                        onOpenAsset={props.onOpenAsset} assetTitle={props.assetTitle} allTasks={tasks}
                       />
                     ))}
                   </div>
