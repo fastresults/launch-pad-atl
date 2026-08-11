@@ -4,14 +4,16 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { OpsNote, OpsOwnerKind, OpsStatus, OpsTask } from "@/lib/ops-runway";
+import type { DeliveryMode, OpsNote, OpsOwnerKind, OpsStatus, OpsTask } from "@/lib/ops-runway";
 import { OWNER_LABEL, estimateLabel, guidedQueue, stageOf, stepPosition } from "@/lib/ops-guided";
 import { CRITICALITY, criticalityOf, criticalityTip, minutesTip, ownerTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
+import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
 import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
 
-export interface GuidedStepProps {
+export interface GuidedStepProps extends DeliveryHandlers {
+  deliveryMode?: DeliveryMode | null;
   tasks: OpsTask[];
   notes: OpsNote[];
   canEdit: boolean;
