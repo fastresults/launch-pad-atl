@@ -105,7 +105,7 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
     ],
     needs: ["Your generated brand and collateral set", "Three brands you admire"],
     minutes: 60,
-    criticality: "makes_it_grow",
+    criticality: "growth",
     unlocks: ["art-direction", "imagery-production", "poster-system"],
   },
   "art-direction": {
@@ -118,7 +118,7 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
     ],
     needs: ["The foundation grade", "Locked colour and type"],
     minutes: 150,
-    criticality: "makes_it_grow",
+    criticality: "growth",
     unlocks: ["imagery-production", "poster-system", "collateral-print", "motion-cut", "creative-standard-signoff"],
   },
   "imagery-production": {
@@ -130,7 +130,7 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
     ],
     needs: ["The written art direction", "A location and anything you sell"],
     minutes: 300,
-    criticality: "makes_it_grow",
+    criticality: "growth",
     unlocks: ["poster-system", "creative-standard-signoff"],
   },
   "poster-system": {
@@ -142,7 +142,7 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
     ],
     needs: ["The written art direction", "Owned imagery"],
     minutes: 240,
-    criticality: "makes_it_grow",
+    criticality: "growth",
     unlocks: ["creative-standard-signoff"],
   },
   "collateral-print": {
@@ -154,7 +154,7 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
     ],
     needs: ["The written art direction", "A vector logo"],
     minutes: 180,
-    criticality: "makes_it_grow",
+    criticality: "growth",
     unlocks: ["creative-standard-signoff"],
   },
   "motion-cut": {
@@ -166,7 +166,7 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
     ],
     needs: ["Owned footage or stills", "The written art direction"],
     minutes: 180,
-    criticality: "makes_it_grow",
+    criticality: "growth",
   },
   "creative-standard-signoff": {
     how: [
