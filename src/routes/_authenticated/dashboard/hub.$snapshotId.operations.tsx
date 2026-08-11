@@ -9,10 +9,12 @@ import CreativeSignoffBoard from "@/components/creative/CreativeSignoffBoard";
 import { Button } from "@/components/ui/button";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import {
-  addOpsNote, fetchOpsRunway, setClientEditing, setOpsOwner, setOpsProof, setOpsStatus, snoozeOpsTask,
+  addOpsNote, assignOpsTask, attachOpsWorkProduct, fetchOpsRunway, setClientEditing,
+  setDeliveryMode, setOpsCommittedDate, setOpsDeliveryStatus, setOpsOwner, setOpsProof,
+  setOpsStatus, snoozeOpsTask,
   type OpsAuth,
 } from "@/lib/ops.functions";
-import type { OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
+import type { DeliveryMode, DeliveryStatus, OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
 
 /** Agency-side operating runway: the same dashboard the founder sees on their link. */
 export default function HubOperationsPage() {
