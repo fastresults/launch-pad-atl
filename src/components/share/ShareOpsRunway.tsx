@@ -6,7 +6,7 @@ import { OpsDashboard } from "@/components/ops/OpsDashboard";
 import CreativeSignoffBoard from "@/components/creative/CreativeSignoffBoard";
 import {
   addOpsNote, dismissOpsIntro, fetchOpsRunway, requestOpsHandoff, reviewOpsWorkProduct,
-  setBlendedRate, setDeliveryMode, setOpsOwner, setOpsProof, setOpsStatus,
+  requestPlatformBuild, setBlendedRate, setDeliveryMode, setOpsOwner, setOpsProof, setOpsStatus,
   snoozeOpsTask, type OpsAuth,
 } from "@/lib/ops.functions";
 import type { DeliveryMode, OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
@@ -107,6 +107,8 @@ export function ShareOpsRunway({
           startedAt={data.state?.runway_started_at}
           deliveryMode={data.state?.delivery_mode ?? null}
           rateCents={data.state?.blended_rate_cents ?? null}
+          platformRequest={data.platformRequest}
+          onPlatformRequest={async (input) => { await requestPlatformBuild(auth, input); refresh(); }}
           onDeliveryMode={(m: DeliveryMode) => void run("mode", () => setDeliveryMode(auth, m))}
           onRate={(cents) => void setBlendedRate(auth, cents).then(refresh).catch(() => undefined)}
           onHandoff={(id) => void run(id, () => requestOpsHandoff(auth, id))}

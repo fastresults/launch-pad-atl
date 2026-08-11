@@ -99,6 +99,8 @@ export interface OpsState {
 
 export interface OpsRunway {
   tasks: OpsTask[];
+  /** Latest open platform-build request for this venture, if any. */
+  platformRequest?: import("@/lib/ops-platform").PlatformRequest | null;
   notes: OpsNote[];
   updates: OpsUpdate[];
   state: OpsState | null;

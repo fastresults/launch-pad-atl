@@ -3,6 +3,9 @@ import { ArrowRight, Check, Clock, ShieldCheck, Sparkles, Users } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HeavyLifting } from "./HeavyLifting";
+import { PlatformAddOn } from "./PlatformAddOn";
+import type { PlatformRequestInput } from "./PlatformRequestDialog";
+import { PLATFORM_COPY, type PlatformRequest } from "@/lib/ops-platform";
 import { OpsStageMasthead } from "./OpsStageArt";
 import type { DeliveryMode, OpsTask } from "@/lib/ops-runway";
 import {
@@ -16,7 +19,7 @@ import {
  * figure comes from this venture's own step list.
  */
 export function InvestmentCompare({
-  tasks, onChoose, busy, currentMode, rateCents, onRate,
+  tasks, onChoose, busy, currentMode, rateCents, onRate, platformRequest, onPlatformRequest,
 }: {
   tasks: OpsTask[];
   onChoose: (mode: DeliveryMode) => void;
@@ -24,6 +27,8 @@ export function InvestmentCompare({
   currentMode?: DeliveryMode | null;
   rateCents?: number | null;
   onRate?: (cents: number) => void;
+  platformRequest?: PlatformRequest | null;
+  onPlatformRequest?: (input: PlatformRequestInput) => Promise<void>;
 }) {
   const [rate, setRate] = useState(rateCents || DEFAULT_RATE);
   const inv = useMemo(() => computeInvestment(tasks, rate), [tasks, rate]);
@@ -155,6 +160,7 @@ export function InvestmentCompare({
               "A committed date on every step",
               "The finished work product linked in your dashboard",
               "You approve or ask for changes — nothing ships past you",
+              PLATFORM_COPY.retainedLine,
             ].map((line) => (
               <li key={line} className="flex gap-2">
                 <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{line}
@@ -184,6 +190,12 @@ export function InvestmentCompare({
           )}
         </div>
       </div>
+
+      <PlatformAddOn
+        request={platformRequest}
+        onRequest={onPlatformRequest}
+        mode={currentMode === "retained" ? "retained" : currentMode ? "self" : null}
+      />
 
       <div className="rounded-2xl border border-border/50 bg-card/30 px-5 py-4 text-sm">
         <span className="text-muted-foreground">Difference: </span>

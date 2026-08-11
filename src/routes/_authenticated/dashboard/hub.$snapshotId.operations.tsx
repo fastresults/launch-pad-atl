@@ -11,7 +11,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import {
   addOpsNote, assignOpsTask, attachOpsWorkProduct, fetchOpsRunway, setClientEditing,
   setDeliveryMode, setOpsCommittedDate, setOpsDeliveryStatus, setOpsOwner, setOpsProof,
-  setOpsStatus, snoozeOpsTask,
+  setOpsStatus, snoozeOpsTask, requestPlatformBuild,
   type OpsAuth,
 } from "@/lib/ops.functions";
 import type { DeliveryMode, DeliveryStatus, OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
@@ -134,6 +134,11 @@ export default function HubOperationsPage() {
           startedAt={q.data.state?.runway_started_at}
           deliveryMode={q.data.state?.delivery_mode ?? null}
           rateCents={q.data.state?.blended_rate_cents ?? null}
+          platformRequest={q.data.platformRequest}
+          onPlatformRequest={async (input) => {
+            await requestPlatformBuild(auth, input);
+            refresh();
+          }}
           onDeliveryMode={(m: DeliveryMode) => void run("mode", () => setDeliveryMode(auth, m, "Startup Labs"))}
           onAssign={(id, name) => void run(id, () => assignOpsTask(auth, id, name))}
           onCommittedDate={(id, iso) => void run(id, () => setOpsCommittedDate(auth, id, iso))}
