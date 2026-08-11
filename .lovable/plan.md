@@ -68,8 +68,11 @@ A new **Delivered** rail on the client Operationalize page: reverse-chronologica
 
 **Edge function `venture-ops`:** add actions `set_delivery_mode`, `assign`, `set_committed_date`, `set_delivery_status`, `attach_work_product`, `post_update`, `request_handoff`, `review_work_product`. Keep the existing dual path — share-token callers (client) get the client-permitted subset; authenticated admin callers (verified via `has_role`) get the full set. Applying a mode rewrites `owner_kind` across the catalog using the existing significance/leadership mapping in `src/lib/ops-significance.ts`.
 
+**Cost math:** `src/lib/ops-investment.ts` — pure functions over the task list returning total minutes, founder-only minutes, specialist minutes, opportunity cost at the chosen rate, outsourced market-rate range, and the retainer constants (`RETAINER_MONTHLY = 199700`, `RETAINER_MONTHS = 4`, `RETAINER_TOTAL = 798800`, in cents). Market rates for specialist categories live in the same file as a category → hourly-range map.
+
 **UI:**
-- `src/components/ops/DeliveryModeGate.tsx` — the choice card, rendered by `OpsDashboard.tsx` when `delivery_mode` is null.
+- `src/components/ops/DeliveryModeGate.tsx` — the choice screen, rendered by `OpsDashboard.tsx` when `delivery_mode` is null.
+- `src/components/ops/InvestmentCompare.tsx` — the two pricing cards, rate selector, delta strip, and commit buttons.
 - `src/components/ops/DeliveryPanel.tsx` — per-task delivery block (owner, date, status, artifact, approve/request-changes) used by `OpsTaskRow` and `GuidedStep`.
 - `src/components/ops/DeliveredRail.tsx` — completed-work feed.
 - `src/routes/dashboard/admin/delivery.tsx` (+ hub-scoped variant) — the agency console, with sidebar entry alongside Operationalize.
