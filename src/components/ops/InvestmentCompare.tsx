@@ -19,10 +19,12 @@ import {
  * figure comes from this venture's own step list.
  */
 export function InvestmentCompare({
-  tasks, onChoose, busy, currentMode, rateCents, onRate, platformRequest, onPlatformRequest,
+  tasks, onChoose, busy, currentMode, rateCents, onRate, platformRequest, onPlatformRequest, engageHref,
 }: {
   tasks: OpsTask[];
   onChoose: (mode: DeliveryMode) => void;
+  /** Public page with the price and how to start; shown as a secondary link. */
+  engageHref?: string;
   busy?: boolean;
   currentMode?: DeliveryMode | null;
   rateCents?: number | null;
@@ -199,9 +201,19 @@ export function InvestmentCompare({
               </div>
             </div>
           ) : (
-            <Button className="mt-5 w-full" disabled={busy} onClick={() => setConfirm(true)}>
-              <ShieldCheck className="mr-1.5 h-4 w-4" /> Retain Adam's team
-            </Button>
+            <>
+              <Button className="mt-5 w-full" disabled={busy} onClick={() => setConfirm(true)}>
+                <ShieldCheck className="mr-1.5 h-4 w-4" /> Retain Adam's team
+              </Button>
+              {engageHref && (
+                <a
+                  href={engageHref}
+                  className="mt-2 block text-center text-xs font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  See the full price, what's covered and how to start
+                </a>
+              )}
+            </>
           )}
         </div>
       </div>
