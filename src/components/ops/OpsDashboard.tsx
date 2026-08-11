@@ -191,29 +191,23 @@ export function OpsDashboard(props: OpsDashboardProps) {
           {stuck > 0 && <span className="text-destructive">{stuck} stuck</span>}
           {late > 0 && <span className="text-destructive">{late} past due</span>}
           {!canEdit && <span>Read-only view</span>}
-          {mode && canEdit && props.onDeliveryMode && (
-            <DeliveryModeToggle
-              mode={mode}
-              tasks={tasks}
-              disabled={!!props.busyTaskId}
-              onChange={(m) => props.onDeliveryMode?.(m)}
-            />
-          )}
-          {mode && (!canEdit || !props.onDeliveryMode) && (
-            <span className="normal-case tracking-normal">{MODE_LABEL[mode]}</span>
-          )}
-          {mode && (
-            <button
-              type="button" onClick={() => setGateOpen(true)}
-              className="inline-flex items-center gap-1.5 normal-case tracking-normal hover:text-foreground"
-            >
-              <Scale className="h-3 w-3" /> Compare the two
-            </button>
-          )}
           <button type="button" onClick={() => setIntro(true)} className="normal-case tracking-normal hover:text-foreground">
             How this works
           </button>
         </div>
+
+        {mode && (
+          <DeliveryModeToggle
+            variant="band"
+            className="relative mt-4"
+            mode={mode}
+            tasks={tasks}
+            readOnly={!canEdit || !props.onDeliveryMode}
+            disabled={!!props.busyTaskId}
+            onChange={(m) => props.onDeliveryMode?.(m)}
+            onCompare={() => setGateOpen(true)}
+          />
+        )}
 
 
 
