@@ -43,7 +43,7 @@ export function ShareOutroDialog({
     e.preventDefault();
     const parsed = FormSchema.safeParse(form);
     if (!parsed.success) {
-      setError(parsed.error.errors[0]?.message ?? "Please check the form.");
+      setError(parsed.error.issues[0]?.message ?? "Please check the form.");
       return;
     }
     setBusy(true);
