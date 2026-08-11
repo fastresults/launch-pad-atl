@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Compass, Hammer, ListChecks, Map as MapIcon, Phone, Scale } from "lucide-react";
+import { Check, Compass, Hammer, ListChecks, Map as MapIcon, Phone, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -68,6 +68,15 @@ const MODE_LABEL: Record<DeliveryMode, string> = {
   self: "You're building this",
   retained: "Adam's team is building this",
 };
+
+/** What the foundation already delivered — credited before the remaining work. */
+const FOUNDATION_DELIVERED = [
+  "Offer and pricing",
+  "Brand system",
+  "Site direction and copy",
+  "Campaign arc",
+  "Operating assets",
+];
 
 
 /**
@@ -151,9 +160,14 @@ export function OpsDashboard(props: OpsDashboardProps) {
 
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">Operationalize</h2>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-primary">
+              Phase 2 of 2 · Foundation complete
+            </p>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight">Operationalize</h2>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Turning the foundation into a running business — one step at a time.
+              Your foundation is built — the offer, brand system, site direction and copy, campaign arc
+              and operating assets are done and yours. Nothing here recreates it. This phase puts it into
+              the world: filing, accounts, systems, and the first sales.
               Right now you're in <span className="text-foreground">{stage.when} — {stage.name}</span>.
             </p>
           </div>
@@ -166,6 +180,18 @@ export function OpsDashboard(props: OpsDashboardProps) {
             <OpsProgressRing pct={overall.pct} label="Complete" size={84} />
           </div>
         </div>
+
+        <div className="relative mt-4 flex flex-wrap items-center gap-1.5">
+          {FOUNDATION_DELIVERED.map((item) => (
+            <span key={item}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-[11px] text-muted-foreground">
+              <Check className="h-3 w-3 text-primary" />{item}
+            </span>
+          ))}
+          <span className="text-[11px] text-muted-foreground/80">Already done. This runway builds on it.</span>
+        </div>
+
+
 
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] uppercase tracking-wide text-muted-foreground">

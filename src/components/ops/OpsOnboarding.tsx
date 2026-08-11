@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 const PANELS = [
   {
     icon: Compass,
-    title: "You've got the foundation. Now you run it.",
-    body: "Everything built for your startup — the offer, the brand, the site, the campaign — is done. What's left is the doing: filing, banking, sending, selling. This is that list, in order.",
+    title: "The foundation is built. This is what it unlocks.",
+    body: "Your offer and pricing, brand system, site direction and copy, campaign arc and operating assets are finished and yours — that's the hard thinking already behind you. None of it gets rebuilt here. What's left is the part only doing can finish: filing, banking, connecting, sending, selling. This is that list, in order.",
   },
   {
     icon: ListChecks,
