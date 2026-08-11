@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  CheckCircle2, ChevronRight, Clock, HelpCircle, Link2, Loader2, PartyPopper, Phone, Hammer,
+  CheckCircle2, ChevronRight, Clock, HelpCircle, Link2, Loader2, Phone, Hammer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
