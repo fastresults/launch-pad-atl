@@ -137,6 +137,16 @@ export function GuidedStep(props: GuidedStepProps) {
           <p className="mt-1 text-sm text-muted-foreground">{task.done_when}</p>
         </div>
 
+        {engaged && task.owner_kind === "agency" && (
+          <DeliveryPanel
+            className="mt-4" task={task} viewerKind={viewerKind} busy={busy}
+            onAssign={props.onAssign} onCommittedDate={props.onCommittedDate}
+            onDeliveryStatus={props.onDeliveryStatus} onWorkProduct={props.onWorkProduct}
+            onReview={props.onReview}
+          />
+        )}
+
+
         {links.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">
             {links.map((l) => (
