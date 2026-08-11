@@ -7,7 +7,7 @@ import { PlatformAddOn } from "./PlatformAddOn";
 import type { PlatformRequestInput } from "./PlatformRequestDialog";
 import { PLATFORM_COPY, type PlatformRequest } from "@/lib/ops-platform";
 import { OpsStageMasthead } from "./OpsStageArt";
-import type { DeliveryMode, OpsTask } from "@/lib/ops-runway";
+import { FOUNDATION_DELIVERED, type DeliveryMode, type OpsTask } from "@/lib/ops-runway";
 import {
   DEFAULT_RATE, RATE_CHOICES, RETAINER_DAYS, RETAINER_MONTHLY, RETAINER_MONTHS,
   computeInvestment, hours, money, rateLabel,
