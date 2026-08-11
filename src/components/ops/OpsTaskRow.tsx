@@ -7,8 +7,9 @@ import {
 import { cn } from "@/lib/utils";
 import {
   OPS_CATEGORY_DOT, STATUS_CLASS, dueForDay, isOverdue,
-  type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
+  type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
 } from "@/lib/ops-runway";
+import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
 import { OWNER_LABEL, estimateLabel, isSnoozed } from "@/lib/ops-guided";
 import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, minutesTip, ownerTip, statusTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
@@ -25,7 +26,7 @@ export const PLAIN_STATUS: Record<OpsStatus, string> = {
   done: "Done",
 };
 
-export interface TaskRowProps {
+export interface TaskRowProps extends DeliveryHandlers {
   task: OpsTask;
   notes: OpsNote[];
   canEdit: boolean;
@@ -43,7 +44,10 @@ export interface TaskRowProps {
   allTasks?: OpsTask[];
   /** "milestone" renders the big-move treatment; "supporting" the quiet one. */
   variant?: "milestone" | "supporting" | "auto";
+  /** How this runway is being delivered — drives the managed-delivery block. */
+  deliveryMode?: DeliveryMode | null;
 }
+
 
 
 /** One step in the checklist: a real checkbox, plain words, detail on demand. */
@@ -60,6 +64,11 @@ export function OpsTaskRow(props: TaskRowProps) {
   const major = props.variant === "milestone" || (props.variant !== "supporting" && isMilestone(task));
   const lead = leadOf(task);
   const leadMeta = LEAD_META[lead];
+  // Managed delivery only shows once the venture has retained the team.
+  const engaged = props.deliveryMode === "retained" || props.deliveryMode === "mixed";
+  const managed = engaged && task.owner_kind === "agency";
+  const canHandoff = engaged && canEdit && !!props.onHandoff && task.owner_kind === "client" && !done;
+
 
   const links = (task.asset_keys ?? [])
     .map((k) => ({ key: k, label: props.assetTitle?.(k) ?? null }))
@@ -179,6 +188,23 @@ export function OpsTaskRow(props: TaskRowProps) {
                 <span className="font-medium text-foreground">You'll know it's done when: </span>
                 <span className="text-muted-foreground">{task.done_when}</span>
               </p>
+
+              {managed && (
+                <DeliveryPanel
+                  task={task} viewerKind={viewerKind} busy={busy}
+                  onAssign={props.onAssign} onCommittedDate={props.onCommittedDate}
+                  onDeliveryStatus={props.onDeliveryStatus} onWorkProduct={props.onWorkProduct}
+                  onReview={props.onReview}
+                />
+              )}
+
+              {!managed && canHandoff && (
+                <Button size="sm" variant="outline" disabled={busy}
+                  onClick={() => props.onHandoff?.(task.id)}>
+                  Ask Adam's team to take this
+                </Button>
+              )}
+
 
               {canEdit && (
                 <div className="flex flex-wrap items-center gap-1.5">

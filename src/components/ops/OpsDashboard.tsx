@@ -1,25 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import { Compass, Hammer, ListChecks, Map as MapIcon, Phone } from "lucide-react";
+import { Compass, Hammer, ListChecks, Map as MapIcon, Phone, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   currentRunwayDay, isOverdue, progressOf,
-  type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
+  type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask, type OpsUpdate,
 } from "@/lib/ops-runway";
 import { activeStage, stageOf } from "@/lib/ops-guided";
 import { GuidedStep } from "./GuidedStep";
 import { OpsChecklist } from "./OpsChecklist";
 import { OpsTimeline } from "./OpsTimeline";
 import { OpsOnboarding } from "./OpsOnboarding";
+import { DeliveryModeGate } from "./DeliveryModeGate";
+import { DeliveredRail } from "./DeliveredRail";
+import type { DeliveryHandlers } from "./DeliveryPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InfoTip } from "./InfoTip";
 import { TIPS } from "@/lib/ops-criticality";
 
 type ViewMode = "guided" | "checklist" | "timeline";
 
-export interface OpsDashboardProps {
+export interface OpsDashboardProps extends DeliveryHandlers {
   tasks: OpsTask[];
   notes: OpsNote[];
+  updates?: OpsUpdate[];
   startedAt?: string | null;
   canEdit: boolean;
   viewerKind: OpsOwnerKind;
@@ -36,6 +40,11 @@ export interface OpsDashboardProps {
   /** False once the venture has seen the first-run walkthrough. */
   showIntro?: boolean;
   onDismissIntro?: () => void;
+  /** Who is executing this runway — null means the decision hasn't been made. */
+  deliveryMode?: DeliveryMode | null;
+  onDeliveryMode?: (mode: DeliveryMode) => void;
+  rateCents?: number | null;
+  onRate?: (cents: number) => void;
   className?: string;
 }
 
@@ -45,6 +54,13 @@ const VIEWS: [ViewMode, string, typeof Compass][] = [
   ["timeline", "The 90 days", MapIcon],
 ];
 
+const MODE_LABEL: Record<DeliveryMode, string> = {
+  self: "You're building this",
+  retained: "Adam's team is building this",
+  mixed: "Split between you and Adam's team",
+};
+
+
 /**
  * The operating runway both the founder (share link) and the agency (hub)
  * work out of. Guided mode is the default: a novice sees one step, not 130.
@@ -53,6 +69,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
   const { tasks, notes, startedAt, canEdit, viewerKind } = props;
   const [view, setView] = useState<ViewMode>(props.viewerKind === "agency" ? "checklist" : "guided");
   const [intro, setIntro] = useState(!!props.showIntro);
+  const [gateOpen, setGateOpen] = useState(false);
 
   useEffect(() => { setIntro(!!props.showIntro); }, [props.showIntro]);
 
@@ -61,6 +78,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
   const stage = stageOf(activeStage(tasks));
   const stuck = tasks.filter((t) => t.status === "blocked").length;
   const late = tasks.filter((t) => isOverdue(t, startedAt) && t.status !== "done").length;
+  const mode = props.deliveryMode ?? null;
 
   const shared = useMemo(() => ({
     tasks, notes, startedAt, canEdit, viewerKind,
@@ -68,10 +86,18 @@ export function OpsDashboard(props: OpsDashboardProps) {
     onStatus: props.onStatus, onOwner: props.onOwner, onNote: props.onNote,
     onProof: props.onProof, onSnooze: props.onSnooze,
     onOpenAsset: props.onOpenAsset, assetTitle: props.assetTitle,
-  }), [tasks, notes, startedAt, canEdit, viewerKind, props.busyTaskId, props.onStatus,
-    props.onOwner, props.onNote, props.onProof, props.onSnooze, props.onOpenAsset, props.assetTitle]);
+    deliveryMode: mode,
+    onAssign: props.onAssign, onCommittedDate: props.onCommittedDate,
+    onDeliveryStatus: props.onDeliveryStatus, onWorkProduct: props.onWorkProduct,
+    onReview: props.onReview, onHandoff: props.onHandoff,
+  }), [tasks, notes, startedAt, canEdit, viewerKind, mode, props.busyTaskId, props.onStatus,
+    props.onOwner, props.onNote, props.onProof, props.onSnooze, props.onOpenAsset, props.assetTitle,
+    props.onAssign, props.onCommittedDate, props.onDeliveryStatus, props.onWorkProduct,
+    props.onReview, props.onHandoff]);
 
   const dismissIntro = () => { setIntro(false); props.onDismissIntro?.(); };
+
+  const chooseMode = (m: DeliveryMode) => { props.onDeliveryMode?.(m); setGateOpen(false); };
 
   if (intro) {
     return (
@@ -80,6 +106,28 @@ export function OpsDashboard(props: OpsDashboardProps) {
       </div>
     );
   }
+
+  // The decision comes before the list: who is actually going to do this work.
+  if ((!mode && props.onDeliveryMode) || gateOpen) {
+    return (
+      <div className={cn("space-y-6", props.className)}>
+        <DeliveryModeGate
+          tasks={tasks}
+          currentMode={mode}
+          rateCents={props.rateCents}
+          onRate={props.onRate}
+          onChoose={chooseMode}
+          busy={!!props.busyTaskId}
+        />
+        {gateOpen && (
+          <div className="text-center">
+            <Button variant="ghost" size="sm" onClick={() => setGateOpen(false)}>Back to the runway</Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
 
   return (
     <TooltipProvider delayDuration={120}>
@@ -109,10 +157,19 @@ export function OpsDashboard(props: OpsDashboardProps) {
           {stuck > 0 && <span className="text-destructive">{stuck} stuck</span>}
           {late > 0 && <span className="text-destructive">{late} past due</span>}
           {!canEdit && <span>Read-only view</span>}
+          {mode && (
+            <button
+              type="button" onClick={() => setGateOpen(true)}
+              className="inline-flex items-center gap-1.5 normal-case tracking-normal hover:text-foreground"
+            >
+              <Scale className="h-3 w-3" /> {MODE_LABEL[mode]} · compare again
+            </button>
+          )}
           <button type="button" onClick={() => setIntro(true)} className="normal-case tracking-normal hover:text-foreground">
             How this works
           </button>
         </div>
+
 
         <div className="mt-4 inline-flex flex-wrap gap-1 rounded-full border border-border/50 bg-background/50 p-1">
           {VIEWS.map(([v, label, Icon]) => (
@@ -144,6 +201,11 @@ export function OpsDashboard(props: OpsDashboardProps) {
               </Button>
             )}
           </div>
+
+          {mode !== "self" && (
+            <DeliveredRail tasks={tasks} updates={props.updates} />
+          )}
+
 
           {props.onConsult && (
             <div className="rounded-2xl border border-border/50 bg-card/40 p-4">

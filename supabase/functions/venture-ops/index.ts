@@ -28,6 +28,63 @@ async function sha256(input: string) {
 
 const STATUSES = new Set(["todo", "in_progress", "waiting_client", "blocked", "done"]);
 const OWNERS = new Set(["client", "agency"]);
+const DELIVERY_STATUSES = new Set(["not_started", "in_progress", "in_review", "delivered", "blocked"]);
+const MODES = new Set(["self", "retained", "mixed"]);
+
+/**
+ * Work a first-time founder cannot do at a usable standard. Mirrors
+ * src/lib/ops-investment.ts so the gate's promise and the ownership rewrite
+ * agree on what "specialist" means.
+ */
+const SPECIALIST = [
+  /entity|operating-agreement|registered-agent|incorporat/,
+  /ein|tax|accountant|bookkeep/,
+  /qbo|quickbooks|chart-of-accounts|reconcil/,
+  /bank|stripe|payment|merchant|invoice/,
+  /ghl|crm|a2p|pipeline|automation|workflow/,
+  /funnel|lead-magnet|nurture|retarget|list-build|segment/,
+  /site|website|landing|prd|domain|dns|hosting/,
+  /brand|logo|collateral|guideline|style-system/,
+  /campaign|ad-|ads|creative|content|social|calendar/,
+  /contract|msa|terms|privacy|compliance|insurance|license/,
+  /offer|price|pricing|proposal|script/,
+];
+
+const isSpecialist = (t: any) => {
+  const slug = `${String(t.task_key ?? "").split(".").pop()} ${t.title ?? ""}`.toLowerCase();
+  return SPECIALIST.some((re) => re.test(slug));
+};
+
+/**
+ * Apply a delivery mode across the catalog:
+ *   self     — everything sits with the founder
+ *   retained — specialist work moves to the team, with a committed date
+ *   mixed    — leave ownership as seeded
+ */
+async function applyDeliveryMode(db: any, snapshotId: string, mode: string, startedAt: string | null) {
+  if (mode === "mixed") return;
+  const { data: tasks } = await db
+    .from("venture_ops_tasks").select("id, task_key, title, day, owner_kind").eq("snapshot_id", snapshotId);
+  const start = startedAt ? new Date(startedAt) : new Date();
+
+  for (const t of tasks ?? []) {
+    if (mode === "self") {
+      if (t.owner_kind !== "client") {
+        await db.from("venture_ops_tasks")
+          .update({ owner_kind: "client", assignee_name: null, committed_at: null }).eq("id", t.id);
+      }
+      continue;
+    }
+    // retained
+    if (!isSpecialist(t)) continue;
+    const due = new Date(start);
+    due.setDate(due.getDate() + Math.max(0, (t.day ?? 1) - 1));
+    await db.from("venture_ops_tasks")
+      .update({ owner_kind: "agency", committed_at: due.toISOString() })
+      .eq("id", t.id);
+  }
+}
+
 
 /** Create any catalog tasks this venture doesn't have yet, without touching progress. */
 async function seedRunway(db: any, snapshotId: string) {
@@ -70,10 +127,11 @@ async function seedRunway(db: any, snapshotId: string) {
 }
 
 
-async function loadRunway(db: any, snapshotId: string) {
-  const [{ data: tasks }, { data: state }] = await Promise.all([
+async function loadRunway(db: any, snapshotId: string, viewerKind: "client" | "agency") {
+  const [{ data: tasks }, { data: state }, { data: rawUpdates }] = await Promise.all([
     db.from("venture_ops_tasks").select("*").eq("snapshot_id", snapshotId).order("sort_order"),
     db.from("venture_ops_state").select("*").eq("snapshot_id", snapshotId).maybeSingle(),
+    db.from("venture_ops_updates").select("*").eq("snapshot_id", snapshotId).order("created_at"),
   ]);
   const ids = (tasks ?? []).map((t: any) => t.id);
   let notes: any[] = [];
@@ -81,7 +139,8 @@ async function loadRunway(db: any, snapshotId: string) {
     const { data } = await db.from("venture_ops_notes").select("*").in("task_id", ids).order("created_at");
     notes = data ?? [];
   }
-  return { tasks: tasks ?? [], notes, state: state ?? null };
+  const updates = (rawUpdates ?? []).filter((u: any) => viewerKind === "agency" || u.visible_to_client);
+  return { tasks: tasks ?? [], notes, updates, state: state ?? null };
 }
 
 Deno.serve(async (req) => {
@@ -138,7 +197,7 @@ Deno.serve(async (req) => {
 
     if (action === "list") {
       await seedRunway(db, snapshotId);
-      const payload = await loadRunway(db, snapshotId);
+      const payload = await loadRunway(db, snapshotId, viewerKind);
       clientCanEditFlag = payload.state?.client_can_edit !== false;
       return json({
         ...payload,
@@ -159,6 +218,55 @@ Deno.serve(async (req) => {
         .upsert({ snapshot_id: snapshotId, client_can_edit: on }, { onConflict: "snapshot_id" });
       return json({ ok: true });
     }
+
+    // ------------------------------------------------------------ delivery
+    if (action === "set_delivery_mode") {
+      const mode = String(body?.mode ?? "");
+      if (!MODES.has(mode)) return json({ error: "Pick how this gets delivered" }, 400);
+      const setBy = typeof body?.setBy === "string" ? body.setBy.slice(0, 120) : viewerKind;
+      const { data: state } = await db
+        .from("venture_ops_state").select("runway_started_at").eq("snapshot_id", snapshotId).maybeSingle();
+      await db.from("venture_ops_state").upsert({
+        snapshot_id: snapshotId,
+        delivery_mode: mode,
+        delivery_mode_set_at: new Date().toISOString(),
+        delivery_mode_set_by: setBy,
+      }, { onConflict: "snapshot_id" });
+      await applyDeliveryMode(db, snapshotId, mode, state?.runway_started_at ?? null);
+      if (mode === "retained") {
+        await db.from("venture_ops_updates").insert({
+          snapshot_id: snapshotId,
+          author_kind: "agency",
+          author_name: "Startup Labs",
+          body: "Engagement started. Every specialist step now has an owner and a committed date.",
+        });
+      }
+      return json({ ok: true });
+    }
+
+    if (action === "set_rate") {
+      const cents = Math.max(1000, Math.min(100_000, Number(body?.rateCents) || 7500));
+      await db.from("venture_ops_state")
+        .upsert({ snapshot_id: snapshotId, blended_rate_cents: cents }, { onConflict: "snapshot_id" });
+      return json({ ok: true });
+    }
+
+    if (action === "post_update") {
+      const text = typeof body?.body === "string" ? body.body.trim().slice(0, 4000) : "";
+      if (!text) return json({ error: "Write something first." }, 400);
+      const forTask = typeof body?.taskId === "string" && body.taskId ? body.taskId : null;
+      const { error } = await db.from("venture_ops_updates").insert({
+        snapshot_id: snapshotId,
+        task_id: forTask,
+        author_kind: viewerKind,
+        author_name: typeof body?.authorName === "string" ? body.authorName.slice(0, 120) : null,
+        body: text,
+        visible_to_client: viewerKind === "agency" ? body?.visibleToClient !== false : true,
+      });
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
 
     // Every mutation below needs a task that belongs to this venture.
     const taskId = typeof body?.taskId === "string" ? body.taskId : "";
@@ -234,6 +342,77 @@ Deno.serve(async (req) => {
         task_id: taskId, author_kind: viewerKind, author_name: authorName, body: text,
       });
       if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    // --------------------------------------------------- managed delivery
+    if (action === "assign" && viewerKind === "agency") {
+      const name = typeof body?.assigneeName === "string" ? body.assigneeName.trim().slice(0, 120) : "";
+      const { error } = await db.from("venture_ops_tasks")
+        .update({ assignee_name: name || null }).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "set_committed_date" && viewerKind === "agency") {
+      const iso = typeof body?.committedAt === "string" ? body.committedAt : null;
+      const { error } = await db.from("venture_ops_tasks")
+        .update({ committed_at: iso }).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "set_delivery_status" && viewerKind === "agency") {
+      const ds = String(body?.deliveryStatus ?? "");
+      if (!DELIVERY_STATUSES.has(ds)) return json({ error: "Unknown delivery status" }, 400);
+      const patch: Record<string, unknown> = { delivery_status: ds };
+      if (ds === "delivered") {
+        patch.delivered_at = new Date().toISOString();
+        patch.client_review_state = "pending";
+        patch.status = "done";
+        patch.completed_at = new Date().toISOString();
+      }
+      const { error } = await db.from("venture_ops_tasks").update(patch).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "attach_work_product" && viewerKind === "agency") {
+      const url = typeof body?.url === "string" ? body.url.trim() : "";
+      if (url && !/^https?:\/\//i.test(url)) return json({ error: "Link must start with http" }, 400);
+      const label = typeof body?.label === "string" ? body.label.trim().slice(0, 160) : "";
+      const { error } = await db.from("venture_ops_tasks")
+        .update({ work_product_url: url || null, work_product_label: label || null }).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "request_handoff") {
+      const note = typeof body?.note === "string" ? body.note.trim().slice(0, 2000) : "";
+      const { error } = await db.from("venture_ops_tasks")
+        .update({ owner_kind: "agency", delivery_status: "not_started" }).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      await db.from("venture_ops_updates").insert({
+        snapshot_id: snapshotId, task_id: taskId, author_kind: viewerKind,
+        body: note || "Founder asked Startup Labs to take this step.",
+      });
+      return json({ ok: true });
+    }
+
+    if (action === "review_work_product") {
+      const review = String(body?.review ?? "");
+      if (review !== "approved" && review !== "changes_requested") {
+        return json({ error: "Unknown review" }, 400);
+      }
+      const patch: Record<string, unknown> = { client_review_state: review };
+      if (review === "changes_requested") { patch.delivery_status = "in_progress"; patch.status = "in_progress"; }
+      const { error } = await db.from("venture_ops_tasks").update(patch).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      const note = typeof body?.note === "string" ? body.note.trim().slice(0, 2000) : "";
+      await db.from("venture_ops_updates").insert({
+        snapshot_id: snapshotId, task_id: taskId, author_kind: viewerKind,
+        body: review === "approved" ? "Client approved this work." : `Changes requested: ${note || "see notes"}`,
+      });
       return json({ ok: true });
     }
 

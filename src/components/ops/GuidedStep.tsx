@@ -4,14 +4,16 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { OpsNote, OpsOwnerKind, OpsStatus, OpsTask } from "@/lib/ops-runway";
+import type { DeliveryMode, OpsNote, OpsOwnerKind, OpsStatus, OpsTask } from "@/lib/ops-runway";
 import { OWNER_LABEL, estimateLabel, guidedQueue, stageOf, stepPosition } from "@/lib/ops-guided";
 import { CRITICALITY, criticalityOf, criticalityTip, minutesTip, ownerTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
+import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
 import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
 
-export interface GuidedStepProps {
+export interface GuidedStepProps extends DeliveryHandlers {
+  deliveryMode?: DeliveryMode | null;
   tasks: OpsTask[];
   notes: OpsNote[];
   canEdit: boolean;
@@ -35,6 +37,7 @@ export function GuidedStep(props: GuidedStepProps) {
   const [stuckOpen, setStuckOpen] = useState(false);
   const [stuckNote, setStuckNote] = useState("");
   const [peek, setPeek] = useState(false);
+  const engaged = props.deliveryMode === "retained" || props.deliveryMode === "mixed";
 
   const queue = guidedQueue(tasks, viewerKind);
   const task = queue[0];
@@ -136,6 +139,16 @@ export function GuidedStep(props: GuidedStepProps) {
           <p className="text-xs font-medium">You'll know it's done when</p>
           <p className="mt-1 text-sm text-muted-foreground">{task.done_when}</p>
         </div>
+
+        {engaged && task.owner_kind === "agency" && (
+          <DeliveryPanel
+            className="mt-4" task={task} viewerKind={viewerKind} busy={busy}
+            onAssign={props.onAssign} onCommittedDate={props.onCommittedDate}
+            onDeliveryStatus={props.onDeliveryStatus} onWorkProduct={props.onWorkProduct}
+            onReview={props.onReview}
+          />
+        )}
+
 
         {links.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">

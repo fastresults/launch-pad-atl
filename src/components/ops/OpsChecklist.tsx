@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { OPS_PHASES, isOverdue, progressOf, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask } from "@/lib/ops-runway";
+import { OPS_PHASES, isOverdue, progressOf, type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask } from "@/lib/ops-runway";
 import { OpsTaskRow } from "./OpsTaskRow";
+import type { DeliveryHandlers } from "./DeliveryPanel";
 import { activeStage, isSnoozed, stageOf } from "@/lib/ops-guided";
 import { criticalityOf } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
@@ -12,7 +13,8 @@ import { groupByMilestone, isMilestone, leadOf, milestoneProgress } from "@/lib/
 type Lens = "all" | "mine" | "theirs" | "open" | "major" | "welead" | "must" | "sell" | "stuck" | "late" | "done";
 
 
-export interface OpsChecklistProps {
+export interface OpsChecklistProps extends DeliveryHandlers {
+  deliveryMode?: DeliveryMode | null;
   tasks: OpsTask[];
   notes: OpsNote[];
   startedAt?: string | null;
@@ -148,6 +150,10 @@ export function OpsChecklist(props: OpsChecklistProps) {
                           onStatus={props.onStatus} onOwner={props.onOwner}
                           onNote={props.onNote} onProof={props.onProof} onSnooze={props.onSnooze}
                           onOpenAsset={props.onOpenAsset} assetTitle={props.assetTitle} allTasks={tasks}
+                          deliveryMode={props.deliveryMode}
+                          onAssign={props.onAssign} onCommittedDate={props.onCommittedDate}
+                          onDeliveryStatus={props.onDeliveryStatus} onWorkProduct={props.onWorkProduct}
+                          onReview={props.onReview} onHandoff={props.onHandoff}
                         />
                       );
                       return (

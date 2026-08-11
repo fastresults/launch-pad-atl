@@ -5,6 +5,30 @@
 export type OpsStatus = "todo" | "in_progress" | "waiting_client" | "blocked" | "done";
 export type OpsOwnerKind = "client" | "agency";
 
+/** How this venture's runway gets executed. Null until the founder chooses. */
+export type DeliveryMode = "self" | "retained" | "mixed";
+export type DeliveryStatus = "not_started" | "in_progress" | "in_review" | "delivered" | "blocked";
+export type ReviewState = "none" | "pending" | "approved" | "changes_requested";
+
+export const DELIVERY_STATUS_LABEL: Record<DeliveryStatus, string> = {
+  not_started: "Not started",
+  in_progress: "In progress",
+  in_review: "In review",
+  delivered: "Delivered",
+  blocked: "Blocked — needs you",
+};
+
+export const DELIVERY_STATUS_CLASS: Record<DeliveryStatus, string> = {
+  not_started: "border-border/60 text-muted-foreground",
+  in_progress: "border-sky-400/50 text-sky-300",
+  in_review: "border-violet-400/50 text-violet-300",
+  delivered: "border-emerald-400/50 text-emerald-300",
+  blocked: "border-destructive/60 text-destructive",
+};
+
+export const DELIVERY_STATUS_ORDER: DeliveryStatus[] =
+  ["not_started", "in_progress", "in_review", "delivered", "blocked"];
+
 export interface OpsTask {
   id: string;
   snapshot_id: string;
@@ -31,6 +55,15 @@ export interface OpsTask {
   /** Slugs of later steps this one gates. */
   unlocks?: string[] | null;
   snoozed_until?: string | null;
+  // Managed delivery — only meaningful once a delivery mode is chosen.
+  assignee_name?: string | null;
+  assignee_user_id?: string | null;
+  committed_at?: string | null;
+  delivery_status?: DeliveryStatus | null;
+  work_product_url?: string | null;
+  work_product_label?: string | null;
+  delivered_at?: string | null;
+  client_review_state?: ReviewState | null;
 }
 
 export interface OpsNote {
@@ -42,20 +75,45 @@ export interface OpsNote {
   created_at: string;
 }
 
+export interface OpsUpdate {
+  id: string;
+  snapshot_id: string;
+  task_id: string | null;
+  author_kind: OpsOwnerKind;
+  author_name: string | null;
+  body: string;
+  visible_to_client: boolean;
+  created_at: string;
+}
+
 export interface OpsState {
   snapshot_id: string;
   runway_started_at: string;
   client_can_edit: boolean;
   intro_dismissed?: boolean;
+  delivery_mode?: DeliveryMode | null;
+  delivery_mode_set_at?: string | null;
+  delivery_mode_set_by?: string | null;
+  blended_rate_cents?: number | null;
 }
 
 export interface OpsRunway {
   tasks: OpsTask[];
   notes: OpsNote[];
+  updates: OpsUpdate[];
   state: OpsState | null;
   canEdit: boolean;
   viewerKind: OpsOwnerKind;
 }
+
+/** Delivery stage of a step, defaulting for rows seeded before managed delivery. */
+export const deliveryStatusOf = (t: OpsTask): DeliveryStatus => {
+  if (t.delivery_status) return t.delivery_status;
+  if (t.status === "done") return "delivered";
+  if (t.status === "blocked") return "blocked";
+  if (t.status === "in_progress") return "in_progress";
+  return "not_started";
+};
 
 export const OPS_PHASES: { phase: number; label: string; range: string; blurb: string }[] = [
   { phase: 1, label: "Prove it", range: "Days 1–7", blurb: "Concept, offer, buyers, demand, wedge, sales machine, voice." },
