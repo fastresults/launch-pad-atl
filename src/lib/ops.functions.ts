@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type {
   DeliveryMode, DeliveryStatus, OpsOwnerKind, OpsRunway, OpsStatus,
 } from "@/lib/ops-runway";
+import type { PlatformRequest } from "@/lib/ops-platform";
 
 const SUPABASE_URL =
   (import.meta.env.VITE_SUPABASE_URL as string | undefined) ||
@@ -49,8 +50,19 @@ export async function fetchOpsRunway(auth: OpsAuth): Promise<OpsRunway> {
     state: body.state ?? null,
     canEdit: body.canEdit !== false,
     viewerKind: (body.viewerKind ?? "client") as OpsOwnerKind,
+    platformRequest: (body.platformRequest ?? null) as PlatformRequest | null,
   };
 }
+
+/** Founder raises their hand for a platform build (marketplace, matching, booking…). */
+export const requestPlatformBuild = (
+  auth: OpsAuth,
+  input: { description: string; audience?: string; deadline?: string; contact?: string },
+) => call(auth, { action: "request_platform_build", ...input });
+
+/** Agency moves a platform request along the pipeline. */
+export const setPlatformRequestStatus = (auth: OpsAuth, requestId: string, status: string) =>
+  call(auth, { action: "set_platform_request_status", requestId, status });
 
 export const setOpsStatus = (auth: OpsAuth, taskId: string, status: OpsStatus) =>
   call(auth, { action: "set_status", taskId, status });
