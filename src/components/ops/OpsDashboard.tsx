@@ -12,6 +12,8 @@ import { OpsChecklist } from "./OpsChecklist";
 import { OpsTimeline } from "./OpsTimeline";
 import { OpsOnboarding } from "./OpsOnboarding";
 import { DeliveryModeGate } from "./DeliveryModeGate";
+import { DeliveryGateOverlay } from "./DeliveryGateOverlay";
+
 import { DeliveryModeToggle } from "./DeliveryModeToggle";
 import { PlatformAddOn } from "./PlatformAddOn";
 import type { PlatformRequestInput } from "./PlatformRequestDialog";
