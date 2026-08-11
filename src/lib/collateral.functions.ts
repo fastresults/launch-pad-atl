@@ -77,7 +77,25 @@ export async function listCollateral(snapshotId: string): Promise<CollateralItem
 }
 
 export async function generateCollateral(snapshotId: string, kinds?: string[]) {
-  return call({ action: "generate", snapshotId, kinds });
+  const requested = kinds?.length
+    ? kinds
+    : COLLATERAL_TIERS.flatMap((tier) => tier.kinds.map((item) => item.kind));
+
+  // Edge rendering is CPU-bound (wasm + pixel QC). Keep each invocation
+  // independently retryable so one complex deck cannot take the entire brand
+  // package down with WORKER_RESOURCE_LIMIT.
+  const generated: any[] = [];
+  const failed: any[] = [];
+  const qcIssues: any[] = [];
+  let artDirection: any = null;
+  for (const kind of requested) {
+    const result = await call({ action: "generate", snapshotId, kinds: [kind] });
+    generated.push(...(result?.generated ?? []));
+    failed.push(...(result?.failed ?? []));
+    qcIssues.push(...(result?.qcIssues ?? []));
+    artDirection ??= result?.artDirection ?? null;
+  }
+  return { ok: failed.length === 0, generated, failed, qcIssues, artDirection };
 }
 
 export async function clearCollateral(snapshotId: string, kind?: string) {

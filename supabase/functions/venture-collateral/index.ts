@@ -208,7 +208,7 @@ async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
       const ext = path.split(".").pop()?.toLowerCase();
       const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : "image/png";
       const raw = `data:${mime};base64,${b64(bytes)}`;
-      const small = await downscaleDataUri(raw);
+      const small = await downscaleDataUri(raw, 560);
       out.push(small ?? raw);
     } catch (e) {
       console.warn("[collateral imagery] skipped a tile:", (e as Error).message);
@@ -242,7 +242,7 @@ async function downscaleDataUri(href: string, width = 900): Promise<string | nul
 async function buildCtx(
   admin: any,
   snapshotId: string,
-  opts: { redirect?: boolean } = {},
+  opts: { redirect?: boolean; needsCopy?: boolean; needsImagery?: boolean } = {},
 ): Promise<{ ctx: CollateralCtx; details: ContactDetails; extras: StyleSystemExtras }> {
   const kit = await loadKit(admin, snapshotId);
   if (!kit) throw new Error("NO_BRAND_KIT");
@@ -363,7 +363,7 @@ async function buildCtx(
 
   // The whole dossier, not a one-liner. A deck written from seven fields reads
   // like a template; the brain already holds the facts and the numbers.
-  const copy: CollateralCopy | null = await writeCollateralCopy({
+  const copy: CollateralCopy | null = opts.needsCopy ? await writeCollateralCopy({
     company,
     tagline: details.tagline ?? null,
     oneLiner: tidy(brain?.identity?.one_liner) || null,
@@ -383,9 +383,12 @@ async function buildCtx(
     knownNumbers: brain?.known_numbers && Object.keys(brain.known_numbers).length ? brain.known_numbers : null,
     bannedAssumptions: Array.isArray(brain?.banned_assumptions) ? brain.banned_assumptions.slice(0, 6) : null,
     sourceExcerpts: sourceExcerpts.length ? sourceExcerpts : null,
-  });
+  }) : null;
 
-  const imagery = await loadVentureImagery(admin, kit);
+  // Only the presentation consumes mood-board imagery. Decoding and
+  // re-encoding two full-size tiles for every business card, letterhead, token
+  // file, etc. was pure worker CPU and caused otherwise tiny jobs to hit 546.
+  const imagery = opts.needsImagery ? await loadVentureImagery(admin, kit) : [];
 
   const ctx: CollateralCtx = {
     company,
@@ -575,7 +578,7 @@ async function generateKind(
     // Ten-slide decks blew the worker CPU allowance at 1100px a page. QC reads
     // ink coverage and contrast, both of which survive a smaller raster, so
     // multi-page kinds review (and preview) at a lighter width.
-    const rasterWidth = Math.min(p.width, pages.length > 6 ? 760 : 1100);
+    const rasterWidth = Math.min(p.width, pages.length > 6 ? 560 : 960);
     const bytes = await rasterizeSvgToBytes(p.svg, rasterWidth, undefined, fontBuffers);
 
     // Quarantine in memory: nothing is promoted until every page in the kind
@@ -740,11 +743,27 @@ Deno.serve(async (req) => {
         : [...COLLATERAL_KINDS];
       if (!requested.length) return json({ error: "No valid collateral kinds requested" }, 400);
 
+      // A single edge worker is intentionally bounded to one asset. The client
+      // orchestrates full-set generation as resumable one-kind calls; allowing
+      // all eleven kinds here accumulates wasm raster CPU until the runtime
+      // kills the worker with WORKER_RESOURCE_LIMIT before it can respond.
+      if (requested.length > 1) {
+        return json({
+          error: "Generate one collateral asset per request.",
+          code: "ONE_KIND_PER_REQUEST",
+        }, 400);
+      }
+
       let ctx: CollateralCtx;
       let details: ContactDetails;
       let extras: StyleSystemExtras;
       try {
-        ({ ctx, details, extras } = await buildCtx(admin, snapshotId, { redirect: !!body?.redirect }));
+        const kind = requested[0];
+        ({ ctx, details, extras } = await buildCtx(admin, snapshotId, {
+          redirect: !!body?.redirect,
+          needsCopy: ["presentation", "proposal", "invoice", "notecard", "guidelines"].includes(kind),
+          needsImagery: kind === "presentation",
+        }));
       } catch (e) {
         const code = (e as Error).message;
         const msg = code === "NO_BRAND_KIT"
