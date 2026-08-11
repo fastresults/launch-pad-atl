@@ -14,6 +14,8 @@ import { SectionExportMenu } from "@/components/share/SectionExportMenu";
 import { buildFullDoc, buildSectionDoc } from "@/lib/share-export";
 import { SHARE_UI_VERSION } from "@/components/share/preview-copy";
 import { ShareOutroDialog } from "@/components/share/ShareOutroDialog";
+import { ShareOpsRunway } from "@/components/share/ShareOpsRunway";
+
 
 
 import { Button } from "@/components/ui/button";
@@ -140,6 +142,9 @@ export default function VentureSharePage() {
   const brainActive = activeKey === BRAIN_KEY;
 
   const timelineActive = activeKey === TIMELINE_KEY;
+  /** Operationalize is a working dashboard in the reading pane, not a modal. */
+  const opsActive = activeKey === OUTRO_KEY;
+
   const activeIndex = items.findIndex((i) => i.key === activeKey);
   const activeItem = activeIndex >= 0 ? items[activeIndex] : null;
   const activeSection = payload?.sections.find((s) => s.items.some((i) => i.key === activeKey));
@@ -167,16 +172,10 @@ export default function VentureSharePage() {
     `${window.location.pathname}${window.location.search}#${step ? `${key}/${step}` : key}`;
 
   const goTo = (key: string, step?: string | null) => {
-    if (key === OUTRO_KEY) {
-      // The invitation is a modal, not a document — the reading pane stays put.
-      setNavOpen(false);
-      setOutroOpen(true);
-      return;
-    }
-    // Reaching the operations chapter is the moment the "what's next" question lands.
-    const section = payload.sections.find((s) => s.items.some((i) => i.key === key));
-    if (section && /operation/i.test(`${section.key} ${section.label}`)) setOutroOpen(true);
+    if (key === OUTRO_KEY) setNavOpen(false);
     if (key === BRAIN_KEY && isMobile) {
+
+
       // The brain takes the whole phone screen instead of replacing the reading pane.
       setBrainOpen(true);
       setNavOpen(false);
@@ -513,7 +512,16 @@ export default function VentureSharePage() {
             >
 
 
-              {brainActive ? (
+              {opsActive ? (
+                <ShareOpsRunway
+                  token={token}
+                  password={submitted}
+                  payload={payload}
+                  onOpenAsset={(k) => goTo(k)}
+                  onConsult={() => setOutroOpen(true)}
+                />
+              ) : brainActive ? (
+
                 <ShareBrain
                   token={token}
                   password={submitted}

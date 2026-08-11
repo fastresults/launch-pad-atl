@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
-import { ArrowUpRight, ChevronRight, ExternalLink, FileText, Hammer, Image as ImageIcon, Images, Route, Search, Sparkle } from "lucide-react";
+import { ArrowUpRight, ChevronRight, ExternalLink, FileText, Hammer, Image as ImageIcon, Images, ListChecks, Route, Search, Sparkle } from "lucide-react";
 import { mediaHintForItem, sectionHasMedia, type MediaHint } from "@/components/share/share-media-hint";
 
 /** Small muted glyph marking rows whose preview contains pictures. */
@@ -120,7 +120,7 @@ export function ShareSidebar({
     ...(hasSummary
       ? [{ key: "overview:executive", label: "Executive summary", hint: "The venture in 300 words", icon: FileText }]
       : []),
-    { key: OUTRO_KEY, label: "Operationalize", hint: "Build it with Adam's team", icon: Hammer },
+    { key: OUTRO_KEY, label: "Operationalize", hint: "Your 90-day operating runway", icon: ListChecks },
   ];
 
 

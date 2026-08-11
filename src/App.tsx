@@ -56,6 +56,8 @@ const DashboardBrain = lazy(() => import("@/routes/_authenticated/dashboard/brai
 const HubLibrary = lazy(() => import("@/routes/_authenticated/dashboard/hub.index"));
 const HubNew = lazy(() => import("@/routes/_authenticated/dashboard/hub.new"));
 const HubSnapshot = lazy(() => import("@/routes/_authenticated/dashboard/hub.$snapshotId"));
+const HubOperations = lazy(() => import("@/routes/_authenticated/dashboard/hub.$snapshotId.operations"));
+
 const WorkshopStage = lazy(() => import("@/routes/_authenticated/workshop.$stage"));
 
 
@@ -171,6 +173,8 @@ export default function App() {
             <Route path="hub" element={<HubLibrary />} />
             <Route path="hub/new" element={<HubNew />} />
             <Route path="hub/:snapshotId" element={<HubSnapshot />} />
+            <Route path="hub/:snapshotId/operations" element={<HubOperations />} />
+
           </Route>
 
 

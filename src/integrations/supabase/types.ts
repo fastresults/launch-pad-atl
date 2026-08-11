@@ -3433,6 +3433,150 @@ export type Database = {
           },
         ]
       }
+      venture_ops_notes: {
+        Row: {
+          author_kind: string
+          author_name: string | null
+          body: string
+          created_at: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          author_kind?: string
+          author_name?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          author_kind?: string
+          author_name?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_ops_notes_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "venture_ops_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venture_ops_state: {
+        Row: {
+          client_can_edit: boolean
+          created_at: string
+          runway_started_at: string
+          seeded_version: number
+          snapshot_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_can_edit?: boolean
+          created_at?: string
+          runway_started_at?: string
+          seeded_version?: number
+          snapshot_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_can_edit?: boolean
+          created_at?: string
+          runway_started_at?: string
+          seeded_version?: number
+          snapshot_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_ops_state_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: true
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venture_ops_tasks: {
+        Row: {
+          asset_keys: string[]
+          category: string
+          completed_at: string | null
+          created_at: string
+          day: number
+          done_when: string
+          due_at: string | null
+          id: string
+          owner_kind: string
+          owner_name: string | null
+          phase: number
+          proof_url: string | null
+          snapshot_id: string
+          sort_order: number
+          status: string
+          task_key: string
+          title: string
+          updated_at: string
+          why: string
+        }
+        Insert: {
+          asset_keys?: string[]
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          day?: number
+          done_when?: string
+          due_at?: string | null
+          id?: string
+          owner_kind?: string
+          owner_name?: string | null
+          phase?: number
+          proof_url?: string | null
+          snapshot_id: string
+          sort_order?: number
+          status?: string
+          task_key: string
+          title: string
+          updated_at?: string
+          why?: string
+        }
+        Update: {
+          asset_keys?: string[]
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          day?: number
+          done_when?: string
+          due_at?: string | null
+          id?: string
+          owner_kind?: string
+          owner_name?: string | null
+          phase?: number
+          proof_url?: string | null
+          snapshot_id?: string
+          sort_order?: number
+          status?: string
+          task_key?: string
+          title?: string
+          updated_at?: string
+          why?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_ops_tasks_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venture_shares: {
         Row: {
           chat_enabled: boolean
