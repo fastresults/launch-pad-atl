@@ -160,7 +160,7 @@ function DuringMode({ state, generated, total }: { state: WorkshopState; generat
           </div>
           <p className="mt-3 text-xl md:text-2xl font-medium leading-snug">{block.subtitle}</p>
           <p className="mt-2 text-muted-foreground">
-            Back at {minutesToClock(block.endMin)} ET. Your AI assistant keeps working while you take a breather.
+            Back at {minutesToClock(block.endMin)} ET. Your build keeps moving while you take a breather.
           </p>
           <div className="mt-6 flex items-center gap-3">
             <div className="flex-1 h-2 rounded-full bg-emerald-500/20 overflow-hidden">
@@ -215,7 +215,7 @@ function DuringMode({ state, generated, total }: { state: WorkshopState; generat
         <div className="flex items-center gap-2 text-sm">
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="text-muted-foreground">
-            Your AI assistant is generating {Math.max(0, total - generated)} more deliverables in the background.
+            We're preparing {Math.max(0, total - generated)} more deliverables in the background.
           </span>
         </div>
         <div className="mt-2 flex items-baseline gap-2">

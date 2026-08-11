@@ -394,7 +394,7 @@ function EpiphanyPanel({ snapshot, onApplied, onChanged }: { snapshot: any; onAp
             Challenge the concept itself — surface bigger swings you may have missed.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            <b>When to use this:</b> before you lock, when you want AI to challenge assumptions rather than polish wording. Multi-pass: mines your research, generates and scores enhancements, returns up to 3 vision-extending ideas. <i>Takes ~60s.</i>
+            <b>When to use this:</b> before you lock, when you want your assumptions challenged rather than your wording polished. Multi-pass: mines your research, generates and scores enhancements, returns up to 3 vision-extending ideas. <i>Takes ~60s.</i>
           </p>
         </div>
         <Button size="sm" onClick={findEpiphany} disabled={run.isPending || !hasBrief}>

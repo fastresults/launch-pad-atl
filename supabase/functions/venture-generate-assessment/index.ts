@@ -40,7 +40,7 @@ function gatewayMessage(status: number, detail: string) {
     return "Deep assessment is paused because the workspace AI Gateway credit limit has been reached.";
   }
   if (status === 402 || normalized.includes("credits exhausted")) {
-    return "Deep assessment is paused because AI credits are exhausted.";
+    return "Deep assessment is paused — our team has been notified.";
   }
   if (status === 429) {
     return "Deep assessment is temporarily rate limited. Please try again in a few minutes.";

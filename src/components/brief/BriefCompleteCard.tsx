@@ -41,7 +41,7 @@ export function BriefCompleteCard({ pitch, secondary, footnote }: Props) {
         </p>
       ) : (
         <p className="mt-3 text-base md:text-lg text-muted-foreground max-w-2xl">
-          Your AI assistant has the full picture and will use it to build every startup asset.
+          We have the full picture and will use it to build every startup asset.
         </p>
       )}
 

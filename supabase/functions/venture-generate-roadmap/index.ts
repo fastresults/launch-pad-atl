@@ -99,7 +99,7 @@ function gatewayMessage(status: number, detail: string) {
     return "Founder Roadmap is paused because the workspace AI Gateway credit limit has been reached.";
   }
   if (status === 402 || n.includes("credits exhausted")) {
-    return "Founder Roadmap is paused because AI credits are exhausted.";
+    return "Founder Roadmap is paused — our team has been notified.";
   }
   if (status === 429) return "Founder Roadmap is rate limited. Please try again shortly.";
   if (status === 401 || status === 403) return "Founder Roadmap is unavailable — AI Gateway rejected the request.";

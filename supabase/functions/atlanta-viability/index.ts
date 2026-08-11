@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
       const message = aiRes.status === 429
         ? "We're getting a lot of ideas right now — try again in a moment."
         : aiRes.status === 402
-          ? "Our AI credits ran out. Reach out and we'll walk you through it."
+          ? "We hit a snag on our side. Reach out and we'll walk you through it."
           : "We couldn't read the market just now. Try again in a moment.";
       console.error("atlanta-viability gateway error", aiRes.status, txt.slice(0, 300));
       return json({ error: message }, aiRes.status === 429 ? 429 : 502);

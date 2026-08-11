@@ -143,7 +143,7 @@ function gatewayMessage(status: number, detail: string) {
     return "AI generation is paused because the workspace AI Gateway credit limit has been reached.";
   }
   if (status === 402 || normalized.includes("credits exhausted")) {
-    return "AI generation is paused because AI credits are exhausted.";
+    return "Generation is paused — our team has been notified.";
   }
   if (status === 429) {
     return "AI generation is temporarily rate limited. Please try again in a few minutes.";

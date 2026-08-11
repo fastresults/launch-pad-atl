@@ -23,11 +23,11 @@ export const HUB_DASHBOARD_INTROS: Record<
     ],
   },
   toolkit: {
-    eyebrow: "02 · AI Toolkit",
-    why: "A personalized stack of AI tools chosen for your industry. Your 14-day plan assumes you have these installed — this gets you set up in an afternoon.",
+    eyebrow: "02 · Operating Tool Stack",
+    why: "The named tools your business runs on, chosen for your industry. Your 14-day plan assumes you have these set up — this gets you there in an afternoon.",
     howTo: [
       "Generate the stack, then open each tool to install it.",
-      "Paste API keys as prompted so the rest of the assets can use them.",
+      "Connect each account so the rest of the assets can use it.",
       "Skip anything you already own — the checklist tracks progress.",
     ],
   },
@@ -45,5 +45,5 @@ export const HUB_DASHBOARD_INTROS: Record<
 export const HUB_WELCOME_COPY = {
   title: "This is your venture workspace",
   body:
-    "Three things live here — your 14-day sprint plan, your AI toolkit, and 60+ founder-ready assets. Read each section eyebrow, then start with the primary button up top.",
+    "Three things live here — your 14-day sprint plan, your operating tool stack, and 60+ founder-ready assets. Read each section eyebrow, then start with the primary button up top.",
 };
