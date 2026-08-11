@@ -345,6 +345,77 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    // --------------------------------------------------- managed delivery
+    if (action === "assign" && viewerKind === "agency") {
+      const name = typeof body?.assigneeName === "string" ? body.assigneeName.trim().slice(0, 120) : "";
+      const { error } = await db.from("venture_ops_tasks")
+        .update({ assignee_name: name || null }).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "set_committed_date" && viewerKind === "agency") {
+      const iso = typeof body?.committedAt === "string" ? body.committedAt : null;
+      const { error } = await db.from("venture_ops_tasks")
+        .update({ committed_at: iso }).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "set_delivery_status" && viewerKind === "agency") {
+      const ds = String(body?.deliveryStatus ?? "");
+      if (!DELIVERY_STATUSES.has(ds)) return json({ error: "Unknown delivery status" }, 400);
+      const patch: Record<string, unknown> = { delivery_status: ds };
+      if (ds === "delivered") {
+        patch.delivered_at = new Date().toISOString();
+        patch.client_review_state = "pending";
+        patch.status = "done";
+        patch.completed_at = new Date().toISOString();
+      }
+      const { error } = await db.from("venture_ops_tasks").update(patch).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "attach_work_product" && viewerKind === "agency") {
+      const url = typeof body?.url === "string" ? body.url.trim() : "";
+      if (url && !/^https?:\/\//i.test(url)) return json({ error: "Link must start with http" }, 400);
+      const label = typeof body?.label === "string" ? body.label.trim().slice(0, 160) : "";
+      const { error } = await db.from("venture_ops_tasks")
+        .update({ work_product_url: url || null, work_product_label: label || null }).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "request_handoff") {
+      const note = typeof body?.note === "string" ? body.note.trim().slice(0, 2000) : "";
+      const { error } = await db.from("venture_ops_tasks")
+        .update({ owner_kind: "agency", delivery_status: "not_started" }).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      await db.from("venture_ops_updates").insert({
+        snapshot_id: snapshotId, task_id: taskId, author_kind: viewerKind,
+        body: note || "Founder asked Startup Labs to take this step.",
+      });
+      return json({ ok: true });
+    }
+
+    if (action === "review_work_product") {
+      const review = String(body?.review ?? "");
+      if (review !== "approved" && review !== "changes_requested") {
+        return json({ error: "Unknown review" }, 400);
+      }
+      const patch: Record<string, unknown> = { client_review_state: review };
+      if (review === "changes_requested") { patch.delivery_status = "in_progress"; patch.status = "in_progress"; }
+      const { error } = await db.from("venture_ops_tasks").update(patch).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      const note = typeof body?.note === "string" ? body.note.trim().slice(0, 2000) : "";
+      await db.from("venture_ops_updates").insert({
+        snapshot_id: snapshotId, task_id: taskId, author_kind: viewerKind,
+        body: review === "approved" ? "Client approved this work." : `Changes requested: ${note || "see notes"}`,
+      });
+      return json({ ok: true });
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("venture-ops failed", e);
