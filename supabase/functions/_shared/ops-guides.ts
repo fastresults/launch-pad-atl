@@ -96,6 +96,89 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
   },
 
   // ── Creative sign-off ───────────────────────────────────────────────
+  "foundation-grade": {
+    how: [
+      "Put your foundation set on one screen: mark, palette, type, business card, poster, social cover.",
+      "Open three brands you admire in your category next to it — not competitors, the ones you envy.",
+      "For each of your pieces write one sentence: what is already right, and what gives it away as new.",
+      "Rank the gaps by what a buyer sees first. That ranking becomes the elevation list.",
+    ],
+    needs: ["Your generated brand and collateral set", "Three brands you admire"],
+    minutes: 60,
+    criticality: "makes_it_grow",
+    unlocks: ["art-direction", "imagery-production", "poster-system"],
+  },
+  "art-direction": {
+    how: [
+      "Collect 12–20 reference images and cut them to the 8 that genuinely feel like you.",
+      "Name the rules those 8 share: light, distance, colour temperature, how people are framed.",
+      "Write the crop and type rules — one headline treatment, one kicker, one caption size.",
+      "Add what is banned: the stock look, the drop shadow, the third font, the tilted phone mockup.",
+      "Save it as one page. Everything made from now on is checked against it.",
+    ],
+    needs: ["The foundation grade", "Locked colour and type"],
+    minutes: 150,
+    criticality: "makes_it_grow",
+    unlocks: ["imagery-production", "poster-system", "collateral-print", "motion-cut", "creative-standard-signoff"],
+  },
+  "imagery-production": {
+    how: [
+      "Write the shot list from the art direction: hero, product or work in progress, people, detail, texture.",
+      "Book a half-day with a photographer, or block a half-day to shoot it properly yourself.",
+      "Shoot wide — you need crops for square, vertical and banner from the same frame.",
+      "Retouch to one consistent look, then replace every placeholder on a live surface.",
+    ],
+    needs: ["The written art direction", "A location and anything you sell"],
+    minutes: 300,
+    criticality: "makes_it_grow",
+    unlocks: ["poster-system", "creative-standard-signoff"],
+  },
+  "poster-system": {
+    how: [
+      "List the formats you actually post: feed square, story, ad, cover.",
+      "Rebuild one of each to the art direction using owned imagery.",
+      "Fix the type hierarchy once — kicker, headline, supporting line — and reuse it everywhere.",
+      "Hold them side by side. If any one looks like it came from somewhere else, it is not done.",
+    ],
+    needs: ["The written art direction", "Owned imagery"],
+    minutes: 240,
+    criticality: "makes_it_grow",
+    unlocks: ["creative-standard-signoff"],
+  },
+  "collateral-print": {
+    how: [
+      "Rebuild the card, letterhead and one leave-behind against the art direction.",
+      "Check the mark reads at real size in a hand, not on screen at 200%.",
+      "Export at bleed with crop marks, in the colour profile your printer asks for.",
+      "Order one physical proof before you order a hundred.",
+    ],
+    needs: ["The written art direction", "A vector logo"],
+    minutes: 180,
+    criticality: "makes_it_grow",
+    unlocks: ["creative-standard-signoff"],
+  },
+  "motion-cut": {
+    how: [
+      "Pick one story: how it is made, the before and after, or the founder saying the one-liner.",
+      "Cut it to 15–30 seconds using owned footage or stills with slow movement.",
+      "Typeset the titles with the same hierarchy as the posters — motion is not an excuse for a new font.",
+      "Publish it on one channel and keep the project file for the next three cuts.",
+    ],
+    needs: ["Owned footage or stills", "The written art direction"],
+    minutes: 180,
+    criticality: "makes_it_grow",
+  },
+  "creative-standard-signoff": {
+    how: [
+      "Open every live surface in one sitting: site, each social profile, ads, email signature, invoice, collateral.",
+      "Check each one against the art direction — imagery, crop, type, colour, logo clear space.",
+      "Fix or pull anything that fails. An off-standard surface costs more than a missing one.",
+      "Sign it off in the Creative tab so the whole team knows the bar has been set.",
+    ],
+    needs: ["The written art direction", "Access to every live surface"],
+    minutes: 90,
+    criticality: "required_to_sell",
+  },
   "logo-signoff": {
     how: [
       "Open the Creative sign-off tab and look at the mark at real size, on a phone.",
