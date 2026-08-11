@@ -69,6 +69,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
   const { tasks, notes, startedAt, canEdit, viewerKind } = props;
   const [view, setView] = useState<ViewMode>(props.viewerKind === "agency" ? "checklist" : "guided");
   const [intro, setIntro] = useState(!!props.showIntro);
+  const [gateOpen, setGateOpen] = useState(false);
 
   useEffect(() => { setIntro(!!props.showIntro); }, [props.showIntro]);
 
@@ -77,6 +78,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
   const stage = stageOf(activeStage(tasks));
   const stuck = tasks.filter((t) => t.status === "blocked").length;
   const late = tasks.filter((t) => isOverdue(t, startedAt) && t.status !== "done").length;
+  const mode = props.deliveryMode ?? null;
 
   const shared = useMemo(() => ({
     tasks, notes, startedAt, canEdit, viewerKind,
@@ -84,10 +86,18 @@ export function OpsDashboard(props: OpsDashboardProps) {
     onStatus: props.onStatus, onOwner: props.onOwner, onNote: props.onNote,
     onProof: props.onProof, onSnooze: props.onSnooze,
     onOpenAsset: props.onOpenAsset, assetTitle: props.assetTitle,
-  }), [tasks, notes, startedAt, canEdit, viewerKind, props.busyTaskId, props.onStatus,
-    props.onOwner, props.onNote, props.onProof, props.onSnooze, props.onOpenAsset, props.assetTitle]);
+    deliveryMode: mode,
+    onAssign: props.onAssign, onCommittedDate: props.onCommittedDate,
+    onDeliveryStatus: props.onDeliveryStatus, onWorkProduct: props.onWorkProduct,
+    onReview: props.onReview, onHandoff: props.onHandoff,
+  }), [tasks, notes, startedAt, canEdit, viewerKind, mode, props.busyTaskId, props.onStatus,
+    props.onOwner, props.onNote, props.onProof, props.onSnooze, props.onOpenAsset, props.assetTitle,
+    props.onAssign, props.onCommittedDate, props.onDeliveryStatus, props.onWorkProduct,
+    props.onReview, props.onHandoff]);
 
   const dismissIntro = () => { setIntro(false); props.onDismissIntro?.(); };
+
+  const chooseMode = (m: DeliveryMode) => { props.onDeliveryMode?.(m); setGateOpen(false); };
 
   if (intro) {
     return (
@@ -96,6 +106,28 @@ export function OpsDashboard(props: OpsDashboardProps) {
       </div>
     );
   }
+
+  // The decision comes before the list: who is actually going to do this work.
+  if ((!mode && props.onDeliveryMode) || gateOpen) {
+    return (
+      <div className={cn("space-y-6", props.className)}>
+        <DeliveryModeGate
+          tasks={tasks}
+          currentMode={mode}
+          rateCents={props.rateCents}
+          onRate={props.onRate}
+          onChoose={chooseMode}
+          busy={!!props.busyTaskId}
+        />
+        {gateOpen && (
+          <div className="text-center">
+            <Button variant="ghost" size="sm" onClick={() => setGateOpen(false)}>Back to the runway</Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
 
   return (
     <TooltipProvider delayDuration={120}>
