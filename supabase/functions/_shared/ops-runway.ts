@@ -191,6 +191,10 @@ const DAYS: Day[] = [
     subs: [
       ["site-live", "Ship the site", "The site is where every message you send lands.", "Live at your domain with logo, favicon, OG image, and one clear call to action.", "agency"],
       ["site-proof", "Put proof on the page", "Nobody buys from a page with no evidence.", "At least one testimonial, result, or named client on the homepage.", "client"],
+      ["asset-pack", "Export the print and digital asset pack", "The wrong file at the printer costs a week and a reprint.", "SVG, PNG, favicon, OG image, plus business card and letterhead print files at bleed — all in one folder.", "agency", "Creative"],
+      ["photography", "Choose the real imagery", "Stock and placeholders read as 'nobody works here'.", "Real photography or commissioned imagery replaces every placeholder on live surfaces.", "client", "Creative"],
+      ["identity-sweep", "Apply the identity everywhere", "Brand drift starts on the surfaces nobody audits.", "Site, email signature, invoice, proposal, and every social profile match the style system.", "agency", "Creative"],
+
     ],
   },
   {
