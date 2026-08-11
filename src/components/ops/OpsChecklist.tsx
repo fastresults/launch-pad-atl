@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { OPS_PHASES, isOverdue, progressOf, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask } from "@/lib/ops-runway";
+import { OPS_PHASES, isOverdue, progressOf, type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask } from "@/lib/ops-runway";
 import { OpsTaskRow } from "./OpsTaskRow";
+import type { DeliveryHandlers } from "./DeliveryPanel";
 import { activeStage, isSnoozed, stageOf } from "@/lib/ops-guided";
 import { criticalityOf } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
