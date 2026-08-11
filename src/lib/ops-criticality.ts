@@ -70,12 +70,16 @@ export const TIPS = {
 
 /** Per-lane framing, used as the lead-in for a step-specific tooltip. */
 const CATEGORY_ROLE: Record<string, string> = {
+  Offer: "Offer work — what you sell, what it costs, and why someone says yes.",
   Strategy: "Strategy work — the decisions everything downstream gets built on.",
   Legal: "Legal and entity work — what makes the business real and protected.",
   Money: "Money plumbing — how cash comes in, gets tracked, and stays clean.",
   Sales: "Sales machinery — how interest turns into signed, paid work.",
+  Demand: "Demand work — how the right people find out you exist.",
   Marketing: "Demand work — how the right people find out you exist.",
   Brand: "Brand work — how the business looks and sounds everywhere it shows up.",
+  Creative: "Creative work — the art direction that lifts the foundation set to agency grade.",
+  Content: "Content work — the posts and sends that keep you in front of buyers.",
   Systems: "Systems work — the tools and automations that do the remembering for you.",
   Run: "Delivery work — how the promise gets kept after someone pays.",
   Rhythm: "Operating rhythm — the recurring habits that keep the business honest.",
@@ -89,7 +93,9 @@ const firstLine = (t: OpsTask) => t.how?.[0] ?? t.done_when ?? "";
  * step does, and the first concrete move. Never the same string twice.
  */
 export function categoryTip(task: OpsTask): string {
-  const role = CATEGORY_ROLE[task.category] ?? `${task.category} work.`;
+  const lane = categoryLabel(task.category);
+  const role = CATEGORY_ROLE[lane] ?? `${lane} work.`;
+
   const what = task.why ? ` This step: ${task.why}` : "";
   const first = firstLine(task);
   return `${role}${what}${first ? ` Start by: ${first.replace(/^\w/, (c) => c.toLowerCase())}` : ""}`;
