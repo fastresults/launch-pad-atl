@@ -1400,8 +1400,23 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         }}
       />
 
+      {/* Where the cadence becomes real work: the shared operating runway. */}
+      <a
+        href={`/dashboard/hub/${snapshot.id}/operations`}
+        className="flex items-center justify-between gap-4 rounded-2xl border border-border/60 bg-card/40 px-4 py-3 transition-colors hover:bg-card/70"
+      >
+        <span>
+          <span className="block text-sm font-semibold tracking-tight">Operating runway</span>
+          <span className="block text-xs text-muted-foreground">
+            The 90-day checklist you and the founder both work from — legal, money, CRM, demand, rhythm.
+          </span>
+        </span>
+        <span className="text-xs text-primary">Open →</span>
+      </a>
+
       <div className="space-y-3">
         <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} variant={isGuided ? "minimal" : "full"} />
+
 
         <LaunchPlanner14Day
         docs={docs}
