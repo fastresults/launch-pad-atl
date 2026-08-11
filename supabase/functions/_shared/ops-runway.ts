@@ -11,7 +11,8 @@
 
 export type OpsCategory =
   | "Foundation" | "Strategy" | "Operations" | "Finance"
-  | "Governance" | "Brand" | "Marketing" | "Social & Content";
+  | "Governance" | "Brand" | "Marketing" | "Social & Content" | "Creative";
+
 
 export type OpsOwnerKind = "client" | "agency";
 
@@ -35,8 +36,9 @@ type Day = {
   doneWhen: string;
   assetKeys: string[];
   category: OpsCategory;
-  /** [slug, title, why, doneWhen, owner] */
-  subs: [string, string, string, string, OpsOwnerKind][];
+  /** [slug, title, why, doneWhen, owner, category?] — category defaults to the day's. */
+  subs: [string, string, string, string, OpsOwnerKind, OpsCategory?][];
+
 };
 
 const DAYS: Day[] = [
@@ -70,8 +72,13 @@ const DAYS: Day[] = [
     category: "Strategy",
     subs: [
       ["crm-live", "Stand up the CRM", "A list in a spreadsheet is not a pipeline.", "CRM account live with stages created and the First-50 imported.", "agency"],
+      ["crm-fields", "Configure the CRM fields", "Data you don't capture on day one can't be reported on in month three.", "Source, segment, deal value, next step, and close date are required fields on every record.", "agency"],
+      ["lead-sources", "Define and tag the lead sources", "Untagged leads make channel spend unreadable.", "Every record carries a source tag from a fixed, written list of channels.", "agency"],
+      ["segments", "Build the working lists", "One giant list gets one generic message.", "Contacts segmented into ICP tier, warm vs. cold, industry, and geography.", "client"],
+      ["lead-score", "Write the qualified-lead rule", "Without a definition, everything looks like a lead.", "One paragraph defining a qualified lead, applied as a CRM filter or score.", "client"],
       ["angles", "Write one angle per prospect", "Generic outreach is why week-three founders quit.", "Every one of the 50 rows has a reason-to-reach-out.", "client"],
     ],
+
   },
   {
     day: 4, theme: "Validate demand",
@@ -114,7 +121,11 @@ const DAYS: Day[] = [
     category: "Brand",
     subs: [
       ["voice-adopted", "Put the voice to work", "A voice guide nobody applies is decoration.", "Site copy, outbound scripts, and social captions all pass the voice guide.", "agency"],
+      ["logo-signoff", "Approve the final logo lockup", "Everything printed and published inherits this decision — changing it later is expensive.", "Primary, stacked, and one-color marks signed off with clear-space rules written down.", "client", "Creative"],
+      ["color-type-lock", "Lock the color and type system", "Near-miss colors and substitute fonts are what make a brand look homemade.", "Hex, CMYK/Pantone equivalents, and the licensed or web-embedded fonts are fixed and documented.", "agency", "Creative"],
+      ["style-system", "Publish the style system to the team", "Anyone touching a surface needs the rules without asking.", "The venture style guide is exported and shared with everyone who makes anything.", "agency", "Creative"],
     ],
+
   },
   {
     day: 8, theme: "Legal + entity",
@@ -162,6 +173,13 @@ const DAYS: Day[] = [
       ["email", "Set up business email", "Gmail-address outreach halves your reply rate.", "you@yourdomain sends and receives.", "agency"],
       ["auth", "Authenticate the sending domain", "Without SPF/DKIM your launch email is spam.", "SPF, DKIM, and DMARC pass on a test send.", "agency"],
       ["analytics", "Fire real events", "You can't improve a funnel you can't see.", "GA4 and pixels record a real form submit and a real purchase event.", "agency"],
+      ["utm", "Set the UTM and attribution convention", "Links without a convention report nothing you can act on.", "A written naming scheme every campaign link follows, visible in analytics and the CRM.", "agency"],
+      ["lead-magnet", "Build the lead magnet", "Cold traffic won't buy, but it will trade an email address.", "The asset exists, is gated behind a form, and is delivered automatically.", "client"],
+      ["capture-funnel", "Publish the capture funnel", "A form with nowhere to go is a dead end.", "Landing page, form, thank-you page, and delivery email all tested end to end.", "agency"],
+      ["forms-to-crm", "Wire the forms into the CRM", "Leads that land in an inbox get lost.", "A test submission creates a CRM record with its source tag attached.", "agency"],
+      ["nurture", "Turn on the welcome sequence", "Most subscribers never hear from you twice — that's the whole leak.", "Five nurture emails written and sending automatically to new subscribers.", "agency"],
+      ["retargeting", "Stand up the retargeting audience", "The people who already looked are the cheapest to reach again.", "Site and list audiences built in the ad platform and populating.", "agency"],
+
     ],
   },
   {
@@ -173,6 +191,10 @@ const DAYS: Day[] = [
     subs: [
       ["site-live", "Ship the site", "The site is where every message you send lands.", "Live at your domain with logo, favicon, OG image, and one clear call to action.", "agency"],
       ["site-proof", "Put proof on the page", "Nobody buys from a page with no evidence.", "At least one testimonial, result, or named client on the homepage.", "client"],
+      ["asset-pack", "Export the print and digital asset pack", "The wrong file at the printer costs a week and a reprint.", "SVG, PNG, favicon, OG image, plus business card and letterhead print files at bleed — all in one folder.", "agency", "Creative"],
+      ["photography", "Choose the real imagery", "Stock and placeholders read as 'nobody works here'.", "Real photography or commissioned imagery replaces every placeholder on live surfaces.", "client", "Creative"],
+      ["identity-sweep", "Apply the identity everywhere", "Brand drift starts on the surfaces nobody audits.", "Site, email signature, invoice, proposal, and every social profile match the style system.", "agency", "Creative"],
+
     ],
   },
   {
@@ -183,6 +205,9 @@ const DAYS: Day[] = [
     category: "Operations",
     subs: [
       ["pipeline-stages", "Define the pipeline stages", "Deals stall in stages nobody owns.", "Stages named, entry criteria written, one owner per stage.", "agency"],
+      ["crm-automation", "Turn on task and reminder automation", "Deals die from silence, not objections.", "No deal can sit untouched past the number of days you set — the CRM chases you.", "agency"],
+      ["crm-reporting", "Build the pipeline reporting view", "If you can't see it by source, you'll spend blind.", "One saved view showing pipeline by stage, by source, and by owner.", "agency"],
+
       ["proposal", "Build the proposal template", "Bespoke proposals per deal is how founders lose a week.", "Proposal template generated from the priced offer, ready to send.", "agency"],
       ["esign", "Connect e-signature", "Chasing PDFs adds days to every close.", "A test proposal signed electronically end to end.", "agency"],
       ["invoicing", "Turn on invoicing terms", "Unclear terms are why founders get paid late.", "Invoice template live with deposit, net terms, and a late fee.", "client"],
@@ -232,6 +257,11 @@ const POST_LAUNCH: [string, string, string, string, OpsCategory, OpsOwnerKind, 1
   ["pricing-review", "Revisit pricing against win-loss", "Your launch price was a hypothesis.", "Price adjusted or explicitly confirmed using real win-loss data.", "Foundation", "client", 31],
   ["first-hire", "Scope the first hire or contractor", "The bottleneck at day 60 is always you.", "Role scoped with a 30-day scorecard and a budget.", "Operations", "client", 31],
   ["quarter-plan", "Write the next quarter's plan", "Ninety days without a target drifts.", "One page: the target number, the three bets, and what you'll stop doing.", "Strategy", "client", 31],
+  ["funnel-read", "Read the funnel end to end", "Averages hide the one step that's leaking.", "Visitors, leads, calls, proposals, and closes counted for the month, with the worst step named.", "Marketing", "agency", 15],
+  ["list-hygiene", "Install the list-hygiene rhythm", "A dirty list quietly kills your sending reputation.", "Monthly pass on bounces, unsubscribes, and a re-engagement send to the cold segment.", "Marketing", "agency", 31],
+  ["creative-refresh", "Refresh the creative against results", "Ad and post fatigue is measurable — and fixable.", "Lowest-performing creative replaced using the brand kit, with before/after numbers.", "Creative", "agency", 31],
+  ["brand-audit", "Audit brand consistency across surfaces", "Six weeks of shipping is how brands drift.", "Every live surface checked against the style system; the exceptions fixed or documented.", "Creative", "agency", 31],
+
 ];
 
 export function buildOpsCatalog(): OpsCatalogTask[] {
@@ -248,16 +278,17 @@ export function buildOpsCatalog(): OpsCatalogTask[] {
       asset_keys: d.assetKeys,
       owner_kind: "client",
     });
-    for (const [slug, title, why, doneWhen, owner] of d.subs) {
+    for (const [slug, title, why, doneWhen, owner, category] of d.subs) {
       out.push({
         phase, day: d.day,
         task_key: `day-${d.day}.${slug}`,
         title, why, done_when: doneWhen,
-        category: d.category,
+        category: category ?? d.category,
         asset_keys: d.assetKeys,
         owner_kind: owner,
       });
     }
+
   }
   for (const [slug, title, why, doneWhen, category, owner, day] of POST_LAUNCH) {
     out.push({

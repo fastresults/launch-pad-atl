@@ -32,19 +32,27 @@ const OWNERS = new Set(["client", "agency"]);
 /** Create any catalog tasks this venture doesn't have yet, without touching progress. */
 async function seedRunway(db: any, snapshotId: string) {
   const { data: existing } = await db
-    .from("venture_ops_tasks").select("task_key").eq("snapshot_id", snapshotId);
-  const have = new Set((existing ?? []).map((r: any) => r.task_key));
-  const catalog = buildOpsCatalog();
+    .from("venture_ops_tasks").select("task_key, sort_order").eq("snapshot_id", snapshotId);
+  const have = new Map<string, number>((existing ?? []).map((r: any) => [r.task_key, r.sort_order]));
+  const catalog = buildOpsCatalog().map((t, i) => ({ ...t, sort_order: i }));
   const missing = catalog
-    .map((t, i) => ({ ...t, sort_order: i }))
     .filter((t) => !have.has(t.task_key))
     .map((t) => ({ ...t, snapshot_id: snapshotId }));
   if (missing.length) {
     await db.from("venture_ops_tasks").upsert(missing, { onConflict: "snapshot_id,task_key" });
   }
+  // When the catalog grows mid-flight, existing rows keep stale positions and the
+  // day groups interleave. Re-align order only — never status, owner, or notes.
+  const drifted = catalog.filter((t) => have.has(t.task_key) && have.get(t.task_key) !== t.sort_order);
+  for (const t of drifted) {
+    await db.from("venture_ops_tasks")
+      .update({ sort_order: t.sort_order })
+      .eq("snapshot_id", snapshotId).eq("task_key", t.task_key);
+  }
   await db.from("venture_ops_state")
     .upsert({ snapshot_id: snapshotId }, { onConflict: "snapshot_id", ignoreDuplicates: true });
 }
+
 
 async function loadRunway(db: any, snapshotId: string) {
   const [{ data: tasks }, { data: state }] = await Promise.all([

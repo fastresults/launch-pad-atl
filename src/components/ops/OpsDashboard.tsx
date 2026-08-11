@@ -8,7 +8,7 @@ import {
   type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
 } from "@/lib/ops-runway";
 
-type Filter = "all" | "mine" | "agency" | "blocked" | "overdue" | "open";
+type Filter = "all" | "mine" | "agency" | "blocked" | "overdue" | "open" | "creative" | "growth";
 
 export interface OpsDashboardProps {
   tasks: OpsTask[];
@@ -232,6 +232,8 @@ export function OpsDashboard(props: OpsDashboardProps) {
     if (filter === "blocked") return t.status === "blocked";
     if (filter === "overdue") return isOverdue(t, startedAt);
     if (filter === "open") return t.status !== "done";
+    if (filter === "creative") return t.category === "Creative" || t.category === "Brand";
+    if (filter === "growth") return t.category === "Marketing" || t.category === "Strategy" || t.category === "Social & Content";
     return true;
   });
 
@@ -243,8 +245,10 @@ export function OpsDashboard(props: OpsDashboardProps) {
 
   const FILTERS: [Filter, string][] = [
     ["all", "All"], ["open", "Open"], ["mine", viewerKind === "agency" ? "Agency" : "Mine"],
+    ["creative", "Creative"], ["growth", "Sales & funnel"],
     ["blocked", "Blocked"], ["overdue", "Overdue"],
   ];
+
 
   return (
     <div className={cn("space-y-6", props.className)}>
