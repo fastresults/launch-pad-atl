@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowRight, Check, Clock, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { HeavyLifting } from "./HeavyLifting";
 import type { DeliveryMode, OpsTask } from "@/lib/ops-runway";
 import {
   DEFAULT_RATE, RATE_CHOICES, RETAINER_DAYS, RETAINER_MONTHLY, RETAINER_MONTHS,
@@ -55,6 +56,8 @@ export function InvestmentCompare({
           ))}
         </div>
       </div>
+
+      <HeavyLifting tasks={tasks} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* ---------------------------------------------------------- self */}
