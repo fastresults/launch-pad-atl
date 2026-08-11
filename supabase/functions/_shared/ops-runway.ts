@@ -66,18 +66,26 @@ const DAYS: Day[] = [
   },
   {
     day: 3, theme: "Name your buyers, load the CRM",
-    objective: "Get specific about who buys and land the First-50 into a real CRM.",
+    objective: "Get specific about who buys and land the First-50 into GoHighLevel.",
     doneWhen: "50 named prospects in a live pipeline with an angle each.",
     assetKeys: ["customer_personas", "first_50_warm_list", "crm_pipeline_starter"],
     category: "Strategy",
     subs: [
-      ["crm-live", "Stand up the CRM", "A list in a spreadsheet is not a pipeline.", "CRM account live with stages created and the First-50 imported.", "agency"],
+      ["crm-live", "Stand up the CRM (GoHighLevel)", "A list in a spreadsheet is not a pipeline.", "GoHighLevel account live with stages created and the First-50 imported.", "agency"],
+      ["ghl-subaccount", "Create the GoHighLevel sub-account", "Everything else hangs off a correctly configured sub-account.", "Sub-account created from the agency snapshot with business profile, timezone, and users set.", "agency"],
+      ["ghl-pipeline", "Build the opportunity pipeline in GoHighLevel", "Deals stall in stages nobody defined.", "Pipeline created with named stages, written entry criteria, and one owner per stage.", "agency"],
+      ["ghl-custom-fields", "Add the GoHighLevel custom fields", "Data you don't capture on day one can't be reported on in month three.", "Source, segment, deal value, next step, and close date exist as custom fields and are required.", "agency"],
+      ["ghl-tags-lists", "Set the tags and smart lists", "One giant list gets one generic message.", "Smart lists saved for ICP tier, warm vs. cold, industry, and geography.", "agency"],
+      ["ghl-import-first50", "Import the First-50 into GoHighLevel", "The list only counts once it's in the system that chases it.", "All 50 contacts imported with source tags attached and no duplicates.", "agency"],
+      ["ghl-a2p", "Complete A2P 10DLC registration and buy the number", "Unregistered numbers get their texts silently dropped.", "Brand and campaign approved, number purchased, and a test SMS delivered.", "agency"],
+      ["ghl-email-domain", "Connect the sending domain in GoHighLevel", "Unauthenticated GHL email lands in spam.", "LC Email domain connected with SPF, DKIM, and DMARC passing on a test send.", "agency"],
       ["crm-fields", "Configure the CRM fields", "Data you don't capture on day one can't be reported on in month three.", "Source, segment, deal value, next step, and close date are required fields on every record.", "agency"],
       ["lead-sources", "Define and tag the lead sources", "Untagged leads make channel spend unreadable.", "Every record carries a source tag from a fixed, written list of channels.", "agency"],
       ["segments", "Build the working lists", "One giant list gets one generic message.", "Contacts segmented into ICP tier, warm vs. cold, industry, and geography.", "client"],
-      ["lead-score", "Write the qualified-lead rule", "Without a definition, everything looks like a lead.", "One paragraph defining a qualified lead, applied as a CRM filter or score.", "client"],
+      ["lead-score", "Write the qualified-lead rule", "Without a definition, everything looks like a lead.", "One paragraph defining a qualified lead, applied as a GoHighLevel smart list or score.", "client"],
       ["angles", "Write one angle per prospect", "Generic outreach is why week-three founders quit.", "Every one of the 50 rows has a reason-to-reach-out.", "client"],
     ],
+
 
   },
   {
