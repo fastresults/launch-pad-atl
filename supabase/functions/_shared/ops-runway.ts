@@ -68,7 +68,7 @@ const DAYS: Day[] = [
     day: 2, theme: "Sharpen the offer",
     objective: "Turn the concept into a priced, packaged, buyable offer with the messaging to sell it.",
     doneWhen: "You have a headline price, a one-page offer sheet, and 25 tuned prompts.",
-    assetKeys: ["value_proposition", "pricing_offer_sheet", "ai_prompt_library"],
+    assetKeys: ["value_proposition", "pricing_offer_sheet", "brand_messaging"],
     category: "Foundation",
     subs: [
       ["price", "Set the headline price", "You cannot sell, invoice, or forecast without a number.", "A single published price (or price band) you'd quote on a call today.", "client"],

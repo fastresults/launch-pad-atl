@@ -39,7 +39,7 @@ export const LAUNCH_14DAY_PLAN: LaunchDay[] = [
     theme: "Sharpen the offer",
     objective: "Turn the concept into a priced, packaged, buyable offer with the messaging to sell it.",
     doneWhen: "You have a headline price, a one-page offer sheet, and the messaging that carries it.",
-    assetKeys: ["value_proposition", "pricing_offer_sheet", "ai_prompt_library"],
+    assetKeys: ["value_proposition", "pricing_offer_sheet", "brand_messaging"],
     category: "Foundation",
   },
   {

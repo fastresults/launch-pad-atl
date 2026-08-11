@@ -56,7 +56,7 @@ type AssetTrack = "Introduction" | "Education" | "Tracking" | "Action";
 const ASSET_TRACK: Record<string, AssetTrack> = {
   executive_summary: "Introduction", vision_mission: "Introduction", problem_solution: "Introduction",
   ai_tool_stack_recommendation: "Education",
-  value_proposition: "Introduction", pricing_offer_sheet: "Action", ai_prompt_library: "Education",
+  value_proposition: "Introduction", pricing_offer_sheet: "Action",
   customer_personas: "Introduction", first_50_warm_list: "Tracking", crm_pipeline_starter: "Tracking",
   pre_sell_offer_test: "Action", landing_page_waitlist_test: "Action", presell_landing_prd: "Education",
   competitive_positioning: "Introduction", market_analysis: "Education",
