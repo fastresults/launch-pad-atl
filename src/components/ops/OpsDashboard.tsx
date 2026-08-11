@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Compass, Hammer, ListChecks, Map as MapIcon, Phone, Scale } from "lucide-react";
+import { Check, Compass, Hammer, ListChecks, Map as MapIcon, Phone, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
