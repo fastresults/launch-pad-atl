@@ -51,6 +51,7 @@ export async function fetchOpsRunway(auth: OpsAuth): Promise<OpsRunway> {
     canEdit: body.canEdit !== false,
     viewerKind: (body.viewerKind ?? "client") as OpsOwnerKind,
     platformRequest: (body.platformRequest ?? null) as PlatformRequest | null,
+    ventureName: (body.ventureName ?? null) as string | null,
   };
 }
 

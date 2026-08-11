@@ -106,6 +106,8 @@ export interface OpsRunway {
   state: OpsState | null;
   canEdit: boolean;
   viewerKind: OpsOwnerKind;
+  /** Company name, for surfaces outside the showcase shell. */
+  ventureName?: string | null;
 }
 
 /** Delivery stage of a step, defaulting for rows seeded before managed delivery. */
