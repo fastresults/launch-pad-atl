@@ -106,6 +106,7 @@ export function OpsChecklist(props: OpsChecklistProps) {
         const rows = visible.filter((t) => t.phase === p.phase);
         if (!all.length) return null;
         const prog = progressOf(all);
+        const ms = milestoneProgress(all);
         const stage = stageOf(p.phase);
         const expanded = openStages.includes(p.phase);
         const days = Array.from(new Set(rows.map((t) => t.day))).sort((a, b) => a - b);
@@ -127,26 +128,47 @@ export function OpsChecklist(props: OpsChecklistProps) {
                   <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${prog.pct}%` }} />
                 </div>
               </div>
-              <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{prog.done}/{prog.total}</span>
+              <span className="shrink-0 text-right text-[11px] tabular-nums text-muted-foreground">
+                {ms.total > 0 && <span className="block text-foreground/80">{ms.done} of {ms.total} major moves</span>}
+                {prog.done}/{prog.total} steps
+              </span>
             </button>
 
             {expanded && (
               <div className="space-y-4 border-t border-border/40 px-3 py-3 sm:px-4">
                 {days.map((d) => (
-                  <div key={d} className="space-y-1.5">
+                  <div key={d} className="space-y-2">
                     <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{dayLabel(d)}</div>
-                    {rows.filter((t) => t.day === d).map((t) => (
-                      <OpsTaskRow
-                        key={t.id} task={t} notes={notesFor.get(t.id) ?? []}
-                        canEdit={canEdit} viewerKind={viewerKind} startedAt={startedAt}
-                        busy={props.busyTaskId === t.id}
-                        onStatus={props.onStatus} onOwner={props.onOwner}
-                        onNote={props.onNote} onProof={props.onProof} onSnooze={props.onSnooze}
-                        onOpenAsset={props.onOpenAsset} assetTitle={props.assetTitle} allTasks={tasks}
-                      />
-                    ))}
+                    {groupByMilestone(rows.filter((t) => t.day === d)).map((g, gi) => {
+                      const row = (t: OpsTask, variant: "milestone" | "supporting") => (
+                        <OpsTaskRow
+                          key={t.id} task={t} notes={notesFor.get(t.id) ?? []}
+                          canEdit={canEdit} viewerKind={viewerKind} startedAt={startedAt}
+                          busy={props.busyTaskId === t.id} variant={variant}
+                          onStatus={props.onStatus} onOwner={props.onOwner}
+                          onNote={props.onNote} onProof={props.onProof} onSnooze={props.onSnooze}
+                          onOpenAsset={props.onOpenAsset} assetTitle={props.assetTitle} allTasks={tasks}
+                        />
+                      );
+                      return (
+                        <div key={g.milestone?.id ?? `g${gi}`} className="space-y-1.5">
+                          {g.milestone && row(g.milestone, "milestone")}
+                          {g.supporting.length > 0 && (
+                            <div className={cn("space-y-1", g.milestone && "ml-3 border-l border-border/40 pl-3 sm:ml-4 sm:pl-4")}>
+                              {g.milestone && (
+                                <p className="pt-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                                  Supporting steps
+                                </p>
+                              )}
+                              {g.supporting.map((t) => row(t, "supporting"))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ))}
+
                 {!rows.length && (
                   <p className="py-3 text-center text-xs text-muted-foreground">Nothing here under this filter.</p>
                 )}
