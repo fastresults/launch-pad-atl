@@ -278,16 +278,17 @@ export function buildOpsCatalog(): OpsCatalogTask[] {
       asset_keys: d.assetKeys,
       owner_kind: "client",
     });
-    for (const [slug, title, why, doneWhen, owner] of d.subs) {
+    for (const [slug, title, why, doneWhen, owner, category] of d.subs) {
       out.push({
         phase, day: d.day,
         task_key: `day-${d.day}.${slug}`,
         title, why, done_when: doneWhen,
-        category: d.category,
+        category: category ?? d.category,
         asset_keys: d.assetKeys,
         owner_kind: owner,
       });
     }
+
   }
   for (const [slug, title, why, doneWhen, category, owner, day] of POST_LAUNCH) {
     out.push({
