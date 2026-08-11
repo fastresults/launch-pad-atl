@@ -13,9 +13,11 @@ type Cluster = {
   key: string;
   label: string;
   match: RegExp;
-  /** What the founder has to become good at to do this alone. */
+  /** What the build already delivered — the starting line, not new scope. */
+  have: string;
+  /** What carrying the rest alone actually looks like for the founder. */
   you: string;
-  /** The role that does it on our side, and the artifact you receive. */
+  /** The role that carries it on our side, and the state you end up in. */
   we: string;
   role: string;
 };
@@ -23,66 +25,74 @@ type Cluster = {
 const CLUSTERS: Cluster[] = [
   {
     key: "entity",
-    label: "Entity, EIN and the legal base",
+    label: "Entity filed and the legal base in force",
     match: /entity|ein|operating-agreement|registered-agent|license|insurance|state|contract|msa|terms|privacy/,
-    you: "Read state rules, pick a structure, file it, and hope the operating agreement holds later.",
-    we: "Structure chosen, filed and documented — with the agreement and contracts drafted around how you actually sell.",
+    have: "Recommended structure, and terms written around how your offer actually sells.",
+    you: "Work out the state's filing path yourself, chase the EIN and licences, and hope the paperwork matches what you sell.",
+    we: "Filed, EIN issued, agent and licences in place, and your agreement and contracts executed — the recommendation turned into a real entity.",
     role: "Formation specialist",
   },
   {
     key: "books",
-    label: "Banking, books and QuickBooks",
+    label: "Books configured to your model",
     match: /bank|qbo|quickbooks|chart-of-accounts|bookkeep|invoice|payment|stripe|tax|payroll/,
-    you: "Open accounts, wire a chart of accounts you've never built, reconcile it monthly.",
-    we: "QuickBooks live with a chart of accounts built for your model, feeds connected, invoicing tested end to end.",
+    have: "Your model, price points and revenue lines already defined.",
+    you: "Open the accounts, map a chart of accounts to lines you've never booked, and reconcile it every month.",
+    we: "QuickBooks configured to those exact revenue lines, banking and payments connected, invoicing tested end to end.",
     role: "Bookkeeping lead",
   },
   {
     key: "offer",
-    label: "Offer and pricing",
+    label: "Offer pressure-tested on live buyers",
     match: /offer|price|pricing|proposal|package|guarantee/,
-    you: "Guess a number, discount when challenged, rebuild the offer after the first ten calls.",
-    we: "A priced offer with the terms, guarantee and objection language tested against real buyers.",
+    have: "A priced offer, guarantee and positioning from the build.",
+    you: "Take it to market cold, discount under pressure, and rewrite it after the first ten calls go sideways.",
+    we: "The written offer tested against real conversations — terms, guarantee and objection language tightened, then locked.",
     role: "Offer strategist",
   },
   {
     key: "crm",
-    label: "CRM, A2P and automation",
+    label: "CRM stood up and loaded",
     match: /ghl|crm|a2p|pipeline|automation|sequence|nurture|sms|dialer/,
-    you: "Learn a CRM, register A2P, build pipelines and automations that mostly misfire the first time.",
-    we: "Sub-account built, A2P approved, pipelines and follow-up automations live and tested with real records.",
+    have: "Pipeline logic, follow-up sequences and messaging already written.",
+    you: "Learn the platform, register A2P, and rebuild the written sequences into automations that misfire the first few passes.",
+    we: "Sub-account built, A2P approved, your sequences loaded into live pipelines and tested against real records.",
     role: "Systems engineer",
   },
   {
     key: "funnel",
-    label: "Lists, leads and funnels",
+    label: "Funnel assembled and tracked",
     match: /funnel|lead|list|magnet|capture|retarget|landing/,
-    you: "Assemble a lead magnet, a form and a follow-up, then wonder why nothing converts.",
-    we: "Capture funnel, magnet, nurture and retargeting wired together — with tracking that proves what worked.",
+    have: "Lead magnet concept, capture copy and the nurture arc.",
+    you: "Stitch the pieces into a builder, wire the forms, and guess why the numbers stay flat.",
+    we: "Magnet, capture, nurture and retargeting connected end to end — with tracking that proves which step converts.",
     role: "Growth lead",
   },
   {
     key: "site",
-    label: "Website and conversion copy",
+    label: "Website built from your PRD",
     match: /site|website|prd|domain|hosting|analytics|seo/,
-    you: "Wrangle a builder, write your own copy, and settle for a page that looks fine and sells nothing.",
-    we: "A conversion-built site with studio art direction, written copy and analytics reading properly on day one.",
+    have: "The website PRD, art direction and written page copy.",
+    you: "Translate the PRD into a builder yourself, and settle for a page that drifts from the direction you approved.",
+    we: "Built to the PRD without dilution, live on your domain, analytics and search reading properly on day one.",
     role: "Creative director + copywriter",
   },
   {
     key: "brand",
-    label: "Brand system, elevated past the foundation set",
+    label: "Brand system elevated and produced",
     match: /brand|logo|collateral|guideline|card|letterhead|signoff|sign-off|art-direction|foundation-grade/,
-    you: "Keep the generated set as-is and hope it holds together once real customers look closely.",
-    we: "The foundation graded against your category, an art direction written, the mark and system refined, and collateral produced to it at print standard.",
+    have: "Your mark, palette, type, voice and the full collateral set.",
+    you: "Run the set as delivered and watch it drift as each new piece gets made in a different tool.",
+    we: "The set graded against your category, an art direction written over it, the system refined and collateral produced to print standard.",
     role: "Creative director + brand designer",
   },
   {
     key: "campaign",
-    label: "Campaign creative, raised to agency grade",
+    label: "Campaign elevated and run",
     match: /campaign|ad|content|social|creative|post|cover|launch|imagery|poster|motion/,
-    you: "Publish the starter posters and stock frames — the work that reads as new to anyone who buys often.",
-    we: "Owned imagery shot or commissioned, the poster and ad system rebuilt to the art direction, and the standard held across eight weeks.",
+    have: "The eight-week campaign arc and your foundation poster set.",
+    you: "Publish the starter frames as-is, then lose the thread around week three when the calendar gets busy.",
+    we: "Owned imagery commissioned, the poster system rebuilt to the art direction, and the arc actually run for eight weeks.",
     role: "Art buyer + campaign director",
   },
 ];
@@ -124,12 +134,13 @@ export function HeavyLifting({ tasks }: { tasks: OpsTask[] }) {
         {rows.length} major moves — {totalSteps} steps, {hours(totalMinutes)} of real work
       </h3>
       <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
-        These are the same milestones either way. The only question is who carries them.
+        The foundation is already yours. These are the moves that turn it into a business that
+        runs — the same milestones either way. The only question is who carries them.
       </p>
 
       <div className="mt-5 hidden grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 px-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:grid">
-        <span>You do it</span>
-        <span className="text-primary">We do it</span>
+        <span>You carry it from here</span>
+        <span className="text-primary">We carry it from here</span>
       </div>
 
       <ul className="mt-2 space-y-2.5">
@@ -141,9 +152,12 @@ export function HeavyLifting({ tasks }: { tasks: OpsTask[] }) {
                 {r.count} steps · {hours(r.minutes)}
               </span>
             </div>
-            <div className="mt-2 grid gap-2.5 sm:grid-cols-2">
+            <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/80">
+              <span className="text-foreground/60">Already yours from the build:</span> {r.have}
+            </p>
+            <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
               <p className="text-xs leading-relaxed text-muted-foreground">
-                <span className="sm:hidden font-medium text-foreground/80">You do it: </span>
+                <span className="sm:hidden font-medium text-foreground/80">You carry it: </span>
                 {r.you}
               </p>
               <div className="flex gap-2 rounded-lg border border-primary/25 bg-primary/[0.05] px-3 py-2">
