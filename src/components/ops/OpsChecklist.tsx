@@ -12,7 +12,8 @@ import { groupByMilestone, isMilestone, leadOf, milestoneProgress } from "@/lib/
 type Lens = "all" | "mine" | "theirs" | "open" | "major" | "welead" | "must" | "sell" | "stuck" | "late" | "done";
 
 
-export interface OpsChecklistProps {
+export interface OpsChecklistProps extends DeliveryHandlers {
+  deliveryMode?: DeliveryMode | null;
   tasks: OpsTask[];
   notes: OpsNote[];
   startedAt?: string | null;
