@@ -151,9 +151,14 @@ export function OpsDashboard(props: OpsDashboardProps) {
 
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">Operationalize</h2>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-primary">
+              Phase 2 of 2 · Foundation complete
+            </p>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight">Operationalize</h2>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Turning the foundation into a running business — one step at a time.
+              Your foundation is built — the offer, brand system, site direction and copy, campaign arc
+              and operating assets are done and yours. Nothing here recreates it. This phase puts it into
+              the world: filing, accounts, systems, and the first sales.
               Right now you're in <span className="text-foreground">{stage.when} — {stage.name}</span>.
             </p>
           </div>
