@@ -36,8 +36,9 @@ type Day = {
   doneWhen: string;
   assetKeys: string[];
   category: OpsCategory;
-  /** [slug, title, why, doneWhen, owner] */
-  subs: [string, string, string, string, OpsOwnerKind][];
+  /** [slug, title, why, doneWhen, owner, category?] — category defaults to the day's. */
+  subs: [string, string, string, string, OpsOwnerKind, OpsCategory?][];
+
 };
 
 const DAYS: Day[] = [
