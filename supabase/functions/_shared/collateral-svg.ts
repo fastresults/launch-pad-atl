@@ -1402,11 +1402,24 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   const cols = 3, rowsL = 2;
   const tGap = g.gutter * 2;
   const tileW = (g.content - tGap * (cols - 1)) / cols;
-  const footNote = step(ad, 6);
-  const gridH = H - g.M - top - footNote;
+
+  // The footnote is measured first and pinned to the bottom margin by its real
+  // drawn height, so a two-line wrap grows upward instead of into the captions.
+  const footText = "Use the variant whose ground it was built for. Never redraw, restack or re-space the lockup.";
+  const footSize = step(ad, -0.6);
+  const footWidth = g.span(Math.round(ad.grid.columns * 0.7));
+  const footProbe = T.block(footText, g.M, 0, footSize, footWidth, muted, { leading: ad.type.bodyLeading, maxLines: 2 });
+  const footH = footProbe.height;
+  const footTop = H - g.M - footH;
+
+  // Caption band is the measured label + note stack, not a fixed guess.
+  const capLabel = Math.max(...tiles.map((t) => T.lineSize(t.label, step(ad, -1.1), tileW, { family: "head", weight: 700 })));
+  const capNote = Math.max(...tiles.map((t) => T.lineSize(t.note, step(ad, -1.4), tileW)));
+  const capBand = step(ad, 0.4) + capLabel * 1.24 + step(ad, 0.2) + capNote * 1.24 + step(ad, 0.6);
+
+  const gridH = footTop - step(ad, 1.2) - top;
   const tileH = (gridH - tGap * (rowsL - 1)) / rowsL;
-  const capBand = step(ad, 3.8);
-  const artH = tileH - capBand;
+  const artH = Math.max(tileH * 0.35, tileH - capBand);
   pages.push({
     name: "guidelines-2-logo", width: W, height: H,
     svg: page(W, H, defs, [
@@ -1424,12 +1437,10 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
           f.svg(),
         ].join("");
       }),
-      T.block(
-        "Use the variant whose ground it was built for. Never redraw, restack or re-space the lockup.",
-        g.M, H - g.M - step(ad, 0.6), step(ad, -0.6), g.span(Math.round(ad.grid.columns * 0.7)), muted, { leading: ad.type.bodyLeading, maxLines: 2 },
-      ).svg,
+      T.block(footText, g.M, footTop + footProbe.size, footSize, footWidth, muted, { leading: ad.type.bodyLeading, maxLines: 2 }).svg,
     ].join("")),
   });
+
 
   // ── 02 Clear space and minimum size ───────────────────────────────────────
   const hClear = head("Clear space & minimum size", "02");
