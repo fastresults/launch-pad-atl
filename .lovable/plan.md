@@ -35,8 +35,9 @@ Every row carries: the day or window it belongs to, why it matters in one line, 
 ## What the viewer sees
 
 - Clicking **Operationalize** in the sidebar (desktop) or bottom nav (mobile) opens a full reading-pane view — not a modal.
-- Header: "Your foundation is drafted. Here's what turns it into a business." Progress ring: *x of 22 complete*, plus a per-wave bar.
-- Three collapsible waves; each item is a checkbox row with the one-line why, a "done means…" hint, an optional owner/date, and a link chip to the related asset when one exists.
+- Header: "Your foundation is drafted. Here's what turns it into a business." Progress ring for the whole runway, plus a bar per phase (Week 1, Week 2, Days 15–30, Days 31–90).
+- Four collapsible phases; inside each, one row per day (or window) showing the cadence theme, objective, "done when", a category dot, sub-step checkboxes, an optional owner/date, and link chips to the related assets.
+- Week 1 and Week 2 rows are visibly the same days the founder saw in the Launch Cadence, so the runway reads as the continuation of that timeline, not a new list.
 - Checking items persists locally per share token, so a founder can come back to it. Progress never leaves their browser (no login on a share link).
 - Sticky footer bar: **Request an operations consultation** (opens the existing modal with the form) and **Call 929-234-7355**. The modal is also still reachable, just never auto-opened.
 - Export: the runway exports to PDF/Word through the existing section export menu, with checked state included.
