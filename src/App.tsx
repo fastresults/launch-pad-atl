@@ -29,6 +29,7 @@ const PrivacyPage = lazy(() => import("@/routes/privacy"));
 const TermsPage = lazy(() => import("@/routes/terms"));
 const UnsubscribePage = lazy(() => import("@/routes/unsubscribe"));
 const VentureSharePage = lazy(() => import("@/routes/v.$token"));
+const VentureEngagePage = lazy(() => import("@/routes/v.$token.engage"));
 const WebinarPage = lazy(() => import("@/routes/webinar"));
 const OneOnOnePage = lazy(() => import("@/routes/one-on-one"));
 const PrivateTuesdayPage = lazy(() => import("@/routes/private-tuesday"));
@@ -142,6 +143,7 @@ export default function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/unsubscribe" element={<UnsubscribePage />} />
         <Route path="/v/:token" element={<VentureSharePage />} />
+        <Route path="/v/:token/engage" element={<VentureEngagePage />} />
         <Route path="/webinar" element={<WebinarPage />} />
         <Route path="/one-on-one" element={<OneOnOnePage />} />
         <Route path="/private-tuesday" element={<PrivateTuesdayPage />} />
