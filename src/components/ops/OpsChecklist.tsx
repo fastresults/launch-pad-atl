@@ -141,19 +141,38 @@ export function OpsChecklist(props: OpsChecklistProps) {
 
             {expanded && (
               <div className="space-y-4 border-t border-border/40 px-3 py-3 sm:px-4">
-                {days.map((d) => (
+                {days.map((d) => {
+                  const dayRows = rows.filter((t) => t.day === d);
+                  const lanes = Array.from(new Set(dayRows.map((t) => categoryLabel(t.category))));
+                  const oneLane = lanes.length === 1 ? lanes[0] : null;
+                  const agencyNote = dayAgencyNote(dayRows);
+                  const leadSummary = dayLeadSummary(dayRows);
+                  // One reason per sentence per day — repeats stay quiet.
+                  const reasons = dedupeReasons(dayRows, tasks);
+
+                  return (
                   <div key={d} className="space-y-2">
-                    <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                       <span className="h-px w-4 bg-border/70" />
-                      {dayLabel(d)}
+                      <span>{dayLabel(d)}</span>
+                      {oneLane && <span className="normal-case tracking-normal text-foreground/70">{oneLane}</span>}
                       <span className="h-px flex-1 bg-border/40" />
+                      {leadSummary && (
+                        <span className="normal-case tracking-normal text-muted-foreground/80">{leadSummary}</span>
+                      )}
                     </div>
-                    {groupByMilestone(rows.filter((t) => t.day === d)).map((g, gi) => {
+                    {agencyNote && (
+                      <p className="max-w-2xl pl-6 text-xs text-muted-foreground">
+                        <span className="text-foreground/80">Where our experience saves you:</span> {agencyNote}.
+                      </p>
+                    )}
+                    {groupByMilestone(dayRows).map((g, gi) => {
                       const row = (t: OpsTask, variant: "milestone" | "supporting") => (
                         <OpsTaskRow
                           key={t.id} task={t} notes={notesFor.get(t.id) ?? []}
                           canEdit={canEdit} viewerKind={viewerKind} startedAt={startedAt}
                           busy={props.busyTaskId === t.id} variant={variant}
+                          hideCategory={!!oneLane} suppressReason={!reasons.has(t.id)}
                           onStatus={props.onStatus} onOwner={props.onOwner}
                           onNote={props.onNote} onProof={props.onProof} onSnooze={props.onSnooze}
                           onOpenAsset={props.onOpenAsset} assetTitle={props.assetTitle} allTasks={tasks}
@@ -163,6 +182,7 @@ export function OpsChecklist(props: OpsChecklistProps) {
                           onReview={props.onReview} onHandoff={props.onHandoff}
                         />
                       );
+
                       return (
                         <div key={g.milestone?.id ?? `g${gi}`} className="space-y-1.5">
                           {g.milestone && row(g.milestone, "milestone")}
