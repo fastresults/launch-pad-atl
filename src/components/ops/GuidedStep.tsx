@@ -12,7 +12,7 @@ import { StepExplainer } from "./StepExplainer";
 import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
 import { OpsGlyph } from "./OpsGlyph";
 import { OpsStageArt, OpsClearedMark } from "./OpsStageArt";
-import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
+import { LEAD_META, agencySkillNote, isMilestone, leadOf } from "@/lib/ops-significance";
 
 export interface GuidedStepProps extends DeliveryHandlers {
   deliveryMode?: DeliveryMode | null;
