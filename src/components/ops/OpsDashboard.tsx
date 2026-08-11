@@ -243,8 +243,10 @@ export function OpsDashboard(props: OpsDashboardProps) {
 
   const FILTERS: [Filter, string][] = [
     ["all", "All"], ["open", "Open"], ["mine", viewerKind === "agency" ? "Agency" : "Mine"],
+    ["creative", "Creative"], ["growth", "Sales & funnel"],
     ["blocked", "Blocked"], ["overdue", "Overdue"],
   ];
+
 
   return (
     <div className={cn("space-y-6", props.className)}>
