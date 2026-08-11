@@ -70,6 +70,9 @@ export function OpsTaskRow(props: TaskRowProps) {
   const major = props.variant === "milestone" || (props.variant !== "supporting" && isMilestone(task));
   const lead = leadOf(task);
   const leadMeta = LEAD_META[lead];
+  // Specific before generic, and never the same sentence twice in a group.
+  const reason = props.suppressReason ? null : milestoneReason(task, props.allTasks ?? [task]);
+
   // Managed delivery only shows once the venture has retained the team.
   const engaged = props.deliveryMode === "retained";
   const managed = engaged && task.owner_kind === "agency";
