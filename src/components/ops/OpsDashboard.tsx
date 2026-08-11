@@ -3,7 +3,7 @@ import { Check, Compass, Hammer, ListChecks, Map as MapIcon, Phone, Scale } from
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  currentRunwayDay, isOverdue, progressOf,
+  currentRunwayDay, isOverdue, progressOf, FOUNDATION_DELIVERED,
   type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask, type OpsUpdate,
 } from "@/lib/ops-runway";
 import { activeStage, stageOf } from "@/lib/ops-guided";
