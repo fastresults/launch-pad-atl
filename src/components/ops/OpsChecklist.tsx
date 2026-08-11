@@ -148,6 +148,10 @@ export function OpsChecklist(props: OpsChecklistProps) {
                           onStatus={props.onStatus} onOwner={props.onOwner}
                           onNote={props.onNote} onProof={props.onProof} onSnooze={props.onSnooze}
                           onOpenAsset={props.onOpenAsset} assetTitle={props.assetTitle} allTasks={tasks}
+                          deliveryMode={props.deliveryMode}
+                          onAssign={props.onAssign} onCommittedDate={props.onCommittedDate}
+                          onDeliveryStatus={props.onDeliveryStatus} onWorkProduct={props.onWorkProduct}
+                          onReview={props.onReview} onHandoff={props.onHandoff}
                         />
                       );
                       return (
