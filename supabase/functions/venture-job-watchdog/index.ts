@@ -19,10 +19,109 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // watchdog kills healthy in-flight work and re-runs it — the old 3-minute
 // window did exactly that and froze runs at "62 of 63".
 const STALL_MS = 6 * 60 * 1000;
+// A single document's own row is touched at the start of its run and at every
+// checkpoint, so it can be judged on a tighter clock than a whole job.
+const DOC_STALL_MS = 4 * 60 * 1000;
 // Paused jobs are swept back into a retry-only run on a slower cadence so one
 // stubborn asset can't strand a founder, without burning credits in a loop.
 const PAUSED_SWEEP_MS = 20 * 60 * 1000;
 const MAX_PAUSED_SWEEPS = 4;
+// Per-document recovery budget. Past this we stop resurrecting the same asset
+// and park it with a recorded failure so it surfaces in triage.
+const MAX_DOC_RECOVERIES = 3;
+
+/**
+ * Recover documents wedged in `generating`.
+ *
+ * A checkpointed draft is never thrown away: the draft/refine split exists so a
+ * dropped phase-two worker publishes what it had. We re-invoke refine once, and
+ * if that also dies we promote the draft to complete with the unmet work
+ * recorded. Only a document with nothing written is failed for the retry engine.
+ */
+async function recoverStuckDocuments(supabase: any, cutoff: string, snapshotId?: string) {
+  let q = supabase
+    .from("venture_documents")
+    .select("id, snapshot_id, document_type, content, metadata, generation_attempts, word_count")
+    .eq("status", "generating")
+    .lt("updated_at", cutoff)
+    .limit(50);
+  if (snapshotId) q = q.eq("snapshot_id", snapshotId);
+  const { data: rows } = await q;
+  let handled = 0;
+
+  for (const row of rows ?? []) {
+    const metadata = (row.metadata ?? {}) as Record<string, unknown>;
+    const recoveries = Number(metadata.recovery_attempts ?? 0);
+    const draft = typeof row.content === "string" ? row.content.trim() : "";
+    handled++;
+
+    if (draft && recoveries < 1) {
+      // Phase two never landed — run it again on a fresh wall clock.
+      await supabase.from("venture_documents").update({
+        metadata: { ...metadata, recovery_attempts: recoveries + 1, recovered_at: new Date().toISOString() },
+        updated_at: new Date().toISOString(),
+      }).eq("id", row.id);
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/venture-generate-document`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-key": SERVICE_KEY,
+            Authorization: `Bearer ${SERVICE_KEY}`,
+          },
+          body: JSON.stringify({ snapshotId: row.snapshot_id, documentType: row.document_type, phase: "refine" }),
+        });
+      } catch (e) {
+        console.error("refine recovery failed", e);
+      }
+      continue;
+    }
+
+    if (draft) {
+      // Publish the checkpoint rather than lose it.
+      await supabase.from("venture_documents").update({
+        status: "complete",
+        word_count: row.word_count ?? draft.split(/\s+/).filter(Boolean).length,
+        last_error: null,
+        metadata: {
+          ...metadata,
+          quality_gaps: ["refine_incomplete"],
+          published_from: "checkpoint",
+        },
+      }).eq("id", row.id);
+      continue;
+    }
+
+    const attempts = Number(row.generation_attempts ?? 0);
+    const exhausted = attempts >= MAX_DOC_RECOVERIES;
+    await supabase.from("venture_documents").update({
+      status: "failed",
+      last_error: exhausted
+        ? "We tried this asset several times and it kept dropping. Retry it or skip it."
+        : "Generation stalled — worker dropped.",
+    }).eq("id", row.id);
+
+    if (exhausted) {
+      try {
+        const { data: already } = await supabase
+          .from("venture_generation_failures")
+          .select("id")
+          .eq("snapshot_id", row.snapshot_id)
+          .eq("document_type", row.document_type)
+          .maybeSingle();
+        if (!already) {
+          await supabase.from("venture_generation_failures").insert({
+            snapshot_id: row.snapshot_id,
+            document_type: row.document_type,
+            error: `Recovery budget exhausted after ${attempts} attempts.`,
+          });
+        }
+      } catch { /* best effort */ }
+    }
+  }
+  return handled;
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
