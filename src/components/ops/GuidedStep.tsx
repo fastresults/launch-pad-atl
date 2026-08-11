@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { OpsNote, OpsOwnerKind, OpsStatus, OpsTask } from "@/lib/ops-runway";
 import { OWNER_LABEL, estimateLabel, guidedQueue, stageOf, stepPosition } from "@/lib/ops-guided";
-import { CRITICALITY, TIPS, criticalityOf } from "@/lib/ops-criticality";
+import { CRITICALITY, criticalityOf, criticalityTip, minutesTip, ownerTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
 
@@ -79,14 +79,14 @@ export function GuidedStep(props: GuidedStepProps) {
           <span className="text-primary">{stage.when} · {stage.name}</span>
           <span>Step {pos.index} of {pos.total}</span>
           {est && (
-            <InfoTip tip={TIPS.minutes}>
+            <InfoTip tip={minutesTip(task, est!)}>
               <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{est}</span>
             </InfoTip>
           )}
-          <InfoTip tip={theirs ? TIPS.ownerAgency : TIPS.ownerYou}>
+          <InfoTip tip={ownerTip(task, !theirs)}>
             <span>{theirs ? `${OWNER_LABEL(task.owner_kind, viewerKind)} has this` : "This one's yours"}</span>
           </InfoTip>
-          <InfoTip tip={crit.tip} className={cn("rounded-full border px-2 py-0.5 normal-case tracking-normal", crit.badge)}>
+          <InfoTip tip={criticalityTip(task, tasks)} className={cn("rounded-full border px-2 py-0.5 normal-case tracking-normal", crit.badge)}>
             <span>{crit.label}</span>
           </InfoTip>
         </div>

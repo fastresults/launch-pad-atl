@@ -10,7 +10,7 @@ import {
   type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
 } from "@/lib/ops-runway";
 import { OWNER_LABEL, estimateLabel, isSnoozed } from "@/lib/ops-guided";
-import { CRITICALITY, TIPS, criticalityOf } from "@/lib/ops-criticality";
+import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, minutesTip, ownerTip, statusTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
 
@@ -89,25 +89,25 @@ export function OpsTaskRow(props: TaskRowProps) {
           </button>
 
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-            <InfoTip tip={TIPS.category}>
+            <InfoTip tip={categoryTip(task)}>
               <span className="inline-flex items-center gap-1.5">
                 <span className={cn("h-1.5 w-1.5 rounded-full", OPS_CATEGORY_DOT[task.category] ?? "bg-muted")} />
                 {task.category}
               </span>
             </InfoTip>
-            <InfoTip tip={crit.tip} className={cn("rounded-full border px-1.5 py-px", crit.badge)}>
+            <InfoTip tip={criticalityTip(task, props.allTasks ?? [task])} className={cn("rounded-full border px-1.5 py-px", crit.badge)}>
               <span>{crit.short}</span>
             </InfoTip>
-            <InfoTip tip={task.owner_kind === viewerKind ? TIPS.ownerYou : TIPS.ownerAgency}>
+            <InfoTip tip={ownerTip(task, task.owner_kind === viewerKind)}>
               <span>{OWNER_LABEL(task.owner_kind, viewerKind)}</span>
             </InfoTip>
             {!done && task.status !== "todo" && (
-              <InfoTip tip={TIPS.status[task.status] ?? ""} className={cn("rounded-full border px-1.5 py-px", STATUS_CLASS[task.status])}>
+              <InfoTip tip={statusTip(task, PLAIN_STATUS[task.status])} className={cn("rounded-full border px-1.5 py-px", STATUS_CLASS[task.status])}>
                 <span>{PLAIN_STATUS[task.status]}</span>
               </InfoTip>
             )}
-            {snoozed && <InfoTip tip={TIPS.snoozed}><span>Put off for now</span></InfoTip>}
-            {est && <InfoTip tip={TIPS.minutes}><span>{est}</span></InfoTip>}
+            {snoozed && <InfoTip tip={`"${task.title}" is put off for now. ${TIPS.snoozed}`}><span>Put off for now</span></InfoTip>}
+            {est && <InfoTip tip={minutesTip(task, est)}><span>{est}</span></InfoTip>}
             {due && !done && (
               <span className={cn("inline-flex items-center gap-1", overdue && "text-destructive")}>
                 <Clock className="h-3 w-3" />
