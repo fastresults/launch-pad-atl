@@ -122,7 +122,8 @@ export function InvestmentCompare({
         {/* ------------------------------------------------------ retained */}
         <div className="relative flex flex-col overflow-hidden rounded-2xl border border-primary/40 bg-primary/[0.04] p-5 shadow-lg shadow-primary/5 ring-1 ring-primary/10 sm:p-6">
           <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+          <OpsStageMasthead phase={4} className="w-[38%] opacity-[0.16] text-primary" />
+          <div className="relative flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
             <Sparkles className="h-3.5 w-3.5" /> Adam's team builds it
           </div>
           <h3 className="mt-2 text-lg font-semibold tracking-tight">Done with you, on committed dates</h3>
