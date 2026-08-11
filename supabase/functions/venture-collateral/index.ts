@@ -11,6 +11,8 @@ import { requireUser, requireSnapshotOwner } from "../_shared/auth.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { rasterizeSvgToBytes } from "../_shared/logo-raster.ts";
 import { isolateSymbol } from "../_shared/logo-geometry.ts";
+import { traceLogo } from "../_shared/logo-trace.ts";
+
 
 import {
   COLLATERAL_KINDS,
