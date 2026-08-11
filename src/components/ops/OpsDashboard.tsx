@@ -172,6 +172,18 @@ export function OpsDashboard(props: OpsDashboardProps) {
           </div>
         </div>
 
+        <div className="relative mt-4 flex flex-wrap items-center gap-1.5">
+          {FOUNDATION_DELIVERED.map((item) => (
+            <span key={item}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-[11px] text-muted-foreground">
+              <Check className="h-3 w-3 text-primary" />{item}
+            </span>
+          ))}
+          <span className="text-[11px] text-muted-foreground/80">Already done. This runway builds on it.</span>
+        </div>
+
+
+
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] uppercase tracking-wide text-muted-foreground">
           {stuck > 0 && <span className="text-destructive">{stuck} stuck</span>}
