@@ -5,10 +5,11 @@ import { toast } from "sonner";
 import { OpsDashboard } from "@/components/ops/OpsDashboard";
 import CreativeSignoffBoard from "@/components/creative/CreativeSignoffBoard";
 import {
-  addOpsNote, dismissOpsIntro, fetchOpsRunway, setOpsOwner, setOpsProof, setOpsStatus,
+  addOpsNote, dismissOpsIntro, fetchOpsRunway, requestOpsHandoff, reviewOpsWorkProduct,
+  setBlendedRate, setDeliveryMode, setOpsOwner, setOpsProof, setOpsStatus,
   snoozeOpsTask, type OpsAuth,
 } from "@/lib/ops.functions";
-import type { OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
+import type { DeliveryMode, OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
 import type { SharePayload } from "@/lib/venture-share.functions";
 
 /**
