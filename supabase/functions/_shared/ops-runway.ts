@@ -257,6 +257,11 @@ const POST_LAUNCH: [string, string, string, string, OpsCategory, OpsOwnerKind, 1
   ["pricing-review", "Revisit pricing against win-loss", "Your launch price was a hypothesis.", "Price adjusted or explicitly confirmed using real win-loss data.", "Foundation", "client", 31],
   ["first-hire", "Scope the first hire or contractor", "The bottleneck at day 60 is always you.", "Role scoped with a 30-day scorecard and a budget.", "Operations", "client", 31],
   ["quarter-plan", "Write the next quarter's plan", "Ninety days without a target drifts.", "One page: the target number, the three bets, and what you'll stop doing.", "Strategy", "client", 31],
+  ["funnel-read", "Read the funnel end to end", "Averages hide the one step that's leaking.", "Visitors, leads, calls, proposals, and closes counted for the month, with the worst step named.", "Marketing", "agency", 15],
+  ["list-hygiene", "Install the list-hygiene rhythm", "A dirty list quietly kills your sending reputation.", "Monthly pass on bounces, unsubscribes, and a re-engagement send to the cold segment.", "Marketing", "agency", 31],
+  ["creative-refresh", "Refresh the creative against results", "Ad and post fatigue is measurable — and fixable.", "Lowest-performing creative replaced using the brand kit, with before/after numbers.", "Creative", "agency", 31],
+  ["brand-audit", "Audit brand consistency across surfaces", "Six weeks of shipping is how brands drift.", "Every live surface checked against the style system; the exceptions fixed or documented.", "Creative", "agency", 31],
+
 ];
 
 export function buildOpsCatalog(): OpsCatalogTask[] {
