@@ -28,6 +28,63 @@ async function sha256(input: string) {
 
 const STATUSES = new Set(["todo", "in_progress", "waiting_client", "blocked", "done"]);
 const OWNERS = new Set(["client", "agency"]);
+const DELIVERY_STATUSES = new Set(["not_started", "in_progress", "in_review", "delivered", "blocked"]);
+const MODES = new Set(["self", "retained", "mixed"]);
+
+/**
+ * Work a first-time founder cannot do at a usable standard. Mirrors
+ * src/lib/ops-investment.ts so the gate's promise and the ownership rewrite
+ * agree on what "specialist" means.
+ */
+const SPECIALIST = [
+  /entity|operating-agreement|registered-agent|incorporat/,
+  /ein|tax|accountant|bookkeep/,
+  /qbo|quickbooks|chart-of-accounts|reconcil/,
+  /bank|stripe|payment|merchant|invoice/,
+  /ghl|crm|a2p|pipeline|automation|workflow/,
+  /funnel|lead-magnet|nurture|retarget|list-build|segment/,
+  /site|website|landing|prd|domain|dns|hosting/,
+  /brand|logo|collateral|guideline|style-system/,
+  /campaign|ad-|ads|creative|content|social|calendar/,
+  /contract|msa|terms|privacy|compliance|insurance|license/,
+  /offer|price|pricing|proposal|script/,
+];
+
+const isSpecialist = (t: any) => {
+  const slug = `${String(t.task_key ?? "").split(".").pop()} ${t.title ?? ""}`.toLowerCase();
+  return SPECIALIST.some((re) => re.test(slug));
+};
+
+/**
+ * Apply a delivery mode across the catalog:
+ *   self     — everything sits with the founder
+ *   retained — specialist work moves to the team, with a committed date
+ *   mixed    — leave ownership as seeded
+ */
+async function applyDeliveryMode(db: any, snapshotId: string, mode: string, startedAt: string | null) {
+  if (mode === "mixed") return;
+  const { data: tasks } = await db
+    .from("venture_ops_tasks").select("id, task_key, title, day, owner_kind").eq("snapshot_id", snapshotId);
+  const start = startedAt ? new Date(startedAt) : new Date();
+
+  for (const t of tasks ?? []) {
+    if (mode === "self") {
+      if (t.owner_kind !== "client") {
+        await db.from("venture_ops_tasks")
+          .update({ owner_kind: "client", assignee_name: null, committed_at: null }).eq("id", t.id);
+      }
+      continue;
+    }
+    // retained
+    if (!isSpecialist(t)) continue;
+    const due = new Date(start);
+    due.setDate(due.getDate() + Math.max(0, (t.day ?? 1) - 1));
+    await db.from("venture_ops_tasks")
+      .update({ owner_kind: "agency", committed_at: due.toISOString() })
+      .eq("id", t.id);
+  }
+}
+
 
 /** Create any catalog tasks this venture doesn't have yet, without touching progress. */
 async function seedRunway(db: any, snapshotId: string) {
