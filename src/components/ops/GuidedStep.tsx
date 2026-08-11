@@ -244,8 +244,9 @@ export function GuidedStep(props: GuidedStepProps) {
         {peek && (
           <ol className="mt-3 space-y-1.5">
             {next3.map((t, i) => (
-              <li key={t.id} className="flex gap-2 text-xs text-muted-foreground">
+              <li key={t.id} className="flex items-start gap-2 text-xs text-muted-foreground">
                 <span className="tabular-nums">{i + 2}.</span>
+                <OpsGlyph category={t.category} className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 <span>{t.title} <span className="opacity-70">· {OWNER_LABEL(t.owner_kind, viewerKind)}</span></span>
               </li>
             ))}
