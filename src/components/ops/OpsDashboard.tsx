@@ -64,10 +64,6 @@ const VIEWS: [ViewMode, string, typeof Compass][] = [
   ["timeline", "The 90 days", MapIcon],
 ];
 
-const MODE_LABEL: Record<DeliveryMode, string> = {
-  self: "You're building this",
-  retained: "Adam's team is building this",
-};
 
 
 
