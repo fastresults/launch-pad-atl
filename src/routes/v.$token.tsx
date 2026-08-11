@@ -64,24 +64,9 @@ export default function VentureSharePage() {
   );
   const paneRef = useRef<HTMLElement>(null);
   const tracked = useRef(false);
-  /** The closing "next step" invitation — shown once, at the bottom of the read. */
+  /** The closing "next step" invitation — opened from the nav, never by scrolling. */
   const [outroOpen, setOutroOpen] = useState(false);
-  const outroShown = useRef(false);
-  const maybeOutro = (el: HTMLElement) => {
-    if (outroShown.current) return;
-    if (el.scrollHeight - el.scrollTop - el.clientHeight > 32) return;
-    try {
-      if (localStorage.getItem(`sl-share-outro:${token}`)) {
-        outroShown.current = true;
-        return;
-      }
-      localStorage.setItem(`sl-share-outro:${token}`, "1");
-    } catch {
-      /* private mode */
-    }
-    outroShown.current = true;
-    setOutroOpen(true);
-  };
+
   const touchX = useRef<number | null>(null);
   const touchY = useRef<number | null>(null);
 
