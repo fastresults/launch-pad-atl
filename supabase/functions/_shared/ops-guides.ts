@@ -32,7 +32,7 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
   },
   "ai-stack": {
     how: [
-      "Pick one writing tool, one image tool, and one place to keep notes.",
+      "Pick one place for customers (CRM), one for money (invoicing), one for notes.",
       "Create the accounts with your business email, not a personal one.",
       "Save every login into a password manager you actually use.",
       "Stop shopping. You can change tools in 90 days, not this week.",
