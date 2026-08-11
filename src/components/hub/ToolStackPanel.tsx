@@ -30,7 +30,7 @@ const STEP_LABEL: Record<StackStatus, string> = {
 interface Props {
   snapshotId: string;
   userId: string;
-  stackDoc: any | null;               // venture_documents row for ai_tool_stack_recommendation
+  stackDoc: any | null;               // venture_documents row for ai_tool_stack_recommendation (Operating Tool Stack)
   onGenerateStack: () => void;
   onScrollToDoc: (key: string) => void;
   onOpenDoc: (key: string) => void;
@@ -38,10 +38,10 @@ interface Props {
   compact?: boolean;
 }
 
-// Extract the ai_stack_checklist.json block from the generated markdown.
+// Extract the tool_stack_checklist.json block from the generated markdown.
 function extractStackJson(content: string | null | undefined): Tool[] {
   if (!content) return [];
-  const match = content.match(/```json[^\n]*ai_stack_checklist[^\n]*\n([\s\S]*?)```/i)
+  const match = content.match(/```json[^\n]*(?:tool|ai)_stack_checklist[^\n]*\n([\s\S]*?)```/i)
     || content.match(/```json\s*\n([\s\S]*?)```/i);
   if (!match) return [];
   try {
@@ -64,7 +64,7 @@ function extractStackJson(content: string | null | undefined): Tool[] {
   }
 }
 
-export function AIStackPanel({
+export function ToolStackPanel({
   snapshotId,
   userId,
   stackDoc,
@@ -131,12 +131,12 @@ export function AIStackPanel({
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-primary/30 bg-card/40 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2 text-sm">
             <Sparkles className="h-4 w-4 shrink-0 text-primary" />
-            <span className="truncate font-medium">AI Toolkit</span>
+            <span className="truncate font-medium">Operating Tool Stack</span>
             <span
               className="truncate text-xs text-muted-foreground"
-              title="Generate your AI Tool Stack Recommendation and this panel becomes a live setup checklist — signup, configure, and go-live for every tool the sprint needs."
+              title="Generate your Operating Tool Stack and this panel becomes a live setup checklist — sign up, configure, and go live for every tool the sprint needs."
             >
-              Turn your plan into an installable toolkit
+              Turn your plan into a working tool stack
             </span>
           </div>
           <Button size="sm" onClick={onGenerateStack} disabled={isGenerating}>
@@ -154,10 +154,10 @@ export function AIStackPanel({
       <div className="relative overflow-hidden rounded-2xl border border-dashed border-primary/30 bg-card/40 p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="text-xl font-semibold">Turn your 14-day plan into an installable toolkit</h3>
+            <h3 className="text-xl font-semibold">Turn your 14-day plan into a working tool stack</h3>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Generate your AI Tool Stack Recommendation and this panel becomes a live setup checklist —
-              signup, configure, and go-live for every tool the sprint needs.
+              Generate your Operating Tool Stack and this panel becomes a live setup checklist —
+              sign up, configure, and go live for every tool the sprint needs.
             </p>
           </div>
 
@@ -167,7 +167,7 @@ export function AIStackPanel({
             ) : (
               <Sparkles className="mr-1.5 h-4 w-4" />
             )}
-            Generate my AI Stack
+            Set up my tool stack
           </Button>
         </div>
       </div>
@@ -180,9 +180,9 @@ export function AIStackPanel({
       <div className="relative">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="text-xl font-semibold">Installable launch toolkit</h3>
+            <h3 className="text-xl font-semibold">Your operating tool stack</h3>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              The exact AI-first tools recommended for your venture. Click a step to advance — track signup, configuration, and go-live for each.
+              The exact tools your business runs on. Click a step to advance — track signup, configuration, and go-live for each.
             </p>
           </div>
 

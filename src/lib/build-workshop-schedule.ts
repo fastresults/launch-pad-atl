@@ -58,13 +58,6 @@ export const WORKSHOP_SCHEDULES: Record<string, ScheduleRule> = {
     endTime: "16:00",
     timeLabel: "1:30–4:00 pm ET",
   },
-  "ai-operating-system": {
-    weekday: 4, // Thu
-    nth: 2,
-    startTime: "09:30",
-    endTime: "11:30",
-    timeLabel: "9:30–11:30 am ET",
-  },
   "email-crm-automation": {
     weekday: 4, // Thu
     nth: 2,

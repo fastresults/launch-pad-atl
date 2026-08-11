@@ -1407,7 +1407,7 @@ function Step5Launch({
 
 
 // ============================================================
-// Reusable card: "Plan Week N" — asks AI to draft the next week's posts
+// Reusable card: "Plan Week N" — drafts the next week's posts
 // ============================================================
 function PlanNextWeekCard({ snapshotId, nextWeek }: { snapshotId: string; nextWeek: number }) {
   const qc = useQueryClient();
@@ -1433,7 +1433,7 @@ function PlanNextWeekCard({ snapshotId, nextWeek }: { snapshotId: string; nextWe
             <span className="text-[10px] text-muted-foreground">Not planned yet</span>
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            Ask the AI to draft 3 posts for Week {nextWeek} that match your existing calendar tone and platforms.
+            Draft 3 posts for Week {nextWeek} that match your existing calendar tone and platforms.
           </p>
         </div>
         <Button size="sm" onClick={onClick} disabled={busy} className="shrink-0">

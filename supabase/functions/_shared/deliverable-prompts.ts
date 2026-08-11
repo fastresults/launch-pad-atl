@@ -446,10 +446,10 @@ ${QF}`,
 3. a \`### SMS follow-up (1-touch, opt-in only)\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a single SMS ≤160 chars sent only after a warm reply or event, with the compliance line (STOP to opt out) included.
 ${QF}`,
 
-  ai_tool_stack_recommendation: `You are a fractional CTO picking the actual AI-first tool stack this founder will install this week. Ground every pick in identity, solution, customer, business_model_summary, and differentiators. Every recommendation must be a named product with a working URL — no "a good CRM" placeholders, no invented tools. Prefer free-tier or generous-trial tools where quality allows. Output Markdown:
-# {Company} — AI-First Tool Stack
-## Stack Thesis (3-5 sentences: how AI compounds the founder's leverage, what NOT to buy in the first 30 days, the single biggest risk of over-tooling)
-## Stack Table — a markdown table with EXACTLY these rows in this order: AI Writer & Research | Site Builder | CRM & Pipeline | Calendar & Booking | Email Marketing | Transactional Email | Analytics | Support / AI Support Bot | Automations | Ads Manager | Reviews & Testimonials | Call Recording. Columns: Job | Pick | Why this for this venture | Alternative | Free tier? | Monthly cost at scale | Setup time (min).
+  ai_tool_stack_recommendation: `You are a fractional COO picking the actual operating tool stack this founder will set up this week. Ground every pick in identity, solution, customer, business_model_summary, and differentiators. Every recommendation must be a named product with a working URL — no "a good CRM" placeholders, no invented tools. Prefer free-tier or generous-trial tools where quality allows. Output Markdown:
+# {Company} — Operating Tool Stack
+## Stack Thesis (3-5 sentences: what this stack lets the business do on day one, what NOT to buy in the first 30 days, the single biggest risk of over-tooling)
+## Stack Table — a markdown table with EXACTLY these rows in this order: Site Builder | CRM & Pipeline | Calendar & Booking | Email Marketing | Transactional Email | Bookkeeping & Invoicing | Analytics | Support Inbox | Automations | Ads Manager | Reviews & Testimonials | Call Recording. Columns: Job | Pick | Why this for this venture | Alternative | Free tier? | Monthly cost at scale | Setup time (min).
 ## Order of Operations (which 4 tools go in first — before Day 3, before Day 7, before Day 10, before Day 14)
 ## Cost Envelope (total $/mo at launch, at first $1k MRR, at first $10k MRR)
 ## Do-Not-Buy List (3-5 tools founders waste money on in the first 30 days, with why)
@@ -461,20 +461,7 @@ ${QF}`,
   ]
 }
 \`\`\`
-Include every row from the Stack Table. \`linked_asset_key\` must be one of: crm_pipeline_starter, booking_calendar_setup, email_marketing_setup, analytics_pixel_setup, ai_support_bot_setup, automation_recipes_starter, paid_ads_starter_pack, reviews_testimonials_kit, sales_call_recording_stack, website_prd, ai_prompt_library, domain_email_dns_checklist. No prose outside the fence.${QF}`,
-
-  ai_prompt_library: `You are a prompt engineer writing 25 copy-paste prompts the founder will actually use every week. Each prompt must be tuned to THIS venture's identity, customer, and voice — no generic "You are a helpful assistant" boilerplate. Every prompt uses \`{{VARIABLE}}\` tokens for the parts the founder fills in. Output Markdown:
-# {Company} — AI Prompt Library
-## How to Use (1 paragraph: which model to paste each into by default, when to switch to a reasoning model, how to store these in Raycast / ChatGPT projects / Claude projects)
-## The 25 Prompts — grouped under these five section headings, exactly 5 prompts each: **Sell**, **Ship**, **Support**, **Market**, **Operate**. Every prompt formatted as:
-### N. {Short Prompt Name}
-**When to use:** one sentence
-**Paste this:**
-\`\`\`text
-{full prompt with {{VARIABLE}} tokens, tuned to this venture}
-\`\`\`
-Every prompt must reference at least one venture-specific detail (persona name, offer name, pricing tier, differentiator) so it can't be reused verbatim by a different founder.
-## Paste-Ready — one fenced \`\`\`markdown block labeled \`# prompt_library.md\` containing all 25 prompts back-to-back in a single Markdown file, ready to save to a repo or Notion page. Nothing outside the fence.${QF}`,
+Include every row from the Stack Table. \`linked_asset_key\` must be one of: crm_pipeline_starter, booking_calendar_setup, email_marketing_setup, analytics_pixel_setup, ai_support_bot_setup, automation_recipes_starter, paid_ads_starter_pack, reviews_testimonials_kit, sales_call_recording_stack, website_prd, domain_email_dns_checklist. No prose outside the fence.${QF}`,
 
   crm_pipeline_starter: `You are a revenue-ops lead standing up the CRM on Day 3 so the First-50 list lives somewhere real by end of day. Recommend Attio (default), Folk, or HubSpot Free — pick one based on customer + business_model_summary and defend the pick in 2 sentences. Ground stages in the sales_playbook when available. Output Markdown:
 # {Company} — CRM Pipeline Starter
@@ -522,7 +509,7 @@ ${QF}`,
 3. a \`### first_broadcast.md\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — one launch-week broadcast with SUBJECT, PREVIEW, BODY, CTA, and a 3-line "Why we're emailing you" opener suitable for a first send.
 ${QF}`,
 
-  logo_brand_asset_pack: `You are a brand designer briefing an AI image generator (Midjourney / Ideogram / Nano Banana) to produce the venture's launch-week visual assets on Day 11. Ground every prompt in visual_identity_brief and brand_strategy_framework. Never invent asset dimensions — use the standards below. Output Markdown:
+  logo_brand_asset_pack: `You are a brand designer briefing the studio's image production to produce the venture's launch-week visual assets on Day 11. Ground every prompt in visual_identity_brief and brand_strategy_framework. Never invent asset dimensions — use the standards below. Output Markdown:
 # {Company} — Logo & Brand Asset Pack
 ## Visual Thesis (3-5 sentences: what the brand should *feel* like, what it must NEVER look like, references to steal from and references to avoid)
 ## Asset Inventory — table: Asset | Dimensions | File formats | Where it lives (site, email, social, favicon, OG) | Notes
@@ -530,7 +517,7 @@ ${QF}`,
 ## Paste-Ready — one fenced \`\`\`markdown block labeled \`# brand_asset_prompts.md\` containing exactly these sections, each with 3 prompt variants ready to paste into an image generator, using this shape:
 \`\`\`
 ### Logo (3 directions)
-Aspect: 1:1 · Output: SVG-friendly, transparent background · Model: Midjourney v6 / Ideogram
+Aspect: 1:1 · Output: SVG-friendly, transparent background
 1. {prompt v1}
 2. {prompt v2}
 3. {prompt v3}
@@ -584,13 +571,13 @@ ${QF}`,
 ## Weekly Rhythm — table: Slot | Day/Time | Duration | Purpose | Output. Include at minimum: Monday Plan, Daily 10-min AI Recap Standup, Tue/Thu Deep Work Blocks, Weekly Pipeline Review, Friday Retro, Monthly Numbers Review.
 ## KPI Dashboard — table: Metric | Definition | Source | Target (Month 1) | Target (Month 3) | Owner | Review cadence. Metrics must be venture-specific — pulled from the business model and known_numbers, not a generic SaaS list.
 ## Decision Rules (what triggers a pivot, what triggers a hire, what triggers cutting a channel — thresholds in numbers)
-## Tooling (which of the recommended AI tools the founder opens for each ritual — Notion/Linear for plan, Fathom for standup transcript, CRM for pipeline review)
+## Tooling (which tool from the operating stack the founder opens for each ritual — Notion/Linear for plan, the call recorder for standup notes, CRM for pipeline review)
 ## Paste-Ready — two fenced blocks:
 1. a \`### operating_cadence.md\` heading followed by a plain \`\`\`markdown fence containing only the content (never put a label on the fence line) — a Notion/Linear-friendly template with headings for each ritual, a fill-in-the-blank agenda, and a "Definition of done" line under each.
 2. a \`### kpi_dashboard.json\` heading followed by a plain \`\`\`json fence containing only the content (never put a label on the fence line) — array of KPI objects \`{ "metric", "definition", "source", "target_month_1", "target_month_3", "owner", "cadence" }\` ready to seed a dashboard tool.
 ${QF}`,
 
-  ad_creative_pack: `You are a performance-creative lead producing 12 ready-to-run ad units on Day 14, mapped to Meta, Google, TikTok, and LinkedIn. Ground every unit in pricing_offer_sheet, brand_messaging, and paid_ads_starter_pack. Every image prompt must be pasteable into Midjourney/Ideogram; every script pasteable into a TikTok/Reels caption; every headline pair pasteable into Ads Manager. Output Markdown:
+  ad_creative_pack: `You are a performance-creative lead producing 12 ready-to-run ad units on Day 14, mapped to Meta, Google, TikTok, and LinkedIn. Ground every unit in pricing_offer_sheet, brand_messaging, and paid_ads_starter_pack. Every image direction must be production-ready for the studio; every script pasteable into a TikTok/Reels caption; every headline pair pasteable into Ads Manager. Output Markdown:
 # {Company} — Ad Creative Pack
 ## Creative Thesis (which hook, which offer, which persona this batch tests; what gets killed if a variant underperforms)
 ## Distribution Map — table: Channel | Format | Recommended units from this pack | Daily test budget | Winning-signal (CTR/CPA)
@@ -598,7 +585,7 @@ ${QF}`,
 ## Paste-Ready — one fenced \`\`\`markdown block labeled \`# ad_creative_pack.md\` containing exactly these four sections, each with the specified units:
 \`\`\`
 ### Static Image Ads (4) — for Meta / LinkedIn feed
-Aspect: 1:1 · Model: Ideogram or Midjourney
+Aspect: 1:1
 1. {image prompt v1 with venture-specific palette + hook overlay text}
 2. {v2}
 3. {v3}

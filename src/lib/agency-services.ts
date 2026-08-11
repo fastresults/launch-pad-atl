@@ -89,21 +89,6 @@ export const AGENCY_SERVICES: AgencyService[] = [
     ctaHref: "/contact?service=content-engine",
   },
   {
-    slug: "ai-operating-system",
-    capability: "AI as your operating system",
-    icon: Sparkles,
-    oneLiner: "Ten workflows rewired around AI, documented, and owned by your team — not by a vendor.",
-    deliverables: [
-      "Workflow audit + ROI model",
-      "10 automations built, tested, and handed off",
-      "Prompt library + governance doc",
-    ],
-    priceLabel: "From $4,500",
-    timelineLabel: "30 days",
-    workshopHref: "/build/ai-operating-system",
-    ctaHref: "/contact?service=ai-operating-system",
-  },
-  {
     slug: "email-crm-automation",
     capability: "Email, CRM, and automation",
     icon: Mail,
@@ -207,9 +192,9 @@ export const AGENCY_TRACKS: AgencyTrack[] = [
     icon: Settings,
     tagline: "Streamline the work, automate the busywork, keep more of every dollar.",
     outcome:
-      "AI built into how you ship, so two people do the work of ten. A sales motion that runs without you — and a leaner cost base that turns the same revenue into more profit.",
+      "The busywork automated and the follow-up handled, so two people do the work of ten. A sales motion that runs without you — and a leaner cost base that turns the same revenue into more profit.",
 
-    includedSlugs: ["ai-operating-system", "sales-systems"],
+    includedSlugs: ["email-crm-automation", "sales-systems"],
     priceLabel: "Bespoke — priced after a 20-min discovery call",
     timelineLabel: "30-day sprint",
     ctaHref: "/contact?track=operate",

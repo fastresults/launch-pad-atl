@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
       const text = await res.text();
       console.error(`caption shorten gateway failed [${res.status}]: ${text}`);
       if (res.status === 429) return json({ error: "AI is rate limited right now — try again in a moment." }, 429);
-      if (res.status === 402) return json({ error: "AI credits are exhausted. Add credits to keep generating." }, 402);
+      if (res.status === 402) return json({ error: "Generation is paused — our team has been notified." }, 402);
       return json({ error: "Could not shorten the caption.", details: text }, res.status);
     }
 

@@ -11,10 +11,10 @@ export type DayGuidance = {
 export const DAY_GUIDANCE: Record<number, DayGuidance> = {
   1: {
     why: "Today decides how everyone downstream — customers, investors, teammates, AI copilots — will hear your story. A fuzzy concept costs you refunds, redos, and ad spend for the next 13 days.",
-    suggestedSchedule: "Morning: draft your one-page story and what you stand for. Midday: rewrite the one-liner until a stranger can repeat it. Afternoon: lock the AI toolkit and paste API keys.",
+    suggestedSchedule: "Morning: draft your one-page story and what you stand for. Midday: rewrite the one-liner until a stranger can repeat it. Afternoon: lock the tool stack and create the accounts.",
     pitfalls: [
       "Writing for investors instead of buyers — buyers pay first.",
-      "Skipping the AI stack because it feels tangential; you'll pay for that on Day 6.",
+      "Skipping the tool setup because it feels tangential; you'll pay for that on Day 6.",
       "Trying to be everything to everyone — pick one buyer, one job.",
     ],
   },
@@ -24,7 +24,7 @@ export const DAY_GUIDANCE: Record<number, DayGuidance> = {
     pitfalls: [
       "Under-pricing because you're scared — you can always discount, you can't always raise.",
       "Endless option-adding — three tiers, one recommended.",
-      "Prompt library that reads pretty but doesn't do work — test each one on a real task.",
+      "Messaging that reads pretty but doesn't sell — test every line on a real prospect.",
     ],
   },
   3: {

@@ -26,7 +26,7 @@ export function edgeErrorMessage(err: any, fallback = "Something went wrong. Ple
     return "The render ran out of time. Retry — we'll finish it with a lighter pass.";
   }
   if (code === "PAYMENT_REQUIRED" || code === "AI_CREDIT_LIMIT_REACHED") {
-    return "AI credits are exhausted for this workspace. Add credits and retry.";
+    return "Generation is paused — our team has been notified. Try again shortly.";
   }
   if (code === "BRAND_NOT_LOCKED") {
     return "Lock the Brand Wizard before generating ads.";

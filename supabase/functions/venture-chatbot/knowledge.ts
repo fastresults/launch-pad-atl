@@ -91,8 +91,8 @@ The legal and risk scaffolding that keeps you bankable.
 An identity worth premium pricing — system, not stickers.
   - Brand Strategy Framework: The strategic foundation under your brand — purpose, promise, audience, positioning. Every logo, color, and word downstream has a reason behind it, and you stop redoing your brand every time something feels off.
   - Brand Messaging House: Your headline, supporting messages, and proof — organized so every page, post, and pitch pulls from the same well. You'll write faster, sound consistent everywhere, and stop staring at a blinking cursor wondering what to say.
-  - Visual Identity Brief: A clear brief for the logo, colors, type, and visual feel — ready to hand to a designer or an AI tool. You'll skip months of revisions, get an identity you actually love, and look credible from day one.
-  - Brand Voice & Tone Guide: How your brand sounds — word choice, rhythm, what to avoid — so anyone writing for you sounds like you. Founders, contractors, and AI tools all produce on-brand copy without you rewriting every sentence yourself.
+  - Visual Identity Brief: A clear brief for the logo, colors, type, and visual feel — ready to hand to a designer. You'll skip months of revisions, get an identity you actually love, and look credible from day one.
+  - Brand Voice & Tone Guide: How your brand sounds — word choice, rhythm, what to avoid — so anyone writing for you sounds like you. Founders and contractors all produce on-brand copy without you rewriting every sentence yourself.
   - Brand Guidelines Book: One document that holds your logo rules, colors, type, voice, and examples in one place. Hand it to any vendor, freelancer, or new hire and they'll produce on-brand work without forty rounds of feedback from you.
 
 ### 07 · Marketing (Bonus)
@@ -130,11 +130,10 @@ These sit alongside the framework above and are what actually makes "launched in
 - **Reviews & Testimonials Capture Kit** (Social & Content): email, SMS, DM ask templates, video-ask script, wall-of-love HTML snippet.
 - **Outbound DM & Email Scripts** (Social & Content): 3-touch cold email, LinkedIn DM sequence, and compliant SMS follow-up — keyed to the First-50 list.
 
-## Launch Tech Stack Layer (the AI-first toolkit that runs the sprint)
+## Launch Tech Stack Layer (the operating tool stack that runs the sprint)
 These sit on top of the strategy assets and turn each day into installable software. The founder doesn't get advice — they get a paste-ready config or a named tool with a signup link.
 
-- **AI Tool Stack Recommendation** (Foundation): the named toolkit — AI writer, site builder, CRM, calendar, email, analytics, support bot, automations, ads, reviews — with signup URLs, free-tier notes, and why-this-vs-alternatives. Powers the AI Stack panel on the hub.
-- **AI Prompt Library** (Foundation): 25 copy-paste prompts tuned to the venture (cold email, ad hook, weekly recap, competitor scan, invoice draft, refund reply). Route "which prompt should I use for X?" here.
+- **Operating Tool Stack** (Foundation): the named tool stack — site builder, CRM, calendar, email, bookkeeping, analytics, support inbox, automations, ads, reviews — with signup URLs, free-tier notes, and why-this-vs-alternatives. Powers the tool stack panel on the hub.
 - **CRM Pipeline Starter** (Strategy): Attio / Folk / HubSpot Free schema, CSV import of the First-50, three saved views. Route "which CRM?" here.
 - **Booking & Calendar Setup** (Operations): Cal.com / Calendly event types tuned to the sales playbook, routing, reminders, confirmation copy. Route "how do I set up Cal.com?" here.
 - **Sales Call Recording Stack** (Operations): Fathom / Grain / Fireflies setup + AI summary template + insight-to-content pipeline. Route call-recording and note-taking questions here.
@@ -266,17 +265,6 @@ Each has a starting price; Tracks are bespoke and scoped in a 20-min discovery c
 - Half-day workshop route: /build/content-engine
 - Done-for-you contact: /contact?service=content-engine
 
-### AI as your operating system
-- One-liner: Ten workflows rewired around AI, documented, and owned by your team — not by a vendor.
-- Deliverables:
-  - Workflow audit + ROI model
-  - 10 automations built, tested, and handed off
-  - Prompt library + governance doc
-- Pricing: From $4,500
-- Timeline: 30 days
-- Half-day workshop route: /build/ai-operating-system
-- Done-for-you contact: /contact?service=ai-operating-system
-
 ### Email, CRM, and automation
 - One-liner: The follow-up machine. CRM live, sequences written, deliverability fixed — for good.
 - Deliverables:
@@ -335,7 +323,7 @@ Every startup asset ships with an on-demand **Deep Dive** — a partner-grade ex
 - **How fast until I'm actually making money?** First paying customer inside 14 days is the target the whole session is designed around — not a guarantee. The morning gets the foundations right; the week after is where the page goes live and the real outreach goes out to real people from your real offer.
 - **Is Adam actually in the room?** Yes. Adam sits at your table for the session — not a moderator, not a TA, not an AI. That's the whole point.
 - **Isn't this just AI generating documents?** No. Adam runs the room. We use AI behind the scenes so Adam spends the morning on *your* business — pricing your offer, naming your first customer, writing the actual message — instead of on formatting.
-- **Why is this different from just using ChatGPT?** Straight AI hands you a stack of files and calls it a startup. It isn't one. Startup Labs runs the sequence a real startup needs, in the room, with an operator who's shipped companies. AI does the formatting so Adam spends the morning naming your brand, pricing your offer, writing the website PRD, and writing the message to a person you named out loud. That's the difference between a folder of files and a foundation you can build on that week.
+- **Why is this different from doing it on your own?** Generic advice hands you a stack of files and calls it a startup. It isn't one. Startup Labs runs the sequence a real startup needs, in the room, with an operator who's shipped companies. Our team handles the production so Adam spends the morning naming your brand, pricing your offer, writing the website PRD, and writing the message to a person you named out loud. That's the difference between a folder of files and a foundation you can build on that week.
 - **Do I need a startup idea already?** Yes — bring the idea and the intention. We handle the strategy, math, offer, page copy, website PRD, and outreach copy.
 - **Why now? Why is this taking off?** Because the old way — a year, an agency, a co-founder, a prayer — was never affordable and now it's not competitive either. Modern founders need a precise foundation before they spend months and thousands building the wrong thing. The tools finally exist to compress the foundation work into one morning — but only if someone who's actually shipped is running the room. That's what Startup Labs is.
 - **What if I already have a logo/website?** Great — we keep what works, sharpen the rest, and focus the morning on getting the brand, offer, page copy, website PRD, outreach copy, and operations clear enough to build from.

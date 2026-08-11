@@ -67,7 +67,7 @@ function makeCommonFaq(priceLabel: string): FAQ[] {
   return [
     {
       q: `What's actually included for ${priceLabel}?`,
-      a: "The strategy, the exact tool stack we use, and the step-by-step process to ship it yourself — delivered in a live half-day workshop. Plus every framework and worksheet, a recording you keep forever, and 30 days of follow-up access in our group channel as you implement.",
+      a: "The strategy, the exact tools we use, and the step-by-step process to ship it yourself — delivered in a live half-day workshop. Plus every framework and worksheet, a recording you keep forever, and 30 days of follow-up access in our group channel as you implement.",
     },
     {
       q: "Do I need to attend the Strategic Foundation Workshop first?",
@@ -79,7 +79,7 @@ function makeCommonFaq(priceLabel: string): FAQ[] {
     },
     {
       q: "Can your team just build this for me instead?",
-      a: `Yes. The workshop is built to let you ship it yourself — strategy, frameworks, tool stack, the whole playbook. If you'd rather hand it to us, the ${priceLabel} credits toward any engagement over $1,000.`,
+      a: `Yes. The workshop is built to let you ship it yourself — strategy, frameworks, tools, the whole playbook. If you'd rather hand it to us, the ${priceLabel} credits toward any engagement over $1,000.`,
     },
   ];
 }
@@ -107,7 +107,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       },
       {
         title: "AI makes every asset look like it's from a different company.",
-        body: "Without a written brand system, every Midjourney render and Canva slide drifts. The market reads inconsistency as amateurism, and your CAC quietly climbs as trust leaks out.",
+        body: "Without a written brand system, every render and every Canva slide drifts. The market reads inconsistency as amateurism, and your CAC quietly climbs as trust leaks out.",
       },
     ],
     walkOuts: [
@@ -313,7 +313,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "Profile rewrites for both channels: bio, link, banner, pinned post — drafted in the room",
       "Your first week of posts drafted and slotted, with the rest of the month outlined by pillar, format, and publish date",
       "Hook bank built on your pillars — 15 openers written for your niche, ready to remix",
-      "Weekly cadence and the lightest tool stack to actually hold it (Buffer or Notion + your phone)",
+      "Weekly cadence and the lightest set of tools to actually hold it (Buffer or Notion + your phone)",
       "Engagement playbook — what to comment, on whose posts, on what schedule, to be visible to buyers",
     ],
     agenda: [
@@ -433,7 +433,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         time: "10:30 – 11:15",
         title: "Design the production system + repurposing flow",
         detail:
-          "Input: your team (or just you), your tool stack. Working session: map the assembly line — who captures, who drafts, who edits, who ships. Output: a documented workflow and the repurposing framework (1 → 10).",
+          "Input: your team (or just you), the tools you already use. Working session: map the assembly line — who captures, who drafts, who edits, who ships. Output: a documented workflow and the repurposing framework (1 → 10).",
       },
       {
         time: "11:15 – 11:30",
@@ -479,106 +479,6 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
         "By 11:30 you'll have your pillars, a keyword map you can actually win in 6 months, a documented production flow (capture → draft → edit → ship), a 1-to-10 repurposing framework, and a 90-day editorial calendar with owners assigned. You'll also know whether to operate it solo, hire an editor, or hand the whole flywheel to our team.",
       otherWorkshopsHeadline: "The other channels your content will pour into.",
       faqHeadline: "Content questions, answered without the SEO theater.",
-    },
-    faq: makeCommonFaq("$197"),
-  },
-
-  /* ─────────── 5. AI AS YOUR OPERATING SYSTEM ─────────── */
-  {
-    slug: "ai-operating-system",
-    priceCents: 19700,
-    priceLabel: "$197",
-    icon: Sparkles,
-    title: "Run on AI",
-    capability: "AI as your operating system",
-    oneLiner: "Find the hours. Take the first one back.",
-    subhead:
-      "Buying ChatGPT seats isn't AI strategy. In one morning we audit your real workflows, configure your highest-value one on your own account, specify the next four, and hand you the prompt library, model choices, and governance plan so the leverage compounds across your team — not just on your laptop.",
-    pains: [
-      {
-        title: "AI amplifies whatever it's pointed at. Most teams are scaling fuzz.",
-        body: "Vague strategy + AI = vague output, faster. Sharp inputs + AI = a 10-person company. The difference isn't the model — it's the inputs no one is investing in.",
-      },
-      {
-        title: "Tools without workflows are toys.",
-        body: "Seats don't transform companies. Mapping which decisions and outputs AI owns end-to-end does. Most 'AI rollouts' are seat counts with no workflow attached.",
-      },
-      {
-        title: "No governance, no scale.",
-        body: "Without prompt standards, model choices, and quality gates, output drifts the moment more than one person uses it. Inconsistency at scale is a brand problem and a legal one.",
-      },
-    ],
-    walkOuts: [
-      "AI stack audit — what to keep, kill, and add, with monthly cost math",
-      "Your highest-value workflow configured on your own account with your real data — the next four specified and prompted",
-      "Prompt library tuned to your brand voice — your core prompts written, organized, and reusable",
-      "Governance doc: model choice per task, quality gates, what AI is never allowed to do alone",
-      "ROI model — hours and dollars saved per week, per workflow, with the formula",
-      "30-day rollout plan to onboard the team without revolt (training, ownership, KPI)",
-    ],
-    agenda: [
-      {
-        time: "8:45 – 9:15",
-        title: "Audit and score your top 15 workflows",
-        detail:
-          "Input: a list of your team's recurring work. Working session: score each by AI leverage, risk, and frequency. Output: the 5 workflows we're attacking before lunch.",
-      },
-      {
-        time: "9:15 – 10:30",
-        title: "Build your first workflow — with your data",
-        detail:
-          "Input: real tools (Claude/GPT, n8n or Zapier, your CRM). Working session: build and test your highest-value automation in the room, then specify the next four. Output: one configured workflow plus four written specs you can build this week.",
-      },
-      {
-        time: "10:45 – 11:15",
-        title: "Build the prompt library + governance",
-        detail:
-          "Input: voice guide, brand rules, risk tolerance. Working session: write and organize your core prompt set, set quality gates, decide what AI never touches alone. Output: a prompt vault and a one-page governance doc.",
-      },
-      {
-        time: "11:15 – 11:30",
-        title: "Sequence the 30-day rollout",
-        detail:
-          "Input: your team and current routines. Working session: pick owner, training cadence, and the one KPI that proves it worked. Output: a dated rollout plan with accountability.",
-      },
-    ],
-    forYou: [
-      "You're a small team trying to operate like a big one — and you're hitting the headcount wall",
-      "You've bought AI tools nobody actually uses",
-      "You're ready to compete on speed, not headcount",
-    ],
-    notForYou: [
-      "You want a generic 'intro to ChatGPT' session",
-      "You expect AI to run the business with no humans in the loop",
-      "You haven't picked the offer yet — automate the strategy first, then workflows",
-    ],
-    agencyServiceTagline:
-      "30 days, 10 of your workflows rewired around AI — built, tested, and handed off with the prompt library.",
-    sections: {
-      painEyebrow: "The cost of seats without systems",
-      painHeadline: "AI without workflows isn't transformation — it's a $400/month subscription.",
-      walkOutHeadline: {
-        lead: "One working automation, four specified, governance.",
-        emphasis: "Not a demo reel.",
-      },
-      agendaHeadline: {
-        lead: "One morning. Your first workflow, configured.",
-        emphasis: "With your tools, your data — in the room.",
-      },
-      fitHeadline: {
-        lead: "Built for teams hitting the headcount wall.",
-        emphasis: "Not for ChatGPT 101 attendees.",
-      },
-      fitLede:
-        "If you came for tips and prompts, save the morning. If you came to actually take ten hours a week off your team, sit down.",
-      decisionHeadline: {
-        lead: "Leave with leverage —",
-        emphasis: "measured in hours per week.",
-      },
-      decisionBody:
-        "By 11:30 you'll have your highest-value automation configured on your own account with your real data, the next four specified and prompted, a prompt library tuned to your brand, a one-page governance doc (what AI does, what it never does alone), and an ROI model showing hours and dollars saved per week. You'll also know whether to build the rest internally or hand the next ten workflows to our team.",
-      otherWorkshopsHeadline: "The other workflows AI will quietly absorb.",
-      faqHeadline: "AI questions, answered without the hype-cycle math.",
     },
     faq: makeCommonFaq("$197"),
   },
@@ -714,7 +614,7 @@ export const BUILD_WORKSHOPS: BuildWorkshop[] = [
       "Pipeline stages with exit criteria for each (what has to be true to advance)",
       "Objection bank — your 8 most common objections, with handlers written and rehearsed out loud in the room",
       "Weekly sales rhythm — pipeline review, forecast call, accountability, in 30 minutes",
-      "Tool stack recommendation — CRM, dialer, scheduler — with cost math and switching cost",
+      "Tool recommendations — CRM, dialer, scheduler — with cost math and switching cost",
     ],
     agenda: [
       {

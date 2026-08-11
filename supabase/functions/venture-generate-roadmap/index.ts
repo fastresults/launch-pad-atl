@@ -56,7 +56,7 @@ type AssetTrack = "Introduction" | "Education" | "Tracking" | "Action";
 const ASSET_TRACK: Record<string, AssetTrack> = {
   executive_summary: "Introduction", vision_mission: "Introduction", problem_solution: "Introduction",
   ai_tool_stack_recommendation: "Education",
-  value_proposition: "Introduction", pricing_offer_sheet: "Action", ai_prompt_library: "Education",
+  value_proposition: "Introduction", pricing_offer_sheet: "Action",
   customer_personas: "Introduction", first_50_warm_list: "Tracking", crm_pipeline_starter: "Tracking",
   pre_sell_offer_test: "Action", landing_page_waitlist_test: "Action", presell_landing_prd: "Education",
   competitive_positioning: "Introduction", market_analysis: "Education",
@@ -99,7 +99,7 @@ function gatewayMessage(status: number, detail: string) {
     return "Founder Roadmap is paused because the workspace AI Gateway credit limit has been reached.";
   }
   if (status === 402 || n.includes("credits exhausted")) {
-    return "Founder Roadmap is paused because AI credits are exhausted.";
+    return "Founder Roadmap is paused — our team has been notified.";
   }
   if (status === 429) return "Founder Roadmap is rate limited. Please try again shortly.";
   if (status === 401 || status === 403) return "Founder Roadmap is unavailable — AI Gateway rejected the request.";

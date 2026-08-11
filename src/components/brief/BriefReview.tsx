@@ -45,7 +45,7 @@ export function BriefReview({ values, onEdit, onContinueDiscovery }: Props) {
           Your answers
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Everything you've told us. Tap any answer to refine it — your AI assistant picks up the change instantly.
+          Everything you've told us. Tap any answer to refine it — your build picks up the change instantly.
         </p>
       </div>
 

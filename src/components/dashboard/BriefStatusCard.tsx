@@ -44,7 +44,7 @@ export function BriefStatusCard({ answered, total }: Props) {
         title="Answer 10 quick questions about your startup."
         description={
           <>
-            You can talk instead of type. Your AI assistant uses these answers all day
+            You can talk instead of type. We use these answers all day
             during the workshop to build your 25 startup assets. You're <strong className="text-foreground">0 of {total}</strong> done.
           </>
         }

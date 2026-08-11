@@ -398,7 +398,7 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
       files: [
         { name: "Brand Strategy Framework", format: "PDF", note: "The strategic foundation" },
         { name: "Messaging House", format: "PDF", note: "Every writer pulls from this well" },
-        { name: "Visual Identity Brief", format: "DOCX", note: "Hand to a designer or AI tool" },
+        { name: "Visual Identity Brief", format: "DOCX", note: "Hand to a designer" },
         { name: "Logo Concepts", format: "PNG + SVG · 3 options", note: "Pick one, iterate" },
         { name: "Palette + Type Pairing", format: "PDF + Google Fonts links", note: "Use immediately" },
         { name: "Voice & Tone One-pager", format: "PDF", note: "Anyone writing for you sounds like you" },
@@ -417,14 +417,14 @@ export const STAGE_PRODUCTIZATION: Record<string, StageProductization> = {
         takeaway: "You stop staring at a blinking cursor wondering what to say.",
       },
       {
-        buildMechanic: "Visual Identity Brief DOCX generated for a designer or AI tool; 3 moodboards generated live.",
+        buildMechanic: "Visual Identity Brief DOCX generated for a designer; 3 moodboards generated live.",
         inputs: ["Brand Strategy Framework", "3 brands you admire"],
         takeaway: "You skip months of revisions on an identity you actually love.",
       },
       {
         buildMechanic: "Voice & Tone one-pager with word choice, rhythm, and do/don't examples.",
         inputs: ["Messaging House", "Words that feel right / wrong for you"],
-        takeaway: "Founders, contractors, and AI tools all produce on-brand copy.",
+        takeaway: "Founders and contractors all produce on-brand copy.",
       },
       {
         buildMechanic: "Continues on dashboard — Brand Guidelines Book assembles from every prior artifact.",

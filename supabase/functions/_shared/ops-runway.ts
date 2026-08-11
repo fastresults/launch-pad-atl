@@ -55,20 +55,20 @@ type Day = {
 const DAYS: Day[] = [
   {
     day: 1, theme: "Lock the concept",
-    objective: "Nail the one-line story of what you're building and pick your AI toolkit.",
-    doneWhen: "A stranger can repeat what you do — and you've committed to your AI stack.",
+    objective: "Nail the one-line story of what you're building and pick the tools you'll run on.",
+    doneWhen: "A stranger can repeat what you do — and your tool stack is chosen.",
     assetKeys: ["executive_summary", "vision_mission", "problem_solution", "ai_tool_stack_recommendation"],
     category: "Foundation",
     subs: [
       ["one-liner", "Say it in one sentence", "Every later asset inherits this sentence.", "Three people repeat it back correctly without prompting.", "client"],
-      ["ai-stack", "Commit to the AI stack", "Tool churn is the #1 week-one time sink.", "Accounts created and logins stored in the password manager.", "client"],
+      ["ai-stack", "Set up your operating tools", "Tool churn is the #1 week-one time sink.", "Accounts created and logins stored in the password manager.", "client"],
     ],
   },
   {
     day: 2, theme: "Sharpen the offer",
-    objective: "Turn the concept into a priced, packaged, buyable offer — with your prompt library ready.",
+    objective: "Turn the concept into a priced, packaged, buyable offer with the messaging to sell it.",
     doneWhen: "You have a headline price, a one-page offer sheet, and 25 tuned prompts.",
-    assetKeys: ["value_proposition", "pricing_offer_sheet", "ai_prompt_library"],
+    assetKeys: ["value_proposition", "pricing_offer_sheet", "brand_messaging"],
     category: "Foundation",
     subs: [
       ["price", "Set the headline price", "You cannot sell, invoice, or forecast without a number.", "A single published price (or price band) you'd quote on a call today.", "client"],

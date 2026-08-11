@@ -13,7 +13,6 @@ export const ASSET_TRACK: Record<string, AssetTrack> = {
   // Day 2
   value_proposition: "Introduction",
   pricing_offer_sheet: "Action",
-  ai_prompt_library: "Education",
   // Day 3
   customer_personas: "Introduction",
   first_50_warm_list: "Tracking",

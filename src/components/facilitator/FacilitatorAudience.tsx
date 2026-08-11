@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Zap, Building2, Mic2, Code2, type LucideIcon } from "lucide-react";
 
 const ITEMS: { icon: LucideIcon; title: string; desc: string }[] = [
-  { icon: Zap, title: "Founders compressing the build", desc: "From validated idea to live product without waiting for a team or a Series A — using the same AI stack Adam ships with." },
+  { icon: Zap, title: "Founders compressing the build", desc: "From validated idea to live product without waiting for a team or a Series A — with Adam's team doing the heavy lifting." },
   { icon: Building2, title: "Executives leading adoption", desc: "Practical decision frameworks for rolling AI into an organization — minus the vendor pitch and the hype cycle." },
   { icon: Mic2, title: "Brand & marketing operators", desc: "Authority engines and content systems engineered to compound in a feed flooded with machine-written sameness." },
   { icon: Code2, title: "Engineers becoming founders", desc: "Crossing from technical builder to commercial operator — pricing, positioning, and shipping product, not just code." },
