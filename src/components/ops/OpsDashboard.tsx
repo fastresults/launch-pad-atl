@@ -16,6 +16,8 @@ import { DeliveredRail } from "./DeliveredRail";
 import type { DeliveryHandlers } from "./DeliveryPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InfoTip } from "./InfoTip";
+import { OpsStageArt } from "./OpsStageArt";
+import { OpsProgressRing } from "./OpsProgressRing";
 import { TIPS } from "@/lib/ops-criticality";
 
 type ViewMode = "guided" | "checklist" | "timeline";
@@ -75,7 +77,8 @@ export function OpsDashboard(props: OpsDashboardProps) {
 
   const overall = progressOf(tasks);
   const day = currentRunwayDay(startedAt);
-  const stage = stageOf(activeStage(tasks));
+  const stagePhase = activeStage(tasks);
+  const stage = stageOf(stagePhase);
   const stuck = tasks.filter((t) => t.status === "blocked").length;
   const late = tasks.filter((t) => isOverdue(t, startedAt) && t.status !== "done").length;
   const mode = props.deliveryMode ?? null;
@@ -132,8 +135,16 @@ export function OpsDashboard(props: OpsDashboardProps) {
   return (
     <TooltipProvider delayDuration={120}>
     <div className={cn("space-y-6", props.className)}>
-      <header className="rounded-2xl border border-border/50 bg-card/40 p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <header className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 p-4 sm:p-5">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-[0.06] md:block"
+          style={{ maskImage: "linear-gradient(to left, black, transparent)", WebkitMaskImage: "linear-gradient(to left, black, transparent)" }}
+        >
+          <OpsStageArt phase={stagePhase} className="h-full" />
+        </div>
+
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold tracking-tight">Operationalize</h2>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
@@ -141,17 +152,20 @@ export function OpsDashboard(props: OpsDashboardProps) {
               Right now you're in <span className="text-foreground">{stage.when} — {stage.name}</span>.
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-semibold tabular-nums">{overall.pct}%</div>
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-              <InfoTip tip={TIPS.progress}>{overall.done} of {overall.total} done</InfoTip>{day ? ` · day ${day}` : ""}
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                <InfoTip tip={TIPS.progress}>{overall.done} of {overall.total} done</InfoTip>{day ? ` · day ${day}` : ""}
+              </div>
             </div>
+            <OpsProgressRing pct={overall.pct} label="Complete" size={84} />
           </div>
         </div>
 
-        <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
+        <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
           <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${overall.pct}%` }} />
         </div>
+
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] uppercase tracking-wide text-muted-foreground">
           {stuck > 0 && <span className="text-destructive">{stuck} stuck</span>}
@@ -193,6 +207,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
         <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
           <div className="rounded-2xl border border-border/50 bg-card/40 p-4">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Where you are</h4>
+            <OpsStageArt phase={stagePhase} className="mt-3 h-16 opacity-70" />
             <p className="mt-2 text-sm font-medium">{stage.when} — {stage.name}</p>
             <p className="mt-1 text-xs text-muted-foreground">{stage.promise}</p>
             {view !== "guided" && (

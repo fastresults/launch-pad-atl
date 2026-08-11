@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import {
-  OPS_CATEGORY_DOT, STATUS_CLASS, dueForDay, isOverdue,
+  STATUS_CLASS, dueForDay, isOverdue,
   type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
 } from "@/lib/ops-runway";
 import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
@@ -14,6 +14,7 @@ import { OWNER_LABEL, estimateLabel, isSnoozed } from "@/lib/ops-guided";
 import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, minutesTip, ownerTip, statusTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
+import { OpsGlyph } from "./OpsGlyph";
 import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
 
 
@@ -103,6 +104,15 @@ export function OpsTaskRow(props: TaskRowProps) {
             : <Circle className={cn(major ? "h-4 w-4" : "h-3.5 w-3.5")} />}
         </button>
 
+        {major && (
+          <OpsGlyph
+            category={task.category}
+            plate
+            plateClassName={cn("h-10 w-10", done && "opacity-70")}
+            className="h-5 w-5"
+          />
+        )}
+
         <div className="min-w-0 flex-1">
           {major && (
             <div className="mb-1 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
@@ -130,7 +140,7 @@ export function OpsTaskRow(props: TaskRowProps) {
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
             <InfoTip tip={categoryTip(task)}>
               <span className="inline-flex items-center gap-1.5">
-                <span className={cn("h-1.5 w-1.5 rounded-full", OPS_CATEGORY_DOT[task.category] ?? "bg-muted")} />
+                <OpsGlyph category={task.category} className="h-3.5 w-3.5" />
                 {task.category}
               </span>
             </InfoTip>

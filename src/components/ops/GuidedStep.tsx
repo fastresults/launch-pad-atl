@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  CheckCircle2, ChevronRight, Clock, HelpCircle, Link2, Loader2, PartyPopper, Phone, Hammer,
+  CheckCircle2, ChevronRight, Clock, HelpCircle, Link2, Loader2, Phone, Hammer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,8 @@ import { CRITICALITY, criticalityOf, criticalityTip, minutesTip, ownerTip, TIPS 
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
 import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
+import { OpsGlyph } from "./OpsGlyph";
+import { OpsStageArt, OpsClearedMark } from "./OpsStageArt";
 import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
 
 export interface GuidedStepProps extends DeliveryHandlers {
@@ -45,7 +47,7 @@ export function GuidedStep(props: GuidedStepProps) {
   if (!task) {
     return (
       <div className="rounded-2xl border border-border/50 bg-card/40 p-8 text-center">
-        <PartyPopper className="mx-auto h-7 w-7 text-primary" />
+        <OpsClearedMark className="mx-auto h-20 w-20" />
         <h3 className="mt-3 text-lg font-semibold tracking-tight">Everything on the list is handled</h3>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
           Nothing is waiting on you right now. Anything you put off will come back when it's due.
@@ -78,8 +80,16 @@ export function GuidedStep(props: GuidedStepProps) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-border/50 bg-card/40 p-5 sm:p-7">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+      <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 p-5 sm:p-7">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-2 right-0 hidden w-2/5 opacity-[0.08] sm:block"
+          style={{ maskImage: "linear-gradient(to left, black, transparent)", WebkitMaskImage: "linear-gradient(to left, black, transparent)" }}
+        >
+          <OpsStageArt phase={task.phase} />
+        </div>
+
+        <div className="relative flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-wide text-muted-foreground">
           <span className="text-primary">{stage.when} · {stage.name}</span>
           <span>Step {pos.index} of {pos.total}</span>
           {est && (
@@ -101,7 +111,13 @@ export function GuidedStep(props: GuidedStepProps) {
           </InfoTip>
         </div>
 
-        <h3 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">{task.title}</h3>
+        <div className="relative mt-3 flex items-start gap-3">
+          <OpsGlyph category={task.category} plate plateClassName="h-12 w-12" className="h-6 w-6" />
+          <div className="min-w-0">
+            <h3 className="text-xl font-semibold tracking-tight sm:text-2xl">{task.title}</h3>
+            <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{task.category}</p>
+          </div>
+        </div>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{task.why}</p>
         {isMilestone(task) && (
           <p className="mt-2 max-w-2xl rounded-xl border border-primary/25 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
@@ -228,8 +244,9 @@ export function GuidedStep(props: GuidedStepProps) {
         {peek && (
           <ol className="mt-3 space-y-1.5">
             {next3.map((t, i) => (
-              <li key={t.id} className="flex gap-2 text-xs text-muted-foreground">
+              <li key={t.id} className="flex items-start gap-2 text-xs text-muted-foreground">
                 <span className="tabular-nums">{i + 2}.</span>
+                <OpsGlyph category={t.category} className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                 <span>{t.title} <span className="opacity-70">· {OWNER_LABEL(t.owner_kind, viewerKind)}</span></span>
               </li>
             ))}
