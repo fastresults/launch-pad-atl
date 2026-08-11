@@ -124,7 +124,7 @@ export function DeliveryModeToggle({
             className,
           )}
         >
-          <OpsStageArt phase="build" className="pointer-events-none absolute -right-6 -top-8 h-40 w-40 opacity-[0.07]" />
+          <OpsStageArt phase={2} className="pointer-events-none absolute -right-6 -top-8 h-40 w-40 opacity-[0.07]" />
 
           <div className="relative flex flex-wrap items-baseline justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Delivery mode</p>
