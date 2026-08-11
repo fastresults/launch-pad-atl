@@ -16,7 +16,7 @@ import { DeliveredRail } from "./DeliveredRail";
 import type { DeliveryHandlers } from "./DeliveryPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InfoTip } from "./InfoTip";
-import { OpsStageArt } from "./OpsStageArt";
+import { OpsStageArt, OpsStageMasthead } from "./OpsStageArt";
 import { OpsProgressRing } from "./OpsProgressRing";
 import { TIPS } from "@/lib/ops-criticality";
 
@@ -136,13 +136,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
     <TooltipProvider delayDuration={120}>
     <div className={cn("space-y-6", props.className)}>
       <header className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 p-4 sm:p-5">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-[0.06] md:block"
-          style={{ maskImage: "linear-gradient(to left, black, transparent)", WebkitMaskImage: "linear-gradient(to left, black, transparent)" }}
-        >
-          <OpsStageArt phase={stagePhase} className="h-full" />
-        </div>
+        <OpsStageMasthead phase={stagePhase} className="w-[42%]" />
 
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -160,10 +154,6 @@ export function OpsDashboard(props: OpsDashboardProps) {
             </div>
             <OpsProgressRing pct={overall.pct} label="Complete" size={84} />
           </div>
-        </div>
-
-        <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${overall.pct}%` }} />
         </div>
 
 
