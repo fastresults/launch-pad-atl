@@ -2,7 +2,9 @@
 // the share link authenticates with its token, the hub authenticates with the
 // signed-in user's session and a snapshotId.
 import { supabase } from "@/integrations/supabase/client";
-import type { OpsOwnerKind, OpsRunway, OpsStatus } from "@/lib/ops-runway";
+import type {
+  DeliveryMode, DeliveryStatus, OpsOwnerKind, OpsRunway, OpsStatus,
+} from "@/lib/ops-runway";
 
 const SUPABASE_URL =
   (import.meta.env.VITE_SUPABASE_URL as string | undefined) ||
