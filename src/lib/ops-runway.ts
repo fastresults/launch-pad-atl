@@ -83,7 +83,12 @@ export const OPS_CATEGORY_DOT: Record<string, string> = {
   Brand: "bg-fuchsia-400",
   Marketing: "bg-sky-400",
   "Social & Content": "bg-rose-400",
+  Creative: "bg-violet-400",
 };
+
+/** Categories that make up the creative sign-off thread. */
+export const OPS_CREATIVE_CATEGORIES = new Set(["Creative", "Brand"]);
+
 
 /** Day N of the runway is N-1 days after the start; used for due dates and the "today" marker. */
 export function dueForDay(startedAt: string | null | undefined, day: number): Date | null {
