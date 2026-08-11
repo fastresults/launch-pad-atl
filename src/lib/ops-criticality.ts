@@ -96,12 +96,13 @@ export function categoryTip(task: OpsTask): string {
 /** Criticality, said in terms of this specific step and what it holds up. */
 export function criticalityTip(task: OpsTask, all: OpsTask[] = []): string {
   const meta = critMeta(task);
+  const level = criticalityOf(task);
   const gated = unlockedBy(task, all).map((t) => t.title);
   const consequence = gated.length
     ? ` Leave it and these stall: ${gated.slice(0, 3).join(", ")}.`
-    : meta.key === "required_to_operate"
+    : level === "required_to_operate"
       ? " Leave it and you're operating exposed — no clean paperwork, no clean books."
-      : meta.key === "required_to_sell"
+      : level === "required_to_sell"
         ? " Leave it and interest has nowhere to become revenue."
         : " Safe to do after the essentials are holding.";
   return `${task.title} is ${meta.label.toLowerCase()}.${consequence} ${meta.tip}`;
