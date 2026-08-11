@@ -6,7 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { fetchSharePayload, trackShareView, type SharePayload } from "@/lib/venture-share.functions";
 import { useSurfaceLogo } from "@/hooks/use-surface-logo";
 import { OwnerAssetActions } from "@/components/share/OwnerAssetActions";
-import { ShareSidebar, BRAIN_KEY, TIMELINE_KEY } from "@/components/share/ShareSidebar";
+import { ShareSidebar, BRAIN_KEY, TIMELINE_KEY, OUTRO_KEY } from "@/components/share/ShareSidebar";
 import { decodeScenario, encodeScenario, type TimelineScenario } from "@/lib/venture-timeline";
 import { ShareSection } from "@/components/share/ShareSection";
 import { ShareBrain } from "@/components/share/ShareBrain";
