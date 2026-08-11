@@ -23,6 +23,10 @@ export interface OpsTask {
   sort_order: number;
   completed_at: string | null;
   proof_url: string | null;
+  how?: string[] | null;
+  needs?: string[] | null;
+  minutes?: number | null;
+  snoozed_until?: string | null;
 }
 
 export interface OpsNote {
@@ -38,6 +42,7 @@ export interface OpsState {
   snapshot_id: string;
   runway_started_at: string;
   client_can_edit: boolean;
+  intro_dismissed?: boolean;
 }
 
 export interface OpsRunway {
