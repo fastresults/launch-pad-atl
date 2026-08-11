@@ -25,7 +25,7 @@ export const PLAIN_STATUS: Record<OpsStatus, string> = {
   done: "Done",
 };
 
-export interface TaskRowProps {
+export interface TaskRowProps extends DeliveryHandlers {
   task: OpsTask;
   notes: OpsNote[];
   canEdit: boolean;
@@ -43,7 +43,10 @@ export interface TaskRowProps {
   allTasks?: OpsTask[];
   /** "milestone" renders the big-move treatment; "supporting" the quiet one. */
   variant?: "milestone" | "supporting" | "auto";
+  /** How this runway is being delivered — drives the managed-delivery block. */
+  deliveryMode?: DeliveryMode | null;
 }
+
 
 
 /** One step in the checklist: a real checkbox, plain words, detail on demand. */
