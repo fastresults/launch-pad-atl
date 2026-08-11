@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { OpsDashboard } from "@/components/ops/OpsDashboard";
 import CreativeSignoffBoard from "@/components/creative/CreativeSignoffBoard";
 import {
-  addOpsNote, fetchOpsRunway, setOpsOwner, setOpsProof, setOpsStatus, type OpsAuth,
+  addOpsNote, dismissOpsIntro, fetchOpsRunway, setOpsOwner, setOpsProof, setOpsStatus,
+  snoozeOpsTask, type OpsAuth,
 } from "@/lib/ops.functions";
 import type { OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
 import type { SharePayload } from "@/lib/venture-share.functions";
@@ -109,6 +110,11 @@ export function ShareOpsRunway({
           onOwner={(id, o: OpsOwnerKind) => void run(id, () => setOpsOwner(auth, id, o))}
           onNote={(id, body) => void run(id, () => addOpsNote(auth, id, body))}
           onProof={(id, url) => void run(id, () => setOpsProof(auth, id, url))}
+          onSnooze={(id, days) => void run(id, () => snoozeOpsTask(auth, id, days))}
+          showIntro={data.canEdit && !data.state?.intro_dismissed}
+          onDismissIntro={() => {
+            void dismissOpsIntro(auth).then(refresh).catch(() => undefined);
+          }}
           assetTitle={(k) => titleByKey.get(k) ?? null}
           onOpenAsset={(k) => {
             const item = keyToItem.get(k);
