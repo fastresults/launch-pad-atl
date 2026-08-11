@@ -4,7 +4,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { DeliveryMode, OpsNote, OpsOwnerKind, OpsStatus, OpsTask } from "@/lib/ops-runway";
+import { categoryLabel, type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask } from "@/lib/ops-runway";
 import { OWNER_LABEL, estimateLabel, guidedQueue, stageOf, stepPosition } from "@/lib/ops-guided";
 import { CRITICALITY, criticalityOf, criticalityTip, minutesTip, ownerTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
