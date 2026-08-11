@@ -69,14 +69,7 @@ const MODE_LABEL: Record<DeliveryMode, string> = {
   retained: "Adam's team is building this",
 };
 
-/** What the foundation already delivered — credited before the remaining work. */
-const FOUNDATION_DELIVERED = [
-  "Offer and pricing",
-  "Brand system",
-  "Site direction and copy",
-  "Campaign arc",
-  "Operating assets",
-];
+
 
 
 /**
