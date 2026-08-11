@@ -85,7 +85,11 @@ export function agencySkillNote(t: OpsTask): string {
   return `${t.category.toLowerCase()} work we've run end to end before — you get the version that already works`;
 }
 
-/** Why a milestone is different from the errands around it. */
+/**
+ * Fallback framing for a milestone with no written reason of its own.
+ * Generic by construction, so it is only ever a last resort — see
+ * `milestoneReason`, which prefers the step's own line.
+ */
 export function milestoneNote(t: OpsTask, all: OpsTask[]): string {
   const gates = (t.unlocks?.length ?? 0);
   if (gates >= 2) return `A hinge point — ${gates} later steps wait on this one.`;
@@ -93,6 +97,52 @@ export function milestoneNote(t: OpsTask, all: OpsTask[]): string {
   if (criticalityOf(t) === "required_to_sell") return "You cannot reliably take money until this one is done.";
   return "A step the whole week is pointed at.";
 }
+
+/**
+ * The one line under a major move. Specific before generic: every seeded step
+ * carries its own reason, so the derived line is only used when it doesn't.
+ */
+export function milestoneReason(t: OpsTask, all: OpsTask[] = [t]): string {
+  const own = (t.why ?? "").trim();
+  return own || milestoneNote(t, all);
+}
+
+/**
+ * Suppress a line that has already been said in this group. Repeating the
+ * same sentence down three cards is what made the runway read as filler.
+ */
+export function dedupeReasons(tasks: OpsTask[], all: OpsTask[] = tasks): Map<string, string> {
+  const seen = new Set<string>();
+  const out = new Map<string, string>();
+  for (const t of tasks) {
+    const line = milestoneReason(t, all);
+    const key = line.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.set(t.id, line);
+  }
+  return out;
+}
+
+/**
+ * One expertise line for a whole day, not one per step. Returns null when the
+ * founder owns everything that day.
+ */
+export function dayAgencyNote(tasks: OpsTask[]): string | null {
+  const led = tasks.filter((t) => leadOf(t) !== "founder");
+  if (!led.length) return null;
+  const anchor = led.find(isMilestone) ?? led[0];
+  return agencySkillNote(anchor);
+}
+
+/** How the day splits between the team and the founder, said once. */
+export function dayLeadSummary(tasks: OpsTask[]): string | null {
+  const led = tasks.filter((t) => leadOf(t) !== "founder").length;
+  if (!led) return "You lead every step today";
+  if (led === tasks.length) return "Adam's team leads today";
+  return `Adam's team leads ${led} of ${tasks.length} steps today`;
+}
+
 
 /** Milestone progress for a set of steps. */
 export function milestoneProgress(tasks: OpsTask[]) {
