@@ -207,6 +207,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
         <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
           <div className="rounded-2xl border border-border/50 bg-card/40 p-4">
             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Where you are</h4>
+            <OpsStageArt phase={stagePhase} className="mt-3 h-16 opacity-70" />
             <p className="mt-2 text-sm font-medium">{stage.when} — {stage.name}</p>
             <p className="mt-1 text-xs text-muted-foreground">{stage.promise}</p>
             {view !== "guided" && (

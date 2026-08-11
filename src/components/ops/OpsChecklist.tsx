@@ -8,6 +8,8 @@ import { activeStage, isSnoozed, stageOf } from "@/lib/ops-guided";
 import { criticalityOf } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { CRITICALITY } from "@/lib/ops-criticality";
+import { OpsStageArt } from "./OpsStageArt";
+import { OpsGlyph } from "./OpsGlyph";
 import { groupByMilestone, isMilestone, leadOf, milestoneProgress } from "@/lib/ops-significance";
 
 type Lens = "all" | "mine" | "theirs" | "open" | "major" | "welead" | "must" | "sell" | "stuck" | "late" | "done";
@@ -118,6 +120,7 @@ export function OpsChecklist(props: OpsChecklistProps) {
             <button type="button" onClick={() => toggle(p.phase)}
               className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/20">
               <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", !expanded && "-rotate-90")} />
+              <OpsStageArt phase={p.phase} className="hidden h-12 w-28 shrink-0 opacity-60 sm:block" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-2">
                   <InfoTip tip={stage.promise}>
@@ -140,7 +143,11 @@ export function OpsChecklist(props: OpsChecklistProps) {
               <div className="space-y-4 border-t border-border/40 px-3 py-3 sm:px-4">
                 {days.map((d) => (
                   <div key={d} className="space-y-2">
-                    <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{dayLabel(d)}</div>
+                    <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      <span className="h-px w-4 bg-border/70" />
+                      {dayLabel(d)}
+                      <span className="h-px flex-1 bg-border/40" />
+                    </div>
                     {groupByMilestone(rows.filter((t) => t.day === d)).map((g, gi) => {
                       const row = (t: OpsTask, variant: "milestone" | "supporting") => (
                         <OpsTaskRow
@@ -162,7 +169,8 @@ export function OpsChecklist(props: OpsChecklistProps) {
                           {g.supporting.length > 0 && (
                             <div className={cn("space-y-1", g.milestone && "ml-3 border-l border-border/40 pl-3 sm:ml-4 sm:pl-4")}>
                               {g.milestone && (
-                                <p className="pt-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                                <p className="flex items-center gap-1.5 pt-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                                  <OpsGlyph category={g.milestone.category} className="h-3 w-3" />
                                   Supporting steps
                                 </p>
                               )}
