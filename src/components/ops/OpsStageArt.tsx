@@ -112,7 +112,7 @@ export function OpsStageMasthead({
       )}
       style={{ maskImage: mask, WebkitMaskImage: mask }}
     >
-      <OpsStageArt phase={phase} className="h-auto w-full" />
+      <OpsStageArt phase={phase} className="h-full w-auto max-w-full" />
     </div>
   );
 }
