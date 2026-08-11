@@ -22,12 +22,13 @@ export interface DeliveryHandlers {
  * founder reads it and approves.
  */
 export function DeliveryPanel({
-  task, viewerKind, busy, compact, ...h
+  task, viewerKind, busy, compact, className, ...h
 }: DeliveryHandlers & {
   task: OpsTask;
   viewerKind: OpsOwnerKind;
   busy?: boolean;
   compact?: boolean;
+  className?: string;
 }) {
   const agencyView = viewerKind === "agency";
   const status = deliveryStatusOf(task);
@@ -40,6 +41,7 @@ export function DeliveryPanel({
     <div className={cn(
       "rounded-xl border border-primary/25 bg-primary/[0.03]",
       compact ? "px-3 py-2.5" : "px-3.5 py-3",
+      className,
     )}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px]">
         <span className={cn("rounded-full border px-2 py-0.5", DELIVERY_STATUS_CLASS[status])}>
