@@ -7,8 +7,10 @@ import { activeStage, isSnoozed, stageOf } from "@/lib/ops-guided";
 import { criticalityOf } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
 import { CRITICALITY } from "@/lib/ops-criticality";
+import { groupByMilestone, isMilestone, leadOf, milestoneProgress } from "@/lib/ops-significance";
 
-type Lens = "all" | "mine" | "theirs" | "open" | "must" | "sell" | "stuck" | "late" | "done";
+type Lens = "all" | "mine" | "theirs" | "open" | "major" | "welead" | "must" | "sell" | "stuck" | "late" | "done";
+
 
 export interface OpsChecklistProps {
   tasks: OpsTask[];
