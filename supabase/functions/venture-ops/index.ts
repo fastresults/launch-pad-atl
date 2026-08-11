@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
 
     if (action === "list") {
       await seedRunway(db, snapshotId);
-      const payload = await loadRunway(db, snapshotId);
+      const payload = await loadRunway(db, snapshotId, viewerKind);
       clientCanEditFlag = payload.state?.client_can_edit !== false;
       return json({
         ...payload,
@@ -218,6 +218,55 @@ Deno.serve(async (req) => {
         .upsert({ snapshot_id: snapshotId, client_can_edit: on }, { onConflict: "snapshot_id" });
       return json({ ok: true });
     }
+
+    // ------------------------------------------------------------ delivery
+    if (action === "set_delivery_mode") {
+      const mode = String(body?.mode ?? "");
+      if (!MODES.has(mode)) return json({ error: "Pick how this gets delivered" }, 400);
+      const setBy = typeof body?.setBy === "string" ? body.setBy.slice(0, 120) : viewerKind;
+      const { data: state } = await db
+        .from("venture_ops_state").select("runway_started_at").eq("snapshot_id", snapshotId).maybeSingle();
+      await db.from("venture_ops_state").upsert({
+        snapshot_id: snapshotId,
+        delivery_mode: mode,
+        delivery_mode_set_at: new Date().toISOString(),
+        delivery_mode_set_by: setBy,
+      }, { onConflict: "snapshot_id" });
+      await applyDeliveryMode(db, snapshotId, mode, state?.runway_started_at ?? null);
+      if (mode === "retained") {
+        await db.from("venture_ops_updates").insert({
+          snapshot_id: snapshotId,
+          author_kind: "agency",
+          author_name: "Startup Labs",
+          body: "Engagement started. Every specialist step now has an owner and a committed date.",
+        });
+      }
+      return json({ ok: true });
+    }
+
+    if (action === "set_rate") {
+      const cents = Math.max(1000, Math.min(100_000, Number(body?.rateCents) || 7500));
+      await db.from("venture_ops_state")
+        .upsert({ snapshot_id: snapshotId, blended_rate_cents: cents }, { onConflict: "snapshot_id" });
+      return json({ ok: true });
+    }
+
+    if (action === "post_update") {
+      const text = typeof body?.body === "string" ? body.body.trim().slice(0, 4000) : "";
+      if (!text) return json({ error: "Write something first." }, 400);
+      const forTask = typeof body?.taskId === "string" && body.taskId ? body.taskId : null;
+      const { error } = await db.from("venture_ops_updates").insert({
+        snapshot_id: snapshotId,
+        task_id: forTask,
+        author_kind: viewerKind,
+        author_name: typeof body?.authorName === "string" ? body.authorName.slice(0, 120) : null,
+        body: text,
+        visible_to_client: viewerKind === "agency" ? body?.visibleToClient !== false : true,
+      });
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
 
     // Every mutation below needs a task that belongs to this venture.
     const taskId = typeof body?.taskId === "string" ? body.taskId : "";
