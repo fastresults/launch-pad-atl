@@ -202,6 +202,11 @@ export function OpsDashboard(props: OpsDashboardProps) {
             )}
           </div>
 
+          {mode !== "self" && (
+            <DeliveredRail tasks={tasks} updates={props.updates} />
+          )}
+
+
           {props.onConsult && (
             <div className="rounded-2xl border border-border/50 bg-card/40 p-4">
               <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Want it done with you?</h4>
