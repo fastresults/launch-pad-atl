@@ -6,6 +6,8 @@
  * a link a customer or investor reads. This strips them before render.
  */
 
+import { stripEmbeddedMarkup } from "@/lib/strip-embedded-markup";
+
 /** Headings whose whole section is a developer artifact. */
 const DEV_SECTION = /^#{2,4}\s*(brand tokens\b.*|design tokens\b.*|tokens \(json\)|machine-readable.*)$/i;
 
@@ -19,7 +21,7 @@ function headingLevel(line: string): number | null {
 
 export function filterShowcaseContent(md?: string | null): string {
   if (!md) return "";
-  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const lines = stripEmbeddedMarkup(md).split("\n");
   const out: string[] = [];
   let i = 0;
 
