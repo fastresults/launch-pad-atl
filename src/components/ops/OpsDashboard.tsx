@@ -232,6 +232,8 @@ export function OpsDashboard(props: OpsDashboardProps) {
     if (filter === "blocked") return t.status === "blocked";
     if (filter === "overdue") return isOverdue(t, startedAt);
     if (filter === "open") return t.status !== "done";
+    if (filter === "creative") return t.category === "Creative" || t.category === "Brand";
+    if (filter === "growth") return t.category === "Marketing" || t.category === "Strategy" || t.category === "Social & Content";
     return true;
   });
 
