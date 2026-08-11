@@ -11,6 +11,7 @@ import {
 } from "@/lib/ops.functions";
 import type { DeliveryMode, OpsOwnerKind, OpsStatus } from "@/lib/ops-runway";
 import type { SharePayload } from "@/lib/venture-share.functions";
+import { engagePath } from "@/lib/ops-engagement";
 
 /**
  * The Operationalize view inside the public showcase. Same dashboard the agency
@@ -101,6 +102,7 @@ export function ShareOpsRunway({
         <CreativeSignoffBoard auth={auth} />
       ) : (
         <OpsDashboard
+          engageHref={engagePath(token)}
           tasks={data.tasks}
           notes={data.notes}
           updates={data.updates}

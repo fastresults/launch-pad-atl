@@ -8,8 +8,9 @@ import type { PlatformRequestInput } from "./PlatformRequestDialog";
  * delivered. The choice reshapes ownership across the whole catalog.
  */
 export function DeliveryModeGate({
-  tasks, onChoose, busy, currentMode, rateCents, onRate, platformRequest, onPlatformRequest,
+  tasks, onChoose, busy, currentMode, rateCents, onRate, platformRequest, onPlatformRequest, engageHref,
 }: {
+  engageHref?: string;
   tasks: OpsTask[];
   onChoose: (mode: DeliveryMode) => void;
   busy?: boolean;
@@ -29,6 +30,7 @@ export function DeliveryModeGate({
       onRate={onRate}
       platformRequest={platformRequest}
       onPlatformRequest={onPlatformRequest}
+      engageHref={engageHref}
     />
   );
 }

@@ -3542,6 +3542,50 @@ export type Database = {
           },
         ]
       }
+      venture_ops_engagements: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          snapshot_id: string
+          start_pref: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          snapshot_id: string
+          start_pref?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          snapshot_id?: string
+          start_pref?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_ops_engagements_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venture_ops_notes: {
         Row: {
           author_kind: string

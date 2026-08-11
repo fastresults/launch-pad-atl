@@ -167,6 +167,48 @@ async function notifyPlatformRequest(db: any, snapshotId: string, row: Record<st
   }
 }
 
+/** Tell Adam a founder wants the team to run the runway. Best-effort. */
+async function notifyEngagementRequest(db: any, snapshotId: string, row: Record<string, unknown>) {
+  try {
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (!lovableKey || !resendKey) return;
+    const { data: snap } = await db
+      .from("venture_snapshots").select("company_name").eq("id", snapshotId).maybeSingle();
+    const venture = snap?.company_name || "Unknown venture";
+    const esc = (v: unknown) =>
+      String(v ?? "—").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const html = `
+      <div style="font-family:Arial,Helvetica,sans-serif;color:#111;line-height:1.6">
+        <h2 style="margin:0 0 12px">Kickoff call requested</h2>
+        <p style="margin:0 0 16px">Retainer engagement for <strong>${esc(venture)}</strong>.</p>
+        <p><strong>Name:</strong> ${esc(row.name)}</p>
+        <p><strong>Email:</strong> ${esc(row.email)}</p>
+        <p><strong>Phone:</strong> ${esc(row.phone)}</p>
+        <p><strong>Wants to start:</strong> ${esc(row.start_pref)}</p>
+        <p><strong>Notes:</strong><br/>${esc(row.notes)}</p>
+      </div>`;
+    await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": resendKey,
+      },
+      body: JSON.stringify({
+        from: Deno.env.get("CONSULT_FROM") ?? "Startup Labs <notifications@3dayplan.com>",
+        to: [Deno.env.get("CONSULT_TO") ?? "fastresults@gmail.com"],
+        subject: `Kickoff call requested — ${venture}`,
+        html,
+      }),
+    });
+  } catch (e) {
+    console.error("engagement notify failed", e);
+  }
+}
+
+
+
 async function loadRunway(db: any, snapshotId: string, viewerKind: "client" | "agency") {
   const [{ data: tasks }, { data: state }, { data: rawUpdates }, { data: platform }] = await Promise.all([
     db.from("venture_ops_tasks").select("*").eq("snapshot_id", snapshotId).order("sort_order"),
@@ -241,12 +283,44 @@ Deno.serve(async (req) => {
       await seedRunway(db, snapshotId);
       const payload = await loadRunway(db, snapshotId, viewerKind);
       clientCanEditFlag = payload.state?.client_can_edit !== false;
+      const { data: snapRow } = await db
+        .from("venture_snapshots").select("company_name").eq("id", snapshotId).maybeSingle();
       return json({
         ...payload,
+        ventureName: snapRow?.company_name ?? null,
         viewerKind,
         canEdit: viewerKind === "agency" ? true : clientCanEditFlag,
       });
     }
+
+    // ------------------------------------------------- retainer engagement
+    if (action === "request_engagement") {
+      const name = typeof body?.name === "string" ? body.name.trim().slice(0, 100) : "";
+      const email = typeof body?.email === "string" ? body.email.trim().slice(0, 255) : "";
+      if (!name) return json({ error: "Add your name." }, 400);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Add a valid email." }, 400);
+      const row = {
+        snapshot_id: snapshotId,
+        name,
+        email,
+        phone: typeof body?.phone === "string" ? body.phone.trim().slice(0, 32) || null : null,
+        start_pref: typeof body?.startPref === "string" ? body.startPref.trim().slice(0, 120) || null : null,
+        notes: typeof body?.notes === "string" ? body.notes.trim().slice(0, 2000) || null : null,
+        status: "new",
+      };
+      const { error } = await db.from("venture_ops_engagements").insert(row);
+      if (error) return json({ error: error.message }, 400);
+      await db.from("venture_ops_updates").insert({
+        snapshot_id: snapshotId,
+        author_kind: viewerKind,
+        author_name: name,
+        body: "Kickoff call requested — Startup Labs to run the operating runway.",
+        visible_to_client: true,
+      });
+      await notifyEngagementRequest(db, snapshotId, row);
+      return json({ ok: true });
+    }
+
 
     if (action === "dismiss_intro") {
       await db.from("venture_ops_state")
