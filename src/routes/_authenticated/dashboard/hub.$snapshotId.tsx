@@ -1063,9 +1063,30 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
   // the watchdog window (or an explicitly paused job) is surfaced honestly
   // instead of spinning a progress bar that will never move.
   const heartbeatAgeMs = job?.heartbeat_at ? Date.now() - new Date(job.heartbeat_at).getTime() : null;
+  // Drift is the early signal: the cron watchdog would catch this within a few
+  // minutes, but an open browser can recover it far sooner.
+  const jobDrifting = jobRunning && heartbeatAgeMs !== null && heartbeatAgeMs > 3 * 60 * 1000;
   const jobStalled = jobRunning && heartbeatAgeMs !== null && heartbeatAgeMs > 6 * 60 * 1000;
   const jobPaused = job?.status === "paused";
   const jobNeedsAttention = jobPaused || jobStalled;
+
+  // Nudge the server-side watchdog (idempotent) at most once a minute while a
+  // run looks drifted, so document-level recovery doesn't wait for cron.
+  const lastNudgeRef = useRef(0);
+  useEffect(() => {
+    if (!jobDrifting && !jobPaused) return;
+    const now = Date.now();
+    if (now - lastNudgeRef.current < 60_000) return;
+    lastNudgeRef.current = now;
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) return;
+    fetch(`${url}/functions/v1/venture-job-watchdog`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: key },
+      body: JSON.stringify({}),
+    }).catch(() => {});
+  }, [jobDrifting, jobPaused, heartbeatAgeMs]);
 
   // Self-heal first, ask second: the first time we notice a dropped run we
   // quietly pick it back up. The founder only ever sees a decision to make if
@@ -1079,6 +1100,7 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
     setAutoResuming(true);
     bulk.mutateAsync({ retryOnly: true }).catch(() => {}).finally(() => setAutoResuming(false));
   }, [jobNeedsAttention, job?.id]);
+
 
 
 
