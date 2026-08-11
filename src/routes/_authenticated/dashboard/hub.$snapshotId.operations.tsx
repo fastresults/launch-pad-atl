@@ -126,7 +126,15 @@ export default function HubOperationsPage() {
         <OpsDashboard
           tasks={q.data.tasks}
           notes={q.data.notes}
+          updates={q.data.updates}
           startedAt={q.data.state?.runway_started_at}
+          deliveryMode={q.data.state?.delivery_mode ?? null}
+          rateCents={q.data.state?.blended_rate_cents ?? null}
+          onDeliveryMode={(m: DeliveryMode) => void run("mode", () => setDeliveryMode(auth, m, "Startup Labs"))}
+          onAssign={(id, name) => void run(id, () => assignOpsTask(auth, id, name))}
+          onCommittedDate={(id, iso) => void run(id, () => setOpsCommittedDate(auth, id, iso))}
+          onDeliveryStatus={(id, s: DeliveryStatus) => void run(id, () => setOpsDeliveryStatus(auth, id, s))}
+          onWorkProduct={(id, url, label) => void run(id, () => attachOpsWorkProduct(auth, id, url, label))}
           canEdit
           viewerKind="agency"
           busyTaskId={busyTaskId}
