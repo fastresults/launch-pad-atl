@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 import { OPS_PHASES, progressOf, type OpsTask } from "@/lib/ops-runway";
 import { activeStage, stageOf } from "@/lib/ops-guided";
 import { milestoneProgress } from "@/lib/ops-significance";
+import { OpsStageArt } from "./OpsStageArt";
+import { OpsGlyph } from "./OpsGlyph";
 
 /**
  * A read-only arc of the whole 90 days. Not a tool — a map, so a first-time
@@ -25,6 +27,7 @@ export function OpsTimeline({ tasks, onJump }: { tasks: OpsTask[]; onJump?: (pha
           const stage = stageOf(p.phase);
           const done = prog.pct === 100 && prog.total > 0;
           const active = p.phase === current && !done;
+          const cats = Array.from(new Set(all.map((t) => t.category))).slice(0, 5);
 
           return (
             <li key={p.phase} className="relative">
@@ -57,7 +60,22 @@ export function OpsTimeline({ tasks, onJump }: { tasks: OpsTask[]; onJump?: (pha
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{stage.promise}</p>
-                <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted/40">
+
+                <div className="mt-3 flex items-center gap-4">
+                  <OpsStageArt
+                    phase={p.phase}
+                    className={cn("hidden h-14 w-40 shrink-0 sm:block", active ? "opacity-90" : "opacity-45")}
+                  />
+                  <div className="flex flex-wrap gap-1.5">
+                    {cats.map((c) => (
+                      <span key={c} className="inline-flex items-center gap-1 rounded-full border border-border/50 px-2 py-0.5 text-[10px] text-muted-foreground">
+                        <OpsGlyph category={c} className="h-3 w-3" />{c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-muted/40">
                   <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${prog.pct}%` }} />
                 </div>
               </button>

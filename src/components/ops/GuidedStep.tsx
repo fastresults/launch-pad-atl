@@ -10,6 +10,8 @@ import { CRITICALITY, criticalityOf, criticalityTip, minutesTip, ownerTip, TIPS 
 import { InfoTip } from "./InfoTip";
 import { StepExplainer } from "./StepExplainer";
 import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
+import { OpsGlyph } from "./OpsGlyph";
+import { OpsStageArt, OpsClearedMark } from "./OpsStageArt";
 import { LEAD_META, agencySkillNote, isMilestone, leadOf, milestoneNote } from "@/lib/ops-significance";
 
 export interface GuidedStepProps extends DeliveryHandlers {
@@ -45,7 +47,7 @@ export function GuidedStep(props: GuidedStepProps) {
   if (!task) {
     return (
       <div className="rounded-2xl border border-border/50 bg-card/40 p-8 text-center">
-        <PartyPopper className="mx-auto h-7 w-7 text-primary" />
+        <OpsClearedMark className="mx-auto h-20 w-20" />
         <h3 className="mt-3 text-lg font-semibold tracking-tight">Everything on the list is handled</h3>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
           Nothing is waiting on you right now. Anything you put off will come back when it's due.
