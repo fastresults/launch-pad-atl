@@ -41,7 +41,10 @@ export interface TaskRowProps {
   assetTitle?: (key: string) => string | null;
   /** Full task list, so the explainer can name what this step unlocks. */
   allTasks?: OpsTask[];
+  /** "milestone" renders the big-move treatment; "supporting" the quiet one. */
+  variant?: "milestone" | "supporting" | "auto";
 }
+
 
 /** One step in the checklist: a real checkbox, plain words, detail on demand. */
 export function OpsTaskRow(props: TaskRowProps) {
