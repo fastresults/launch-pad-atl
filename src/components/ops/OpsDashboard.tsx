@@ -13,6 +13,9 @@ import { OpsTimeline } from "./OpsTimeline";
 import { OpsOnboarding } from "./OpsOnboarding";
 import { DeliveryModeGate } from "./DeliveryModeGate";
 import { DeliveryModeToggle } from "./DeliveryModeToggle";
+import { PlatformAddOn } from "./PlatformAddOn";
+import type { PlatformRequestInput } from "./PlatformRequestDialog";
+import type { PlatformRequest } from "@/lib/ops-platform";
 
 import { DeliveredRail } from "./DeliveredRail";
 import type { DeliveryHandlers } from "./DeliveryPanel";
@@ -49,6 +52,9 @@ export interface OpsDashboardProps extends DeliveryHandlers {
   onDeliveryMode?: (mode: DeliveryMode) => void;
   rateCents?: number | null;
   onRate?: (cents: number) => void;
+  /** An existing platform-build request, when the founder has already raised one. */
+  platformRequest?: PlatformRequest | null;
+  onPlatformRequest?: (input: PlatformRequestInput) => Promise<void>;
   className?: string;
 }
 
@@ -124,6 +130,8 @@ export function OpsDashboard(props: OpsDashboardProps) {
           onRate={props.onRate}
           onChoose={chooseMode}
           busy={!!props.busyTaskId}
+          platformRequest={props.platformRequest}
+          onPlatformRequest={props.onPlatformRequest}
         />
         {gateOpen && (
           <div className="text-center">
@@ -189,6 +197,16 @@ export function OpsDashboard(props: OpsDashboardProps) {
         </div>
 
 
+
+        {(props.platformRequest || props.onPlatformRequest) && (
+          <PlatformAddOn
+            variant="strip"
+            className="mt-4"
+            mode={mode}
+            request={props.platformRequest}
+            onRequest={canEdit ? props.onPlatformRequest : undefined}
+          />
+        )}
 
         <div className="mt-4 inline-flex flex-wrap gap-1 rounded-full border border-border/50 bg-background/50 p-1">
           {VIEWS.map(([v, label, Icon]) => (
