@@ -55,6 +55,8 @@ export interface OpsDashboardProps extends DeliveryHandlers {
   /** An existing platform-build request, when the founder has already raised one. */
   platformRequest?: PlatformRequest | null;
   onPlatformRequest?: (input: PlatformRequestInput) => Promise<void>;
+  /** Public engagement page for this venture, when one is reachable. */
+  engageHref?: string;
   className?: string;
 }
 
@@ -130,6 +132,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
           busy={!!props.busyTaskId}
           platformRequest={props.platformRequest}
           onPlatformRequest={props.onPlatformRequest}
+          engageHref={props.engageHref}
         />
         {gateOpen && (
           <div className="text-center">
@@ -202,6 +205,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
             disabled={!!props.busyTaskId}
             onChange={(m) => props.onDeliveryMode?.(m)}
             onCompare={() => setGateOpen(true)}
+            engageHref={props.engageHref}
           />
         )}
 

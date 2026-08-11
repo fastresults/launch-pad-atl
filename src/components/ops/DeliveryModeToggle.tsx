@@ -54,6 +54,8 @@ export function DeliveryModeToggle({
   readOnly?: boolean;
   /** Opens the side-by-side comparison; rendered inside the band when provided. */
   onCompare?: () => void;
+  /** Public engagement page — the price and how to start with Startup Labs. */
+  engageHref?: string;
 }) {
   const [pending, setPending] = useState<DeliveryMode | null>(null);
   const summary = pending ? changeSummary(tasks, pending) : null;
@@ -199,15 +201,25 @@ export function DeliveryModeToggle({
             })}
           </div>
 
-          {onCompare && (
-            <div className="relative mt-3">
-              <button
-                type="button"
-                onClick={onCompare}
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-foreground"
-              >
-                <Scale className="h-3.5 w-3.5" /> Compare the two side by side
-              </button>
+          {(onCompare || engageHref) && (
+            <div className="relative mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+              {onCompare && (
+                <button
+                  type="button"
+                  onClick={onCompare}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-foreground"
+                >
+                  <Scale className="h-3.5 w-3.5" /> Compare the two side by side
+                </button>
+              )}
+              {engageHref && (
+                <a
+                  href={engageHref}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 transition hover:underline"
+                >
+                  <Users className="h-3.5 w-3.5" /> See the price and start with Startup Labs
+                </a>
+              )}
             </div>
           )}
         </section>
