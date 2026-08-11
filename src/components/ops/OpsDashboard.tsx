@@ -16,6 +16,8 @@ import { DeliveredRail } from "./DeliveredRail";
 import type { DeliveryHandlers } from "./DeliveryPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InfoTip } from "./InfoTip";
+import { OpsStageArt } from "./OpsStageArt";
+import { OpsProgressRing } from "./OpsProgressRing";
 import { TIPS } from "@/lib/ops-criticality";
 
 type ViewMode = "guided" | "checklist" | "timeline";
@@ -75,7 +77,8 @@ export function OpsDashboard(props: OpsDashboardProps) {
 
   const overall = progressOf(tasks);
   const day = currentRunwayDay(startedAt);
-  const stage = stageOf(activeStage(tasks));
+  const stagePhase = activeStage(tasks);
+  const stage = stageOf(stagePhase);
   const stuck = tasks.filter((t) => t.status === "blocked").length;
   const late = tasks.filter((t) => isOverdue(t, startedAt) && t.status !== "done").length;
   const mode = props.deliveryMode ?? null;
