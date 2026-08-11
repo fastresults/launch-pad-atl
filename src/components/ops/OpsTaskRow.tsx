@@ -88,10 +88,10 @@ export function OpsTaskRow(props: TaskRowProps) {
           )}
         >
           {busy
-            ? <Loader2 className={cn("animate-spin", major ? "h-4.5 w-4.5" : "h-3.5 w-3.5")} />
-            : done ? <CheckCircle2 className={cn(major ? "h-4.5 w-4.5" : "h-3.5 w-3.5")} />
-            : task.status === "blocked" ? <AlertTriangle className={cn("text-destructive", major ? "h-4.5 w-4.5" : "h-3.5 w-3.5")} />
-            : <Circle className={cn(major ? "h-4.5 w-4.5" : "h-3.5 w-3.5")} />}
+            ? <Loader2 className={cn("animate-spin", major ? "h-4 w-4" : "h-3.5 w-3.5")} />
+            : done ? <CheckCircle2 className={cn(major ? "h-4 w-4" : "h-3.5 w-3.5")} />
+            : task.status === "blocked" ? <AlertTriangle className={cn("text-destructive", major ? "h-4 w-4" : "h-3.5 w-3.5")} />
+            : <Circle className={cn(major ? "h-4 w-4" : "h-3.5 w-3.5")} />}
         </button>
 
         <div className="min-w-0 flex-1">
