@@ -157,10 +157,19 @@ export function OpsDashboard(props: OpsDashboardProps) {
           {stuck > 0 && <span className="text-destructive">{stuck} stuck</span>}
           {late > 0 && <span className="text-destructive">{late} past due</span>}
           {!canEdit && <span>Read-only view</span>}
+          {mode && (
+            <button
+              type="button" onClick={() => setGateOpen(true)}
+              className="inline-flex items-center gap-1.5 normal-case tracking-normal hover:text-foreground"
+            >
+              <Scale className="h-3 w-3" /> {MODE_LABEL[mode]} · compare again
+            </button>
+          )}
           <button type="button" onClick={() => setIntro(true)} className="normal-case tracking-normal hover:text-foreground">
             How this works
           </button>
         </div>
+
 
         <div className="mt-4 inline-flex flex-wrap gap-1 rounded-full border border-border/50 bg-background/50 p-1">
           {VIEWS.map(([v, label, Icon]) => (
