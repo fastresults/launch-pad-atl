@@ -150,44 +150,17 @@ Deno.serve(async (req) => {
       });
     };
 
-    // Standalone documents (generated outside a bulk run — e.g. a single
-    // Website PRD rebuild) also strand in `generating` when a worker dies.
-    // Terminalize them so the founder gets a retry button instead of an
-    // indefinite spinner over stale content.
-    {
-      const { data: orphanDocs } = await supabase
-        .from("venture_documents")
-        .select("id")
-        .eq("status", "generating")
-        .lt("updated_at", cutoff);
-      if (orphanDocs?.length) {
-        await supabase.from("venture_documents")
-          .update({ status: "failed", last_error: "Generation stalled — worker dropped." })
-          .in("id", orphanDocs.map((d: any) => d.id));
-        unstuck += orphanDocs.length;
-      }
-    }
+    // Every wedged document — standalone rebuilds and assets inside a bulk run
+    // alike — goes through the checkpoint-aware recovery on its own 4-minute
+    // clock, so a saved draft is republished instead of destroyed.
+    const docCutoff = new Date(Date.now() - DOC_STALL_MS).toISOString();
+    unstuck += await recoverStuckDocuments(supabase, docCutoff);
 
     for (const j of stalled ?? []) {
 
-      // Reset docs stuck mid-generation — but only ones whose OWN row has been
-      // untouched past the stall window. A long, healthy document still being
-      // written must never be flipped to failed underneath the worker.
-      const { data: stuckDocs } = await supabase
-        .from("venture_documents")
-        .select("id")
-        .eq("snapshot_id", j.snapshot_id)
-        .eq("status", "generating")
-        .lt("updated_at", cutoff);
-      if (stuckDocs?.length) {
-        await supabase.from("venture_documents")
-          .update({ status: "failed", last_error: "Generation stalled — worker dropped." })
-          .in("id", stuckDocs.map((d: any) => d.id));
-        unstuck += stuckDocs.length;
-      }
-
       const resumeCount = j.resume_count ?? 0;
       if (resumeCount < 2) {
+
         // Auto-resume: re-invoke the bulk function in retry-only mode so a
         // dropped edge worker picks the run back up without the founder.
         await supabase.from("venture_generation_jobs").update({
