@@ -71,19 +71,19 @@ const CLUSTERS: Cluster[] = [
   },
   {
     key: "brand",
-    label: "Brand system and collateral",
-    match: /brand|logo|collateral|guideline|card|letterhead|signoff|sign-off/,
-    you: "Cobble together a logo and templates that drift apart within a month.",
-    we: "A vector mark, a written style system and print-grade collateral that stay consistent everywhere.",
-    role: "Brand designer",
+    label: "Brand system, elevated past the foundation set",
+    match: /brand|logo|collateral|guideline|card|letterhead|signoff|sign-off|art-direction|foundation-grade/,
+    you: "Keep the generated set as-is and hope it holds together once real customers look closely.",
+    we: "The foundation graded against your category, an art direction written, the mark and system refined, and collateral produced to it at print standard.",
+    role: "Creative director + brand designer",
   },
   {
     key: "campaign",
-    label: "Campaign and creative",
-    match: /campaign|ad|content|social|creative|post|cover|launch/,
-    you: "Post when you remember, with creative made in whatever tool is open.",
-    we: "An eight-week campaign arc, art-directed creative, and every asset reviewed before it publishes.",
-    role: "Campaign director",
+    label: "Campaign creative, raised to agency grade",
+    match: /campaign|ad|content|social|creative|post|cover|launch|imagery|poster|motion/,
+    you: "Publish the starter posters and stock frames — the work that reads as new to anyone who buys often.",
+    we: "Owned imagery shot or commissioned, the poster and ad system rebuilt to the art direction, and the standard held across eight weeks.",
+    role: "Art buyer + campaign director",
   },
 ];
 
@@ -92,10 +92,20 @@ const slugOf = (t: OpsTask) =>
 
 export function HeavyLifting({ tasks }: { tasks: OpsTask[] }) {
   const rows = useMemo(() => {
+    // Each step counts once: first matching cluster claims it, so the totals
+    // here reconcile with the step count on the summary above.
+    const claimed = new Set<string>();
+    const bucket = new Map<string, OpsTask[]>();
+    for (const t of tasks) {
+      const slug = slugOf(t);
+      const c = CLUSTERS.find((x) => x.match.test(slug));
+      if (!c || claimed.has(t.task_key)) continue;
+      claimed.add(t.task_key);
+      bucket.set(c.key, [...(bucket.get(c.key) ?? []), t]);
+    }
     return CLUSTERS.map((c) => {
-      const hit = tasks.filter((t) => c.match.test(slugOf(t)));
-      const minutes = hit.reduce((s, t) => s + (t.minutes ?? 0), 0);
-      return { ...c, count: hit.length, minutes };
+      const hit = bucket.get(c.key) ?? [];
+      return { ...c, count: hit.length, minutes: hit.reduce((s, t) => s + (t.minutes ?? 0), 0) };
     })
       .filter((r) => r.count > 0)
       .sort((a, b) => b.minutes - a.minutes)

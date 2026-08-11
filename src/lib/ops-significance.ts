@@ -14,6 +14,7 @@ const MILESTONE_MARKERS = [
   "qbo-connect", "chart-of-accounts", "offer", "price", "pricing",
   "ghl-subaccount", "a2p", "pipeline", "funnel", "site-live", "website",
   "launch", "campaign-live", "first-send", "signoff", "sign-off",
+  "art-direction", "imagery-production",
 ];
 
 /** A launch-defining move, versus the errands that feed it. */
@@ -68,7 +69,10 @@ const AGENCY_SKILL: [RegExp, string][] = [
   [/funnel|lead|list|nurture|retarget/, "funnel architecture and list building that has run for other ventures already"],
   [/offer|price|pricing|proposal/, "offer design and pricing — what the market will actually pay"],
   [/site|website|landing|prd/, "site architecture and conversion copy at studio standard"],
-  [/brand|logo|collateral|guideline/, "brand system and print-grade collateral"],
+  [/art-direction|foundation-grade/, "art direction — the written point of view that turns a foundation set into work that looks bought, not generated"],
+  [/imagery|photograph|shoot|motion/, "art buying and production: owned imagery and motion shot to one light, crop and colour language"],
+  [/poster|template|format/, "the poster and ad system rebuilt to one hierarchy, so every format reads as the same brand"],
+  [/brand|logo|collateral|guideline/, "brand system refinement and print-grade collateral, exported at bleed in the right colour profile"],
   [/campaign|ad|content|social|creative/, "campaign art direction and creative sign-off"],
   [/contract|msa|terms|privacy|compliance/, "contracts and compliance language that holds up"],
 ];

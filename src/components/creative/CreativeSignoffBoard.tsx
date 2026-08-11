@@ -115,13 +115,25 @@ export default function CreativeSignoffBoard({ auth, className }: Props) {
   if (!items.length) {
     return (
       <p className="py-10 text-sm text-muted-foreground">
-        No creative to review yet. Generate logos, collateral, social or ad creative first.
+        Nothing to elevate yet. Build the foundation set first — mark, collateral, social and ad
+        creative — then it arrives here to be raised to the standard and signed off.
       </p>
     );
   }
 
   return (
     <div className={cn("space-y-6", className)}>
+      <div className="rounded-xl border border-border/50 bg-card/40 px-4 py-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+          Elevate, then sign off
+        </p>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          What the build handed you is the foundation set, not the finished standard. Each piece gets
+          raised to the written art direction — real imagery, one crop language, one type hierarchy —
+          and only then does it get approved to publish.
+        </p>
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button

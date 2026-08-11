@@ -140,6 +140,8 @@ const DAYS: Day[] = [
     category: "Brand",
     subs: [
       ["voice-adopted", "Put the voice to work", "A voice guide nobody applies is decoration.", "Site copy, outbound scripts, and social captions all pass the voice guide.", "agency"],
+      ["foundation-grade", "Grade the foundation set against the category", "The build hands you a working foundation, not the finished standard — you have to see the gap before you can close it.", "Mark, palette, type, collateral, posters and covers reviewed side by side with three admired brands in your category, with the gaps written down.", "agency", "Creative"],
+      ["art-direction", "Write the art direction", "Without a written point of view, every new graphic is a fresh guess and the set drifts apart.", "One page fixing the reference set, lighting, composition, crop language, treatment of people and product, and motion rules.", "agency", "Creative"],
       ["logo-signoff", "Approve the final logo lockup", "Everything printed and published inherits this decision — changing it later is expensive.", "Primary, stacked, and one-color marks signed off with clear-space rules written down.", "client", "Creative"],
       ["color-type-lock", "Lock the color and type system", "Near-miss colors and substitute fonts are what make a brand look homemade.", "Hex, CMYK/Pantone equivalents, and the licensed or web-embedded fonts are fixed and documented.", "agency", "Creative"],
       ["style-system", "Publish the style system to the team", "Anyone touching a surface needs the rules without asking.", "The venture style guide is exported and shared with everyone who makes anything.", "agency", "Creative"],
@@ -228,6 +230,9 @@ const DAYS: Day[] = [
       ["site-proof", "Put proof on the page", "Nobody buys from a page with no evidence.", "At least one testimonial, result, or named client on the homepage.", "client"],
       ["asset-pack", "Export the print and digital asset pack", "The wrong file at the printer costs a week and a reprint.", "SVG, PNG, favicon, OG image, plus business card and letterhead print files at bleed — all in one folder.", "agency", "Creative"],
       ["photography", "Choose the real imagery", "Stock and placeholders read as 'nobody works here'.", "Real photography or commissioned imagery replaces every placeholder on live surfaces.", "client", "Creative"],
+      ["imagery-production", "Shoot or commission the real imagery", "Generated and stock imagery is the single loudest tell that a brand is new — real frames are what move it up a tier.", "A shoot brief run against the art direction, frames delivered and retouched, and every hero surface using an owned image.", "agency", "Creative"],
+      ["poster-system", "Elevate the poster and ad system", "The foundation posters prove the format works; agency-grade is what makes people stop.", "Every recurring post and ad format rebuilt to the art direction — one crop language, one type hierarchy, no template tells.", "agency", "Creative"],
+      ["collateral-print", "Rebuild the key collateral at print standard", "Print is unforgiving: the wrong scale, bleed or color profile is visible the moment it lands in a hand.", "Card, letterhead and one leave-behind rebuilt to the art direction and exported at bleed in the correct color profile.", "agency", "Creative"],
       ["identity-sweep", "Apply the identity everywhere", "Brand drift starts on the surfaces nobody audits.", "Site, email signature, invoice, proposal, and every social profile match the style system.", "agency", "Creative"],
 
     ],
@@ -269,6 +274,7 @@ const DAYS: Day[] = [
       ["three-sources", "Commit to three lead sources", "One source is a single point of failure.", "Three named sources, each with a weekly numeric quota.", "client"],
       ["first-25", "Send the first 25 messages", "The list is worthless until it's contacted.", "25 personalized messages actually sent and logged in the CRM.", "client"],
       ["sequence", "Schedule the 5-touch follow-up", "Most replies come after touch three.", "A five-step sequence running automatically for new prospects.", "agency"],
+      ["motion-cut", "Cut the first short-form motion piece", "Static work alone caps how far the brand travels — one well-cut piece resets what people expect from you.", "A 15–30 second cut using owned footage or stills, typeset and paced to the art direction, published on one channel.", "agency", "Creative"],
       ["calendar-loaded", "Queue the content calendar", "Posting when inspired means not posting.", "30 posts scheduled from the brand kit.", "agency"],
     ],
   },
@@ -282,6 +288,7 @@ const DAYS: Day[] = [
       ["ads-live", "Turn the ads on", "Paid is the fastest read on whether the message lands.", "At least one campaign spending against a tracked conversion.", "agency"],
       ["reviews", "Capture the first reviews", "Proof compounds; ask while it's fresh.", "Two reviews or testimonials published somewhere public.", "client"],
       ["referral", "Send the referral offer", "Your happiest customer is your cheapest channel.", "Referral link or offer sent to everyone who's said yes.", "client"],
+      ["creative-standard-signoff", "Sign off the creative standard across every live surface", "Launch is the moment everything is looked at at once — one off-standard surface undoes the rest.", "Site, profiles, ads, collateral and email all checked against the art direction and signed off, with any exception fixed before launch.", "client", "Creative"],
       ["first-customer", "Log the first paying customer", "The whole runway points here.", "Payment received, customer recorded in the CRM.", "client"],
     ],
   },
@@ -302,8 +309,8 @@ const POST_LAUNCH: [string, string, string, string, OpsCategory, OpsOwnerKind, 1
   ["quarter-plan", "Write the next quarter's plan", "Ninety days without a target drifts.", "One page: the target number, the three bets, and what you'll stop doing.", "Strategy", "client", 31],
   ["funnel-read", "Read the funnel end to end", "Averages hide the one step that's leaking.", "Visitors, leads, calls, proposals, and closes counted for the month, with the worst step named.", "Marketing", "agency", 15],
   ["list-hygiene", "Install the list-hygiene rhythm", "A dirty list quietly kills your sending reputation.", "Monthly pass on bounces, unsubscribes, and a re-engagement send to the cold segment.", "Marketing", "agency", 31],
-  ["creative-refresh", "Refresh the creative against results", "Ad and post fatigue is measurable — and fixable.", "Lowest-performing creative replaced using the brand kit, with before/after numbers.", "Creative", "agency", 31],
-  ["brand-audit", "Audit brand consistency across surfaces", "Six weeks of shipping is how brands drift.", "Every live surface checked against the style system; the exceptions fixed or documented.", "Creative", "agency", 31],
+  ["creative-refresh", "Refresh the creative without dropping the standard", "Fatigue is measurable — but replacing tired work with fast work is how a brand slides back down.", "Lowest-performing creative replaced to the art direction, not just swapped, with before/after numbers.", "Creative", "agency", 31],
+  ["brand-audit", "Hold the standard across every surface", "Six weeks of shipping is how brands drift back to the foundation set.", "Every live surface checked against the art direction and style system; exceptions fixed or documented.", "Creative", "agency", 31],
 
 ];
 
