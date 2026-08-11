@@ -120,7 +120,9 @@ export function OpsDashboard(props: OpsDashboardProps) {
   }
 
   // The decision comes before the list: who is actually going to do this work.
-  if ((!mode && props.onDeliveryMode) || gateOpen) {
+  const undecided = !mode && !!props.onDeliveryMode;
+
+  if (gateOpen) {
     return (
       <div className={cn("space-y-6", props.className)}>
         <DeliveryModeGate
@@ -134,17 +136,15 @@ export function OpsDashboard(props: OpsDashboardProps) {
           onPlatformRequest={props.onPlatformRequest}
           engageHref={props.engageHref}
         />
-        {gateOpen && (
-          <div className="text-center">
-            <Button variant="ghost" size="sm" onClick={() => setGateOpen(false)}>Back to the runway</Button>
-          </div>
-        )}
+        <div className="text-center">
+          <Button variant="ghost" size="sm" onClick={() => setGateOpen(false)}>Back to the runway</Button>
+        </div>
       </div>
     );
   }
 
+  const dashboard = (
 
-  return (
     <TooltipProvider delayDuration={120}>
     <div className={cn("space-y-6", props.className)}>
       <header className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 p-4 sm:p-5">
