@@ -489,10 +489,7 @@ export default function VentureSharePage() {
 
             <main
               ref={paneRef}
-              onScroll={(e) => {
-                setCondensed(e.currentTarget.scrollTop > 24);
-                maybeOutro(e.currentTarget);
-              }}
+              onScroll={(e) => setCondensed(e.currentTarget.scrollTop > 24)}
               onTouchStart={isMobile ? onTouchStart : undefined}
               onTouchEnd={isMobile ? onTouchEnd : undefined}
               className={`min-w-0 flex-1 overflow-y-auto ${
