@@ -97,10 +97,20 @@ export interface OpsState {
   blended_rate_cents?: number | null;
 }
 
+/** A submitted kickoff request for the Startup Labs retainer. */
+export interface OpsEngagement {
+  id: string;
+  status: string;
+  created_at: string;
+  name?: string | null;
+}
+
 export interface OpsRunway {
   tasks: OpsTask[];
   /** Latest open platform-build request for this venture, if any. */
   platformRequest?: import("@/lib/ops-platform").PlatformRequest | null;
+  /** Latest retainer kickoff request, if the founder has committed. */
+  engagement?: OpsEngagement | null;
   notes: OpsNote[];
   updates: OpsUpdate[];
   state: OpsState | null;
@@ -109,6 +119,7 @@ export interface OpsRunway {
   /** Company name, for surfaces outside the showcase shell. */
   ventureName?: string | null;
 }
+
 
 /** Delivery stage of a step, defaulting for rows seeded before managed delivery. */
 export const deliveryStatusOf = (t: OpsTask): DeliveryStatus => {
