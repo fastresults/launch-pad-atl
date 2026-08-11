@@ -135,6 +135,7 @@ export default function HubOperationsPage() {
           deliveryMode={q.data.state?.delivery_mode ?? null}
           rateCents={q.data.state?.blended_rate_cents ?? null}
           platformRequest={q.data.platformRequest}
+          engagement={q.data.engagement}
           onPlatformRequest={async (input) => {
             await requestPlatformBuild(auth, input);
             refresh();
