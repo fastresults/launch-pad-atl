@@ -10,7 +10,28 @@ A one-time decision card replaces the current intro walkthrough's final panel. T
 - **Retain Adam's team** — the done-with-you track. Agency-led tasks flip to Startup Labs ownership, get due dates from a delivery schedule, and the client dashboard becomes a *status + review* view instead of a to-do list.
 - **Mixed — decide step by step** — default owner mapping stays as-is (agency on the specialist work, founder on the rest), and either side can reassign per task.
 
-The card explains each option in plain language plus what it costs the founder in time (self-build: ~X hours across 90 days, drawn from the existing minutes on the milestone tasks; retained: the same work delivered by the team). Choice is reversible from a small "Change how this gets delivered" control in the header, with a confirmation because it reassigns ownership.
+Choice is reversible from a small "Change how this gets delivered" control in the header, with a confirmation because it reassigns ownership.
+
+### 1a. The cost-of-decision panel (the sales moment)
+
+The gate leads with a side-by-side comparison, styled as a premium pricing moment — not a form. Two large cards, the retained card carrying the emphasis treatment (gold kicker, elevated surface, subtle glow), with a shared summary bar above showing the venture's real numbers computed from its own task catalog.
+
+**Left card — You build it.**
+- **Total hours**: summed from `minutes` across every task in this venture's runway, split into "your hands-on hours" and "hours on specialist work you'd have to learn or hire for" (the agency-led set from `ops-significance`).
+- **What it costs anyway**: hours × a blended rate the founder picks from a small selector (default $75/hr — their own time isn't free), shown as an opportunity cost figure.
+- **Plus what you'd still outsource**: a short line-item estimate for the specialist tasks at typical freelance/agency market rates (CRM build, A2P registration, funnel build, brand collateral, site launch), rolled into a range.
+- **Real total**: opportunity cost + outsourced range, plus the honest risk line — "and it lands whenever it lands."
+
+**Right card — Adam's team builds it.**
+- **$1,997/month · 120 days · $7,988 total** as the headline, with the four monthly draws shown as a small four-dot schedule.
+- "Everything on this list" — a count of the exact tasks covered pulled live from the catalog (e.g. "all 106 steps, including the 24 specialist moves").
+- **Your hours drop to** the founder-only irreducible set (approvals, decisions, the things only they can sign) — a much smaller number, computed the same way.
+- A per-step effective cost line: total ÷ task count, framed as "about $X per completed step."
+- Delivery promise: named owner, committed date, work product in your dashboard for every step.
+
+**Under both:** a single delta strip — "Difference: $X and Y hours of your life" — then the two commit buttons. The retained button opens a short confirmation with what happens next (kickoff, first committed dates, who's assigned); the self-build button just applies the mode.
+
+All figures derive from the venture's own data, so nothing is hardcoded except the retainer ($1,997/mo, 4 months, $7,988) and the market-rate table for outsourced specialist work. Rates live in one constants file so they can be tuned without touching UI.
 
 ## 2. What changes after the choice
 
