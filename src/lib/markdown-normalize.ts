@@ -7,6 +7,8 @@
  *     render as an unwrappable monospace slab that runs off the page.
  */
 
+import { stripEmbeddedMarkup } from "@/lib/strip-embedded-markup";
+
 const STRUCTURAL = /^\s*(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||```|~~~|---|===|\s*$)/;
 
 function isProse(line: string) {
@@ -161,9 +163,11 @@ function stripAuthoringArtifacts(md: string): string {
     .join("\n");
 }
 
-/** Full pipeline: unwrap fake fences, tidy artifacts, then split run-on paragraphs. */
+/** Full pipeline: strip leaked markup, unwrap fake fences, tidy artifacts, then split run-on paragraphs. */
 export function normalizeMarkdown(md?: string | null): string {
   if (!md) return "";
-  return normalizeParagraphs(stripAuthoringArtifacts(unwrapProseFences(md)));
+  return normalizeParagraphs(
+    stripAuthoringArtifacts(unwrapProseFences(stripEmbeddedMarkup(md))),
+  );
 }
 
