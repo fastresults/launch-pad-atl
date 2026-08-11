@@ -137,7 +137,7 @@ export default function HubOperationsPage() {
           platformRequest={q.data.platformRequest}
           onPlatformRequest={async (input) => {
             await requestPlatformBuild(auth, input);
-            await qc.invalidateQueries({ queryKey: ["venture-ops", snapshotId] });
+            refresh();
           }}
           onDeliveryMode={(m: DeliveryMode) => void run("mode", () => setDeliveryMode(auth, m, "Startup Labs"))}
           onAssign={(id, name) => void run(id, () => assignOpsTask(auth, id, name))}
