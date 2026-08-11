@@ -5,6 +5,30 @@
 export type OpsStatus = "todo" | "in_progress" | "waiting_client" | "blocked" | "done";
 export type OpsOwnerKind = "client" | "agency";
 
+/** How this venture's runway gets executed. Null until the founder chooses. */
+export type DeliveryMode = "self" | "retained" | "mixed";
+export type DeliveryStatus = "not_started" | "in_progress" | "in_review" | "delivered" | "blocked";
+export type ReviewState = "none" | "pending" | "approved" | "changes_requested";
+
+export const DELIVERY_STATUS_LABEL: Record<DeliveryStatus, string> = {
+  not_started: "Not started",
+  in_progress: "In progress",
+  in_review: "In review",
+  delivered: "Delivered",
+  blocked: "Blocked — needs you",
+};
+
+export const DELIVERY_STATUS_CLASS: Record<DeliveryStatus, string> = {
+  not_started: "border-border/60 text-muted-foreground",
+  in_progress: "border-sky-400/50 text-sky-300",
+  in_review: "border-violet-400/50 text-violet-300",
+  delivered: "border-emerald-400/50 text-emerald-300",
+  blocked: "border-destructive/60 text-destructive",
+};
+
+export const DELIVERY_STATUS_ORDER: DeliveryStatus[] =
+  ["not_started", "in_progress", "in_review", "delivered", "blocked"];
+
 export interface OpsTask {
   id: string;
   snapshot_id: string;
