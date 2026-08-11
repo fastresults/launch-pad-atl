@@ -3581,6 +3581,7 @@ export type Database = {
         Row: {
           client_can_edit: boolean
           created_at: string
+          intro_dismissed: boolean
           runway_started_at: string
           seeded_version: number
           snapshot_id: string
@@ -3589,6 +3590,7 @@ export type Database = {
         Insert: {
           client_can_edit?: boolean
           created_at?: string
+          intro_dismissed?: boolean
           runway_started_at?: string
           seeded_version?: number
           snapshot_id: string
@@ -3597,6 +3599,7 @@ export type Database = {
         Update: {
           client_can_edit?: boolean
           created_at?: string
+          intro_dismissed?: boolean
           runway_started_at?: string
           seeded_version?: number
           snapshot_id?: string
@@ -3621,12 +3624,16 @@ export type Database = {
           day: number
           done_when: string
           due_at: string | null
+          how: string[]
           id: string
+          minutes: number | null
+          needs: string[]
           owner_kind: string
           owner_name: string | null
           phase: number
           proof_url: string | null
           snapshot_id: string
+          snoozed_until: string | null
           sort_order: number
           status: string
           task_key: string
@@ -3642,12 +3649,16 @@ export type Database = {
           day?: number
           done_when?: string
           due_at?: string | null
+          how?: string[]
           id?: string
+          minutes?: number | null
+          needs?: string[]
           owner_kind?: string
           owner_name?: string | null
           phase?: number
           proof_url?: string | null
           snapshot_id: string
+          snoozed_until?: string | null
           sort_order?: number
           status?: string
           task_key: string
@@ -3663,12 +3674,16 @@ export type Database = {
           day?: number
           done_when?: string
           due_at?: string | null
+          how?: string[]
           id?: string
+          minutes?: number | null
+          needs?: string[]
           owner_kind?: string
           owner_name?: string | null
           phase?: number
           proof_url?: string | null
           snapshot_id?: string
+          snoozed_until?: string | null
           sort_order?: number
           status?: string
           task_key?: string
