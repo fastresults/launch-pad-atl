@@ -51,8 +51,10 @@ export async function fetchOpsRunway(auth: OpsAuth): Promise<OpsRunway> {
     canEdit: body.canEdit !== false,
     viewerKind: (body.viewerKind ?? "client") as OpsOwnerKind,
     platformRequest: (body.platformRequest ?? null) as PlatformRequest | null,
+    engagement: (body.engagement ?? null) as OpsRunway["engagement"],
     ventureName: (body.ventureName ?? null) as string | null,
   };
+
 }
 
 /** Founder asks Startup Labs to run the runway on the retainer. */
