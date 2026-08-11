@@ -239,7 +239,7 @@ export default function CohortsAdminPage() {
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <table className="w-full text-sm">
-          <thead className="bg-white/[0.03] text-left text-xs uppercase tracking-wider text-muted-foreground">
+          <thead className="bg-muted/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-3">Date</th>
               <th className="px-4 py-3">Hours</th>
@@ -447,7 +447,7 @@ export default function CohortsAdminPage() {
                   className={`mb-3 rounded-md border px-3 py-2 text-xs ${
                     isFormActive
                       ? "border-amber-400/30 bg-amber-400/10 text-amber-200"
-                      : "border-border bg-white/[0.02] text-muted-foreground"
+                      : "border-border bg-muted/40 text-muted-foreground"
                   }`}
                 >
                   {isFormActive

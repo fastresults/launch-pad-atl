@@ -2063,7 +2063,7 @@ function Inner() {
                 className={`group relative flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition ${
                   selected
                     ? "border-primary bg-primary/10 ring-1 ring-primary"
-                    : "border-border hover:border-border hover:bg-white/[0.02]"
+                    : "border-border hover:border-border hover:bg-muted/60"
                 }`}
               >
                 {isDefault && (

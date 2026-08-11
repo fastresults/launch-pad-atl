@@ -33,7 +33,7 @@ export default function AttendeesPage() {
           </thead>
           <tbody>
             {(data?.attendees ?? []).map((a) => (
-              <tr key={a.user_id} className="border-t border-border hover:bg-white/[0.02]">
+              <tr key={a.user_id} className="border-t border-border hover:bg-muted/60">
                 <td className="px-4 py-3">
                   <Link to={`/admin/attendees/${a.user_id}`} className="hover:underline">
                     {a.display_name ?? "—"}

@@ -322,8 +322,8 @@ export default function ApplicationDetailPage() {
                   className={cn(
                     "rounded-lg border border-border p-3 text-xs",
                     n.kind === "system"
-                      ? "bg-white/[0.02] text-muted-foreground italic"
-                      : "bg-white/[0.04]",
+                      ? "bg-muted/40 text-muted-foreground italic"
+                      : "bg-muted/60",
                   )}
                 >
                   <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wide text-muted-foreground">

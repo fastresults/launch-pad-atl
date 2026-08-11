@@ -130,7 +130,7 @@ export default function InquiryDetailPage() {
                 "rounded-lg border p-4",
                 outbound
                   ? "ml-8 border-primary/30 bg-primary/5"
-                  : "mr-8 border-border bg-white/[0.02]",
+                  : "mr-8 border-border bg-muted/40",
               )}
             >
               <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">

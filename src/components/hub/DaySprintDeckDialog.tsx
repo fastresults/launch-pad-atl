@@ -156,7 +156,7 @@ export function DaySprintDeckDialog({
             <h1 className="slide-title-lg font-semibold tracking-tight">{day.theme}</h1>
             <p className="slide-subtitle mt-10 text-muted-foreground max-w-[1300px]">{day.objective}</p>
             <div className="mt-14 flex flex-wrap items-center gap-4">
-              <span className="inline-flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-3 slide-chrome font-semibold text-white">
+              <span className="inline-flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-3 slide-chrome font-semibold text-foreground">
                 <Clock className="h-5 w-5" /> ≈ {formatDuration(totals.total)} focused work
               </span>
               <span className="inline-flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-3 slide-chrome text-muted-foreground">
@@ -561,7 +561,7 @@ export function DaySprintDeckDialog({
           <button
             onClick={() => goto(index - 1)}
             disabled={index === 0}
-            className={`absolute left-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-muted hover:bg-muted text-white disabled:opacity-20 transition-opacity duration-300 ${
+            className={`absolute left-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-black/50 hover:bg-black/70 text-white disabled:opacity-20 transition-opacity duration-300 ${
               chromeVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Previous slide"
@@ -571,7 +571,7 @@ export function DaySprintDeckDialog({
           <button
             onClick={() => goto(index + 1)}
             disabled={index >= slides.length - 1}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-muted hover:bg-muted text-white disabled:opacity-20 transition-opacity duration-300 ${
+            className={`absolute right-3 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-black/50 hover:bg-black/70 text-white disabled:opacity-20 transition-opacity duration-300 ${
               chromeVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Next slide"
