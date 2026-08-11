@@ -3579,8 +3579,12 @@ export type Database = {
       }
       venture_ops_state: {
         Row: {
+          blended_rate_cents: number
           client_can_edit: boolean
           created_at: string
+          delivery_mode: string | null
+          delivery_mode_set_at: string | null
+          delivery_mode_set_by: string | null
           intro_dismissed: boolean
           runway_started_at: string
           seeded_version: number
@@ -3588,8 +3592,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          blended_rate_cents?: number
           client_can_edit?: boolean
           created_at?: string
+          delivery_mode?: string | null
+          delivery_mode_set_at?: string | null
+          delivery_mode_set_by?: string | null
           intro_dismissed?: boolean
           runway_started_at?: string
           seeded_version?: number
@@ -3597,8 +3605,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          blended_rate_cents?: number
           client_can_edit?: boolean
           created_at?: string
+          delivery_mode?: string | null
+          delivery_mode_set_at?: string | null
+          delivery_mode_set_by?: string | null
           intro_dismissed?: boolean
           runway_started_at?: string
           seeded_version?: number
@@ -3618,11 +3630,17 @@ export type Database = {
       venture_ops_tasks: {
         Row: {
           asset_keys: string[]
+          assignee_name: string | null
+          assignee_user_id: string | null
           category: string
+          client_review_state: string
+          committed_at: string | null
           completed_at: string | null
           created_at: string
           criticality: string
           day: number
+          delivered_at: string | null
+          delivery_status: string
           done_when: string
           due_at: string | null
           how: string[]
@@ -3642,14 +3660,22 @@ export type Database = {
           unlocks: string[]
           updated_at: string
           why: string
+          work_product_label: string | null
+          work_product_url: string | null
         }
         Insert: {
           asset_keys?: string[]
+          assignee_name?: string | null
+          assignee_user_id?: string | null
           category?: string
+          client_review_state?: string
+          committed_at?: string | null
           completed_at?: string | null
           created_at?: string
           criticality?: string
           day?: number
+          delivered_at?: string | null
+          delivery_status?: string
           done_when?: string
           due_at?: string | null
           how?: string[]
@@ -3669,14 +3695,22 @@ export type Database = {
           unlocks?: string[]
           updated_at?: string
           why?: string
+          work_product_label?: string | null
+          work_product_url?: string | null
         }
         Update: {
           asset_keys?: string[]
+          assignee_name?: string | null
+          assignee_user_id?: string | null
           category?: string
+          client_review_state?: string
+          committed_at?: string | null
           completed_at?: string | null
           created_at?: string
           criticality?: string
           day?: number
+          delivered_at?: string | null
+          delivery_status?: string
           done_when?: string
           due_at?: string | null
           how?: string[]
@@ -3696,6 +3730,8 @@ export type Database = {
           unlocks?: string[]
           updated_at?: string
           why?: string
+          work_product_label?: string | null
+          work_product_url?: string | null
         }
         Relationships: [
           {
@@ -3703,6 +3739,57 @@ export type Database = {
             columns: ["snapshot_id"]
             isOneToOne: false
             referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venture_ops_updates: {
+        Row: {
+          author_kind: string
+          author_name: string | null
+          body: string
+          created_at: string
+          id: string
+          snapshot_id: string
+          task_id: string | null
+          updated_at: string
+          visible_to_client: boolean
+        }
+        Insert: {
+          author_kind?: string
+          author_name?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          snapshot_id: string
+          task_id?: string | null
+          updated_at?: string
+          visible_to_client?: boolean
+        }
+        Update: {
+          author_kind?: string
+          author_name?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          snapshot_id?: string
+          task_id?: string | null
+          updated_at?: string
+          visible_to_client?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_ops_updates_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venture_ops_updates_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "venture_ops_tasks"
             referencedColumns: ["id"]
           },
         ]
