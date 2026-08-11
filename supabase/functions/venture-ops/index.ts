@@ -32,7 +32,8 @@ const OWNERS = new Set(["client", "agency"]);
 /** Create any catalog tasks this venture doesn't have yet, without touching progress. */
 async function seedRunway(db: any, snapshotId: string) {
   const { data: existing } = await db
-    .from("venture_ops_tasks").select("task_key, sort_order").eq("snapshot_id", snapshotId);
+    .from("venture_ops_tasks").select("task_key, sort_order, how, minutes").eq("snapshot_id", snapshotId);
+  const rows = new Map<string, any>((existing ?? []).map((r: any) => [r.task_key, r]));
   const have = new Map<string, number>((existing ?? []).map((r: any) => [r.task_key, r.sort_order]));
   const catalog = buildOpsCatalog().map((t, i) => ({ ...t, sort_order: i }));
   const missing = catalog
@@ -40,6 +41,20 @@ async function seedRunway(db: any, snapshotId: string) {
     .map((t) => ({ ...t, snapshot_id: snapshotId }));
   if (missing.length) {
     await db.from("venture_ops_tasks").upsert(missing, { onConflict: "snapshot_id,task_key" });
+  }
+  // Guided-mode copy is catalog-owned: refresh it on every load so authoring
+  // improvements reach existing runways. Never touches status, owner, or notes.
+  const withGuides = catalog.filter((t) => {
+    const row = rows.get(t.task_key);
+    if (!row) return false;
+    const sameHow = (row.how?.length ?? 0) === t.how.length;
+    const sameMin = (row.minutes ?? null) === t.minutes;
+    return !(sameHow && sameMin);
+  });
+  for (const t of withGuides) {
+    await db.from("venture_ops_tasks")
+      .update({ how: t.how, needs: t.needs, minutes: t.minutes })
+      .eq("snapshot_id", snapshotId).eq("task_key", t.task_key);
   }
   // When the catalog grows mid-flight, existing rows keep stale positions and the
   // day groups interleave. Re-align order only — never status, owner, or notes.
@@ -131,6 +146,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "dismiss_intro") {
+      await db.from("venture_ops_state")
+        .upsert({ snapshot_id: snapshotId, intro_dismissed: true }, { onConflict: "snapshot_id" });
+      return json({ ok: true });
+    }
+
     if (action === "set_client_editing" && viewerKind === "agency") {
       const on = body?.enabled !== false;
       await db.from("venture_ops_state")
@@ -180,6 +201,17 @@ Deno.serve(async (req) => {
       const dueAt = body?.dueAt == null ? null : String(body.dueAt);
       if (dueAt && Number.isNaN(Date.parse(dueAt))) return json({ error: "Invalid date" }, 400);
       const { error } = await db.from("venture_ops_tasks").update({ due_at: dueAt }).eq("id", taskId);
+      if (error) return json({ error: error.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "snooze") {
+      const days = Math.min(30, Math.max(1, Number(body?.days) || 3));
+      const until = body?.until === null
+        ? null
+        : new Date(Date.now() + days * 86_400_000).toISOString();
+      const { error } = await db.from("venture_ops_tasks")
+        .update({ snoozed_until: until }).eq("id", taskId);
       if (error) return json({ error: error.message }, 400);
       return json({ ok: true });
     }

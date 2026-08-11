@@ -64,6 +64,16 @@ export const setOpsProof = (auth: OpsAuth, taskId: string, proofUrl: string) =>
 export const addOpsNote = (auth: OpsAuth, taskId: string, body: string, authorName?: string | null) =>
   call(auth, { action: "add_note", taskId, body, authorName: authorName ?? null });
 
+/** Push a step down the queue without marking it failed. */
+export const snoozeOpsTask = (auth: OpsAuth, taskId: string, days = 3) =>
+  call(auth, { action: "snooze", taskId, days });
+
+export const unsnoozeOpsTask = (auth: OpsAuth, taskId: string) =>
+  call(auth, { action: "snooze", taskId, until: null });
+
+/** Remember that this venture has seen the first-run walkthrough. */
+export const dismissOpsIntro = (auth: OpsAuth) => call(auth, { action: "dismiss_intro" });
+
 /** Agency-only: flip whether the client can drive the runway from their link. */
 export const setClientEditing = (auth: OpsAuth, enabled: boolean) =>
   call(auth, { action: "set_client_editing", enabled });

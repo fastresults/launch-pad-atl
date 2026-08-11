@@ -14,6 +14,8 @@ export type OpsCategory =
   | "Governance" | "Brand" | "Marketing" | "Social & Content" | "Creative";
 
 
+import { guideFor } from "./ops-guides.ts";
+
 export type OpsOwnerKind = "client" | "agency";
 
 export type OpsCatalogTask = {
@@ -27,6 +29,10 @@ export type OpsCatalogTask = {
   category: OpsCategory;
   asset_keys: string[];
   owner_kind: OpsOwnerKind;
+  /** Plain-language steps for guided mode; empty when the task speaks for itself. */
+  how: string[];
+  needs: string[];
+  minutes: number | null;
 };
 
 type Day = {
@@ -309,6 +315,7 @@ export function buildOpsCatalog(): OpsCatalogTask[] {
       category: d.category,
       asset_keys: d.assetKeys,
       owner_kind: "client",
+      how: [], needs: [], minutes: null,
     });
     for (const [slug, title, why, doneWhen, owner, category] of d.subs) {
       out.push({
@@ -318,6 +325,7 @@ export function buildOpsCatalog(): OpsCatalogTask[] {
         category: category ?? d.category,
         asset_keys: d.assetKeys,
         owner_kind: owner,
+        how: [], needs: [], minutes: null,
       });
     }
 
@@ -330,9 +338,13 @@ export function buildOpsCatalog(): OpsCatalogTask[] {
       title, why, done_when: doneWhen, category,
       asset_keys: [],
       owner_kind: owner,
+      how: [], needs: [], minutes: null,
     });
   }
-  return out;
+  return out.map((t) => {
+    const g = guideFor(t.task_key);
+    return { ...t, how: g?.how ?? [], needs: g?.needs ?? [], minutes: g?.minutes ?? null };
+  });
 }
 
 export const OPS_PHASES = [
