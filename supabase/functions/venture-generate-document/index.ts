@@ -496,6 +496,8 @@ export async function generateOne(
     // Strip any citation residue the model may have produced despite instructions.
     raw = stripCitations(raw);
     raw = substituteIdentity(raw, lockedName);
+    // Reader contract: no head markup (<style>/<link>/:root tokens) in a body.
+    raw = stripEmbeddedMarkup(raw);
 
     // ---- Checkpoint: a real new-engine draft is on the row BEFORE any of
     // the long enrichment passes run, so a killed worker can never leave the
