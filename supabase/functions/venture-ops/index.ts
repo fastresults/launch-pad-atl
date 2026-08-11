@@ -190,7 +190,7 @@ Deno.serve(async (req) => {
       if (!text) return json({ error: "Write something first." }, 400);
       const authorName = typeof body?.authorName === "string" ? body.authorName.slice(0, 120) : null;
       const { error } = await db.from("venture_ops_notes").insert({
-        task_id: taskId, author_kind: "client", author_name: authorName, body: text,
+        task_id: taskId, author_kind: viewerKind, author_name: authorName, body: text,
       });
       if (error) return json({ error: error.message }, 400);
       return json({ ok: true });
