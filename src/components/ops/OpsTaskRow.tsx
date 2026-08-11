@@ -7,8 +7,9 @@ import {
 import { cn } from "@/lib/utils";
 import {
   OPS_CATEGORY_DOT, STATUS_CLASS, dueForDay, isOverdue,
-  type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
+  type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
 } from "@/lib/ops-runway";
+import { DeliveryPanel, type DeliveryHandlers } from "./DeliveryPanel";
 import { OWNER_LABEL, estimateLabel, isSnoozed } from "@/lib/ops-guided";
 import { CRITICALITY, categoryTip, criticalityOf, criticalityTip, minutesTip, ownerTip, statusTip, TIPS } from "@/lib/ops-criticality";
 import { InfoTip } from "./InfoTip";
