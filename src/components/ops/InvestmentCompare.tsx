@@ -111,12 +111,6 @@ export function InvestmentCompare({
           >
             We'll build it ourselves
           </Button>
-          <button
-            type="button" disabled={busy} onClick={() => onChoose("mixed")}
-            className="mt-2 text-center text-[11px] text-muted-foreground hover:text-foreground"
-          >
-            Or decide step by step — some ours, some yours
-          </button>
         </div>
 
         {/* ------------------------------------------------------ retained */}
