@@ -10,7 +10,7 @@ import {
   SidebarFooter, SidebarHeader, useSidebar,
 } from "@/components/ui/sidebar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles, Info, Brain, Plus } from "lucide-react";
+import { Home, Calendar, ClipboardList, ListChecks, FolderOpen, User, Sparkles, Info, Brain, Plus, Hammer } from "lucide-react";
 import { listCohorts } from "@/lib/cohorts.functions";
 import { getWorkshopMode } from "@/lib/workshop-mode";
 import { getNextAvailable, FALLBACK_COHORT, type Cohort } from "@/lib/cohorts";
@@ -137,6 +137,14 @@ function AppSidebar({ mode }: { mode: ReturnType<typeof getWorkshopMode>["mode"]
       label: "New venture",
       tooltip: "Start a brand-new venture workspace. Paste a website URL or describe the idea in a sentence, and we'll spin up its own asset library.",
       icon: Plus,
+      hide: !hubVisible,
+    },
+    {
+      key: "operations",
+      to: "/dashboard/operations",
+      label: "Operationalize",
+      tooltip: "The 90-day operating runway you and your team work from — legal, money, CRM, demand, rhythm — plus creative sign-off on every asset before it goes out.",
+      icon: Hammer,
       hide: !hubVisible,
     },
 

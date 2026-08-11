@@ -1414,6 +1414,19 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
         <span className="text-xs text-primary">Open →</span>
       </a>
 
+      <a
+        href={`/dashboard/hub/${snapshot.id}/operations?tab=signoff`}
+        className="flex items-center justify-between gap-4 rounded-2xl border border-border/60 bg-card/40 px-4 py-3 transition-colors hover:bg-card/70"
+      >
+        <span>
+          <span className="block text-sm font-semibold tracking-tight">Creative sign-off</span>
+          <span className="block text-xs text-muted-foreground">
+            Review, approve and mark every creative asset ready to publish.
+          </span>
+        </span>
+        <span className="text-xs text-primary">Open →</span>
+      </a>
+
       <div className="space-y-3">
         <SectionIntro copy={HUB_DASHBOARD_INTROS.sprint} variant={isGuided ? "minimal" : "full"} />
 

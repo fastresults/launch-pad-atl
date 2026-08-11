@@ -6,6 +6,7 @@ export const DASHBOARD_NAV_KEYS = [
   "brief",
   "deliverables",
   "hub",
+  "operations",
   "files",
   "profile",
 ] as const;
@@ -18,6 +19,7 @@ export const DEFAULT_DASHBOARD_NAV_VISIBILITY: DashboardNavVisibility = {
   brief: true,
   deliverables: true,
   hub: true,
+  operations: true,
   files: true,
   profile: true,
 };
