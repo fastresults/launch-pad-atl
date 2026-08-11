@@ -231,6 +231,14 @@ const DAYS: Day[] = [
       ["pipeline-stages", "Define the pipeline stages", "Deals stall in stages nobody owns.", "Stages named, entry criteria written, one owner per stage.", "agency"],
       ["crm-automation", "Turn on task and reminder automation", "Deals die from silence, not objections.", "No deal can sit untouched past the number of days you set — the CRM chases you.", "agency"],
       ["crm-reporting", "Build the pipeline reporting view", "If you can't see it by source, you'll spend blind.", "One saved view showing pipeline by stage, by source, and by owner.", "agency"],
+      ["ghl-stale-automation", "Turn on stale-opportunity automation in GoHighLevel", "Deals die from silence, not objections.", "A workflow reassigns or flags any opportunity untouched past the number of days you set.", "agency"],
+      ["ghl-calendar", "Connect the GoHighLevel booking calendar", "Every extra scheduling email costs you a percentage of the close.", "Calendar live with availability, reminders, and round-robin owner assignment.", "agency"],
+      ["ghl-missed-call", "Set missed-call text-back and conversation routing", "An unanswered call is a lead handed to a competitor.", "A missed call auto-sends a text and the reply lands in a routed conversation inbox.", "agency"],
+      ["ghl-dashboard", "Build the GoHighLevel reporting dashboard", "If you can't see it by source, you'll spend blind.", "Dashboard shows pipeline by stage, by source, and by owner.", "agency"],
+      ["ghl-proposal-esign", "Publish the GoHighLevel proposal and e-signature path", "Chasing PDFs adds days to every close.", "A test proposal sent from GoHighLevel and signed electronically end to end.", "agency"],
+      ["ghl-to-qbo", "Connect closed-won to QuickBooks invoicing", "Re-keying deals into the books is how revenue goes missing.", "One test deal moved to closed-won produces a QuickBooks invoice with no manual re-entry — native, Zapier, or a written SOP.", "agency", "Finance"],
+
+
 
       ["proposal", "Build the proposal template", "Bespoke proposals per deal is how founders lose a week.", "Proposal template generated from the priced offer, ready to send.", "agency"],
       ["esign", "Connect e-signature", "Chasing PDFs adds days to every close.", "A test proposal signed electronically end to end.", "agency"],
