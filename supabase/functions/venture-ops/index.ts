@@ -68,45 +68,84 @@ Deno.serve(async (req) => {
     const token = typeof body?.token === "string" ? body.token.trim() : "";
     const password = typeof body?.password === "string" ? body.password : "";
     const action = typeof body?.action === "string" ? body.action : "list";
-    if (!token || token.length < 8 || token.length > 128) return json({ error: "Invalid link" }, 400);
+    const wantSnapshot = typeof body?.snapshotId === "string" ? body.snapshotId : "";
 
     const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
-    // Links carry either the readable slug (new) or the long token (legacy).
-    let { data: share } = await db
-      .from("venture_shares").select("*").ilike("slug", token).is("revoked_at", null).maybeSingle();
-    if (!share) {
-      ({ data: share } = await db.from("venture_shares").select("*").eq("token", token).maybeSingle());
+    let snapshotId = "";
+    /** Agency writes are attributed differently and bypass the client-edit flag. */
+    let viewerKind: "client" | "agency" = "client";
+    let clientCanEditFlag = true;
+
+    if (wantSnapshot) {
+      // Agency mode: the caller's JWT must own the venture or be an admin.
+      const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+      if (!jwt) return json({ error: "Sign in required" }, 401);
+      const { data: userRes } = await db.auth.getUser(jwt);
+      const uid = userRes?.user?.id;
+      if (!uid) return json({ error: "Sign in required" }, 401);
+      const [{ data: snap }, { data: isAdmin }] = await Promise.all([
+        db.from("venture_snapshots").select("id, user_id").eq("id", wantSnapshot).maybeSingle(),
+        db.rpc("is_admin", { _user_id: uid }),
+      ]);
+      if (!snap) return json({ error: "Venture not found" }, 404);
+      if (snap.user_id !== uid && !isAdmin) return json({ error: "Not allowed" }, 403);
+      snapshotId = snap.id;
+      viewerKind = "agency";
+    } else {
+      if (!token || token.length < 8 || token.length > 128) return json({ error: "Invalid link" }, 400);
+
+      // Links carry either the readable slug (new) or the long token (legacy).
+      let { data: share } = await db
+        .from("venture_shares").select("*").ilike("slug", token).is("revoked_at", null).maybeSingle();
+      if (!share) {
+        ({ data: share } = await db.from("venture_shares").select("*").eq("token", token).maybeSingle());
+      }
+      if (!share || share.revoked_at) return json({ error: "This link is no longer available." }, 404);
+      if (share.expires_at && new Date(share.expires_at) < new Date()) {
+        return json({ error: "This link has expired." }, 410);
+      }
+      if (share.password_hash) {
+        if (!password) return json({ error: "Password required", code: "PASSWORD_REQUIRED" }, 401);
+        if ((await sha256(password)) !== share.password_hash) return json({ error: "Incorrect password" }, 401);
+      }
+      snapshotId = share.snapshot_id;
     }
-    if (!share || share.revoked_at) return json({ error: "This link is no longer available." }, 404);
-    if (share.expires_at && new Date(share.expires_at) < new Date()) {
-      return json({ error: "This link has expired." }, 410);
-    }
-    if (share.password_hash) {
-      if (!password) return json({ error: "Password required", code: "PASSWORD_REQUIRED" }, 401);
-      if ((await sha256(password)) !== share.password_hash) return json({ error: "Incorrect password" }, 401);
-    }
-    const snapshotId: string = share.snapshot_id;
 
     if (action === "list") {
       await seedRunway(db, snapshotId);
       const payload = await loadRunway(db, snapshotId);
-      return json({ ...payload, canEdit: payload.state?.client_can_edit !== false });
+      clientCanEditFlag = payload.state?.client_can_edit !== false;
+      return json({
+        ...payload,
+        viewerKind,
+        canEdit: viewerKind === "agency" ? true : clientCanEditFlag,
+      });
     }
 
-    // Every mutation below needs a task that belongs to this share's venture.
+    if (action === "set_client_editing" && viewerKind === "agency") {
+      const on = body?.enabled !== false;
+      await db.from("venture_ops_state")
+        .upsert({ snapshot_id: snapshotId, client_can_edit: on }, { onConflict: "snapshot_id" });
+      return json({ ok: true });
+    }
+
+    // Every mutation below needs a task that belongs to this venture.
     const taskId = typeof body?.taskId === "string" ? body.taskId : "";
     if (!taskId) return json({ error: "Missing task" }, 400);
 
-    const { data: state } = await db
-      .from("venture_ops_state").select("client_can_edit").eq("snapshot_id", snapshotId).maybeSingle();
-    if (state && state.client_can_edit === false) {
-      return json({ error: "This runway is read-only.", code: "READ_ONLY" }, 403);
+    if (viewerKind === "client") {
+      const { data: state } = await db
+        .from("venture_ops_state").select("client_can_edit").eq("snapshot_id", snapshotId).maybeSingle();
+      if (state && state.client_can_edit === false) {
+        return json({ error: "This runway is read-only.", code: "READ_ONLY" }, 403);
+      }
     }
 
     const { data: task } = await db
       .from("venture_ops_tasks").select("id, snapshot_id").eq("id", taskId).maybeSingle();
     if (!task || task.snapshot_id !== snapshotId) return json({ error: "Task not found" }, 404);
+
 
     if (action === "set_status") {
       const status = String(body?.status ?? "");
