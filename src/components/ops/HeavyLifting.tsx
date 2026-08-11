@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { ArrowRight, Check } from "lucide-react";
 import type { OpsTask } from "@/lib/ops-runway";
 import { hours } from "@/lib/ops-investment";
+import { OpsGlyph } from "./OpsGlyph";
 
 /**
  * The heavy lifting: the major moves inside this venture's runway, and what
@@ -20,11 +21,14 @@ type Cluster = {
   /** The role that carries it on our side, and the state you end up in. */
   we: string;
   role: string;
+  /** Category whose drawn mark anchors this move. */
+  glyph: string;
 };
 
 const CLUSTERS: Cluster[] = [
   {
     key: "entity",
+    glyph: "Governance",
     label: "Entity filed and the legal base in force",
     match: /entity|ein|operating-agreement|registered-agent|license|insurance|state|contract|msa|terms|privacy/,
     have: "Recommended structure, and terms written around how your offer actually sells.",
@@ -34,6 +38,7 @@ const CLUSTERS: Cluster[] = [
   },
   {
     key: "books",
+    glyph: "Finance",
     label: "Books configured to your model",
     match: /bank|qbo|quickbooks|chart-of-accounts|bookkeep|invoice|payment|stripe|tax|payroll/,
     have: "Your model, price points and revenue lines already defined.",
@@ -43,6 +48,7 @@ const CLUSTERS: Cluster[] = [
   },
   {
     key: "offer",
+    glyph: "Strategy",
     label: "Offer pressure-tested on live buyers",
     match: /offer|price|pricing|proposal|package|guarantee/,
     have: "A priced offer, guarantee and positioning from the build.",
@@ -52,6 +58,7 @@ const CLUSTERS: Cluster[] = [
   },
   {
     key: "crm",
+    glyph: "Operations",
     label: "CRM stood up and loaded",
     match: /ghl|crm|a2p|pipeline|automation|sequence|nurture|sms|dialer/,
     have: "Pipeline logic, follow-up sequences and messaging already written.",
@@ -61,6 +68,7 @@ const CLUSTERS: Cluster[] = [
   },
   {
     key: "funnel",
+    glyph: "Marketing",
     label: "Funnel assembled and tracked",
     match: /funnel|lead|list|magnet|capture|retarget|landing/,
     have: "Lead magnet concept, capture copy and the nurture arc.",
@@ -70,6 +78,7 @@ const CLUSTERS: Cluster[] = [
   },
   {
     key: "site",
+    glyph: "Foundation",
     label: "Website built from your PRD",
     match: /site|website|prd|domain|hosting|analytics|seo/,
     have: "The website PRD, art direction and written page copy.",
@@ -79,6 +88,7 @@ const CLUSTERS: Cluster[] = [
   },
   {
     key: "brand",
+    glyph: "Brand",
     label: "Brand system elevated and produced",
     match: /brand|logo|collateral|guideline|card|letterhead|signoff|sign-off|art-direction|foundation-grade/,
     have: "Your mark, palette, type, voice and the full collateral set.",
@@ -88,6 +98,7 @@ const CLUSTERS: Cluster[] = [
   },
   {
     key: "campaign",
+    glyph: "Social & Content",
     label: "Campaign elevated and run",
     match: /campaign|ad|content|social|creative|post|cover|launch|imagery|poster|motion/,
     have: "The eight-week campaign arc and your foundation poster set.",
@@ -146,8 +157,11 @@ export function HeavyLifting({ tasks }: { tasks: OpsTask[] }) {
       <ul className="mt-2 space-y-2.5">
         {rows.map((r) => (
           <li key={r.key} className="rounded-xl border border-border/40 bg-background/40 p-3.5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-sm font-semibold">{r.label}</span>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="flex min-w-0 items-center gap-2.5 text-sm font-semibold">
+                <OpsGlyph category={r.glyph} plate plateClassName="h-9 w-9 shrink-0" className="h-5 w-5" />
+                {r.label}
+              </span>
               <span className="text-[11px] tabular-nums text-muted-foreground">
                 {r.count} steps · {hours(r.minutes)}
               </span>
