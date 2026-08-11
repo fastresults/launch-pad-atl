@@ -167,7 +167,9 @@ export default function VentureSharePage() {
     `${window.location.pathname}${window.location.search}#${step ? `${key}/${step}` : key}`;
 
   const goTo = (key: string, step?: string | null) => {
+    if (key === OUTRO_KEY) setNavOpen(false);
     if (key === BRAIN_KEY && isMobile) {
+
 
       // The brain takes the whole phone screen instead of replacing the reading pane.
       setBrainOpen(true);
