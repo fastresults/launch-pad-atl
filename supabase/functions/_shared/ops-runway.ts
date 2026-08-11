@@ -196,6 +196,13 @@ const DAYS: Day[] = [
       ["forms-to-crm", "Wire the forms into the CRM", "Leads that land in an inbox get lost.", "A test submission creates a CRM record with its source tag attached.", "agency"],
       ["nurture", "Turn on the welcome sequence", "Most subscribers never hear from you twice — that's the whole leak.", "Five nurture emails written and sending automatically to new subscribers.", "agency"],
       ["retargeting", "Stand up the retargeting audience", "The people who already looked are the cheapest to reach again.", "Site and list audiences built in the ad platform and populating.", "agency"],
+      ["ghl-funnel", "Build the lead magnet funnel in GoHighLevel", "A funnel spread across four tools breaks at the seams.", "Landing page, form, thank-you page, and delivery email all built in GoHighLevel and tested end to end.", "agency"],
+      ["ghl-form-mapping", "Map the GoHighLevel form to contact + opportunity", "A submission that doesn't create a deal isn't a lead.", "A test submission creates a contact and an opportunity with source and UTM written to the record.", "agency"],
+      ["ghl-nurture-workflow", "Turn on the GoHighLevel nurture workflow", "Most subscribers never hear from you twice — that's the whole leak.", "Five-email workflow live with its trigger and exit conditions written down.", "agency"],
+      ["ghl-attribution", "Confirm UTM attribution in GoHighLevel", "Attribution you never verified is attribution you can't trust.", "A tagged test link shows the correct source on the contact record and in reporting.", "agency"],
+      ["ghl-audience-feed", "Feed the retargeting audience from GoHighLevel", "The people who already looked are the cheapest to reach again.", "GoHighLevel page traffic and list synced into the ad platform audience.", "agency"],
+
+
 
     ],
   },
