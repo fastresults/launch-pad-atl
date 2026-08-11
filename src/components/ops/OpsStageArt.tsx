@@ -91,6 +91,32 @@ export function OpsStageArt({ phase, className }: Props) {
   );
 }
 
+/**
+ * Wide decorative masthead: the stage banner held at a fixed aspect so it never
+ * stretches, faded out toward the copy so type always wins.
+ */
+export function OpsStageMasthead({
+  phase, className, side = "right",
+}: { phase: number; className?: string; side?: "right" | "left" }) {
+  const mask =
+    side === "right"
+      ? "linear-gradient(to left, black 30%, transparent)"
+      : "linear-gradient(to right, black 30%, transparent)";
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute top-0 hidden h-24 items-start overflow-hidden opacity-20 md:flex",
+        side === "right" ? "right-0 justify-end" : "left-0 justify-start",
+        className,
+      )}
+      style={{ maskImage: mask, WebkitMaskImage: mask }}
+    >
+      <OpsStageArt phase={phase} className="h-full w-auto max-w-full" />
+    </div>
+  );
+}
+
 /** Shown when a stage — or the whole runway — has nothing left in it. */
 export function OpsClearedMark({ className }: { className?: string }) {
   return (

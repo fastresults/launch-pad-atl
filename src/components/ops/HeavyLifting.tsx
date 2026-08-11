@@ -129,7 +129,6 @@ export function HeavyLifting({ tasks }: { tasks: OpsTask[] }) {
       return { ...c, count: hit.length, minutes: hit.reduce((s, t) => s + (t.minutes ?? 0), 0) };
     })
       .filter((r) => r.count > 0)
-      .sort((a, b) => b.minutes - a.minutes)
       .slice(0, 8);
   }, [tasks]);
 
@@ -149,17 +148,21 @@ export function HeavyLifting({ tasks }: { tasks: OpsTask[] }) {
         runs — the same milestones either way. The only question is who carries them.
       </p>
 
-      <div className="mt-5 hidden grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 px-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:grid">
-        <span>You carry it from here</span>
-        <span className="text-primary">We carry it from here</span>
-      </div>
+      <ol className="relative mt-2 space-y-2.5">
+        {rows.map((r, i) => (
+          <li key={r.key} className="relative rounded-xl border border-border/40 bg-background/40 p-3.5 sm:pl-[92px]">
+            {/* chapter marker — the drawn mark reads as the anchor for the move */}
+            <div className="absolute bottom-3.5 left-3.5 top-3.5 hidden w-14 flex-col items-center sm:flex">
+              <OpsGlyph category={r.glyph} plate plateClassName="h-14 w-14" className="h-7 w-7" />
+              <span className="mt-1.5 text-[10px] font-semibold tabular-nums tracking-[0.14em] text-muted-foreground/70">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span aria-hidden className="mt-2 w-px flex-1 bg-gradient-to-b from-border/60 to-transparent" />
+            </div>
 
-      <ul className="mt-2 space-y-2.5">
-        {rows.map((r) => (
-          <li key={r.key} className="rounded-xl border border-border/40 bg-background/40 p-3.5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="flex min-w-0 items-center gap-2.5 text-sm font-semibold">
-                <OpsGlyph category={r.glyph} plate plateClassName="h-9 w-9 shrink-0" className="h-5 w-5" />
+                <OpsGlyph category={r.glyph} plate plateClassName="h-9 w-9 shrink-0 sm:hidden" className="h-5 w-5" />
                 {r.label}
               </span>
               <span className="text-[11px] tabular-nums text-muted-foreground">
@@ -169,24 +172,23 @@ export function HeavyLifting({ tasks }: { tasks: OpsTask[] }) {
             <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/80">
               <span className="text-foreground/60">Already yours from the build:</span> {r.have}
             </p>
-            <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                <span className="sm:hidden font-medium text-foreground/80">You carry it: </span>
-                {r.you}
-              </p>
-              <div className="flex gap-2 rounded-lg border border-primary/25 bg-primary/[0.05] px-3 py-2">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-                <p className="text-xs leading-relaxed text-foreground/90">
-                  {r.we}
-                  <span className="mt-1 block text-[10px] uppercase tracking-[0.14em] text-primary/80">
-                    {r.role}
-                  </span>
+
+            <div className="mt-2.5 grid items-stretch gap-2.5 sm:grid-cols-2">
+              <div className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">You carry it</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{r.you}</p>
+              </div>
+              <div className="rounded-lg border border-primary/25 bg-primary/[0.05] px-3 py-2">
+                <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-primary/80">
+                  <Check className="h-3 w-3" /> We carry it
                 </p>
+                <p className="mt-1 text-xs leading-relaxed text-foreground/90">{r.we}</p>
+                <p className="mt-1.5 text-[10px] uppercase tracking-[0.14em] text-primary/80">{r.role}</p>
               </div>
             </div>
           </li>
         ))}
-      </ul>
+      </ol>
 
       <p className="mt-4 flex items-center gap-1.5 text-[11px] text-muted-foreground">
         <ArrowRight className="h-3 w-3 text-primary" />

@@ -3,6 +3,7 @@ import { ArrowRight, Check, Clock, ShieldCheck, Sparkles, Users } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HeavyLifting } from "./HeavyLifting";
+import { OpsStageMasthead } from "./OpsStageArt";
 import type { DeliveryMode, OpsTask } from "@/lib/ops-runway";
 import {
   DEFAULT_RATE, RATE_CHOICES, RETAINER_DAYS, RETAINER_MONTHLY, RETAINER_MONTHS,
@@ -32,40 +33,37 @@ export function InvestmentCompare({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-border/50 bg-card/40 p-5 sm:p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Before you start</p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+      <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 p-5 sm:p-6">
+        <OpsStageMasthead phase={2} className="w-[46%]" />
+        <p className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Before you start</p>
+        <h2 className="relative mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
           Who is going to actually do this work?
         </h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        <p className="relative mt-2 max-w-2xl text-sm text-muted-foreground">
           There are {inv.taskCount} steps between the foundation you have and a business that runs —
           {" "}{inv.specialistCount} of them are specialist work. Decide once, here, and the rest of this
           dashboard reshapes around your answer. You can change it later.
         </p>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          {[
-            ["Steps to run", `${inv.taskCount}`],
-            ["Total work", hours(inv.totalMinutes)],
-            ["Specialist work", hours(inv.specialistMinutes)],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-border/40 bg-background/40 px-4 py-3">
-              <div className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{label}</div>
-              <div className="mt-1 text-xl font-semibold tabular-nums">{value}</div>
-            </div>
-          ))}
-        </div>
+        <WorkSplit
+          taskCount={inv.taskCount}
+          specialistCount={inv.specialistCount}
+          totalMinutes={inv.totalMinutes}
+          specialistMinutes={inv.specialistMinutes}
+          founderMinutes={inv.founderMinutes}
+        />
       </div>
 
       <HeavyLifting tasks={tasks} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* ---------------------------------------------------------- self */}
-        <div className="flex flex-col rounded-2xl border border-border/50 bg-card/30 p-5 sm:p-6">
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <div className="relative flex flex-col overflow-hidden rounded-2xl border border-border/50 bg-card/30 p-5 sm:p-6">
+          <OpsStageMasthead phase={1} className="w-[38%] opacity-[0.12]" />
+          <div className="relative flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             <Users className="h-3.5 w-3.5" /> You build it
           </div>
-          <h3 className="mt-2 text-lg font-semibold tracking-tight">Your team runs the list</h3>
+          <h3 className="relative mt-2 text-lg font-semibold tracking-tight">Your team runs the list</h3>
 
           <dl className="mt-5 space-y-3 text-sm">
             <Line label="Your hands-on hours" value={hours(inv.founderMinutes)} />
@@ -124,7 +122,8 @@ export function InvestmentCompare({
         {/* ------------------------------------------------------ retained */}
         <div className="relative flex flex-col overflow-hidden rounded-2xl border border-primary/40 bg-primary/[0.04] p-5 shadow-lg shadow-primary/5 ring-1 ring-primary/10 sm:p-6">
           <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+          <OpsStageMasthead phase={4} className="w-[38%] opacity-[0.16] text-primary" />
+          <div className="relative flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
             <Sparkles className="h-3.5 w-3.5" /> Adam's team builds it
           </div>
           <h3 className="mt-2 text-lg font-semibold tracking-tight">Done with you, on committed dates</h3>
@@ -210,6 +209,58 @@ export function InvestmentCompare({
           Currently set to {currentMode === "retained" ? "Adam's team" : currentMode === "self" ? "your team" : "step by step"}.
         </p>
       )}
+    </div>
+  );
+}
+
+/**
+ * The argument as a picture: how much of this runway is specialist work. One
+ * track, two shares, the figures hung off it — not three flat number boxes.
+ */
+function WorkSplit({
+  taskCount, specialistCount, totalMinutes, specialistMinutes, founderMinutes,
+}: {
+  taskCount: number; specialistCount: number;
+  totalMinutes: number; specialistMinutes: number; founderMinutes: number;
+}) {
+  const pct = totalMinutes > 0 ? Math.round((specialistMinutes / totalMinutes) * 100) : 0;
+  return (
+    <div className="relative mt-6 rounded-xl border border-border/40 bg-background/40 p-4 sm:p-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <p className="text-sm">
+          <span className="text-xl font-semibold tabular-nums">{taskCount}</span>
+          <span className="ml-1.5 text-muted-foreground">steps to run</span>
+        </p>
+        <p className="text-sm">
+          <span className="text-xl font-semibold tabular-nums">{hours(totalMinutes)}</span>
+          <span className="ml-1.5 text-muted-foreground">of work in front of you</span>
+        </p>
+      </div>
+
+      <div className="mt-4 flex h-3 w-full overflow-hidden rounded-full bg-muted/40">
+        <div
+          className="h-full bg-primary/85 transition-all"
+          style={{ width: `${pct}%` }}
+        />
+        <div className="h-full flex-1 bg-foreground/15" />
+      </div>
+
+      <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+        <p className="flex items-start gap-2">
+          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary/85" />
+          <span>
+            <span className="font-medium text-foreground">{hours(specialistMinutes)} specialist</span>
+            <span className="text-muted-foreground"> — {specialistCount} steps that need a trade skill ({pct}% of the work)</span>
+          </span>
+        </p>
+        <p className="flex items-start gap-2">
+          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-foreground/25" />
+          <span>
+            <span className="font-medium text-foreground">{hours(founderMinutes)} owner work</span>
+            <span className="text-muted-foreground"> — decisions and approvals only you can make</span>
+          </span>
+        </p>
+      </div>
     </div>
   );
 }
