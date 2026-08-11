@@ -278,6 +278,39 @@ export function OpsDashboard(props: OpsDashboardProps) {
     </div>
     </TooltipProvider>
   );
+
+  if (!undecided) return dashboard;
+
+  // Locked peek: the real runway is visible but inert behind the decision.
+  return (
+    <div className={cn("relative", props.className)}>
+      <div
+        aria-hidden
+        className="pointer-events-none select-none opacity-40 blur-[6px] [filter:blur(6px)]"
+      >
+        {dashboard}
+      </div>
+      <div className="pointer-events-none absolute inset-0">
+        <div className="sticky top-6 px-2 pt-6 sm:px-4">
+          <div className="pointer-events-auto">
+            <DeliveryGateOverlay
+              tasks={tasks}
+              busy={!!props.busyTaskId}
+              readOnly={!canEdit}
+              engageHref={props.engageHref}
+              rateCents={props.rateCents}
+              onRate={props.onRate}
+              platformRequest={props.platformRequest}
+              onPlatformRequest={props.onPlatformRequest}
+              onSelf={() => chooseMode("self")}
+              onRetain={() => (props.onCommitRetained ? props.onCommitRetained() : chooseMode("retained"))}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
+
 
 export default OpsDashboard;
