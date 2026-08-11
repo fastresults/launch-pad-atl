@@ -83,7 +83,7 @@ const CLUSTERS: Cluster[] = [
     match: /brand|logo|collateral|guideline|card|letterhead|signoff|sign-off|art-direction|foundation-grade/,
     have: "Your mark, palette, type, voice and the full collateral set.",
     you: "Run the set as delivered and watch it drift as each new piece gets made in a different tool.",
-    we: "The set graded against your category, an art direction written over it, the system refined and collateral produced to print standard.",
+    we: "The set graded against your category, a written art direction over it, the system refined to that direction, and the collateral set produced at print standard.",
     role: "Creative director + brand designer",
   },
   {
@@ -92,8 +92,8 @@ const CLUSTERS: Cluster[] = [
     match: /campaign|ad|content|social|creative|post|cover|launch|imagery|poster|motion/,
     have: "The eight-week campaign arc and your foundation poster set.",
     you: "Publish the starter frames as-is, then lose the thread around week three when the calendar gets busy.",
-    we: "Owned imagery commissioned, the poster system rebuilt to the art direction, and the arc actually run for eight weeks.",
-    role: "Art buyer + campaign director",
+    we: "Original art-directed imagery in place of stock, the poster system rebuilt to your direction, and the eight-week arc run to a standard we sign off.",
+    role: "Campaign director",
   },
 ];
 

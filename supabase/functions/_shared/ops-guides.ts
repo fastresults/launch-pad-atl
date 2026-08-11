@@ -123,12 +123,12 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
   },
   "imagery-production": {
     how: [
-      "Write the shot list from the art direction: hero, product or work in progress, people, detail, texture.",
-      "Book a half-day with a photographer, or block a half-day to shoot it properly yourself.",
-      "Shoot wide — you need crops for square, vertical and banner from the same frame.",
-      "Retouch to one consistent look, then replace every placeholder on a live surface.",
+      "Write the frame list from the art direction: hero, the work itself, people, detail, texture.",
+      "Fix the look before anything is made: light direction, colour, depth, and how tight the crop sits.",
+      "Produce the set to that look, wide enough to crop square, vertical and banner from one frame.",
+      "Grade the set to one consistent finish, then replace every placeholder on a live surface.",
     ],
-    needs: ["The written art direction", "A location and anything you sell"],
+    needs: ["The written art direction", "Anything specific to your business that must appear"],
     minutes: 300,
     criticality: "growth",
     unlocks: ["poster-system", "creative-standard-signoff"],
@@ -214,9 +214,9 @@ export const OPS_GUIDES: Record<string, OpsGuide> = {
   },
   photography: {
     how: [
-      "List the five photos you actually need: you, the work, the result, the space, the team.",
-      "Shoot them on a phone near a window, or book two hours with a local photographer.",
-      "Replace every placeholder image on your site with a real one.",
+      "List the five images you actually need: you, the work, the result, the space, the team.",
+      "Decide the look once — same light, same colour, same distance — so the five read as a set.",
+      "Replace every placeholder image on your site with one that is genuinely yours.",
     ],
     minutes: 120,
   },
