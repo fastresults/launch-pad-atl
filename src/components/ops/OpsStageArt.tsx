@@ -106,7 +106,7 @@ export function OpsStageMasthead({
     <div
       aria-hidden
       className={cn(
-        "pointer-events-none absolute inset-y-0 hidden items-center opacity-20 md:flex",
+        "pointer-events-none absolute top-0 hidden h-24 items-start overflow-hidden opacity-20 md:flex",
         side === "right" ? "right-0 justify-end" : "left-0 justify-start",
         className,
       )}

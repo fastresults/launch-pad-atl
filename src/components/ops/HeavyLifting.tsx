@@ -152,14 +152,12 @@ export function HeavyLifting({ tasks }: { tasks: OpsTask[] }) {
         {rows.map((r, i) => (
           <li key={r.key} className="relative rounded-xl border border-border/40 bg-background/40 p-3.5 sm:pl-[92px]">
             {/* chapter marker — the drawn mark reads as the anchor for the move */}
-            <div className="absolute left-3.5 top-3.5 hidden flex-col items-center sm:flex">
+            <div className="absolute bottom-3.5 left-3.5 top-3.5 hidden w-14 flex-col items-center sm:flex">
               <OpsGlyph category={r.glyph} plate plateClassName="h-14 w-14" className="h-7 w-7" />
               <span className="mt-1.5 text-[10px] font-semibold tabular-nums tracking-[0.14em] text-muted-foreground/70">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              {i < rows.length - 1 && (
-                <span aria-hidden className="mt-1.5 w-px flex-1 bg-border/50" />
-              )}
+              <span aria-hidden className="mt-2 w-px flex-1 bg-gradient-to-b from-border/60 to-transparent" />
             </div>
 
             <div className="flex flex-wrap items-baseline justify-between gap-2">
