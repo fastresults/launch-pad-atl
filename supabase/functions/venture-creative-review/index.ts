@@ -14,7 +14,7 @@ import { syncCreativeReviews } from "../_shared/creative-registry.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const BUCKET = "venture-assets";
+const BUCKET = "user-media";
 const SIGNED_TTL = 60 * 60;
 
 const json = (body: unknown, status = 200) =>
