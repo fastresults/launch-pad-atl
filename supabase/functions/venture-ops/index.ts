@@ -32,7 +32,8 @@ const OWNERS = new Set(["client", "agency"]);
 /** Create any catalog tasks this venture doesn't have yet, without touching progress. */
 async function seedRunway(db: any, snapshotId: string) {
   const { data: existing } = await db
-    .from("venture_ops_tasks").select("task_key, sort_order").eq("snapshot_id", snapshotId);
+    .from("venture_ops_tasks").select("task_key, sort_order, how, minutes").eq("snapshot_id", snapshotId);
+  const rows = new Map<string, any>((existing ?? []).map((r: any) => [r.task_key, r]));
   const have = new Map<string, number>((existing ?? []).map((r: any) => [r.task_key, r.sort_order]));
   const catalog = buildOpsCatalog().map((t, i) => ({ ...t, sort_order: i }));
   const missing = catalog
@@ -43,7 +44,13 @@ async function seedRunway(db: any, snapshotId: string) {
   }
   // Guided-mode copy is catalog-owned: refresh it on every load so authoring
   // improvements reach existing runways. Never touches status, owner, or notes.
-  const withGuides = catalog.filter((t) => have.has(t.task_key) && (t.how.length || t.needs.length || t.minutes));
+  const withGuides = catalog.filter((t) => {
+    const row = rows.get(t.task_key);
+    if (!row) return false;
+    const sameHow = (row.how?.length ?? 0) === t.how.length;
+    const sameMin = (row.minutes ?? null) === t.minutes;
+    return !(sameHow && sameMin);
+  });
   for (const t of withGuides) {
     await db.from("venture_ops_tasks")
       .update({ how: t.how, needs: t.needs, minutes: t.minutes })
