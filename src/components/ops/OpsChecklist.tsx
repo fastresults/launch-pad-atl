@@ -201,7 +201,9 @@ export function OpsChecklist(props: OpsChecklistProps) {
                       );
                     })}
                   </div>
-                ))}
+                  );
+                })}
+
 
                 {!rows.length && (
                   <p className="py-3 text-center text-xs text-muted-foreground">Nothing here under this filter.</p>
