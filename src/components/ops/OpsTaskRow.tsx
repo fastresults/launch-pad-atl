@@ -87,7 +87,7 @@ export function OpsTaskRow(props: TaskRowProps) {
     <div className={cn(
       "rounded-xl border transition-colors",
       major
-        ? "border-border/70 bg-card/70 px-3.5 py-3 shadow-sm ring-1 ring-primary/10 sm:px-4"
+        ? "border-border/70 bg-card/70 px-3.5 py-3 shadow-sm sm:px-4"
         : "border-border/40 bg-card/25 px-3 py-2",
       done && "opacity-60",
       snoozed && "opacity-60",
