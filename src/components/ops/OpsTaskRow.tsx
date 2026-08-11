@@ -10,6 +10,9 @@ import {
   type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
 } from "@/lib/ops-runway";
 import { OWNER_LABEL, estimateLabel, isSnoozed } from "@/lib/ops-guided";
+import { CRITICALITY, TIPS, criticalityOf } from "@/lib/ops-criticality";
+import { InfoTip } from "./InfoTip";
+import { StepExplainer } from "./StepExplainer";
 
 /** Plain-language status names. No underscores, no project-management dialect. */
 export const PLAIN_STATUS: Record<OpsStatus, string> = {
@@ -34,6 +37,8 @@ export interface TaskRowProps {
   onSnooze?: (id: string, days: number) => void;
   onOpenAsset?: (key: string) => void;
   assetTitle?: (key: string) => string | null;
+  /** Full task list, so the explainer can name what this step unlocks. */
+  allTasks?: OpsTask[];
 }
 
 /** One step in the checklist: a real checkbox, plain words, detail on demand. */
@@ -46,6 +51,7 @@ export function OpsTaskRow(props: TaskRowProps) {
   const snoozed = isSnoozed(task);
   const done = task.status === "done";
   const est = estimateLabel(task.minutes);
+  const crit = CRITICALITY[criticalityOf(task)];
 
   const links = (task.asset_keys ?? [])
     .map((k) => ({ key: k, label: props.assetTitle?.(k) ?? null }))
@@ -83,18 +89,25 @@ export function OpsTaskRow(props: TaskRowProps) {
           </button>
 
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <span className={cn("h-1.5 w-1.5 rounded-full", OPS_CATEGORY_DOT[task.category] ?? "bg-muted")} />
-              {task.category}
-            </span>
-            <span>{OWNER_LABEL(task.owner_kind, viewerKind)}</span>
-            {!done && task.status !== "todo" && (
-              <span className={cn("rounded-full border px-1.5 py-px", STATUS_CLASS[task.status])}>
-                {PLAIN_STATUS[task.status]}
+            <InfoTip tip={TIPS.category}>
+              <span className="inline-flex items-center gap-1.5">
+                <span className={cn("h-1.5 w-1.5 rounded-full", OPS_CATEGORY_DOT[task.category] ?? "bg-muted")} />
+                {task.category}
               </span>
+            </InfoTip>
+            <InfoTip tip={crit.tip} className={cn("rounded-full border px-1.5 py-px", crit.badge)}>
+              <span>{crit.short}</span>
+            </InfoTip>
+            <InfoTip tip={task.owner_kind === viewerKind ? TIPS.ownerYou : TIPS.ownerAgency}>
+              <span>{OWNER_LABEL(task.owner_kind, viewerKind)}</span>
+            </InfoTip>
+            {!done && task.status !== "todo" && (
+              <InfoTip tip={TIPS.status[task.status] ?? ""} className={cn("rounded-full border px-1.5 py-px", STATUS_CLASS[task.status])}>
+                <span>{PLAIN_STATUS[task.status]}</span>
+              </InfoTip>
             )}
-            {snoozed && <span>Put off for now</span>}
-            {est && <span>{est}</span>}
+            {snoozed && <InfoTip tip={TIPS.snoozed}><span>Put off for now</span></InfoTip>}
+            {est && <InfoTip tip={TIPS.minutes}><span>{est}</span></InfoTip>}
             {due && !done && (
               <span className={cn("inline-flex items-center gap-1", overdue && "text-destructive")}>
                 <Clock className="h-3 w-3" />
@@ -109,6 +122,7 @@ export function OpsTaskRow(props: TaskRowProps) {
           {open && (
             <div className="mt-3 space-y-3 border-t border-border/40 pt-3 text-sm">
               <p className="text-muted-foreground">{task.why}</p>
+              <StepExplainer task={task} allTasks={props.allTasks ?? [task]} />
 
               {(task.how?.length ?? 0) > 0 && (
                 <div>
