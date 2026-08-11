@@ -1,25 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import { Compass, Hammer, ListChecks, Map as MapIcon, Phone } from "lucide-react";
+import { Compass, Hammer, ListChecks, Map as MapIcon, Phone, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   currentRunwayDay, isOverdue, progressOf,
-  type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask,
+  type DeliveryMode, type OpsNote, type OpsOwnerKind, type OpsStatus, type OpsTask, type OpsUpdate,
 } from "@/lib/ops-runway";
 import { activeStage, stageOf } from "@/lib/ops-guided";
 import { GuidedStep } from "./GuidedStep";
 import { OpsChecklist } from "./OpsChecklist";
 import { OpsTimeline } from "./OpsTimeline";
 import { OpsOnboarding } from "./OpsOnboarding";
+import { DeliveryModeGate } from "./DeliveryModeGate";
+import { DeliveredRail } from "./DeliveredRail";
+import type { DeliveryHandlers } from "./DeliveryPanel";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InfoTip } from "./InfoTip";
 import { TIPS } from "@/lib/ops-criticality";
 
 type ViewMode = "guided" | "checklist" | "timeline";
 
-export interface OpsDashboardProps {
+export interface OpsDashboardProps extends DeliveryHandlers {
   tasks: OpsTask[];
   notes: OpsNote[];
+  updates?: OpsUpdate[];
   startedAt?: string | null;
   canEdit: boolean;
   viewerKind: OpsOwnerKind;
@@ -36,6 +40,11 @@ export interface OpsDashboardProps {
   /** False once the venture has seen the first-run walkthrough. */
   showIntro?: boolean;
   onDismissIntro?: () => void;
+  /** Who is executing this runway — null means the decision hasn't been made. */
+  deliveryMode?: DeliveryMode | null;
+  onDeliveryMode?: (mode: DeliveryMode) => void;
+  rateCents?: number | null;
+  onRate?: (cents: number) => void;
   className?: string;
 }
 
@@ -44,6 +53,13 @@ const VIEWS: [ViewMode, string, typeof Compass][] = [
   ["checklist", "Full checklist", ListChecks],
   ["timeline", "The 90 days", MapIcon],
 ];
+
+const MODE_LABEL: Record<DeliveryMode, string> = {
+  self: "You're building this",
+  retained: "Adam's team is building this",
+  mixed: "Split between you and Adam's team",
+};
+
 
 /**
  * The operating runway both the founder (share link) and the agency (hub)
