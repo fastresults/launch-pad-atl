@@ -6,6 +6,8 @@
  * a link a customer or investor reads. This strips them before render.
  */
 
+import { stripEmbeddedMarkup } from "@/lib/strip-embedded-markup";
+
 /** Headings whose whole section is a developer artifact. */
 const DEV_SECTION = /^#{2,4}\s*(brand tokens\b.*|design tokens\b.*|tokens \(json\)|machine-readable.*)$/i;
 

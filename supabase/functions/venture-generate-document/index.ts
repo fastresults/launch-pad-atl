@@ -22,6 +22,7 @@ import {
   pickBrainSlice,
 } from "../_shared/venture-context.ts";
 import { ensureBrandKit } from "../_shared/brand-derive.ts";
+import { stripEmbeddedMarkup } from "../_shared/strip-markup.ts";
 
 import { ensureSnapshotBrain, markSnapshotBrainDirty } from "../_shared/snapshot-brain.ts";
 import { brainCorpusBlock, brainCorpusBlockMulti } from "../_shared/brain-corpus.ts";
