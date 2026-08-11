@@ -740,8 +740,11 @@ export default function VentureSharePage() {
             </>
           )}
 
+          <ShareOutroDialog open={outroOpen} onOpenChange={setOutroOpen} token={token} />
+
         </div>
       )}
+
 
     </div>
   );
