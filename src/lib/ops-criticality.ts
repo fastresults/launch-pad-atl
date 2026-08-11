@@ -12,25 +12,27 @@ export const CRITICALITY: Record<OpsCriticality, {
 }> = {
   required_to_operate: {
     label: "Required to operate",
-    short: "Must have",
+    // One vocabulary everywhere: the chip and the explainer say the same words.
+    short: "Required to operate",
     tip: "Without this you are not legally or practically in business. Filing, banking, invoicing, contracts — skip one and something downstream stops working or exposes you.",
     badge: "border-destructive/50 bg-destructive/10 text-destructive",
     dot: "bg-destructive",
   },
   required_to_sell: {
     label: "Required to sell",
-    short: "Needed to sell",
+    short: "Required to sell",
     tip: "You can exist without this, but you cannot reliably take money. The offer, the price, the booking link, the pipeline — this is the machinery that turns interest into revenue.",
-    badge: "border-amber-400/50 bg-amber-400/10 text-amber-300",
-    dot: "bg-amber-400",
+    badge: "border-amber-500/50 bg-amber-400/10 text-amber-700 dark:text-amber-300",
+    dot: "bg-amber-500",
   },
   growth: {
     label: "Makes it grow",
-    short: "Growth",
+    short: "Makes it grow",
     tip: "An accelerator. Nothing breaks if it waits a week, but this is what compounds — content, retargeting, referrals, reviews, pricing discipline.",
-    badge: "border-sky-400/50 bg-sky-400/10 text-sky-300",
-    dot: "bg-sky-400",
+    badge: "border-sky-500/50 bg-sky-400/10 text-sky-700 dark:text-sky-300",
+    dot: "bg-sky-500",
   },
+
 };
 
 export const criticalityOf = (t: OpsTask): OpsCriticality =>
