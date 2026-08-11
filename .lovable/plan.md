@@ -2,39 +2,35 @@
 
 Today the "Operationalize" item in the showcase sidebar opens the consultation modal. That's a sales prompt, not an answer. Replace it with a real destination: an **Operating Runway** — a sequenced checklist and workflow the founder works through after receiving the foundation. The consultation offer stays, but it sits at the end as the "or have Adam's team run this" option.
 
-## The recommendation: 6 tracks, 3 waves, 90 days
+## The arc: the Launch Cadence, continued
 
-The foundation answers *what the business is*. The runway answers *what makes it transact*. Everything below is ordered by what blocks revenue soonest.
+The showcase already tells the founder a 14-day story — the Launch Cadence (`LAUNCH_14DAY_PLAN`), Day 1 "Lock the concept" through Day 14 "Launch day + proof + growth loops". The runway does not invent a second story. It uses the same arc, same day numbers, same themes and "done when" lines, and then extends it past Day 14 into the part nobody covers: actually running the business.
 
-**Wave 1 — Legal + Money (Days 1–14). Nothing else is safe until this is done.**
-1. Entity formed and confirmed (state, registered agent, filing receipt saved)
-2. EIN issued
-3. Business bank account + card opened, personal spend separated
-4. Accounting system live (chart of accounts, bank feed connected, sales tax posture set)
-5. Bookkeeping cadence chosen (weekly reconcile, monthly close, who does it)
-6. Insurance quoted and bound (general liability; E&O or trades-specific as applicable)
-7. Core legal pack sent for signature and returned: operating agreement, client services agreement / MSA, statement of work template, NDA, contractor agreement, privacy policy + terms for the site
+```text
+Days 1–7   Week 1 — Prove it      (concept, offer, buyers, demand, wedge, sales machine, voice)
+Days 8–14  Week 2 — Wire it       (legal, money, domain, site, ops, content, launch)
+Days 15–30 Week 3–4 — Run it      (post-launch: the operating system)
+Days 31–90 Quarter 1 — Compound   (rhythm, proof, first hire, first close)
+```
 
-**Wave 2 — Sell (Days 10–45). This is where the money actually starts.**
-8. Offer and price locked from the pricing framework — one flagship offer, written as a page
-9. Proposal template built from the offer (scope, price, terms, signature block) + e-sign tool
-10. Invoicing and payments live (payment processor, deposit terms, late policy)
-11. CRM stood up: pipeline stages, required fields, one owner per stage
-12. Lead sources chosen (3 max) with a weekly quota per source
-13. Outbound list built and the first 25 messages actually sent
-14. Booking link + intake form wired to the CRM
-15. Follow-up sequence written (5 touches) and scheduled
+**Phase 1 — Week 1 · Prove it (Days 1–7).** Straight from the cadence, one checklist row per day, carrying that day's theme, objective and `doneWhen` verbatim, with the day's `assetKeys` resolved into link chips to the assets already sitting in this showcase. Founder checks a day off only when the `doneWhen` is literally true — e.g. Day 4 is not done until a paid deposit or five written commitments exist.
 
-**Wave 3 — Run (Days 30–90). What makes it repeatable instead of heroic.**
-16. Website / landing page live with the offer, proof, and one call to action
-17. Analytics + call tracking installed; one dashboard, five numbers
-18. Content cadence started from the brand kit (channel, format, weekly slot)
-19. Delivery SOP written: what the client gets, in what order, by when
-20. Onboarding kit: welcome email, kickoff agenda, asset request list
-21. First hire or contractor scoped (role, pay, first 30-day scorecard)
-22. Weekly operating rhythm: Monday pipeline review, Friday numbers, monthly close
+**Phase 2 — Week 2 · Wire it (Days 8–14).** Same treatment, and this is where the operational spine lands: entity + ToS/Privacy/Refund + insurance (Day 8), Stripe + business bank + books (Day 9), domain/email/GA4 (Day 10), site + brand pack (Day 11), fulfillment SOP + support bot + automations (Day 12), content calendar + operating cadence (Day 13), ads + reviews + referral + first paying customer (Day 14).
 
-Each item carries: why it matters in one line, what "done" looks like, an owner field, and a due-by day offset. Items link to the asset in the showcase that already answers it (pricing strategy → item 8, operations plan → item 19, brand kit → item 18), so the checklist feels like the foundation coming alive instead of new homework.
+Because the cadence gives the *theme* but not the *administrative reality*, each of these days expands into sub-steps the founder can tick individually — this is the detail the shareable link is missing today:
+
+- Day 8 → entity filed · EIN issued · registered agent · operating agreement signed · MSA / services agreement + SOW template · NDA · contractor agreement · ToS + Privacy live on the site · GL insurance bound (E&O or trades rider where applicable). Sent-for-signature and returned are separate ticks — a contract that went out is not a contract that came back.
+- Day 9 → business bank + card opened · personal spend separated · payment processor live with a real test charge · chart of accounts set · bank feed connected · sales-tax posture decided · bookkeeping cadence named (weekly reconcile, monthly close, who does it)
+- Day 10 → domain + DNS · business email · GA4 + pixels firing real events · email marketing sender authenticated (SPF/DKIM)
+- Day 12 → CRM pipeline stages with one owner per stage · proposal template built from the priced offer · e-sign tool connected · invoicing + deposit + late-payment terms · onboarding kit (welcome email, kickoff agenda, asset request list) · delivery SOP
+- Day 13 → three lead sources chosen with a weekly quota each · outbound list built and the first 25 messages actually sent · 5-touch follow-up sequence scheduled · booking link wired into the CRM
+
+**Phase 3 — Days 15–30 · Run it.** The first orders arrive and the system either holds or it doesn't: first 10 proposals out the door, close-rate tracked, cash-collected vs. invoiced reconciled, first monthly close completed with an accountant's eyes on it, support inbox with a response-time promise, testimonial captured from customer #1.
+
+**Phase 4 — Days 31–90 · Compound.** Weekly operating rhythm installed (Monday pipeline review, Friday five numbers, monthly close), one dashboard with CAC / close rate / cash on hand / pipeline value / MRR-or-backlog, content cadence sustained from the brand kit, pricing revisited against real win/loss, first hire or contractor scoped with a 30-day scorecard, and a quarterly plan written for Q2.
+
+Every row carries: the day or window it belongs to, why it matters in one line, what "done" looks like, an owner field, and link chips into the showcase assets that already answer it. Phases 1–2 are generated from `LAUNCH_14DAY_PLAN` so the runway can never drift from the timeline the founder already saw; Phases 3–4 are the new post-launch extension.
+
 
 ## What the viewer sees
 
