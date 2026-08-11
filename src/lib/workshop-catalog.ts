@@ -162,20 +162,6 @@ const BUILD_META: Record<
     promptCaption: "We build the engine. You own it.",
     lens: "content strategy built around real buying questions",
   },
-  "ai-operating-system": {
-    chipLabel: "AI ops",
-    opensLabel: "Mar 2027",
-    heroQuestion: "What's eating your week?",
-    promptExamples: [
-      "I'm buried in admin every night.",
-      "I rewrite the same quote from scratch weekly.",
-      "I'm the bottleneck in my own business.",
-      "Why am I working Sundays for this?",
-    ],
-    inputLabel: "Tell us what's eating your week",
-    promptCaption: "We build the automation. You own it.",
-    lens: "AI automation of repetitive founder work",
-  },
   "legal-financial-ops": {
     chipLabel: "Accounting",
     opensLabel: "Apr 2027",

@@ -146,21 +146,6 @@ export const WORKSHOP_AUDITS: Record<string, WorkshopAudit> = {
       "The buyer-question list that drives your publishing, and your first piece drafted in the room, ready for you to publish.",
     improvement: "get found by people already searching for what you sell",
   },
-  "ai-operating-system": {
-    name: "Founder Hours Audit",
-    promise:
-      "We grade your week against the repetitive work a machine should already be doing for you.",
-    intake: [
-      { key: "time_sinks", label: "The tasks eating the most hours each week", help: "List them with rough hours. Quotes, scheduling, invoices, DMs, whatever it is.", kind: "longtext", required: true },
-      { key: "tools_paid", label: "Tools you already pay for", help: "Everything with a monthly charge, even the unused ones.", kind: "longtext", required: true },
-      { key: "repeat_docs", label: "Documents you rewrite from scratch", help: "Quotes, proposals, onboarding emails, reports.", kind: "longtext", required: true },
-      { key: "bottleneck", label: "What only you can do right now", help: "The thing that stops when you stop.", kind: "text", required: true },
-      { key: "hours_week", label: "Hours you work in a typical week", help: "Including the Sunday ones.", kind: "text" },
-    ],
-    prescribedOutcome:
-      "Your highest-value time sink configured on your own account, with the next two specified and prompted so you can build them.",
-    improvement: "get back the hours you're currently spending on work a machine can do",
-  },
   "legal-financial-ops": {
     name: "Entity & Books Audit",
     promise:

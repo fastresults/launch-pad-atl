@@ -334,41 +334,6 @@ const PRODUCT_META: Record<string, ProductMeta> = {
   },
 
   /* ─────────── AI OPS ─────────── */
-  "ai-operating-system": {
-    costEyebrow: "The cost of doing it all by hand",
-    costStat: "9 hours",
-    costStatCaption: "a typical founder week spent on work software should be doing",
-    costBody:
-      "Quotes typed from scratch. The same five questions answered again. Invoices chased on a Sunday night. None of it grows anything — it just refuses to stop. Taking the biggest one off your plate is a week that finally has room for the work only you can do.",
-    artifactPreview: {
-      kind: "Automation",
-      title: "Quote request → priced draft in 4 minutes",
-      lines: [
-        "Trigger — form submission or inbound email",
-        "Step 1 — pull job type, square footage, zip; flag anything missing",
-        "Step 2 — draft the quote from your pricing rules, in your voice",
-        "Step 3 — land in your inbox for one look, then send",
-      ],
-      stamp: "One workflow configured on your account · the rest specified",
-    },
-    objections: [
-      {
-        q: "I'm not technical.",
-        a: "Nothing here is code. It's the tools you already have, connected step by step with you at the keyboard, so you can change them later.",
-      },
-      {
-        q: "I don't trust AI with customer-facing work.",
-        a: "Correct instinct. Every workflow we build keeps you as the last click on anything a customer sees. The automation removes the typing, not the judgment.",
-      },
-      {
-        q: "Won't this be obsolete in six months?",
-        a: "The tools will change; the audit won't. You leave knowing which of your tasks are worth automating and what they actually cost — that survives every model release.",
-      },
-    ],
-    decisionHeadline: "Leave with one workflow working and the next four specified.",
-    decisionBody:
-      "An honest audit of your stack, your highest-value workflow configured on your own account, the next four specified and prompted, and the monthly cost written down.",
-  },
 
   /* ─────────── LEGAL & MONEY ─────────── */
   "legal-financial-ops": {
