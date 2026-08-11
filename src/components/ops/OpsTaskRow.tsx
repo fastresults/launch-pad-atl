@@ -66,7 +66,7 @@ export function OpsTaskRow(props: TaskRowProps) {
   const lead = leadOf(task);
   const leadMeta = LEAD_META[lead];
   // Managed delivery only shows once the venture has retained the team.
-  const engaged = props.deliveryMode === "retained" || props.deliveryMode === "mixed";
+  const engaged = props.deliveryMode === "retained";
   const managed = engaged && task.owner_kind === "agency";
   const canHandoff = engaged && canEdit && !!props.onHandoff && task.owner_kind === "client" && !done;
 
