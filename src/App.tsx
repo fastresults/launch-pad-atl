@@ -174,6 +174,7 @@ export default function App() {
             <Route path="hub/new" element={<HubNew />} />
             <Route path="hub/:snapshotId" element={<HubSnapshot />} />
             <Route path="hub/:snapshotId/operations" element={<HubOperations />} />
+            <Route path="operations" element={<OperationsIndex />} />
 
           </Route>
 
