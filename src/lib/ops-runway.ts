@@ -26,6 +26,10 @@ export interface OpsTask {
   how?: string[] | null;
   needs?: string[] | null;
   minutes?: number | null;
+  /** "required_to_operate" | "required_to_sell" | "growth" */
+  criticality?: string | null;
+  /** Slugs of later steps this one gates. */
+  unlocks?: string[] | null;
   snoozed_until?: string | null;
 }
 

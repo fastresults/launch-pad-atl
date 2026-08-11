@@ -3621,6 +3621,7 @@ export type Database = {
           category: string
           completed_at: string | null
           created_at: string
+          criticality: string
           day: number
           done_when: string
           due_at: string | null
@@ -3638,6 +3639,7 @@ export type Database = {
           status: string
           task_key: string
           title: string
+          unlocks: string[]
           updated_at: string
           why: string
         }
@@ -3646,6 +3648,7 @@ export type Database = {
           category?: string
           completed_at?: string | null
           created_at?: string
+          criticality?: string
           day?: number
           done_when?: string
           due_at?: string | null
@@ -3663,6 +3666,7 @@ export type Database = {
           status?: string
           task_key: string
           title: string
+          unlocks?: string[]
           updated_at?: string
           why?: string
         }
@@ -3671,6 +3675,7 @@ export type Database = {
           category?: string
           completed_at?: string | null
           created_at?: string
+          criticality?: string
           day?: number
           done_when?: string
           due_at?: string | null
@@ -3688,6 +3693,7 @@ export type Database = {
           status?: string
           task_key?: string
           title?: string
+          unlocks?: string[]
           updated_at?: string
           why?: string
         }

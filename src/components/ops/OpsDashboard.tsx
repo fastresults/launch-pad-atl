@@ -11,6 +11,9 @@ import { GuidedStep } from "./GuidedStep";
 import { OpsChecklist } from "./OpsChecklist";
 import { OpsTimeline } from "./OpsTimeline";
 import { OpsOnboarding } from "./OpsOnboarding";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { InfoTip } from "./InfoTip";
+import { TIPS } from "@/lib/ops-criticality";
 
 type ViewMode = "guided" | "checklist" | "timeline";
 
@@ -79,6 +82,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
   }
 
   return (
+    <TooltipProvider delayDuration={120}>
     <div className={cn("space-y-6", props.className)}>
       <header className="rounded-2xl border border-border/50 bg-card/40 p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -92,7 +96,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
           <div className="text-right">
             <div className="text-2xl font-semibold tabular-nums">{overall.pct}%</div>
             <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-              {overall.done} of {overall.total} done{day ? ` · day ${day}` : ""}
+              <InfoTip tip={TIPS.progress}>{overall.done} of {overall.total} done</InfoTip>{day ? ` · day ${day}` : ""}
             </div>
           </div>
         </div>
@@ -159,6 +163,7 @@ export function OpsDashboard(props: OpsDashboardProps) {
         </aside>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
 

@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { OpsNote, OpsOwnerKind, OpsStatus, OpsTask } from "@/lib/ops-runway";
 import { OWNER_LABEL, estimateLabel, guidedQueue, stageOf, stepPosition } from "@/lib/ops-guided";
+import { CRITICALITY, TIPS, criticalityOf } from "@/lib/ops-criticality";
+import { InfoTip } from "./InfoTip";
+import { StepExplainer } from "./StepExplainer";
 
 export interface GuidedStepProps {
   tasks: OpsTask[];
@@ -53,6 +56,7 @@ export function GuidedStep(props: GuidedStepProps) {
   const doneCount = tasks.filter((t) => t.status === "done").length;
   const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
   const est = estimateLabel(task.minutes);
+  const crit = CRITICALITY[criticalityOf(task)];
   const busy = props.busyTaskId === task.id;
   const theirs = task.owner_kind !== viewerKind;
   const next3 = queue.slice(1, 4);
@@ -74,12 +78,25 @@ export function GuidedStep(props: GuidedStepProps) {
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] uppercase tracking-wide text-muted-foreground">
           <span className="text-primary">{stage.when} · {stage.name}</span>
           <span>Step {pos.index} of {pos.total}</span>
-          {est && <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{est}</span>}
-          <span>{theirs ? `${OWNER_LABEL(task.owner_kind, viewerKind)} has this` : "This one's yours"}</span>
+          {est && (
+            <InfoTip tip={TIPS.minutes}>
+              <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{est}</span>
+            </InfoTip>
+          )}
+          <InfoTip tip={theirs ? TIPS.ownerAgency : TIPS.ownerYou}>
+            <span>{theirs ? `${OWNER_LABEL(task.owner_kind, viewerKind)} has this` : "This one's yours"}</span>
+          </InfoTip>
+          <InfoTip tip={crit.tip} className={cn("rounded-full border px-2 py-0.5 normal-case tracking-normal", crit.badge)}>
+            <span>{crit.label}</span>
+          </InfoTip>
         </div>
 
         <h3 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">{task.title}</h3>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{task.why}</p>
+
+        <div className="mt-3">
+          <StepExplainer task={task} allTasks={tasks} />
+        </div>
 
         {(task.needs?.length ?? 0) > 0 && (
           <p className="mt-4 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
@@ -164,7 +181,7 @@ export function GuidedStep(props: GuidedStepProps) {
 
       <div className="rounded-2xl border border-border/50 bg-card/30 px-4 py-3">
         <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-          <span>{doneCount} of {tasks.length} steps done</span>
+          <InfoTip tip={TIPS.progress}><span>{doneCount} of {tasks.length} steps done</span></InfoTip>
           <span className="tabular-nums">{pct}%</span>
         </div>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
