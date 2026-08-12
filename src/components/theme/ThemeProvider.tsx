@@ -4,23 +4,34 @@ type Theme = "light" | "dark";
 type Ctx = { theme: Theme; setTheme: (t: Theme) => void; toggle: () => void; locked: boolean };
 
 const ThemeContext = createContext<Ctx | null>(null);
-const STORAGE_KEY = "dashboard-theme";
+const DEFAULT_STORAGE_KEY = "dashboard-theme";
 
 /**
  * `forced` pins the surface for an area that has no theme choice (Admin and
  * Dashboard are light-only). Stored preference is ignored and never written.
+ * `storageKey` keeps separate surfaces (public site vs dashboard) from sharing
+ * one remembered preference.
  */
-export function ThemeProvider({ children, forced }: { children: ReactNode; forced?: Theme }) {
+export function ThemeProvider({
+  children,
+  forced,
+  storageKey = DEFAULT_STORAGE_KEY,
+}: {
+  children: ReactNode;
+  forced?: Theme;
+  storageKey?: string;
+}) {
   const [theme, setThemeState] = useState<Theme>(forced ?? "dark");
 
   // Load persisted preference on mount (client-only)
   useEffect(() => {
     if (forced) return;
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
+      const saved = localStorage.getItem(storageKey) as Theme | null;
       if (saved === "light" || saved === "dark") setThemeState(saved);
     } catch {}
-  }, [forced]);
+  }, [forced, storageKey]);
+
 
   const active = forced ?? theme;
 
@@ -38,7 +49,7 @@ export function ThemeProvider({ children, forced }: { children: ReactNode; force
     if (forced) return;
     setThemeState(t);
     try {
-      localStorage.setItem(STORAGE_KEY, t);
+      localStorage.setItem(storageKey, t);
     } catch {}
   };
 

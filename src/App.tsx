@@ -10,6 +10,7 @@ import { LandingOnlyBanner } from "@/components/admin/LandingOnlyBanner";
 
 // Layout guards
 import AuthenticatedLayout from "@/routes/_authenticated";
+import PublicLayout from "@/routes/_public";
 import AdminLayout from "@/routes/_authenticated/_admin";
 
 // Public pages
@@ -127,6 +128,7 @@ export default function App() {
       <LandingOnlyGate>
       <Routes>
         {/* Public routes */}
+        <Route element={<PublicLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/calendar" element={<CalendarPage />} />
@@ -147,6 +149,7 @@ export default function App() {
         <Route path="/webinar" element={<WebinarPage />} />
         <Route path="/one-on-one" element={<OneOnOnePage />} />
         <Route path="/private-tuesday" element={<PrivateTuesdayPage />} />
+        </Route>
 
         {/* Authenticated routes */}
         <Route element={<AuthenticatedLayout />}>

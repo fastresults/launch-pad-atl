@@ -1054,3 +1054,129 @@
   .sl-rail { margin-top: 14px; }
   .sl-rail__chip { font-size: 11px; padding: 5px 10px; }
 }
+
+/* ---------------------------------------------------------------
+ * 14. Light mode — visitor-selectable surface for the public site
+ *
+ * `.public-surface` pins a dark palette above; these rules repaint it when
+ * the visitor picks light. The hero is deliberately exempt (see below) so the
+ * cinematic fold looks identical in both modes.
+ * --------------------------------------------------------------- */
+
+:root.light .public-surface,
+:root.light .marketing-dialog,
+:root.light .marketing-sheet {
+  --background: oklch(0.985 0.003 260);
+  --foreground: oklch(0.19 0.02 268);
+  --surface: oklch(1 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.19 0.02 268);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.19 0.02 268);
+  --primary: oklch(0.52 0.17 258);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.945 0.004 260);
+  --secondary-foreground: oklch(0.19 0.02 268);
+  --muted: oklch(0.945 0.004 260);
+  --muted-foreground: oklch(0.44 0.02 262);
+  --accent: oklch(0.92 0.02 262);
+  --accent-foreground: oklch(0.19 0.02 268);
+  --destructive: oklch(0.53 0.2 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.24 0.03 268 / 16%);
+  --input: oklch(0.24 0.03 268 / 20%);
+  --ring: oklch(0.52 0.17 258);
+
+  --brand-accent: oklch(0.52 0.17 258);
+  --brand-accent-soft: oklch(0.62 0.13 256);
+  --brand-violet: oklch(0.48 0.16 288);
+  --headline-dim: oklch(0.46 0.02 262);
+
+  --gradient-haze: radial-gradient(
+    120% 95% at 50% 8%,
+    oklch(0.72 0.09 272 / 30%) 0%,
+    oklch(0.85 0.05 268 / 22%) 32%,
+    transparent 70%
+  );
+}
+
+/* Header repaints with the page — except while it floats over the hero. */
+:root.light .sl-site-header {
+  border-bottom-color: oklch(0.24 0.03 268 / 14%);
+  background: oklch(0.985 0.003 260 / 86%);
+}
+
+:root.light .public-surface :is(input, textarea, select):not([type="checkbox"]):not([type="radio"]) {
+  background-color: oklch(0.19 0.02 268 / 4%);
+}
+
+/* Light-mode surfaces need a real shadow instead of a lifted border. */
+:root.light .public-surface .glass-card,
+:root.light .public-surface .sl-glass-bar {
+  box-shadow: 0 1px 2px oklch(0.2 0.02 268 / 6%), 0 12px 32px -18px oklch(0.2 0.02 268 / 30%);
+}
+
+/* --- The hero never changes mode -------------------------------
+ * Every child of `.sl-hero` (prompt glass, workshop rail, chips) reads these
+ * tokens, so pinning them here keeps the fold cinematic in light mode.
+ */
+:root.light .sl-hero {
+  --background: oklch(0.155 0.019 268);
+  --foreground: oklch(0.975 0.004 250);
+  --surface: oklch(0.205 0.021 268);
+  --card: oklch(0.198 0.021 268);
+  --card-foreground: oklch(0.975 0.004 250);
+  --popover: oklch(0.198 0.021 268);
+  --popover-foreground: oklch(0.975 0.004 250);
+  --primary: oklch(0.68 0.18 256);
+  --primary-foreground: oklch(0.16 0.03 264);
+  --secondary: oklch(0.245 0.022 268);
+  --secondary-foreground: oklch(0.975 0.004 250);
+  --muted: oklch(0.245 0.022 268);
+  --muted-foreground: oklch(0.775 0.018 260);
+  --accent: oklch(0.27 0.024 268);
+  --accent-foreground: oklch(0.975 0.004 250);
+  --border: oklch(0.82 0.03 260 / 14%);
+  --input: oklch(0.82 0.03 260 / 18%);
+  --ring: oklch(0.66 0.18 258);
+  --brand-accent: oklch(0.68 0.18 256);
+  --brand-accent-soft: oklch(0.78 0.1 256);
+  --brand-violet: oklch(0.55 0.13 285);
+  color: oklch(0.98 0.006 260);
+}
+
+:root.light .public-surface .sl-hero :is(p, li) {
+  color: color-mix(in oklab, oklch(0.98 0.006 260) 82%, transparent);
+}
+
+/* While the header floats over the hero it stays dark glass in either mode. */
+:root.light .sl-site-header[data-over-hero] {
+  border-bottom-color: oklch(0.82 0.03 260 / 14%);
+  background: oklch(0.155 0.019 268 / 84%);
+  --foreground: oklch(0.975 0.004 250);
+  --muted-foreground: oklch(0.775 0.018 260);
+  color: oklch(0.975 0.004 250);
+}
+
+/* Legacy white-alpha utilities still in the marketing markup: they were drawn
+ * for a dark page, so in light mode they translate to ink-alpha equivalents.
+ * Anything sitting on photography (hero, image cards) keeps the white values. */
+:root.light .public-surface [class*="border-white/"] {
+  border-color: oklch(0.24 0.03 268 / 16%);
+}
+
+:root.light .public-surface [class*="bg-white/"]:not([class*="hover:bg-white/"]) {
+  background-color: oklch(0.19 0.02 268 / 4%);
+}
+
+:root.light .public-surface [class*="hover:bg-white/"]:hover {
+  background-color: oklch(0.19 0.02 268 / 7%);
+}
+
+:root.light .public-surface :is(.sl-hero, .sl-on-photo) :is([class*="border-white/"], [class*="ring-white/"]) {
+  border-color: oklch(1 0 0 / 15%);
+}
+
+:root.light .public-surface :is(.sl-hero, .sl-on-photo) [class*="bg-white/"] {
+  background-color: oklch(1 0 0 / 8%);
+}
