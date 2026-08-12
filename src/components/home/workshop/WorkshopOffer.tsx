@@ -256,9 +256,10 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
       {isOpen ? (
         <div className="mt-6">
           <PrimaryCta to={product.href} className="w-full justify-center px-6 py-3.5">
-            Claim my seat — {product.priceLabel}{" "}
+            Take a seat — {product.priceLabel}{" "}
             <ArrowRight className="size-4" aria-hidden="true" />
           </PrimaryCta>
+
           {date && (
             <p className="mt-3 text-center text-xs text-muted-foreground">
               {date} · 8:45–11:30am · IGNITE Center, Norcross GA
