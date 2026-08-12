@@ -122,7 +122,13 @@ Layout quality: vary section composition down the page — no two consecutive se
 
 Copy: write every headline, subhead, body paragraph, microcopy label, form helper, FAQ answer, testimonial and empty state in ${name}'s own voice, about ${name}'s actual offer${facts.offer ? ` — ${facts.offer}` : ""}. ${ctaLine} No filler, no placeholder brackets, no borrowed positioning from any other company.
 
-Imagery: no section ships text-only and no page may run two consecutive text-only sections. ${moodLine} Give every slot a prompt, alt text, aspect ratio and treatment, and generate all of them on first run into \`src/assets/\` referenced by ES6 imports.${facts.logoUrl ? ` Render the committed logo with <img src="${facts.logoUrl}" alt="${name} logo" /> in the header and footer — never a substitute mark.` : ""}
+Imagery: no section ships text-only and no page may run two consecutive text-only sections. ${moodLine} Give every slot a prompt, alt text, aspect ratio and treatment, and generate all of them on first run into \`src/assets/\` referenced by ES6 imports.${facts.logoUrl ? ` Render the committed logo with <img src="${facts.logoUrl}" alt="${name} logo" /> on light surfaces, and use \`${facts.logoUrl}/auto?on=<the exact background hex>\` for every lockup on a footer, CTA band, brand-colour section or image overlay — never a substitute mark, never the bare URL on a dark band.` : ""} Generate images at the highest-quality tier available, one image per call, and regenerate any image that fails its legibility test.
+
+Motion & depth: build the art direction's motion character, not a default fade. One signature scroll moment per site, named with its technique and scroll distance. Every full-bleed section runs a parallax depth stack — background plate at 0.25x scroll, midground subject at 0.6x, foreground type at 1.0x — with the darkening applied as a CSS gradient scrim between plate and type. Display headlines mask in line by line via clip-path (420ms, 80ms stagger); cards and body follow at opacity 0→1 plus 16px translateY. Animate transform and opacity only, reserve aspect-ratio on every image, and collapse the whole system to a still, finished composition under prefers-reduced-motion.
+
+Typography: display type ships a clamp range (e.g. clamp(2.75rem, 6vw, 7rem)) with stated tracking and a 62–70 character measure, and one editorial device is mandatory somewhere on the home page — a drop cap, an oversized pull quote, or a statistic set as display type. Numerals tabular in every table and metric.
+
+Detail layer: focus-visible rings on the brand accent, a custom 404 and cookie banner drawn in the art direction, fonts preloaded with font-display: swap, and no layout shift on image load.
 
 Conversion: primary CTA above the fold, after proof, after the offer explanation and in the footer. Forms have validation, success and error states. Emit analytics events for CTA clicks, form submits, pricing views, FAQ opens and scroll depth.
 
@@ -210,6 +216,15 @@ export function prdQualityMetrics(raw: string, facts: PrdVentureFacts) {
     archetype: facts.archetype?.name ?? null,
     archetypeNamed: facts.archetype ? raw.includes(facts.archetype.name) : null,
     imgTags: (raw.match(/<img\s/gi) ?? []).length,
+    // Did the archetype's own motion reach the builder, or is Section 5 the
+    // generic four lines again?
+    motionSpecific: /parallax|pinned|scroll-scrub|clip-path|line mask|sticky caption/i.test(raw) &&
+      /prefers-reduced-motion/i.test(raw),
+    // Every logo lockup on a non-light surface must use the /auto endpoint.
+    logoSurfaceSafe: !/\/brand-logo\//i.test(raw) || /\/auto\?on=/i.test(raw),
+    // Headline + microcopy contract actually applied.
+    copyCraftPass: /placeholder|helper text|error state|success (state|message)/i.test(raw) &&
+      !/\b(Learn more|Get started)\b/.test(raw),
   };
 }
 
