@@ -540,7 +540,12 @@ async function generateKind(
     );
   }
 
-  const { pages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx);
+  const PAGE_BUDGET = 1;
+  const from = Math.max(0, startPage);
+  const { pages, totalPages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx, {
+    start: from,
+    count: PAGE_BUDGET,
+  });
   // Fail loudly. Without a real TTF the rasteriser silently drops every line of
   // type, and we would store a "finished" page that is a logo on blank paper.
   if (!fontsOk) throw new Error("Brand fonts could not be loaded — refusing to render type-less pages");
@@ -552,10 +557,8 @@ async function generateKind(
   // A hard one-page boundary is intentional. CPU limits are cumulative rather
   // than wall-clock limits, so checking elapsed time between pages cannot save
   // a worker that spends its allowance inside wasm or synchronous PNG decode.
-  const PAGE_BUDGET = 1;
   const startedAt = Date.now();
-  const from = Math.max(0, startPage);
-  const slice = pages.slice(from, from + PAGE_BUDGET);
+  const slice = pages;
 
   const candidates: Array<{ page: typeof pages[number]; bytes: Uint8Array; verdict: QcVerdict }> = [];
   const verdicts: QcVerdict[] = [];
@@ -576,7 +579,7 @@ async function generateKind(
     // Ten-slide decks blew the worker CPU allowance at 1100px a page. QC reads
     // ink coverage and contrast, both of which survive a smaller raster, so
     // multi-page kinds review (and preview) at a lighter width.
-    const rasterWidth = Math.min(p.width, pages.length > 6 ? 560 : 960);
+    const rasterWidth = Math.min(p.width, totalPages > 6 ? 560 : 960);
     const bytes = await rasterizeSvgToBytes(p.svg, rasterWidth, undefined, fontBuffers);
 
     // Quarantine in memory: nothing is promoted until every page in this slice
@@ -618,10 +621,10 @@ async function generateKind(
   }
 
   const nextPage = from + processed;
-  if (nextPage < pages.length) {
+  if (nextPage < totalPages) {
     // More pages remain: leave superseded files in place until the last slice
     // lands, so the founder never sees a half-swept set.
-    return { kind, files: wrote.length, qc: verdicts, nextPage, totalPages: pages.length };
+    return { kind, files: wrote.length, qc: verdicts, nextPage, totalPages };
   }
 
 
