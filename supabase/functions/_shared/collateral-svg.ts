@@ -1760,6 +1760,7 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
   const markArts = [...svg.matchAll(/data-mark-art="([^"]*)"/g)].map((m) => m[1]);
   const markBgs = [...svg.matchAll(/data-mark-bg="([^"]*)"/g)].map((m) => m[1]);
   const markInks = [...svg.matchAll(/data-mark-ink="([^"]*)"/g)].map((m) => m[1]);
+  const markVis = [...svg.matchAll(/data-mark-visible="([^"]*)"/g)].map((m) => m[1] === "1");
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
   const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
   const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
@@ -1777,6 +1778,7 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
       art: markArts[i] ?? "",
       bg: markBgs[i] ?? "",
       ink: markInks[i] ?? "",
+      visible: markVis[i] ?? true,
     })),
     markBand: isLockup(ctx) ? rs.lockupBand : rs.logoBand,
 
