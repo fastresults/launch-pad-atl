@@ -324,13 +324,12 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
           Two ways in
         </p>
-        <h2 className="public-heading">
-          In Atlanta? Come build it in the room. Anywhere else? We'll build it with you.
-        </h2>
+        <h2 className="public-heading">Pick your way in. Both end the same way.</h2>
         <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
-          Same morning, same team, same outcome — a named startup, a price you can say out loud, a
-          live page, and a first message sent to someone real.
+          Same team, same result: your startup named, a price you can say out loud, a live page, and
+          the first message sent to a real customer.
         </p>
+
       </div>
 
       <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
