@@ -579,15 +579,17 @@ async function generateOne(
 
   const { data: existing } = await supabase
     .from("venture_documents")
-    .select("version, content, content_version_history")
+    .select("version, content, content_version_history, metadata")
     .eq("snapshot_id", snapshotId)
     .eq("document_type", documentType)
     .maybeSingle();
 
-  const nextVersion = existing?.content ? (existing.version ?? 1) + 1 : 1;
+  // Our own checkpoint from this attempt isn't a previous version of the asset.
+  const priorContent = (existing?.metadata as any)?.phase === "draft" ? null : existing?.content;
+  const nextVersion = priorContent ? (existing.version ?? 1) + 1 : 1;
   const history = Array.isArray(existing?.content_version_history) ? existing.content_version_history : [];
-  if (existing?.content) {
-    history.unshift({ version: existing.version ?? 1, content: existing.content, archived_at: new Date().toISOString() });
+  if (priorContent) {
+    history.unshift({ version: existing.version ?? 1, content: priorContent, archived_at: new Date().toISOString() });
   }
 
   await supabase.from("venture_documents").upsert({
@@ -601,7 +603,13 @@ async function generateOne(
     content_version_history: history.slice(0, 10),
     last_error: null,
     blocked_reason: null,
+    metadata: { phase: "final", completed_at: new Date().toISOString() },
   }, { onConflict: "snapshot_id,document_type" });
+
+  await logGenEvent(supabase, {
+    snapshotId, documentType, mode, model: modelId, attempt: attemptNo,
+    phase: "final", durationMs: Date.now() - startedAt, outcome: "complete",
+  });
 
   // It worked — drop any earlier failure row so the founder's count is honest.
   await supabase.from("venture_generation_failures")
