@@ -38,6 +38,7 @@ import { copyIsUsable, writeCollateralCopy } from "../_shared/collateral-copy.ts
 import { resolveSpec } from "../_shared/collateral-specs.ts";
 import { type StyleSystemExtras, styleSystemCss, styleSystemMarkdown } from "../_shared/style-system.ts";
 import { qcPage, type QcVerdict } from "../_shared/collateral-qc.ts";
+import { logGenEvent } from "../_shared/gen-events.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -819,11 +820,33 @@ Deno.serve(async (req) => {
       const done: any[] = [];
       const failed: any[] = [];
       for (const kind of requested) {
+        const startedAt = Date.now();
         try {
-          done.push(await generateKind(admin, snapshotId, userId, kind, ctx, extras, fromPage));
+          const result = await generateKind(admin, snapshotId, userId, kind, ctx, extras, fromPage);
+          done.push(result);
+          // Telemetry is how a collateral break gets noticed by us rather than
+          // reported by a founder. Never allowed to fail the run.
+          await logGenEvent(admin, {
+            snapshotId,
+            documentType: `collateral:${kind}`,
+            phase: typeof result.nextPage === "number" ? `pages ${fromPage}-${result.nextPage}` : "final",
+            mode: "collateral",
+            durationMs: Date.now() - startedAt,
+            outcome: typeof result.nextPage === "number" ? "checkpoint" : "complete",
+          });
         } catch (e) {
           console.error("collateral failed", kind, e);
-          failed.push({ kind, error: (e as Error).message });
+          const message = (e as Error).message;
+          failed.push({ kind, error: message });
+          await logGenEvent(admin, {
+            snapshotId,
+            documentType: `collateral:${kind}`,
+            phase: `from page ${fromPage}`,
+            mode: "collateral",
+            durationMs: Date.now() - startedAt,
+            outcome: message.startsWith("QUALITY_GATE_FAILED") ? "blocked" : "failed",
+            error: message,
+          });
         }
       }
       const qcIssues = done.flatMap((r: any) =>
