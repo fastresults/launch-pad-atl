@@ -21,7 +21,7 @@ export function ThemeProvider({
   forced?: Theme;
   storageKey?: string;
 }) {
-  const [theme, setThemeState] = useState<Theme>(forced ?? "dark");
+  const [theme, setThemeState] = useState<Theme>(forced ?? "light");
 
   // Load persisted preference on mount (client-only)
   useEffect(() => {
