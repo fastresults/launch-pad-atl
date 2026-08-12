@@ -185,13 +185,16 @@ export function LogoSetPanel({
   const brandBg = isHex(primaryColor) ? primaryColor : "#101014";
   const alt = `${companyName ?? "Brand"} logo`;
   // The same server-side per-paint audit used by showcases drives approval
-  // previews too. A file labelled "reversed" is never blindly trusted.
+  // previews too. A file labelled "reversed" is never blindly trusted, and the
+  // set fingerprint retires the previous verdict the moment a slot changes.
   const logoEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto`;
+  const fp = useMemo(() => logoSetFingerprint(logos), [logos]);
   const hasMark = Boolean(set.primary?.url || set.reversed?.url || set.icon?.url || set.wordmark?.url);
-  const lightMark = hasMark ? `${logoEndpoint}?on=light&contrast=v2` : null;
-  const reversedMark = hasMark ? `${logoEndpoint}?on=dark&contrast=v2` : null;
+  const lightMark = hasMark ? `${logoEndpoint}?on=light&v=${fp}` : null;
+  const reversedMark = hasMark ? `${logoEndpoint}?on=dark&v=${fp}` : null;
   const brandIsDark = luminance(brandBg) < 0.5;
-  const brandMark = hasMark ? `${logoEndpoint}?on=${encodeURIComponent(brandBg)}&contrast=v2` : null;
+  const brandMark = hasMark ? `${logoEndpoint}?on=${encodeURIComponent(brandBg)}&v=${fp}` : null;
+  const [lightVerdict, darkVerdict, brandVerdict] = useLogoVerdicts([lightMark, reversedMark, brandMark]);
 
 
   // Stored signed URLs expire after a week; re-sign on mount so an older
