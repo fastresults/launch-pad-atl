@@ -123,7 +123,7 @@ export default function BuildIndexPage() {
 
       <section className="border-t border-white/5 py-16 md:py-24">
         <div className="mx-auto max-w-4xl px-6">
-          <div className="rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
+          <div className="sl-on-photo rounded-3xl border border-white/10 bg-hero-gradient p-8 text-white md:p-12">
             <p className="mb-3 text-xs uppercase tracking-[0.18em] opacity-80 md:text-sm md:tracking-[0.2em]">
               Rather we implement it?
             </p>
