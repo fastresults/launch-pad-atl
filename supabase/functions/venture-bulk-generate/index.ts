@@ -1057,6 +1057,24 @@ async function runJob(
   // founder-triggered build that only unlocks once the brand is locked.
   let types = (allTypes ?? []).filter((t: any) => !BULK_EXCLUDED_TYPES.has(t.type));
 
+  for (const excluded of BULK_EXCLUDED_TYPES) {
+    const { data: exRow } = await supabase
+      .from("venture_documents")
+      .select("status")
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", excluded)
+      .maybeSingle();
+    if (exRow?.status === "complete" || exRow?.status === "generating") continue;
+    await supabase.from("venture_documents").upsert({
+      snapshot_id: snapshotId,
+      document_type: excluded,
+      status: "pending",
+      blocked_reason: "Unlocks once your brand is locked — then build it from the Website PRD card.",
+    }, { onConflict: "snapshot_id,document_type" });
+    await supabase.from("venture_generation_failures")
+      .delete().eq("snapshot_id", snapshotId).eq("document_type", excluded);
+  }
+
   // Sourcing-only asset types don't apply to a non-physical venture. Record
   // them as not_applicable so they stop haunting the "remaining" counter
   // instead of sitting as pending forever.
