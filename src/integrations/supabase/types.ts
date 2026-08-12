@@ -2830,6 +2830,7 @@ export type Database = {
           dna: Json
           guide_markdown: string | null
           id: string
+          ink_safe: Json
           locked_at: string | null
           logos: Json
           moodboard: Json
@@ -2852,6 +2853,7 @@ export type Database = {
           dna?: Json
           guide_markdown?: string | null
           id?: string
+          ink_safe?: Json
           locked_at?: string | null
           logos?: Json
           moodboard?: Json
@@ -2874,6 +2876,7 @@ export type Database = {
           dna?: Json
           guide_markdown?: string | null
           id?: string
+          ink_safe?: Json
           locked_at?: string | null
           logos?: Json
           moodboard?: Json
