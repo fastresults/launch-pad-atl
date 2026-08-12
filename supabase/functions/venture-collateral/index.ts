@@ -38,6 +38,7 @@ import { copyIsUsable, writeCollateralCopy } from "../_shared/collateral-copy.ts
 import { resolveSpec } from "../_shared/collateral-specs.ts";
 import { type StyleSystemExtras, styleSystemCss, styleSystemMarkdown } from "../_shared/style-system.ts";
 import { qcPage, type QcVerdict } from "../_shared/collateral-qc.ts";
+import { logGenEvent } from "../_shared/gen-events.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -522,7 +523,9 @@ async function generateKind(
   kind: CollateralKind,
   ctx: CollateralCtx,
   extras: StyleSystemExtras = {},
-): Promise<{ kind: CollateralKind; files: number; qc: QcVerdict[] }> {
+  startPage = 0,
+): Promise<{ kind: CollateralKind; files: number; qc: QcVerdict[]; nextPage?: number; totalPages?: number }> {
+
   const wrote: string[] = [];
   if (kind === "style_system") {
     // Portable handoff: the venture's own tokens, type, marks, voice and
@@ -560,9 +563,22 @@ async function generateKind(
   // Fail loudly. Without a real TTF the rasteriser silently drops every line of
   // type, and we would store a "finished" page that is a logo on blank paper.
   if (!fontsOk) throw new Error("Brand fonts could not be loaded — refusing to render type-less pages");
+
+  // Per-page worker budget. One kind per request was too coarse a bound: a
+  // ten-page guideline set still rasterised every page in one worker and hit
+  // CPU Time exceeded. Each invocation rasterises a bounded slice and reports
+  // where to resume, so no single worker can run itself into the ground.
+  const PAGE_BUDGET = 3;
+  const TIME_BUDGET_MS = 45_000;
+  const startedAt = Date.now();
+  const from = Math.max(0, startPage);
+  const slice = pages.slice(from, from + PAGE_BUDGET);
+
   const candidates: Array<{ page: typeof pages[number]; bytes: Uint8Array; verdict: QcVerdict }> = [];
   const verdicts: QcVerdict[] = [];
-  for (const p of pages) {
+  let processed = 0;
+  for (const p of slice) {
+    if (processed > 0 && Date.now() - startedAt > TIME_BUDGET_MS) break;
     const expectedText = (p.svg.match(/<text\b/g) || []).length;
     if (expectedText === 0 && !/design_tokens|email_signature/.test(kind)) {
       throw new Error(`${p.name}: no type was set on the page`);
@@ -581,7 +597,7 @@ async function generateKind(
     const rasterWidth = Math.min(p.width, pages.length > 6 ? 560 : 960);
     const bytes = await rasterizeSvgToBytes(p.svg, rasterWidth, undefined, fontBuffers);
 
-    // Quarantine in memory: nothing is promoted until every page in the kind
+    // Quarantine in memory: nothing is promoted until every page in this slice
     // passes geometry and final-raster review.
     const verdict = qcPage(bytes ?? null, p.metrics ?? {
       page: p.name, safe: rs.safe, bleed: rs.bleed, minType: rs.minType, textLines: 0,
@@ -589,10 +605,11 @@ async function generateKind(
     verdicts.push(verdict);
     if (!verdict.ok) console.warn("[collateral qc blocked]", p.name, verdict.reasons.join(" | "));
     if (bytes) candidates.push({ page: p, bytes, verdict });
+    processed++;
   }
 
   const rejected = verdicts.filter((v) => !v.ok);
-  if (rejected.length || candidates.length !== pages.length) {
+  if (rejected.length || candidates.length !== processed) {
     const detail = rejected.map((v) => `${v.page}: ${v.reasons.join("; ")}`).join(" | ");
     throw new Error(`QUALITY_GATE_FAILED${detail ? ` — ${detail}` : " — one or more previews could not be rendered"}`);
   }
@@ -617,6 +634,15 @@ async function generateKind(
     });
     wrote.push(`${p.name}-preview`);
   }
+
+  const nextPage = from + processed;
+  if (nextPage < pages.length) {
+    // More pages remain: leave superseded files in place until the last slice
+    // lands, so the founder never sees a half-swept set.
+    return { kind, files: wrote.length, qc: verdicts, nextPage, totalPages: pages.length };
+  }
+
+
 
   if (kind === "email_signature") {
     await store(admin, snapshotId, userId, kind, "email-signature-html", signatureHtml(ctx), "text/html", null, null);
@@ -790,29 +816,60 @@ Deno.serve(async (req) => {
         }, 400);
       }
 
+      const fromPage = Number.isFinite(Number(body?.fromPage)) ? Math.max(0, Number(body.fromPage)) : 0;
       const done: any[] = [];
       const failed: any[] = [];
       for (const kind of requested) {
+        const startedAt = Date.now();
         try {
-          done.push(await generateKind(admin, snapshotId, userId, kind, ctx, extras));
+          const result = await generateKind(admin, snapshotId, userId, kind, ctx, extras, fromPage);
+          done.push(result);
+          // Telemetry is how a collateral break gets noticed by us rather than
+          // reported by a founder. Never allowed to fail the run.
+          await logGenEvent(admin, {
+            snapshotId,
+            documentType: `collateral:${kind}`,
+            phase: typeof result.nextPage === "number" ? `pages ${fromPage}-${result.nextPage}` : "final",
+            mode: "collateral",
+            durationMs: Date.now() - startedAt,
+            outcome: typeof result.nextPage === "number" ? "checkpoint" : "complete",
+          });
         } catch (e) {
           console.error("collateral failed", kind, e);
-          failed.push({ kind, error: (e as Error).message });
+          const message = (e as Error).message;
+          failed.push({ kind, error: message });
+          await logGenEvent(admin, {
+            snapshotId,
+            documentType: `collateral:${kind}`,
+            phase: `from page ${fromPage}`,
+            mode: "collateral",
+            durationMs: Date.now() - startedAt,
+            outcome: message.startsWith("QUALITY_GATE_FAILED") ? "blocked" : "failed",
+            error: message,
+          });
         }
       }
       const qcIssues = done.flatMap((r: any) =>
         (r.qc ?? []).filter((v: QcVerdict) => !v.ok).map((v: QcVerdict) => ({ kind: r.kind, page: v.page, reasons: v.reasons })),
       );
+      // Resume contract: a bounded slice landed and more pages remain. The
+      // client calls back with `fromPage` until `more` is false.
+      const pending = done.find((r: any) => typeof r.nextPage === "number");
       return json({
         ok: failed.length === 0,
         generated: done,
         failed,
         qcIssues,
+        more: !!pending,
+        nextPage: pending?.nextPage ?? null,
+        totalPages: pending?.totalPages ?? null,
+        code: pending ? "MORE_PAGES" : undefined,
         // Tells the library whether the wordmark on these pieces is real type
         // (symbol isolated) or the tracer's polygons (nothing to isolate).
         logo: { symbolIsolated: !!ctx.symbolSvg },
         artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },
       });
+
 
     }
 

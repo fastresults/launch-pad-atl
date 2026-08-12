@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, ArrowRight } from "lucide-react";
 import { adminListSnapshots } from "@/lib/foundersHub.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { GenerationHealthCard } from "@/components/admin/GenerationHealthCard";
 
 function VentureRow({ s, mine }: { s: any; mine: boolean }) {
   return (
@@ -98,6 +99,8 @@ export default function AdminHubPage() {
               )}
             </div>
           </section>
+
+          <GenerationHealthCard />
         </>
       )}
     </div>

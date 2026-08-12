@@ -9,6 +9,7 @@
 import { colorSpaces, contrastRatio, inkOn, isDarkSurface } from "./color-spaces.ts";
 import { stripSvgBackground } from "./logo-raster.ts";
 import { inkAspect, inkBox } from "./logo-geometry.ts";
+import { resolveInk } from "./logo-ink.ts";
 
 import { fitBox, fitLine, measure } from "./text-metrics.ts";
 import {
@@ -490,25 +491,33 @@ function markAt(
   const untintable = isUntintable(inner);
   const dark = isDarkSurface(bg);
   const MIN = 2.4;
-  // A variant label is not proof of visible pixels. On any known surface we
-  // resolve the ink mathematically; when the artwork cannot be recoloured at
-  // all we give it a plate instead of letting it vanish — that is true of a
-  // founder's uploaded "reversed" raster too, which is how a dark mark used to
-  // land on a dark ground and still be called a knockout.
+  // One authority decides the ink. Templates ask for the colour they want and
+  // `resolveInk` returns the nearest legible form of it on this ground, keeping
+  // the brand hue instead of collapsing to flat black. When the artwork cannot
+  // be recoloured at all we give it a plate rather than let it vanish — that is
+  // true of a founder's uploaded raster on *any* failing ground, light or dark,
+  // which is how a bright brand mark used to be blocked on paper with no repair
+  // available.
   let use = ink;
   let plate = false;
 
+  const measuredFills = fillsIn(inner).map((f) =>
+    f === "white" ? "#ffffff" : f === "black" ? "#000000" : f
+  );
+
   if (bg && !untintable) {
     if (picked.dark) use = inkOn(bg);
-    if (use && contrastRatio(use, bg) < MIN) use = inkOn(bg);
     if (!use) {
-      const fills = fillsIn(inner);
-      const visible = fills.some((f) => contrastRatio(f === "white" ? "#ffffff" : f === "black" ? "#000000" : f, bg) >= MIN);
-      if (dark || (fills.length && !visible)) use = inkOn(bg);
+      const visible = measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
+      if (dark || (measuredFills.length && !visible)) use = inkOn(bg);
     }
-  } else if (bg && untintable && dark) {
-    plate = true;
+    if (use) use = resolveInk(use, bg);
+  } else if (bg && untintable) {
+    const visible = measuredFills.length > 0 &&
+      measuredFills.every((f) => contrastRatio(f, bg) >= MIN);
+    if (dark || !visible) plate = true;
   }
+
 
   if (use && !untintable) inner = tint(inner, use);
 
@@ -522,17 +531,34 @@ function markAt(
   const dx = x + (boxW - drawnW) / 2 - box.x * s;
   const dy = y + (boxH - drawnH) / 2 - box.y * s;
 
+  // The plate is the ground the untintable artwork reads best on, not always
+  // white: a white-ink raster needs a dark plate to be visible at all.
+  const plateFill = plate
+    ? (measuredFills.length &&
+        measuredFills.every((f) => contrastRatio(f, "#111111") >= MIN) &&
+        !measuredFills.every((f) => contrastRatio(f, "#ffffff") >= MIN)
+      ? "#111111"
+      : "#ffffff")
+    : "";
   const pad = Math.round(Math.max(drawnW, drawnH) * 0.14);
   const plateSvg = plate
-    ? `<rect x="${r(x + (boxW - drawnW) / 2 - pad)}" y="${r(y + (boxH - drawnH) / 2 - pad)}" width="${r(drawnW + pad * 2)}" height="${r(drawnH + pad * 2)}" rx="${r(pad * 0.6)}" fill="#ffffff" opacity="0.94"/>`
+    ? `<rect x="${r(x + (boxW - drawnW) / 2 - pad)}" y="${r(y + (boxH - drawnH) / 2 - pad)}" width="${r(drawnW + pad * 2)}" height="${r(drawnH + pad * 2)}" rx="${r(pad * 0.6)}" fill="${plateFill}" opacity="0.94"/>`
     : "";
 
   // The drawn size is recorded on the group so QC can verify the mark landed
   // inside the size band this piece's standard allows; the surface, the artwork
   // used and the ink it was actually drawn in are recorded so QC can measure
   // the specimen's real legibility rather than trusting a variant label.
-  const effectiveBg = plate ? "#ffffff" : (bg ?? "");
-  const drawnInk = use ?? (untintable ? "" : (fillsIn(inner)[0] ?? ""));
+  const effectiveBg = plate ? plateFill : (bg ?? "");
+  // Report what was actually painted. Untintable artwork keeps its own paint no
+  // matter what ink the template asked for, so reporting the request would tell
+  // QC a comfortable lie.
+  const drawnInk = untintable
+    ? (measuredFills.slice().sort((a, b) =>
+        contrastRatio(a, effectiveBg || "#ffffff") - contrastRatio(b, effectiveBg || "#ffffff")
+      )[0] ?? "")
+    : (use ?? measuredFills[0] ?? "");
+
   return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
 
@@ -1393,11 +1419,14 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   const charcoal = "#161719";
   const tiles: Array<{ label: string; note: string; bg: string; ink: string | null }> = [
     { label: "Primary", note: "Full colour on light", bg: paper, ink: null },
-    { label: "On brand", note: `Reversed on ${primary}`, bg: primary, ink: inkOn(primary) },
-    { label: "On accent", note: "Reversed on accent", bg: accent, ink: inkOn(accent) },
-    { label: "Mono black", note: "One ink on paper", bg: paper, ink: "#121212" },
-    { label: "Mono white", note: "One ink on charcoal", bg: charcoal, ink: "#FFFFFF" },
-    { label: "One colour", note: "Brand ink only", bg: paper, ink: primary },
+    { label: "On brand", note: `Reversed on ${primary}`, bg: primary, ink: resolveInk(inkOn(primary), primary) },
+    { label: "On accent", note: "Reversed on accent", bg: accent, ink: resolveInk(inkOn(accent), accent) },
+    { label: "Mono black", note: "One ink on paper", bg: paper, ink: resolveInk("#121212", paper) },
+    { label: "Mono white", note: "One ink on charcoal", bg: charcoal, ink: resolveInk("#FFFFFF", charcoal) },
+    // The brand-ink specimen is the one that used to block the whole set: a
+    // bright brand colour on paper is not legible, so it is drawn in the
+    // deepest form of that same hue that clears the floor.
+    { label: "One colour", note: "Brand ink only", bg: paper, ink: resolveInk(primary, paper) },
   ];
   const cols = 3, rowsL = 2;
   const tGap = g.gutter * 2;

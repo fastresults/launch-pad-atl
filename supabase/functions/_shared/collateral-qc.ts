@@ -66,15 +66,21 @@ export function qcPage(
     }
   }
 
-  // Every specimen must be *visibly* on its tile. A variant labelled "reversed"
-  // that resolved to dark ink on a dark ground is the invisible-knockout bug.
+  // Every specimen must be *visibly* on its tile. Since every renderer now
+  // resolves its ink through `resolveInk` before drawing, reaching this branch
+  // means the chooser and the judge disagreed — a renderer bug, not a brand
+  // problem. It is labelled as one so it shows up in triage instead of reading
+  // like something the founder can fix.
   for (const m of metrics.marks ?? []) {
     if (!m.bg || !m.ink) continue;
     if (contrastRatio(m.ink, m.bg) < 2.4) {
-      reasons.push(`A logo specimen was drawn in ${m.ink} on ${m.bg} — too little contrast to be visible.`);
+      reasons.push(
+        `RENDERER_BUG: a logo specimen was drawn in ${m.ink} on ${m.bg} — too little contrast to be visible.`,
+      );
       break;
     }
   }
+
 
 
 

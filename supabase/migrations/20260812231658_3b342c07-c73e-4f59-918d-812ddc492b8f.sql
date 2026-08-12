@@ -1,0 +1,1 @@
+ALTER TABLE public.venture_brand_kits ADD COLUMN IF NOT EXISTS ink_safe jsonb NOT NULL DEFAULT '{}'::jsonb;

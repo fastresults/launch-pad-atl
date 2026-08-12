@@ -64,9 +64,13 @@ describe("ink measurement", () => {
     const svg = `<svg><style>.gold{fill:#D4AF4A}.navy{fill:#1B2A45}</style><path class="gold"/><path class="navy"/></svg>`;
     const repaired = repairSvgContrast(svg, DARK_SURFACE);
     expect(repaired).toContain("fill:#D4AF4A");
-    expect(repaired).toContain("fill:#FFFFFF");
+    // The navy is lifted within its own hue rather than flattened to white —
+    // a repaired mark must stay recognisably the brand's.
+    expect(repaired).not.toContain("fill:#1B2A45");
+    expect(repaired).not.toContain("fill:#FFFFFF");
     expect(svgPaintsPass(repaired, DARK_SURFACE)).toBe(true);
   });
+
 
   it("repairs light paint on white with dark ink", () => {
     const repaired = repairSvgContrast(`<svg><path fill="#FFFFFF"/></svg>`, LIGHT_SURFACE);
