@@ -20,6 +20,8 @@ import {
   WORKSHOP_PRICE_LABEL,
 } from "@/lib/framework-deliverables";
 import { DeliverableCheck } from "@/components/home/DeliverableCheck";
+import { BuildLayerCard } from "@/components/home/BuildLayerCard";
+
 
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
 import facilitatorPhoto from "@/assets/facilitator.jpg";
@@ -494,41 +496,24 @@ function HonestRoadmap() {
 
 
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {BUILD_LAYER.map((b) => {
-              const Icon = b.icon;
-              const workshop = BUILD_WORKSHOPS.find((w) => w.capability === b.capability);
-              const href = workshop ? `/build/${workshop.slug}` : "/build";
-              return (
-                <Link
-                  key={b.title}
-                  to={href}
-                  className="group flex flex-col rounded-2xl border border-white/10 bg-card p-5 transition-colors hover:border-primary/40 md:p-6"
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <Icon className="size-5 text-primary" />
-                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
-                      Workshop · {workshop?.priceLabel ?? "$197"}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-semibold leading-snug tracking-tight">
-                    {b.title}
-                  </h3>
-                  <p className="mt-1 font-serif text-sm italic leading-snug text-foreground/80">
-                    {b.subtitle}
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {b.description}
-                  </p>
+          <p className="mt-8 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            Eight mornings — pick the one you need next
+          </p>
 
-                  <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
-                    Learn more
-                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
-                  </div>
-                </Link>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+            {BUILD_LAYER.map((b) => {
+              const workshop = BUILD_WORKSHOPS.find((w) => w.capability === b.capability);
+              return (
+                <BuildLayerCard
+                  key={b.title}
+                  item={b}
+                  href={workshop ? `/build/${workshop.slug}` : "/build"}
+                  priceLabel={workshop?.priceLabel ?? "$197"}
+                />
               );
             })}
           </div>
+
 
           <p className="mx-auto mt-10 max-w-3xl text-base text-muted-foreground md:text-lg">
             Do any of it yourself. Hire someone else. Or hand it to our team — same crew, same playbook.{" "}
