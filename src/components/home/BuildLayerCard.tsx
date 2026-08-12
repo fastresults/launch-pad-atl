@@ -21,7 +21,7 @@ export function BuildLayerCard({
   return (
     <Link
       to={href}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card transition-colors duration-300 hover:border-primary/40"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card sl-card-with-image transition-colors duration-300 hover:border-primary/40"
     >
       {item.image ? (
         <div className="relative aspect-[16/10] w-full overflow-hidden sm:aspect-[16/9]">
