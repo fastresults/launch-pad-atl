@@ -816,18 +816,31 @@ Deno.serve(async (req) => {
     const DEADLINE_MS = 100_000;
     const PENDING = Symbol("pending");
     let settled = false;
+    const startedAt = Date.now();
     const guarded = work
-      .then((r) => { settled = true; return r; })
+      .then((r: any) => {
+        settled = true;
+        logGenEvent(supabase, {
+          snapshotId, documentType, phase: r?.phase ?? "full",
+          durationMs: Date.now() - startedAt,
+          outcome: r?.phase === "draft" ? "checkpoint" : "complete",
+        });
+        return r;
+      })
       .catch(async (err) => {
         settled = true;
+        const msg = (err instanceof Error ? err.message : String(err)).slice(0, 500);
+        await logGenEvent(supabase, {
+          snapshotId, documentType, durationMs: Date.now() - startedAt,
+          outcome: (err as any)?.code ? "blocked" : "failed", error: msg,
+        });
         try {
-          await supabase.from("venture_documents")
-            .update({
-              status: "failed",
-              last_error: (err instanceof Error ? err.message : String(err)).slice(0, 500),
-            })
-            .eq("snapshot_id", snapshotId)
-            .eq("document_type", documentType);
+          if (!(err as any)?.code) {
+            await supabase.from("venture_documents")
+              .update({ status: "failed", last_error: msg })
+              .eq("snapshot_id", snapshotId)
+              .eq("document_type", documentType);
+          }
         } catch { /* ignore */ }
         throw err;
       });
