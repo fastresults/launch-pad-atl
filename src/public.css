@@ -1122,6 +1122,30 @@
   background-color: var(--muted);
 }
 
+/* Photo-to-card dissolve. The scrim must fade to whatever the card body is,
+   otherwise the photo washes to white and then steps into grey. */
+.sl-photo-scrim {
+  --sl-card-bg: var(--card);
+  background-image: linear-gradient(
+    to top,
+    var(--sl-card-bg) 0%,
+    color-mix(in oklab, var(--sl-card-bg) 45%, transparent) 18%,
+    transparent 42%
+  );
+}
+
+/* In light mode the photos are dark and low-key: a long milky fade greys them
+   out. Keep a short fade to the grey card body only at the very bottom edge. */
+:root.light .public-surface .sl-photo-scrim {
+  --sl-card-bg: var(--muted);
+  background-image: linear-gradient(
+    to top,
+    var(--sl-card-bg) 0%,
+    color-mix(in oklab, var(--sl-card-bg) 55%, transparent) 6%,
+    transparent 16%
+  );
+}
+
 /* --- The hero never changes mode -------------------------------
  * Every child of `.sl-hero` (prompt glass, workshop rail, chips) reads these
  * tokens, so pinning them here keeps the fold cinematic in light mode.
