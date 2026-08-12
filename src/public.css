@@ -1157,3 +1157,26 @@
   --muted-foreground: oklch(0.775 0.018 260);
   color: oklch(0.975 0.004 250);
 }
+
+/* Legacy white-alpha utilities still in the marketing markup: they were drawn
+ * for a dark page, so in light mode they translate to ink-alpha equivalents.
+ * Anything sitting on photography (hero, image cards) keeps the white values. */
+:root.light .public-surface [class*="border-white/"] {
+  border-color: oklch(0.24 0.03 268 / 16%);
+}
+
+:root.light .public-surface [class*="bg-white/"]:not([class*="hover:bg-white/"]) {
+  background-color: oklch(0.19 0.02 268 / 4%);
+}
+
+:root.light .public-surface [class*="hover:bg-white/"]:hover {
+  background-color: oklch(0.19 0.02 268 / 7%);
+}
+
+:root.light .public-surface :is(.sl-hero, .sl-on-photo) :is([class*="border-white/"], [class*="ring-white/"]) {
+  border-color: oklch(1 0 0 / 15%);
+}
+
+:root.light .public-surface :is(.sl-hero, .sl-on-photo) [class*="bg-white/"] {
+  background-color: oklch(1 0 0 / 8%);
+}
