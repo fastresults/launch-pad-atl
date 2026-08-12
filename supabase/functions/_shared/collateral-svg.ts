@@ -552,16 +552,23 @@ function markAt(
   // used and the ink it was actually drawn in are recorded so QC can measure
   // the specimen's real legibility rather than trusting a variant label.
   const effectiveBg = plate ? plateFill : (bg ?? "");
-  // Report what was actually painted. Untintable artwork keeps its own paint no
-  // matter what ink the template asked for, so reporting the request would tell
-  // QC a comfortable lie.
-  const drawnInk = untintable
-    ? (measuredFills.slice().sort((a, b) =>
-        contrastRatio(a, effectiveBg || "#ffffff") - contrastRatio(b, effectiveBg || "#ffffff")
-      )[0] ?? "")
-    : (use ?? measuredFills[0] ?? "");
+  // Report what was actually painted, measured the same way the gate measures
+  // it. One rule for both branches: the recorded ink is the fill a reader would
+  // struggle with most on this ground, and `visible` says whether *any* painted
+  // fill clears the floor. A two-tone mark whose primary shape reads is legible
+  // even though its accent fill does not — previously the first fill in the
+  // file was reported and a perfectly readable specimen was blocked.
+  const paintedFills = !untintable && use ? [use] : measuredFills;
+  const ground = effectiveBg || "#ffffff";
+  const worstFill = paintedFills.slice().sort((a, b) =>
+    contrastRatio(a, ground) - contrastRatio(b, ground)
+  )[0] ?? "";
+  const anyVisible = paintedFills.length === 0 ||
+    paintedFills.some((f) => contrastRatio(f, ground) >= MIN);
+  const drawnInk = worstFill;
 
-  return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+
 }
 
 
