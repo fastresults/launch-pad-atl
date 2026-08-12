@@ -1783,7 +1783,7 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
 }
 
 
-export type RenderResult = { pages: Page[]; totalPages: number; fontBuffers: Uint8Array[]; fontsOk: boolean };
+export type RenderResult = { pages: Page[]; pageNames: string[]; totalPages: number; fontBuffers: Uint8Array[]; fontsOk: boolean };
 
 export async function renderCollateral(
   kind: CollateralKind,
@@ -1816,6 +1816,7 @@ export async function renderCollateral(
   const headStack = `${heading}, ${fallbackFor(heading)}`;
   const bodyStack = `${body}, ${fallbackFor(body)}`;
 
+  let pageNames: string[] = [];
   const draw = (drawCtx: CollateralCtx): Page[] => {
     const args: Args = { ctx: drawCtx, T, defs };
     let raw: Page[];
@@ -1831,6 +1832,7 @@ export async function renderCollateral(
       case "guidelines": raw = guidelines(args); break;
       default: raw = [];
     }
+    pageNames = raw.map((p) => p.name);
     // Metrics include overlap detection and font measurement. Apply the worker
     // window before that work so a one-page invocation never audits the other
     // nine pages in a deck it will not rasterise or store.
@@ -1855,8 +1857,8 @@ export async function renderCollateral(
 
 
   const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
-  const totalPages = kind === "presentation" ? 10 : kind === "guidelines" ? 7 : kind === "business_card" ? 2 : 1;
-  return { pages, totalPages, fontBuffers, fontsOk: fontBuffers.length > 0 };
+  const totalPages = pageNames.length;
+  return { pages, pageNames, totalPages, fontBuffers, fontsOk: fontBuffers.length > 0 };
 }
 
 

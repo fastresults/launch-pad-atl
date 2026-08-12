@@ -542,7 +542,7 @@ async function generateKind(
 
   const PAGE_BUDGET = 1;
   const from = Math.max(0, startPage);
-  const { pages, totalPages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx, {
+  const { pages, pageNames, totalPages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx, {
     start: from,
     count: PAGE_BUDGET,
   });
@@ -557,7 +557,6 @@ async function generateKind(
   // A hard one-page boundary is intentional. CPU limits are cumulative rather
   // than wall-clock limits, so checking elapsed time between pages cannot save
   // a worker that spends its allowance inside wasm or synchronous PNG decode.
-  const startedAt = Date.now();
   const slice = pages;
 
   const candidates: Array<{ page: typeof pages[number]; bytes: Uint8Array; verdict: QcVerdict }> = [];
@@ -633,7 +632,12 @@ async function generateKind(
     await store(admin, snapshotId, userId, kind, "email-signature-html", signatureHtml(ctx), "text/html", null, null);
     wrote.push("email-signature-html");
   }
-  await sweepKind(admin, snapshotId, kind, wrote);
+  // Earlier page slices are already stored. Keep the complete deterministic
+  // name set when the final slice sweeps superseded files, not just the names
+  // written by this last invocation.
+  const expectedNames = pageNames.flatMap((name) => [name, `${name}-preview`]);
+  if (kind === "email_signature") expectedNames.push("email-signature-html");
+  await sweepKind(admin, snapshotId, kind, expectedNames);
   return { kind, files: candidates.length, qc: verdicts };
 }
 
