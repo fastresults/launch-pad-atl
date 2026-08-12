@@ -68,6 +68,10 @@ export type IdentityCheck = {
   surfaceSystemMissing?: boolean;
   /** PRD only: the art direction was never derived from the actual mark. */
   logoCraftMissing?: boolean;
+  /** PRD only: the logo is embedded as a bare URL with no surface-aware variant. */
+  logoSurfaceUnsafe?: boolean;
+  /** PRD only: the motion spec is boilerplate instead of the archetype's own. */
+  motionGeneric?: boolean;
   /** PRD only: the copy echoes too few real facts from the venture brain. */
   brainFactsThin?: boolean;
   ok: boolean;
