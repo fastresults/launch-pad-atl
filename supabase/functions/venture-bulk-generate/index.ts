@@ -350,6 +350,10 @@ async function generateOne(
   // Record a failure once, replacing any earlier row for this doc so the UI
   // count reflects reality across retry rounds.
   const recordFailure = async (error: string) => {
+    await logGenEvent(supabase, {
+      snapshotId, documentType, mode, model: modelId, attempt: attemptNo,
+      durationMs: Date.now() - startedAt, outcome: "failed", error,
+    });
     const { data: failedRows } = await supabase.from("venture_documents")
       .update({ status: "failed", last_error: error.slice(0, 600) })
       .eq("snapshot_id", snapshotId)
