@@ -511,12 +511,14 @@ function markAt(
       const visible = measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
       if (dark || (measuredFills.length && !visible)) use = inkOn(bg);
     }
+    // One authority: whatever ink we settled on is resolved against the ground
+    // before a single path is painted, so the gate never has to repair.
     if (use) use = resolveInk(use, bg);
   } else if (bg && untintable) {
-    const visible = measuredFills.length > 0 &&
-      measuredFills.every((f) => contrastRatio(f, bg) >= MIN);
+    const visible = measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
     if (dark || !visible) plate = true;
   }
+
 
 
   if (use && !untintable) inner = tint(inner, use);
