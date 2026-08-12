@@ -560,9 +560,22 @@ async function generateKind(
   // Fail loudly. Without a real TTF the rasteriser silently drops every line of
   // type, and we would store a "finished" page that is a logo on blank paper.
   if (!fontsOk) throw new Error("Brand fonts could not be loaded — refusing to render type-less pages");
+
+  // Per-page worker budget. One kind per request was too coarse a bound: a
+  // ten-page guideline set still rasterised every page in one worker and hit
+  // CPU Time exceeded. Each invocation rasterises a bounded slice and reports
+  // where to resume, so no single worker can run itself into the ground.
+  const PAGE_BUDGET = 3;
+  const TIME_BUDGET_MS = 45_000;
+  const startedAt = Date.now();
+  const from = Math.max(0, startPage);
+  const slice = pages.slice(from, from + PAGE_BUDGET);
+
   const candidates: Array<{ page: typeof pages[number]; bytes: Uint8Array; verdict: QcVerdict }> = [];
   const verdicts: QcVerdict[] = [];
-  for (const p of pages) {
+  let processed = 0;
+  for (const p of slice) {
+    if (processed > 0 && Date.now() - startedAt > TIME_BUDGET_MS) break;
     const expectedText = (p.svg.match(/<text\b/g) || []).length;
     if (expectedText === 0 && !/design_tokens|email_signature/.test(kind)) {
       throw new Error(`${p.name}: no type was set on the page`);
@@ -581,7 +594,7 @@ async function generateKind(
     const rasterWidth = Math.min(p.width, pages.length > 6 ? 560 : 960);
     const bytes = await rasterizeSvgToBytes(p.svg, rasterWidth, undefined, fontBuffers);
 
-    // Quarantine in memory: nothing is promoted until every page in the kind
+    // Quarantine in memory: nothing is promoted until every page in this slice
     // passes geometry and final-raster review.
     const verdict = qcPage(bytes ?? null, p.metrics ?? {
       page: p.name, safe: rs.safe, bleed: rs.bleed, minType: rs.minType, textLines: 0,
@@ -589,10 +602,11 @@ async function generateKind(
     verdicts.push(verdict);
     if (!verdict.ok) console.warn("[collateral qc blocked]", p.name, verdict.reasons.join(" | "));
     if (bytes) candidates.push({ page: p, bytes, verdict });
+    processed++;
   }
 
   const rejected = verdicts.filter((v) => !v.ok);
-  if (rejected.length || candidates.length !== pages.length) {
+  if (rejected.length || candidates.length !== processed) {
     const detail = rejected.map((v) => `${v.page}: ${v.reasons.join("; ")}`).join(" | ");
     throw new Error(`QUALITY_GATE_FAILED${detail ? ` — ${detail}` : " — one or more previews could not be rendered"}`);
   }
@@ -617,6 +631,15 @@ async function generateKind(
     });
     wrote.push(`${p.name}-preview`);
   }
+
+  const nextPage = from + processed;
+  if (nextPage < pages.length) {
+    // More pages remain: leave superseded files in place until the last slice
+    // lands, so the founder never sees a half-swept set.
+    return { kind, files: wrote.length, qc: verdicts, nextPage, totalPages: pages.length };
+  }
+
+
 
   if (kind === "email_signature") {
     await store(admin, snapshotId, userId, kind, "email-signature-html", signatureHtml(ctx), "text/html", null, null);
