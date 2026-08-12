@@ -406,6 +406,34 @@ export function selectArchetype(input: ArchetypeInput): SiteArchetype {
   return leaders[seed % leaders.length];
 }
 
+/**
+ * The motion + depth contract, written from THIS archetype.
+ *
+ * Section 5 of the master prompt used to be four hardcoded lines (fade,
+ * slide-up, hover scale), so every venture got the same flat site no matter
+ * which direction was locked. This block carries the archetype's own motion
+ * character, its two signature moves, and the parallax depth stack that makes
+ * full-bleed sections read as depth rather than as a flat picture.
+ */
+export function motionSpecBlock(a: SiteArchetype): string {
+  return [
+    `## MOTION & DEPTH CONTRACT (LOCKED — "${a.name}")`,
+    "Motion is part of the art direction, not a decoration layer added at the end. Specify it in Section 5 of the PRD and restate it in the master prompt in enough detail to build without guessing.",
+    "",
+    `- **Motion character (build to this, not to a generic fade)**: ${a.motion}`,
+    "- **Signature scroll moment**: exactly ONE per site, taken from the signature moves below. Name the technique (pinned section with scroll progress, scroll-scrubbed image sequence, clip-path line-mask headline reveal, horizontal proof reel, headline that scales into the sticky header), the trigger, the scroll distance it occupies, and what it looks like at the start, middle and end of the scrub.",
+    ...a.signatureMoves.map((s) => `  - ${s}`),
+    "- **Parallax depth stack**: every full-bleed section declares three planes — background plate translating at 0.25x scroll, midground subject at 0.6x, foreground type at 1.0x — with a CSS gradient scrim sitting between plate and type. Darkening for legibility lives in the scrim, never in the image render.",
+    "- **Headline entrance**: display headlines mask in line by line via `clip-path` over 420ms with an 80ms stagger and the easing curve below. Body copy and cards follow with opacity 0→1 plus a 16px translateY, 60ms stagger.",
+    "- **Micro-interactions**: every interactive element has hover, active and focus-visible states; 180ms transitions on `cubic-bezier(.22,1,.36,1)`; focus rings drawn on the brand accent, never the browser default.",
+    "- **Page transitions**: route changes fade and slide up 12px over 280ms, ease-out, with scroll restored to top.",
+    "- **Performance**: animate `transform` and `opacity` only; drive scroll effects from IntersectionObserver or a scroll-linked animation, never a scroll event handler; reserve `aspect-ratio` on every image so cumulative layout shift stays at zero.",
+    "- **Reduced motion**: `prefers-reduced-motion: reduce` disables every transform, scrub and parallax translate and ships the same composition as a still — a reduced-motion visitor must see a finished layout, not a broken one.",
+    "",
+    "A PRD whose motion section could be pasted into any other site's PRD is a failure.",
+  ].join("\n");
+}
+
 /** The prompt block injected into the Website PRD generation. */
 export function artDirectionBlock(a: SiteArchetype): string {
   return [
@@ -437,7 +465,7 @@ export function archetypeForPrompt(input: ArchetypeInput): { archetype: SiteArch
   return {
     archetype,
     block:
-      `${artDirectionBlock(archetype)}\n\n${imageCraftBlock()}\n\n${copyCraftBlock()}\n\n${surfaceSystemBlock()}`,
+      `${artDirectionBlock(archetype)}\n\n${motionSpecBlock(archetype)}\n\n${imageCraftBlock()}\n\n${copyCraftBlock()}\n\n${surfaceSystemBlock()}`,
   };
 }
 

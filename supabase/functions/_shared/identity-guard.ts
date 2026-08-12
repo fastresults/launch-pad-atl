@@ -68,6 +68,10 @@ export type IdentityCheck = {
   surfaceSystemMissing?: boolean;
   /** PRD only: the art direction was never derived from the actual mark. */
   logoCraftMissing?: boolean;
+  /** PRD only: the logo is embedded as a bare URL with no surface-aware variant. */
+  logoSurfaceUnsafe?: boolean;
+  /** PRD only: the motion spec is boilerplate instead of the archetype's own. */
+  motionGeneric?: boolean;
   /** PRD only: the copy echoes too few real facts from the venture brain. */
   brainFactsThin?: boolean;
   ok: boolean;
@@ -221,6 +225,16 @@ export function checkIdentity(
       /ink sampled/i.test(raw) &&
       /geometry and negative space/i.test(raw));
 
+  // A logo pasted as one flat URL lands black-on-teal the moment a section
+  // inverts. Any document that embeds the mark must also use the
+  // surface-aware endpoint for its inverted / overlay lockups.
+  const logoSurfaceUnsafe = /\/brand-logo\//i.test(raw) && !/\/auto\?on=/i.test(raw);
+
+  // Motion has to be the archetype's own character, not the default four lines.
+  const motionGeneric = !!opts.requireImagery &&
+    !(/parallax|pinned|scroll-scrub|clip-path|line mask|sticky caption|count-up|marquee/i.test(raw) &&
+      /prefers-reduced-motion/i.test(raw));
+
   // The copy has to carry real facts out of the venture brain.
   let brainFactsThin = false;
   const facts = opts.brainFacts ?? [];
@@ -245,10 +259,13 @@ export function checkIdentity(
     contrastTokensMissing,
     surfaceSystemMissing,
     logoCraftMissing,
+    logoSurfaceUnsafe,
+    motionGeneric,
     brainFactsThin,
     ok: !testimonialPortraitsMissing && !contrastTokensMissing && !surfaceSystemMissing && !copyThin && !copyGeneric && !faqThin && !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
       !imageryCraftMissing && !portraitCraftMissing && !imageryTooDark &&
-      !artDirectionMissing && !logoCraftMissing && !brainFactsThin,
+      !artDirectionMissing && !logoCraftMissing && !logoSurfaceUnsafe &&
+      !motionGeneric && !brainFactsThin,
   };
 }
 
@@ -350,6 +367,16 @@ export function correctionPrompt(
   if (check.surfaceSystemMissing) {
     fixes.push(
       "The document has no surface system, so light and dark keep mixing. Add the surface ladder to Section 3 as a table — `page`, `surface`, `surface-raised`, `surface-inverted`, `overlay`, each with background, foreground, muted-foreground and border tokens for BOTH light and dark themes plus the contrast ratio — state verbatim that \"foreground always travels with its surface\" and that no component inherits text colour across a surface boundary, declare one page mode per route with any inverted sections named, and give every component in the Section 8 inventory a surface assignment with its foreground pair (tables declare header, label column, value cells, borders and zebra rows separately).",
+    );
+  }
+  if (check.logoSurfaceUnsafe) {
+    fixes.push(
+      "The logo is embedded as one flat URL, so the light-surface mark ships on inverted bands and lands illegibly (dark ink on a dark brand colour). Every lockup must name the surface it sits on and use the surface-aware endpoint for it: append `/auto?on=<the exact background hex>&v=<kit version>` to the brand-logo URL for any header, footer, CTA band or overlay that is not the light page surface, and state the measured logo-to-background contrast beside each one. The bare URL is only valid on the light `page` surface.",
+    );
+  }
+  if (check.motionGeneric) {
+    fixes.push(
+      "The motion spec is the default four lines and could belong to any site. Rewrite Section 5 from the locked art direction's own motion character and BOTH signature moves, naming the technique for each (pinned scroll sequence, clip-path line-mask headline reveal, scroll-scrubbed crossfade, horizontal proof reel, count-up, marquee), and specify the parallax depth stack for every full-bleed section — background plate at 0.25x scroll, midground subject at 0.6x, foreground type at 1.0x, with the darkening applied as a CSS gradient scrim between plate and type. State the `prefers-reduced-motion` fallback that collapses the stack to a static, still-composed layout.",
     );
   }
   if (check.faqThin) {

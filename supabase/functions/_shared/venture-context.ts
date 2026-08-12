@@ -268,8 +268,36 @@ export function brandKitBlock(kit: BrandKitRow | null, snapshotId?: string): str
   if (primaryLogo) {
     const durable = snapshotId ? brandLogoUrl(snapshotId) : (primaryLogo.public_url ?? primaryLogo.url);
     if (durable) {
+      const alt = primaryLogo.alt ?? primaryLogo.title ?? primaryLogo.direction_name ?? "Logo";
       lines.push(`- Primary logo URL (PERMANENT — embed exactly this, never a placeholder): ${durable}`);
-      lines.push(`  Markup to use in the site: <img src="${durable}" alt="${primaryLogo.alt ?? primaryLogo.title ?? primaryLogo.direction_name ?? "Logo"}" />`);
+      lines.push(`  Markup to use in the site: <img src="${durable}" alt="${alt}" />`);
+
+      // Surface-aware lockups. One flat URL means one artwork, so a
+      // light-surface mark lands illegibly the moment a section inverts. The
+      // /auto endpoint measures the artwork's ink against the exact background
+      // hex and returns the variant that clears the contrast floor.
+      const pal = (kit.palette?.colors ?? {}) as Record<string, unknown>;
+      const hexOf = (key: string, fallback: string) => {
+        const v = pal[key];
+        return typeof v === "string" && /^#[0-9a-f]{3,8}$/i.test(v) ? v : fallback;
+      };
+      const version = String((kit as any).updated_at ?? (kit as any).locked_at ?? "")
+        .replace(/\D/g, "").slice(0, 14) || "1";
+      const auto = (on: string) =>
+        `${durable}/auto?on=${encodeURIComponent(on)}&v=${version}`;
+      const pageHex = hexOf("bg", "#FFFFFF");
+      const invertedHex = hexOf("primary", "#0B0B12");
+      lines.push(
+        "  SURFACE-AWARE LOGO RULE (mandatory — the bare URL above is the LIGHT-surface mark only):",
+      );
+      lines.push(`  - on the light \`page\` surface (${pageHex}): ${auto(pageHex)}`);
+      lines.push(
+        `  - on \`surface-inverted\` — footers, CTA bands, brand-colour sections (${invertedHex}): ${auto(invertedHex)}`,
+      );
+      lines.push(`  - on \`overlay\` — type over imagery or a dark scrim: ${auto("#0B0B12")}`);
+      lines.push(
+        "  Any lockup sitting on a background other than the light page surface MUST use the matching URL above, and the PRD must state the measured logo-to-background contrast beside it. Never draw a substitute mark, never a text-only wordmark, and never place the bare URL on a dark or brand-colour band.",
+      );
     }
     if (snapshotId && primaryLogo.variants) {
       const available = ["horizontal", "stacked", "mono", "knockout"].filter((v) => primaryLogo.variants?.[v]);
