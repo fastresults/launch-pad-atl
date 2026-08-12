@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -7,10 +8,13 @@ import {
   Minus,
   Layers,
   MessageCircleQuestion,
+  Video,
 } from "lucide-react";
-import { getWorkshopFormats, type WorkshopProduct } from "@/lib/workshop-products";
+import { getWorkshopFormats, REMOTE_SETUP, type WorkshopProduct } from "@/lib/workshop-products";
 import { nextDateLabel } from "@/lib/workshop-catalog";
+import { Button } from "@/components/ui/button";
 import { WaitlistForm } from "@/components/home/workshop/WaitlistForm";
+import { RemoteSetupDialog } from "@/components/home/workshop/RemoteSetupDialog";
 import {
   Panel,
   PrimaryCta,
