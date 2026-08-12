@@ -225,6 +225,16 @@ export function checkIdentity(
       /ink sampled/i.test(raw) &&
       /geometry and negative space/i.test(raw));
 
+  // A logo pasted as one flat URL lands black-on-teal the moment a section
+  // inverts. Any document that embeds the mark must also use the
+  // surface-aware endpoint for its inverted / overlay lockups.
+  const logoSurfaceUnsafe = /\/brand-logo\//i.test(raw) && !/\/auto\?on=/i.test(raw);
+
+  // Motion has to be the archetype's own character, not the default four lines.
+  const motionGeneric = !!opts.requireImagery &&
+    !(/parallax|pinned|scroll-scrub|clip-path|line mask|sticky caption|count-up|marquee/i.test(raw) &&
+      /prefers-reduced-motion/i.test(raw));
+
   // The copy has to carry real facts out of the venture brain.
   let brainFactsThin = false;
   const facts = opts.brainFacts ?? [];
