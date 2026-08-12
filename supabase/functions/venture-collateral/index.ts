@@ -505,7 +505,15 @@ async function generateKind(
   ctx: CollateralCtx,
   extras: StyleSystemExtras = {},
   startPage = 0,
-): Promise<{ kind: CollateralKind; files: number; qc: QcVerdict[]; nextPage?: number; totalPages?: number }> {
+): Promise<{
+  kind: CollateralKind;
+  files: number;
+  qc: QcVerdict[];
+  blocked?: Array<{ page: string; reasons: string[] }>;
+  nextPage?: number;
+  totalPages?: number;
+}> {
+
 
   const wrote: string[] = [];
   if (kind === "style_system") {
