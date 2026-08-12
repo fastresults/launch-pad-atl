@@ -36,7 +36,7 @@ export function BuildLayerCard({
           {/* Dissolve the photo into the card so there's no hard seam. */}
           <div
             aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-card/10"
+            className="sl-photo-scrim absolute inset-0"
           />
           <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
             <span className="inline-flex size-8 items-center justify-center rounded-full border border-white/15 bg-background/60 backdrop-blur-md">

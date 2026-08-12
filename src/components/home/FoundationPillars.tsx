@@ -69,7 +69,7 @@ export function FoundationPillars() {
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-card via-card/35 to-transparent"
+              className="sl-photo-scrim absolute inset-0"
             />
             <span className="absolute left-4 top-3 font-serif text-4xl leading-none text-primary drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]">
               {p.num}
