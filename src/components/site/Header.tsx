@@ -119,6 +119,10 @@ export function SiteHeader() {
               >
                 3 ways to start
               </button>
+              <button type="button" onClick={toggle}>
+                {theme === "dark" ? "light mode" : "dark mode"}
+              </button>
+
               {isAdmin && (
                 <Link to="/admin" onClick={() => setMenuOpen(false)}>admin</Link>
               )}
