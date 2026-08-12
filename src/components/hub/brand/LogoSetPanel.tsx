@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Upload, Wand2, X } from "lucide-react";
 import { toast } from "sonner";
 import { generateBrandAsset } from "@/lib/foundersHub.functions";
+import { logoSetFingerprint, useLogoVerdicts } from "@/lib/logo-surface";
 import { cn } from "@/lib/utils";
 
 /**
@@ -330,14 +331,15 @@ export function LogoSetPanel({
           if (e.dataTransfer.files?.length) pickMany(e.dataTransfer.files);
         }}
       >
-        <MarkTile label="On light" background="#ffffff" src={lightMark} alt={alt} light compact={compact} empty="Upload a primary mark" />
-        <MarkTile label="On dark" background="#101014" src={reversedMark} alt={alt} compact={compact} empty="Upload a reversed mark" />
+        <MarkTile label="On light" background="#ffffff" src={lightMark} alt={alt} light compact={compact} verdict={lightVerdict} empty="Upload a primary mark" />
+        <MarkTile label="On dark" background="#101014" src={reversedMark} alt={alt} compact={compact} verdict={darkVerdict} empty="Upload a reversed mark" />
         <MarkTile
           label="On brand"
           background={brandBg}
           src={brandMark}
           alt={alt}
           compact={compact}
+          verdict={brandVerdict}
           empty={brandIsDark ? "Upload a reversed mark" : "Upload a primary mark"}
         />
 
