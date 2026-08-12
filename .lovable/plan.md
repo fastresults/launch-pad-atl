@@ -44,12 +44,14 @@ New behaviour:
 
 **8. Preflight validation.** Before a run starts, check the gateway is reachable and the brand/intake gates for each asset. Assets that cannot succeed are marked `blocked` up front rather than burning three retry rounds.
 
-**9. Unstick this venture.** Re-run `website_prd` for snapshot `4968b647…` on the staged path once shipped.
+**9. Unstick this venture.** Once shipped, `website_prd` for snapshot `4968b647…` clears to the gated card; the founder builds it after the brand kit is locked.
 
 ## Technical notes
 
-- `supabase/functions/venture-bulk-generate/index.ts` — replace `generateOne` internals with an internal invoke of `venture-generate-document` (`{ snapshotId, documentType, mode, round }`); keep layering, concurrency (6), heartbeat and live progress here.
-- `supabase/functions/venture-generate-document/index.ts` — accept `mode: full|trimmed|minimal`; generalise the draft checkpoint beyond `isPrd`; add PRD stage `enrich` between `draft` and `refine`.
+- `supabase/functions/venture-bulk-generate/index.ts` — drop `website_prd` from the run's type list (seed it `pending` + `blocked_reason` instead); replace `generateOne` internals with an internal invoke of `venture-generate-document` (`{ snapshotId, documentType, mode, round }`); keep layering, concurrency (6), heartbeat and live progress here. Total count for progress excludes the gated PRD.
+- `supabase/functions/venture-generate-document/index.ts` — accept `mode: full|trimmed|minimal`; refuse `website_prd` unless `venture_brand_kits.status = 'locked'` (server-side gate, not just UI); generalise the draft checkpoint beyond `isPrd`; add PRD stage `enrich` between `draft` and `refine`.
+- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — dedicated Website PRD card: locked-brand gate, **Build website PRD** action, live status from the document row, and a stale badge after a brand re-lock.
+- Brand lock path (`venture-brand-wizard`) — on lock, stamp `metadata.brand_locked_at` on an existing PRD so the hub can mark it stale.
 - Migration: `create table public.venture_generation_events` + GRANTs (`select` to `authenticated`, `all` to `service_role`), RLS scoped to the snapshot owner and admins; `create or replace function public.sweep_stuck_generations()` without the two generation UPDATEs.
 - `supabase/functions/venture-job-watchdog/index.ts` — include `failed` jobs in the stalled query; enforce the shared per-asset attempt cap.
 - Admin: new generation-health card on `src/routes/_authenticated/_admin/admin.hub.tsx` reading `venture_generation_events`.
