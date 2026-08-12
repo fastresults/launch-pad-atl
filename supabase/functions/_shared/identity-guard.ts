@@ -369,6 +369,16 @@ export function correctionPrompt(
       "The document has no surface system, so light and dark keep mixing. Add the surface ladder to Section 3 as a table — `page`, `surface`, `surface-raised`, `surface-inverted`, `overlay`, each with background, foreground, muted-foreground and border tokens for BOTH light and dark themes plus the contrast ratio — state verbatim that \"foreground always travels with its surface\" and that no component inherits text colour across a surface boundary, declare one page mode per route with any inverted sections named, and give every component in the Section 8 inventory a surface assignment with its foreground pair (tables declare header, label column, value cells, borders and zebra rows separately).",
     );
   }
+  if (check.logoSurfaceUnsafe) {
+    fixes.push(
+      "The logo is embedded as one flat URL, so the light-surface mark ships on inverted bands and lands illegibly (dark ink on a dark brand colour). Every lockup must name the surface it sits on and use the surface-aware endpoint for it: append `/auto?on=<the exact background hex>&v=<kit version>` to the brand-logo URL for any header, footer, CTA band or overlay that is not the light page surface, and state the measured logo-to-background contrast beside each one. The bare URL is only valid on the light `page` surface.",
+    );
+  }
+  if (check.motionGeneric) {
+    fixes.push(
+      "The motion spec is the default four lines and could belong to any site. Rewrite Section 5 from the locked art direction's own motion character and BOTH signature moves, naming the technique for each (pinned scroll sequence, clip-path line-mask headline reveal, scroll-scrubbed crossfade, horizontal proof reel, count-up, marquee), and specify the parallax depth stack for every full-bleed section — background plate at 0.25x scroll, midground subject at 0.6x, foreground type at 1.0x, with the darkening applied as a CSS gradient scrim between plate and type. State the `prefers-reduced-motion` fallback that collapses the stack to a static, still-composed layout.",
+    );
+  }
   if (check.faqThin) {
     fixes.push(
       "The FAQ is too thin. Write at least 8 questions phrased the way a real buyer would type them, each answered in 60–110 words that address the objection behind the question and end with the next step. Cover price, timeline, what happens if it doesn't work, who it is not for, and how to start.",
