@@ -313,6 +313,10 @@ async function generateOne(
 
 
   // Count the attempt before we make the call, so a hard crash still shows it.
+  // The same counter is the circuit budget: past the cap we stop spending
+  // credits on an asset that has never succeeded and hand it to the founder.
+  const startedAt = Date.now();
+  let attemptNo = 1;
   {
     const { data: attemptRow } = await supabase
       .from("venture_documents")
@@ -320,9 +324,27 @@ async function generateOne(
       .eq("snapshot_id", snapshotId)
       .eq("document_type", documentType)
       .maybeSingle();
+    attemptNo = (attemptRow?.generation_attempts ?? 0) + 1;
+    if (attemptNo > MAX_ATTEMPTS_PER_ASSET) {
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        status: "pending",
+        blocked_reason:
+          "We tried this one several times without a clean result — open it and hit Regenerate when you're ready.",
+      }, { onConflict: "snapshot_id,document_type" });
+      await logGenEvent(supabase, {
+        snapshotId, documentType, mode, model: modelId, attempt: attemptNo,
+        outcome: "blocked", error: "attempt budget exhausted",
+      });
+      return;
+    }
     await supabase.from("venture_documents")
-      .update({ generation_attempts: (attemptRow?.generation_attempts ?? 0) + 1 })
+      .update({ generation_attempts: attemptNo })
       .eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    await logGenEvent(supabase, {
+      snapshotId, documentType, mode, model: modelId, attempt: attemptNo, outcome: "started",
+    });
   }
 
   // Record a failure once, replacing any earlier row for this doc so the UI
