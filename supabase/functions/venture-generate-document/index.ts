@@ -206,6 +206,29 @@ export async function generateOne(
     }
   }
 
+  // Brand-lock gate (Website PRD only). The PRD is the most brand-dependent
+  // artifact we produce, so it is never written from a provisional kit or a
+  // half-finished brand: the founder locks the brand first, then triggers it.
+  if (BRAND_LOCK_REQUIRED_TYPES.has(documentType) && phase !== "refine") {
+    const gate = await checkBrandLock(supabase, snapshotId);
+    if (!gate.ok) {
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        status: "pending",
+        blocked_reason: gate.reason,
+      }, { onConflict: "snapshot_id,document_type" });
+      await logGenEvent(supabase, {
+        snapshotId, documentType, phase, outcome: "blocked", error: gate.reason,
+      });
+      const err = new Error(gate.reason);
+      (err as any).code = "brand_lock_required";
+      throw err;
+    }
+  }
+
+
+
 
   // Ensure a snapshot brain exists AND is fresh (recomputes when dirty —
   // dirty flag is set by source-extract / intake-writeback / concept-refine).
