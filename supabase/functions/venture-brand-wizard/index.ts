@@ -10,6 +10,7 @@ import { aiFetch } from "../_shared/ai-fetch.ts";
 import { sanitizePaletteOption } from "../_shared/palette-rules.ts";
 import { resolveOwner, isAdminUser } from "../_shared/impersonation.ts";
 import { deriveBrandKitFromAssets } from "../_shared/brand-derive.ts";
+import { resolveBrandInks } from "../_shared/logo-ink.ts";
 
 
 const corsHeaders = {
@@ -445,10 +446,29 @@ Deno.serve(async (req) => {
 
     if (action === "styleguide") {
       const md = await generateGuide(ctx, kit);
-      await supabase.from("venture_brand_kits").update({ guide_markdown: md, status: "locked", locked_at: new Date().toISOString() }).eq("snapshot_id", snapshotId);
+      // Resolve every palette role against every ground the brand paints on,
+      // once, here. Renderers read these instead of each recomputing contrast —
+      // and a role with no legible form on a ground is visible in the Brand
+      // Studio now, not discovered eleven assets later.
+      const roles = (kit?.palette?.colors ?? {}) as Record<string, string>;
+      const inkSafe = Object.keys(roles).length
+        ? resolveBrandInks(roles, {
+          paper: roles.bg ?? "#F5F5F5",
+          charcoal: "#161719",
+          primary: roles.primary ?? null,
+          accent: roles.accent ?? null,
+        })
+        : {};
+      await supabase.from("venture_brand_kits").update({
+        guide_markdown: md,
+        status: "locked",
+        locked_at: new Date().toISOString(),
+        ink_safe: inkSafe,
+      }).eq("snapshot_id", snapshotId);
       if (kit?.palette?.colors && kit?.typography) {
         const brand_tokens = {
           colors: kit.palette.colors,
+          inkSafe,
           fonts: { heading: kit.typography.heading?.family, body: kit.typography.body?.family },
           mood: kit.dna?.mood ?? [],
           radius: "md",
