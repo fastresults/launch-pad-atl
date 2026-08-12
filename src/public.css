@@ -1148,3 +1148,12 @@
 :root.light .public-surface .sl-hero :is(p, li) {
   color: color-mix(in oklab, oklch(0.98 0.006 260) 82%, transparent);
 }
+
+/* While the header floats over the hero it stays dark glass in either mode. */
+:root.light .sl-site-header[data-over-hero] {
+  border-bottom-color: oklch(0.82 0.03 260 / 14%);
+  background: oklch(0.155 0.019 268 / 84%);
+  --foreground: oklch(0.975 0.004 250);
+  --muted-foreground: oklch(0.775 0.018 260);
+  color: oklch(0.975 0.004 250);
+}

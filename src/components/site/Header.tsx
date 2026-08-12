@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,11 +29,28 @@ export function SiteHeader() {
   const [modesOpen, setModesOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggle } = useTheme();
+  // In light mode the header keeps its dark glass while it floats over the
+  // (always dark) hero, then repaints with the page once scrolled past it.
+  const [overHero, setOverHero] = useState(false);
+  useEffect(() => {
+    const hero = document.querySelector(".sl-hero");
+    if (!hero) {
+      setOverHero(false);
+      return;
+    }
+    const onScroll = () => {
+      const rect = hero.getBoundingClientRect();
+      setOverHero(rect.bottom > 72);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const ctaFull = `Reserve seat — ${WORKSHOP_PRICE_LABEL}`;
 
   return (
     <>
-    <header className="sl-site-header">
+    <header className="sl-site-header" data-over-hero={overHero || undefined}>
       <div className="sl-site-header__inner">
 
         {/* Left edge: logo + product nav */}
