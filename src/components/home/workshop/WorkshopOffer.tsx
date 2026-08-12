@@ -240,9 +240,18 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
       <h3 className="mt-3 text-xl font-semibold leading-snug">
         If you can get to Atlanta, do this one.
       </h3>
-      <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         One morning, one seat, twenty people — and you walk out with it built.
       </p>
+      <ul className="mt-5 flex-1 space-y-2.5">
+        {product.walkOuts.slice(0, 4).map((w) => (
+          <li key={w} className="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
+            <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+            <span>{w}</span>
+          </li>
+        ))}
+      </ul>
+
       {isOpen ? (
         <div className="mt-6">
           <PrimaryCta to={product.href} className="w-full justify-center px-6 py-3.5">
