@@ -50,8 +50,26 @@ import {
   type PrdVentureFacts,
 } from "../_shared/website-prd.ts";
 import { LAUNCH_14DAY_PLAN } from "../_shared/launch-14day-plan.ts";
+import { logGenEvent } from "../_shared/gen-events.ts";
 
 const MAX_USER_PROMPT_CHARS = 120_000;
+
+/**
+ * Assets the bulk run never writes.
+ *
+ * The Website PRD is the single heaviest artifact we produce and it is only as
+ * good as the brand it is derived from. It is now a founder-triggered build
+ * that runs *after* the brand is locked, from its own card in the hub — see
+ * venture-generate-document's brand-lock gate.
+ */
+export const BULK_EXCLUDED_TYPES = new Set<string>(["website_prd"]);
+
+/**
+ * Circuit budget. Attempts accumulate on the row across runs, so a chronically
+ * failing asset stops burning credits on every future run instead of retrying
+ * forever. It is cleared whenever the founder regenerates the asset by hand.
+ */
+const MAX_ATTEMPTS_PER_ASSET = 8;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
