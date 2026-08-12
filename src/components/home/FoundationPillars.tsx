@@ -56,7 +56,7 @@ export function FoundationPillars() {
       {PILLARS.map((p) => (
         <article
           key={p.num}
-          className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card"
+          className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-card sl-card-with-image"
         >
           <div className="relative aspect-[16/10] w-full overflow-hidden">
             <img
