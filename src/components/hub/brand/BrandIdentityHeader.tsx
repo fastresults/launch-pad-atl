@@ -1,6 +1,4 @@
 // @ts-nocheck
-import { useMemo } from "react";
-import { Wand2 } from "lucide-react";
 import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
 import { LogoSetPanel } from "@/components/hub/brand/LogoSetPanel";
 import { cn } from "@/lib/utils";
@@ -124,11 +122,6 @@ export function BrandIdentityHeader({
 
   const headingFamily = kit?.typography?.heading?.family ?? null;
   const bodyFamily = kit?.typography?.body?.family ?? null;
-
-  const logo = useMemo(() => {
-    const logos = Array.isArray(kit?.logos) ? kit.logos.filter((l: any) => l?.url) : [];
-    return logos.find((l: any) => l.primary) ?? logos[0] ?? null;
-  }, [kit?.logos]);
 
   // The mark panel is always shown so a founder can upload one even before any
   // brand generation has run.
