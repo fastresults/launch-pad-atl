@@ -9,7 +9,7 @@
 import { colorSpaces, contrastRatio, inkOn, isDarkSurface } from "./color-spaces.ts";
 import { stripSvgBackground } from "./logo-raster.ts";
 import { inkAspect, inkBox } from "./logo-geometry.ts";
-import { resolveInk } from "./logo-ink.ts";
+import { specimenVerdict, resolveInk } from "./logo-ink.ts";
 
 import { fitBox, fitLine, measure } from "./text-metrics.ts";
 import {
@@ -560,12 +560,7 @@ function markAt(
   // file was reported and a perfectly readable specimen was blocked.
   const paintedFills = !untintable && use ? [use] : measuredFills;
   const ground = effectiveBg || "#ffffff";
-  const worstFill = paintedFills.slice().sort((a, b) =>
-    contrastRatio(a, ground) - contrastRatio(b, ground)
-  )[0] ?? "";
-  const anyVisible = paintedFills.length === 0 ||
-    paintedFills.some((f) => contrastRatio(f, ground) >= MIN);
-  const drawnInk = worstFill;
+  const { ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN });
 
   return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 
