@@ -154,6 +154,54 @@ function gatewayMessage(status: number, detail: string) {
   return "AI generation is currently unavailable. Please try again shortly.";
 }
 
+/**
+ * Assets that require a *locked* brand — not merely an inferred one — plus the
+ * brand assets they are derived from. These are excluded from bulk runs and
+ * are only ever written when the founder asks for them.
+ */
+export const BRAND_LOCK_REQUIRED_TYPES = new Set<string>(["website_prd"]);
+
+/** Brand assets that must be finished before a brand-locked asset can build. */
+const BRAND_SOURCE_TYPES = ["visual_identity_brief", "logo_brand_asset_pack"];
+
+async function checkBrandLock(
+  supabase: any,
+  snapshotId: string,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const { data: kit } = await supabase
+    .from("venture_brand_kits")
+    .select("status, locked_at, palette, typography, logos")
+    .eq("snapshot_id", snapshotId)
+    .maybeSingle();
+
+  if (kit?.status !== "locked") {
+    return {
+      ok: false,
+      reason: "Lock your brand first — the website brief is built from your final marks, palette and type.",
+    };
+  }
+
+  const { data: brandDocs } = await supabase
+    .from("venture_documents")
+    .select("document_type, status")
+    .eq("snapshot_id", snapshotId)
+    .in("document_type", BRAND_SOURCE_TYPES);
+  const done = new Set(
+    (brandDocs ?? [])
+      .filter((d: any) => d.status === "complete")
+      .map((d: any) => d.document_type),
+  );
+  const missing = BRAND_SOURCE_TYPES.filter((t) => !done.has(t));
+  if (missing.length) {
+    return {
+      ok: false,
+      reason: "Your brand assets aren't finished yet — the website brief unlocks once they are.",
+    };
+  }
+  return { ok: true };
+}
+
+
 // Track tones, specialized prompts, model-tier routing, and the citation
 // stripper all live in supabase/functions/_shared/ so the single-doc path
 // and the bulk path produce identical quality for the same document_type.
