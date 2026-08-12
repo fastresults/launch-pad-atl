@@ -490,25 +490,33 @@ function markAt(
   const untintable = isUntintable(inner);
   const dark = isDarkSurface(bg);
   const MIN = 2.4;
-  // A variant label is not proof of visible pixels. On any known surface we
-  // resolve the ink mathematically; when the artwork cannot be recoloured at
-  // all we give it a plate instead of letting it vanish — that is true of a
-  // founder's uploaded "reversed" raster too, which is how a dark mark used to
-  // land on a dark ground and still be called a knockout.
+  // One authority decides the ink. Templates ask for the colour they want and
+  // `resolveInk` returns the nearest legible form of it on this ground, keeping
+  // the brand hue instead of collapsing to flat black. When the artwork cannot
+  // be recoloured at all we give it a plate rather than let it vanish — that is
+  // true of a founder's uploaded raster on *any* failing ground, light or dark,
+  // which is how a bright brand mark used to be blocked on paper with no repair
+  // available.
   let use = ink;
   let plate = false;
 
+  const measuredFills = fillsIn(inner).map((f) =>
+    f === "white" ? "#ffffff" : f === "black" ? "#000000" : f
+  );
+
   if (bg && !untintable) {
     if (picked.dark) use = inkOn(bg);
-    if (use && contrastRatio(use, bg) < MIN) use = inkOn(bg);
     if (!use) {
-      const fills = fillsIn(inner);
-      const visible = fills.some((f) => contrastRatio(f === "white" ? "#ffffff" : f === "black" ? "#000000" : f, bg) >= MIN);
-      if (dark || (fills.length && !visible)) use = inkOn(bg);
+      const visible = measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
+      if (dark || (measuredFills.length && !visible)) use = inkOn(bg);
     }
-  } else if (bg && untintable && dark) {
-    plate = true;
+    if (use) use = resolveInk(use, bg);
+  } else if (bg && untintable) {
+    const visible = measuredFills.length > 0 &&
+      measuredFills.every((f) => contrastRatio(f, bg) >= MIN);
+    if (dark || !visible) plate = true;
   }
+
 
   if (use && !untintable) inner = tint(inner, use);
 
