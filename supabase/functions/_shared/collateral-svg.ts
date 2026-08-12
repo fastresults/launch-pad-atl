@@ -9,6 +9,7 @@
 import { colorSpaces, contrastRatio, inkOn, isDarkSurface } from "./color-spaces.ts";
 import { stripSvgBackground } from "./logo-raster.ts";
 import { inkAspect, inkBox } from "./logo-geometry.ts";
+import { resolveInk } from "./logo-ink.ts";
 
 import { fitBox, fitLine, measure } from "./text-metrics.ts";
 import {
@@ -1418,11 +1419,14 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
   const charcoal = "#161719";
   const tiles: Array<{ label: string; note: string; bg: string; ink: string | null }> = [
     { label: "Primary", note: "Full colour on light", bg: paper, ink: null },
-    { label: "On brand", note: `Reversed on ${primary}`, bg: primary, ink: inkOn(primary) },
-    { label: "On accent", note: "Reversed on accent", bg: accent, ink: inkOn(accent) },
-    { label: "Mono black", note: "One ink on paper", bg: paper, ink: "#121212" },
-    { label: "Mono white", note: "One ink on charcoal", bg: charcoal, ink: "#FFFFFF" },
-    { label: "One colour", note: "Brand ink only", bg: paper, ink: primary },
+    { label: "On brand", note: `Reversed on ${primary}`, bg: primary, ink: resolveInk(inkOn(primary), primary) },
+    { label: "On accent", note: "Reversed on accent", bg: accent, ink: resolveInk(inkOn(accent), accent) },
+    { label: "Mono black", note: "One ink on paper", bg: paper, ink: resolveInk("#121212", paper) },
+    { label: "Mono white", note: "One ink on charcoal", bg: charcoal, ink: resolveInk("#FFFFFF", charcoal) },
+    // The brand-ink specimen is the one that used to block the whole set: a
+    // bright brand colour on paper is not legible, so it is drawn in the
+    // deepest form of that same hue that clears the floor.
+    { label: "One colour", note: "Brand ink only", bg: paper, ink: resolveInk(primary, paper) },
   ];
   const cols = 3, rowsL = 2;
   const tGap = g.gutter * 2;
