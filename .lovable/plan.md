@@ -25,9 +25,16 @@ The legacy SQL cron `sweep-stuck-generations` (every 5 min) still runs `UPDATE v
 
 **2. Checkpointing everywhere, not just the PRD.** Every asset writes its first complete draft to the row before enrichment, with `metadata.phase='draft'`. Any worker death after that point publishes real content instead of a failure.
 
-**3. Run PRD last, after the brand layer is complete.** The bulk run's dependency layer already respects an order per type. We will harden the PRD (`website_prd`) to be a **terminal layer** that only begins after the Brand asset layer is fully complete (`brand_kit`, `logo_lockups`, `brand_voice_guide`, `archetype`, `color_palette`, `typography`, `moodboard`). If any brand asset is blocked or failed, the PRD is skipped with a blocked reason instead of running on partial/derived brand data. This removes the current failure mode where the PRD starts in a layer mixed with cheaper assets and dies before its checkpoint can land.
+**3. Take the PRD out of the bulk run entirely — it becomes a founder-triggered build, gated on a locked brand.** This is the recommended approach over merely reordering layers: the PRD is the single most expensive, longest-running asset in the system and the only one that has ever failed, and it is also the one asset whose quality depends on brand inputs (`venture_brand_kits.status = 'locked'`) that may still be `draft` or `auto` when the run executes. Generating it inside the run means we pay Pro-tier tokens on a document built from provisional brand data, then die on the wall clock.
 
-**4. Split the PRD into bounded stages.** Within its terminal layer, draft → imagery/copy enrichment → repair, each its own invocation with its own wall clock and each persisted. No stage exceeds ~90s of model time.
+New behaviour:
+
+- `website_prd` is excluded from the bulk run's type list. On run start it is seeded as `pending` with `blocked_reason: "Lock your Brand Wizard, then build your website PRD."` — so the run reaches 100% honestly and never stalls on it.
+- The hub renders a dedicated **Website PRD** card. While the brand kit is not `locked`, the button is disabled with a link to the Brand Wizard. Once locked, the button reads **Build website PRD** and invokes `venture-generate-document` directly (single-asset path, which already has the draft/refine checkpoint).
+- Regenerating the PRD after a brand change is an explicit founder action too — locking a new brand marks an existing PRD as `stale` in metadata and offers a rebuild, rather than silently rewriting it.
+- The watchdog's recovery path is unchanged and still protects the standalone run.
+
+**4. Split the PRD into bounded stages.** In its now-standalone run: draft → imagery/copy enrichment → repair, each its own invocation with its own wall clock and each persisted. No stage exceeds ~90s of model time.
 
 **5. Retire the legacy SQL sweeper.** Rewrite `sweep_stuck_generations()` to leave `venture_documents` and `venture_generation_jobs` alone (keeping only the pipeline/roadmap sweeps), so the checkpoint-aware watchdog is the single authority over generation state. Add `failed` jobs to the watchdog's resume set as a safety net.
 
@@ -37,12 +44,14 @@ The legacy SQL cron `sweep-stuck-generations` (every 5 min) still runs `UPDATE v
 
 **8. Preflight validation.** Before a run starts, check the gateway is reachable and the brand/intake gates for each asset. Assets that cannot succeed are marked `blocked` up front rather than burning three retry rounds.
 
-**9. Unstick this venture.** Re-run `website_prd` for snapshot `4968b647…` on the staged path once shipped.
+**9. Unstick this venture.** Once shipped, `website_prd` for snapshot `4968b647…` clears to the gated card; the founder builds it after the brand kit is locked.
 
 ## Technical notes
 
-- `supabase/functions/venture-bulk-generate/index.ts` — replace `generateOne` internals with an internal invoke of `venture-generate-document` (`{ snapshotId, documentType, mode, round }`); keep layering, concurrency (6), heartbeat and live progress here.
-- `supabase/functions/venture-generate-document/index.ts` — accept `mode: full|trimmed|minimal`; generalise the draft checkpoint beyond `isPrd`; add PRD stage `enrich` between `draft` and `refine`.
+- `supabase/functions/venture-bulk-generate/index.ts` — drop `website_prd` from the run's type list (seed it `pending` + `blocked_reason` instead); replace `generateOne` internals with an internal invoke of `venture-generate-document` (`{ snapshotId, documentType, mode, round }`); keep layering, concurrency (6), heartbeat and live progress here. Total count for progress excludes the gated PRD.
+- `supabase/functions/venture-generate-document/index.ts` — accept `mode: full|trimmed|minimal`; refuse `website_prd` unless `venture_brand_kits.status = 'locked'` (server-side gate, not just UI); generalise the draft checkpoint beyond `isPrd`; add PRD stage `enrich` between `draft` and `refine`.
+- `src/routes/_authenticated/dashboard/hub.$snapshotId.tsx` — dedicated Website PRD card: locked-brand gate, **Build website PRD** action, live status from the document row, and a stale badge after a brand re-lock.
+- Brand lock path (`venture-brand-wizard`) — on lock, stamp `metadata.brand_locked_at` on an existing PRD so the hub can mark it stale.
 - Migration: `create table public.venture_generation_events` + GRANTs (`select` to `authenticated`, `all` to `service_role`), RLS scoped to the snapshot owner and admins; `create or replace function public.sweep_stuck_generations()` without the two generation UPDATEs.
 - `supabase/functions/venture-job-watchdog/index.ts` — include `failed` jobs in the stalled query; enforce the shared per-asset attempt cap.
 - Admin: new generation-health card on `src/routes/_authenticated/_admin/admin.hub.tsx` reading `venture_generation_events`.
