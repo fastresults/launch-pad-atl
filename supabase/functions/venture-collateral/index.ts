@@ -848,7 +848,14 @@ Deno.serve(async (req) => {
             phase: typeof result.nextPage === "number" ? `pages ${fromPage}-${result.nextPage}` : "final",
             mode: "collateral",
             durationMs: Date.now() - startedAt,
-            outcome: typeof result.nextPage === "number" ? "checkpoint" : "complete",
+            outcome: typeof result.nextPage === "number"
+              ? "checkpoint"
+              : result.blocked?.length
+              ? "blocked"
+              : "complete",
+            error: result.blocked?.length
+              ? result.blocked.map((b: any) => `${b.page}: ${b.reasons.join("; ")}`).join(" | ")
+              : null,
           });
         } catch (e) {
           console.error("collateral failed", kind, e);
