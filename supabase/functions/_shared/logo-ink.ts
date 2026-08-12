@@ -6,6 +6,8 @@ import { contrastRatio, inkOn, relLuminance } from "./color-spaces.ts";
 
 /** Contrast a lone mark needs against its ground before we call it legible. */
 export const LOGO_MIN_CONTRAST = 3.0;
+/** The floor the collateral quality gate applies to a drawn specimen. */
+export const SPECIMEN_MIN_CONTRAST = 2.4;
 
 export const DARK_SURFACE = "#0B0B12";
 export const LIGHT_SURFACE = "#FFFFFF";
