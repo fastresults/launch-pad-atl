@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Upload, Wand2, X } from "lucide-react";
 import { toast } from "sonner";
 import { generateBrandAsset } from "@/lib/foundersHub.functions";
+import { logoSetFingerprint, useLogoVerdicts } from "@/lib/logo-surface";
 import { cn } from "@/lib/utils";
 
 /**
@@ -67,7 +68,14 @@ function readDataUrl(file: File) {
   });
 }
 
-function MarkTile({ label, background, src, alt, light, compact, empty }: any) {
+const VERDICT_CHIP: Record<string, { label: string; className: string }> = {
+  original: { label: "Your artwork", className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  repaired: { label: "Auto-corrected", className: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+  plated: { label: "On plate", className: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+};
+
+function MarkTile({ label, background, src, alt, light, compact, empty, verdict }: any) {
+  const chip = verdict ? VERDICT_CHIP[verdict] : null;
   return (
     <figure className="min-w-0">
       <div
@@ -87,8 +95,13 @@ function MarkTile({ label, background, src, alt, light, compact, empty }: any) {
           </span>
         )}
       </div>
-      <figcaption className="mt-1.5 truncate text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-        {label}
+      <figcaption className="mt-1.5 flex items-center justify-between gap-1">
+        <span className="truncate text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
+        {chip && (
+          <span className={cn("shrink-0 rounded-full px-1.5 py-px text-[9px] font-medium", chip.className)}>
+            {chip.label}
+          </span>
+        )}
       </figcaption>
     </figure>
   );
@@ -185,13 +198,16 @@ export function LogoSetPanel({
   const brandBg = isHex(primaryColor) ? primaryColor : "#101014";
   const alt = `${companyName ?? "Brand"} logo`;
   // The same server-side per-paint audit used by showcases drives approval
-  // previews too. A file labelled "reversed" is never blindly trusted.
+  // previews too. A file labelled "reversed" is never blindly trusted, and the
+  // set fingerprint retires the previous verdict the moment a slot changes.
   const logoEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto`;
+  const fp = useMemo(() => logoSetFingerprint(logos), [logos]);
   const hasMark = Boolean(set.primary?.url || set.reversed?.url || set.icon?.url || set.wordmark?.url);
-  const lightMark = hasMark ? `${logoEndpoint}?on=light&contrast=v2` : null;
-  const reversedMark = hasMark ? `${logoEndpoint}?on=dark&contrast=v2` : null;
+  const lightMark = hasMark ? `${logoEndpoint}?on=light&v=${fp}` : null;
+  const reversedMark = hasMark ? `${logoEndpoint}?on=dark&v=${fp}` : null;
   const brandIsDark = luminance(brandBg) < 0.5;
-  const brandMark = hasMark ? `${logoEndpoint}?on=${encodeURIComponent(brandBg)}&contrast=v2` : null;
+  const brandMark = hasMark ? `${logoEndpoint}?on=${encodeURIComponent(brandBg)}&v=${fp}` : null;
+  const [lightVerdict, darkVerdict, brandVerdict] = useLogoVerdicts([lightMark, reversedMark, brandMark]);
 
 
   // Stored signed URLs expire after a week; re-sign on mount so an older
@@ -315,14 +331,15 @@ export function LogoSetPanel({
           if (e.dataTransfer.files?.length) pickMany(e.dataTransfer.files);
         }}
       >
-        <MarkTile label="On light" background="#ffffff" src={lightMark} alt={alt} light compact={compact} empty="Upload a primary mark" />
-        <MarkTile label="On dark" background="#101014" src={reversedMark} alt={alt} compact={compact} empty="Upload a reversed mark" />
+        <MarkTile label="On light" background="#ffffff" src={lightMark} alt={alt} light compact={compact} verdict={lightVerdict} empty="Upload a primary mark" />
+        <MarkTile label="On dark" background="#101014" src={reversedMark} alt={alt} compact={compact} verdict={darkVerdict} empty="Upload a reversed mark" />
         <MarkTile
           label="On brand"
           background={brandBg}
           src={brandMark}
           alt={alt}
           compact={compact}
+          verdict={brandVerdict}
           empty={brandIsDark ? "Upload a reversed mark" : "Upload a primary mark"}
         />
 

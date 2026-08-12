@@ -213,21 +213,119 @@ export function svgPaintsPass(svg: string, surface: string): boolean {
   return paints.length > 0 && paints.every((paint) => inkPasses(paint, surface));
 }
 
+/* ---------------- hue-preserving repair ---------------- */
+
+function hexToHsl(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  if (d === 0) return [0, 0, l];
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h: number;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return [h, s, l];
+}
+
+function hslToHex(h: number, s: number, l: number): string {
+  const f = (n: number) => {
+    const k = (n + h * 12) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const v = l - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+    return Math.round(Math.max(0, Math.min(1, v)) * 255)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+/**
+ * A legible replacement for a failing paint that keeps the brand's own hue.
+ *
+ * Collapsing a bright brand blue to flat black fixes contrast and destroys the
+ * identity. We instead walk that colour's own lightness — darker on a light
+ * ground, lighter on a dark one — and take the first step that clears the
+ * floor. Only a hue with no legible lightness at all falls back to neutral ink.
+ */
+export function hueSafeInk(paint: string, surface: string): string {
+  const hex = normHex(paint) ?? paint;
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return legibleInkFor(surface);
+  const [h, s, l] = hexToHsl(hex);
+  if (s < 0.08) return legibleInkFor(surface); // a neutral has no hue to protect
+  const darken = relLuminance(surface) >= 0.35;
+  for (let step = 1; step <= 20; step++) {
+    const nl = darken ? l - step * 0.05 : l + step * 0.05;
+    if (nl <= 0.02 || nl >= 0.98) break;
+    const candidate = hslToHex(h, Math.min(1, s * 1.05), nl);
+    if (inkPasses(candidate, surface)) return candidate;
+  }
+  return legibleInkFor(surface);
+}
+
 /**
  * Repair only failing SVG paints. Passing brand accents remain untouched, so a
- * gold-and-navy mark becomes gold-and-white on dark rather than monochrome.
+ * gold-and-navy mark becomes gold-and-white on dark rather than monochrome, and
+ * a failing paint keeps its hue instead of turning into flat ink.
  */
 export function repairSvgContrast(svg: string, surface: string): string {
-  const replacement = legibleInkFor(surface);
   return svg.replace(
     /((?:fill|stroke|stop-color)\s*[=:]\s*["']?\s*)(#[0-9a-fA-F]{3,6}|rgba?\([^)]*\)|[a-zA-Z]+)/g,
     (whole, prefix: string, raw: string) => {
       if (/^(none|transparent|url|currentcolor|inherit)$/i.test(raw)) return whole;
       const hex = normHex(raw);
-      return hex && !inkPasses(hex, surface) ? `${prefix}${replacement}` : whole;
+      return hex && !inkPasses(hex, surface) ? `${prefix}${hueSafeInk(hex, surface)}` : whole;
     },
   );
 }
+
+/**
+ * Verdict for one mark on one surface — the shape the studio renders as a chip
+ * and the lock gate reads before it lets a brand be committed.
+ */
+export interface SurfaceVerdict {
+  surface: string;
+  passes: boolean;
+  failing: string[];
+  repairable: boolean;
+}
+
+/** Audit a vector mark against every ground the brand actually paints on. */
+export function auditSvgSurfaces(svg: string, surfaces: string[]): SurfaceVerdict[] {
+  const paints = svgPaints(svg);
+  const untintable = isUntintableSvg(svg);
+  return surfaces.map((surface) => {
+    const failing = paints.filter((p) => !inkPasses(p, surface));
+    return {
+      surface,
+      passes: paints.length > 0 && failing.length === 0,
+      failing,
+      repairable: !untintable && paints.length > 0,
+    };
+  });
+}
+
+/**
+ * Short fingerprint of a venture's logo set. It rides on every preview request
+ * so a freshly uploaded reversed mark can never be answered from the cached
+ * "there is no reversed mark" reply written seconds earlier.
+ */
+export function logoSetFingerprint(logos: any[]): string {
+  const parts = (Array.isArray(logos) ? logos : [])
+    .map((l: any) => `${l?.path ?? l?.svg_path ?? ""}@${l?.created_at ?? ""}`)
+    .sort()
+    .join("|");
+  let hash = 2166136261;
+  for (let i = 0; i < parts.length; i++) {
+    hash ^= parts.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
 
 /** Rewrite every paint in an SVG to one legible ink. */
 export function tintSvg(svg: string, use: string): string {

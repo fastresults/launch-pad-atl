@@ -47,7 +47,13 @@ function contentTypeFor(path: string) {
   return "application/octet-stream";
 }
 
+// A request that carries the logo-set fingerprint (`?v=`) is answerable from
+// cache for a long time: a new upload changes the fingerprint, so it can never
+// be served the previous set's verdict. Unversioned requests stay short-lived.
 const CACHE = "public, max-age=300, stale-while-revalidate=86400";
+const CACHE_VERSIONED = "public, max-age=31536000, immutable";
+const cacheFor = (url: URL) => (url.searchParams.get("v") ? CACHE_VERSIONED : CACHE);
+const EXPOSE = { "Access-Control-Expose-Headers": "X-Logo-Verdict, X-Logo-Surface" };
 
 function toDataUri(bytes: Uint8Array, mime: string) {
   let bin = "";
@@ -107,7 +113,14 @@ Deno.serve(async (req) => {
           : inkPasses(await rasterInkHex(bytes), surface);
         if (passes) {
           return new Response(bytes, {
-            headers: { ...corsHeaders, "Content-Type": contentTypeFor(p), "Cache-Control": CACHE },
+            headers: {
+              ...corsHeaders,
+              ...EXPOSE,
+              "Content-Type": contentTypeFor(p),
+              "Cache-Control": cacheFor(url),
+              "X-Logo-Verdict": "original",
+              "X-Logo-Surface": surface,
+            },
           });
         }
       }
@@ -120,7 +133,14 @@ Deno.serve(async (req) => {
         if (isSvg && !isUntintableSvg(text)) {
           const svg = repairSvgContrast(text, surface);
           return new Response(svg, {
-            headers: { ...corsHeaders, "Content-Type": "image/svg+xml", "Cache-Control": CACHE },
+            headers: {
+              ...corsHeaders,
+              ...EXPOSE,
+              "Content-Type": "image/svg+xml",
+              "Cache-Control": cacheFor(url),
+              "X-Logo-Verdict": "repaired",
+              "X-Logo-Surface": surface,
+            },
           });
         }
         const svg = platedSvg(
@@ -128,7 +148,14 @@ Deno.serve(async (req) => {
           surface,
         );
         return new Response(svg, {
-          headers: { ...corsHeaders, "Content-Type": "image/svg+xml", "Cache-Control": CACHE },
+          headers: {
+            ...corsHeaders,
+            ...EXPOSE,
+            "Content-Type": "image/svg+xml",
+            "Cache-Control": cacheFor(url),
+            "X-Logo-Verdict": "plated",
+            "X-Logo-Surface": surface,
+          },
         });
       }
       return notFound("No usable logo file for this venture");
@@ -145,7 +172,7 @@ Deno.serve(async (req) => {
     if (!bytes) return notFound("Logo file is unavailable");
 
     return new Response(bytes, {
-      headers: { ...corsHeaders, "Content-Type": contentTypeFor(path), "Cache-Control": CACHE },
+      headers: { ...corsHeaders, "Content-Type": contentTypeFor(path), "Cache-Control": cacheFor(url) },
     });
   } catch (e) {
     return new Response(`Logo unavailable: ${(e as Error).message}`, {

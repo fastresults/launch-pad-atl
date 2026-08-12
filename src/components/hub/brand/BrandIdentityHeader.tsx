@@ -1,6 +1,4 @@
 // @ts-nocheck
-import { useMemo } from "react";
-import { Wand2 } from "lucide-react";
 import { EditablePaletteSwatch } from "@/components/hub/brand/EditablePaletteSwatch";
 import { LogoSetPanel } from "@/components/hub/brand/LogoSetPanel";
 import { cn } from "@/lib/utils";
@@ -45,88 +43,6 @@ function contrast(a: string, b: string) {
 }
 const isHex = (v: unknown) => typeof v === "string" && /^#?[0-9a-f]{3,8}$/i.test(v);
 const readableOn = (hex: string) => (luminance(hex) > 0.45 ? "#111111" : "#ffffff");
-
-/* ---------------- mark ---------------- */
-
-function MarkTile({
-  label,
-  background,
-  src,
-  alt,
-  light,
-}: {
-  label: string;
-  background: string;
-  src?: string | null;
-  alt: string;
-  light?: boolean;
-}) {
-  return (
-    <figure className="min-w-0">
-      <div
-        className={cn(
-          "relative flex h-24 items-center justify-center overflow-hidden rounded-xl border border-border/60 px-4",
-          light && "brand-mark-checker",
-        )}
-        style={light ? undefined : { background }}
-      >
-        {light && <div className="absolute inset-0" style={{ background, opacity: 0.92 }} aria-hidden />}
-        {src ? (
-          <img src={src} alt={alt} loading="lazy" className="relative max-h-14 w-full object-contain" />
-        ) : (
-          <span className="relative text-[11px]" style={{ color: readableOn(background) }}>
-            No mark yet
-          </span>
-        )}
-      </div>
-      <figcaption className="mt-1.5 truncate text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-        {label}
-      </figcaption>
-    </figure>
-  );
-}
-
-function MarkPanel({
-  logo,
-  companyName,
-  primary,
-  onEditMark,
-}: {
-  logo: any;
-  companyName?: string;
-  primary?: string;
-  onEditMark?: () => void;
-}) {
-  const alt = `${companyName ?? "Brand"} logo`;
-  const ext = typeof logo?.url === "string" ? (logo.url.split("?")[0].split(".").pop() ?? "").toUpperCase() : "";
-  const brandBg = isHex(primary) ? primary! : "#101014";
-
-  return (
-    <section className="min-w-0 space-y-2.5">
-      <div className="flex items-baseline justify-between gap-2">
-        <Label>Your mark</Label>
-        {onEditMark && (
-          <button
-            type="button"
-            onClick={onEditMark}
-            className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.12em] text-primary transition-opacity hover:opacity-80"
-          >
-            <Wand2 className="h-3 w-3" />
-            Refine
-          </button>
-        )}
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        <MarkTile label="On light" background="#ffffff" src={logo?.url} alt={alt} light />
-        <MarkTile label="On dark" background="#101014" src={logo?.url} alt={alt} />
-        <MarkTile label="On brand" background={brandBg} src={logo?.url} alt={alt} />
-      </div>
-      <p className="truncate text-[10px] text-muted-foreground">
-        {logo?.url ? `${ext || "Image"} · committed mark` : "No logo saved yet — run the Logo Studio."}
-      </p>
-    </section>
-  );
-}
 
 /* ---------------- palette ---------------- */
 
@@ -206,11 +122,6 @@ export function BrandIdentityHeader({
 
   const headingFamily = kit?.typography?.heading?.family ?? null;
   const bodyFamily = kit?.typography?.body?.family ?? null;
-
-  const logo = useMemo(() => {
-    const logos = Array.isArray(kit?.logos) ? kit.logos.filter((l: any) => l?.url) : [];
-    return logos.find((l: any) => l.primary) ?? logos[0] ?? null;
-  }, [kit?.logos]);
 
   // The mark panel is always shown so a founder can upload one even before any
   // brand generation has run.
