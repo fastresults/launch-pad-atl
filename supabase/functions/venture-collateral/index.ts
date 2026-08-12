@@ -522,7 +522,9 @@ async function generateKind(
   kind: CollateralKind,
   ctx: CollateralCtx,
   extras: StyleSystemExtras = {},
-): Promise<{ kind: CollateralKind; files: number; qc: QcVerdict[] }> {
+  startPage = 0,
+): Promise<{ kind: CollateralKind; files: number; qc: QcVerdict[]; nextPage?: number; totalPages?: number }> {
+
   const wrote: string[] = [];
   if (kind === "style_system") {
     // Portable handoff: the venture's own tokens, type, marks, voice and
