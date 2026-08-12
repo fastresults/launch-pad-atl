@@ -72,6 +72,8 @@ export function SiteHeader() {
           >
             3 ways to start
           </button>
+          <ThemeToggle />
+
 
           {isAdmin && (
             <Link to="/admin" className="transition-colors hover:text-foreground">admin</Link>
