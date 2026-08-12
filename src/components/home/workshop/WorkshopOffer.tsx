@@ -276,9 +276,10 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
             doneMessage="You'll hear from us first."
           />
           <p className="text-center text-xs text-muted-foreground">
-            Seats open {product.opensLabel}. Don't wait — build it with us remotely instead.
+            Next seats open {product.opensLabel}. If that's too long to wait, take the other door.
           </p>
         </div>
+
 
       )}
     </Panel>
