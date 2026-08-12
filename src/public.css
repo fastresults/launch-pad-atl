@@ -1205,3 +1205,22 @@
 :root.light .public-surface :is(.sl-hero, .sl-on-photo) [class*="bg-white/"] {
   background-color: oklch(1 0 0 / 8%);
 }
+
+
+/* Bands painted with the brand gradient stay dark in both modes, so the ink
+   colors the light theme applies to headings and body copy would fail contrast.
+   Anything inside `.sl-on-photo` keeps white type. */
+.public-surface .sl-on-photo,
+.public-surface .sl-on-photo :is(h1, h2, h3, h4, p, li, span, a, strong, em) {
+  color: oklch(1 0 0);
+}
+
+.public-surface .sl-on-photo .text-muted-foreground {
+  color: oklch(1 0 0 / 78%);
+}
+
+/* Solid white pills inside a gradient band keep ink type. */
+.public-surface .sl-on-photo :is(.bg-white, .bg-background) :is(span, svg),
+.public-surface .sl-on-photo :is(.bg-white, .bg-background) {
+  color: oklch(0.19 0.02 268);
+}
