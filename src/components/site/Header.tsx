@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+
 
 import { MobileCtaBar } from "@/components/site/MobileCtaBar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
