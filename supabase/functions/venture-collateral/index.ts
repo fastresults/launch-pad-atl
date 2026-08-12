@@ -815,11 +815,12 @@ Deno.serve(async (req) => {
         }, 400);
       }
 
+      const fromPage = Number.isFinite(Number(body?.fromPage)) ? Math.max(0, Number(body.fromPage)) : 0;
       const done: any[] = [];
       const failed: any[] = [];
       for (const kind of requested) {
         try {
-          done.push(await generateKind(admin, snapshotId, userId, kind, ctx, extras));
+          done.push(await generateKind(admin, snapshotId, userId, kind, ctx, extras, fromPage));
         } catch (e) {
           console.error("collateral failed", kind, e);
           failed.push({ kind, error: (e as Error).message });
@@ -828,16 +829,24 @@ Deno.serve(async (req) => {
       const qcIssues = done.flatMap((r: any) =>
         (r.qc ?? []).filter((v: QcVerdict) => !v.ok).map((v: QcVerdict) => ({ kind: r.kind, page: v.page, reasons: v.reasons })),
       );
+      // Resume contract: a bounded slice landed and more pages remain. The
+      // client calls back with `fromPage` until `more` is false.
+      const pending = done.find((r: any) => typeof r.nextPage === "number");
       return json({
         ok: failed.length === 0,
         generated: done,
         failed,
         qcIssues,
+        more: !!pending,
+        nextPage: pending?.nextPage ?? null,
+        totalPages: pending?.totalPages ?? null,
+        code: pending ? "MORE_PAGES" : undefined,
         // Tells the library whether the wordmark on these pieces is real type
         // (symbol isolated) or the tracer's polygons (nothing to isolate).
         logo: { symbolIsolated: !!ctx.symbolSvg },
         artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },
       });
+
 
     }
 
