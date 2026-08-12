@@ -83,19 +83,26 @@ export async function generateCollateral(snapshotId: string, kinds?: string[]) {
 
   // Edge rendering is CPU-bound (wasm + pixel QC). Keep each invocation
   // independently retryable so one complex deck cannot take the entire brand
-  // package down with WORKER_RESOURCE_LIMIT.
+  // package down with WORKER_RESOURCE_LIMIT. Multi-page kinds come back with
+  // `more: true` and the page to resume from — a bounded slice per worker.
   const generated: any[] = [];
   const failed: any[] = [];
   const qcIssues: any[] = [];
   let artDirection: any = null;
   for (const kind of requested) {
-    const result = await call({ action: "generate", snapshotId, kinds: [kind] });
-    generated.push(...(result?.generated ?? []));
-    failed.push(...(result?.failed ?? []));
-    qcIssues.push(...(result?.qcIssues ?? []));
-    artDirection ??= result?.artDirection ?? null;
+    let fromPage = 0;
+    for (let slice = 0; slice < 12; slice++) {
+      const result = await call({ action: "generate", snapshotId, kinds: [kind], fromPage });
+      generated.push(...(result?.generated ?? []));
+      failed.push(...(result?.failed ?? []));
+      qcIssues.push(...(result?.qcIssues ?? []));
+      artDirection ??= result?.artDirection ?? null;
+      if (!result?.more || typeof result?.nextPage !== "number" || result.nextPage <= fromPage) break;
+      fromPage = result.nextPage;
+    }
   }
   return { ok: failed.length === 0, generated, failed, qcIssues, artDirection };
+
 }
 
 export async function clearCollateral(snapshotId: string, kind?: string) {
