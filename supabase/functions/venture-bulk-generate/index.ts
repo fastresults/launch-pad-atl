@@ -443,6 +443,29 @@ async function generateOne(
     }
   }
 
+  // ---- Checkpoint. The draft is on the row BEFORE any enrichment pass (each
+  // of which is another model call that can outlive the worker). If this
+  // invocation dies from here on, the watchdog republishes what we had instead
+  // of throwing away a finished draft and starting over.
+  if (!truncated && raw.trim().length > 0) {
+    await supabase.from("venture_documents").upsert({
+      snapshot_id: snapshotId,
+      document_type: documentType,
+      status: "generating",
+      content: raw,
+      word_count: raw.split(/\s+/).filter(Boolean).length,
+      quality_score: quality,
+      last_error: null,
+      blocked_reason: null,
+      metadata: { phase: "draft", checkpointed_at: new Date().toISOString() },
+    }, { onConflict: "snapshot_id,document_type" });
+    await logGenEvent(supabase, {
+      snapshotId, documentType, mode, model: modelId, attempt: attemptNo,
+      phase: "draft", durationMs: Date.now() - startedAt, outcome: "checkpoint",
+    });
+  }
+
+
   // ---- Identity guard: real company name + committed logo, or a repair pass.
   {
     const lockedName = (snap.company_name ?? "").trim() || null;
