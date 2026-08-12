@@ -4,14 +4,19 @@ import { toast } from "sonner";
 import { generateDocument, listSnapshotDocuments } from "@/lib/foundersHub.functions";
 
 /**
- * One shared regenerate path for the Website PRD.
+ * One shared path for the Website PRD.
  *
- * The action used to live only inside the Brand Wizard's Logo Studio step, so
- * once a founder closed the wizard there was no way back to it. The Brand
- * Studio panel, the deliverable card and the wizard all call this hook now, so
- * they share a single mutation and a single in-flight flag.
+ * The PRD is deliberately excluded from bulk generation: it is the most
+ * brand-dependent artifact we produce, so it is only built once the founder
+ * has locked their brand, and only when they ask for it. The Brand Studio
+ * panel, the deliverable card and the wizard all call this hook, so they share
+ * a single mutation, a single gate and a single in-flight flag.
  */
-export function useWebsitePrd(snapshotId: string, brandLockedAt?: string | null) {
+export function useWebsitePrd(
+  snapshotId: string,
+  brandLockedAt?: string | null,
+  brandLocked = true,
+) {
   const qc = useQueryClient();
 
   const prdQ = useQuery({
@@ -21,13 +26,17 @@ export function useWebsitePrd(snapshotId: string, brandLockedAt?: string | null)
       return docs.find((d: any) => d.document_type === "website_prd") ?? null;
     },
     enabled: Boolean(snapshotId),
+    // The build answers 202 and finishes in the background, so poll while it runs.
+    refetchInterval: (q) => (q.state.data?.status === "generating" ? 6000 : false),
   });
 
   const prd = prdQ.data ?? null;
+  const building = prd?.status === "generating";
 
   const regenerate = useMutation({
     mutationKey: ["websitePrdRegenerate", snapshotId],
     mutationFn: async (rewriteFeedback?: string) => {
+      if (!brandLocked) throw new Error("brand_lock_required");
       await generateDocument({
         data: { snapshotId, documentType: "website_prd", ...(rewriteFeedback ? { rewriteFeedback } : {}) },
       });
@@ -36,9 +45,16 @@ export function useWebsitePrd(snapshotId: string, brandLockedAt?: string | null)
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["hub"] });
       qc.invalidateQueries({ queryKey: ["websitePrd", snapshotId] });
-      toast.success("Website PRD rebuilt with your locked brand");
+      toast.success("Building your website brief — it keeps going if you leave this page");
     },
-    onError: (e: any) => toast.error(e?.message ?? "Could not rebuild the Website PRD"),
+    onError: (e: any) => {
+      const msg = e?.message ?? "";
+      toast.error(
+        /brand_lock_required/i.test(msg)
+          ? "Lock your brand first — the website brief is built from your final marks, palette and type."
+          : msg || "Could not build the website brief",
+      );
+    },
   });
 
   // The date the award-grade PRD engine (image craft + copy craft contracts,
@@ -55,6 +71,17 @@ export function useWebsitePrd(snapshotId: string, brandLockedAt?: string | null)
         new Date(prd.updated_at).getTime() < PRD_ENGINE_EPOCH),
   );
 
-
-  return { prd, exists: Boolean(prd), stale, loading: prdQ.isLoading, running: regenerate.isPending, regenerate };
+  return {
+    prd,
+    exists: Boolean(prd?.content),
+    stale,
+    locked: brandLocked,
+    blockedReason: brandLocked
+      ? null
+      : "Unlocks once your brand is locked — it's built from your final marks, palette and type.",
+    building,
+    loading: prdQ.isLoading,
+    running: regenerate.isPending || building,
+    regenerate,
+  };
 }

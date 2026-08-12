@@ -50,8 +50,26 @@ import {
   type PrdVentureFacts,
 } from "../_shared/website-prd.ts";
 import { LAUNCH_14DAY_PLAN } from "../_shared/launch-14day-plan.ts";
+import { logGenEvent } from "../_shared/gen-events.ts";
 
 const MAX_USER_PROMPT_CHARS = 120_000;
+
+/**
+ * Assets the bulk run never writes.
+ *
+ * The Website PRD is the single heaviest artifact we produce and it is only as
+ * good as the brand it is derived from. It is now a founder-triggered build
+ * that runs *after* the brand is locked, from its own card in the hub — see
+ * venture-generate-document's brand-lock gate.
+ */
+export const BULK_EXCLUDED_TYPES = new Set<string>(["website_prd"]);
+
+/**
+ * Circuit budget. Attempts accumulate on the row across runs, so a chronically
+ * failing asset stops burning credits on every future run instead of retrying
+ * forever. It is cleared whenever the founder regenerates the asset by hand.
+ */
+const MAX_ATTEMPTS_PER_ASSET = 8;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -90,11 +108,16 @@ async function generateOne(
   // separate endpoint and remains the only path allowed to rewrite it.
   const { data: persisted } = await supabase
     .from("venture_documents")
-    .select("status, content, word_count, quality_score, version")
+    .select("status, content, word_count, quality_score, version, metadata")
     .eq("snapshot_id", snapshotId)
     .eq("document_type", documentType)
     .maybeSingle();
+  // A mid-run checkpoint is NOT a finished artifact — it still owes the
+  // enrichment passes, so it must not short-circuit this run.
+  const isCheckpointOnly = (persisted?.metadata as any)?.phase === "draft" &&
+    persisted?.status !== "complete";
   const hasPersistedArtifact =
+    !isCheckpointOnly &&
     typeof persisted?.content === "string" &&
     persisted.content.trim().length > 0 &&
     (persisted.status === "complete" ||
@@ -141,6 +164,9 @@ async function generateOne(
       // Blocked isn't a failure — clear any stale error row for this doc.
       await supabase.from("venture_generation_failures")
         .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      await logGenEvent(supabase, {
+        snapshotId, documentType, mode, outcome: "blocked", error: "brand kit unavailable",
+      });
       return; // skip this doc, continue the job
     }
   }
@@ -200,6 +226,9 @@ async function generateOne(
       }, { onConflict: "snapshot_id,document_type" });
       await supabase.from("venture_generation_failures")
         .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      await logGenEvent(supabase, {
+        snapshotId, documentType, mode, outcome: "blocked", error: "intake inputs unavailable",
+      });
       return;
     }
   }
@@ -295,6 +324,10 @@ async function generateOne(
 
 
   // Count the attempt before we make the call, so a hard crash still shows it.
+  // The same counter is the circuit budget: past the cap we stop spending
+  // credits on an asset that has never succeeded and hand it to the founder.
+  const startedAt = Date.now();
+  let attemptNo = 1;
   {
     const { data: attemptRow } = await supabase
       .from("venture_documents")
@@ -302,14 +335,36 @@ async function generateOne(
       .eq("snapshot_id", snapshotId)
       .eq("document_type", documentType)
       .maybeSingle();
+    attemptNo = (attemptRow?.generation_attempts ?? 0) + 1;
+    if (attemptNo > MAX_ATTEMPTS_PER_ASSET) {
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        status: "pending",
+        blocked_reason:
+          "We tried this one several times without a clean result — open it and hit Regenerate when you're ready.",
+      }, { onConflict: "snapshot_id,document_type" });
+      await logGenEvent(supabase, {
+        snapshotId, documentType, mode, model: modelId, attempt: attemptNo,
+        outcome: "blocked", error: "attempt budget exhausted",
+      });
+      return;
+    }
     await supabase.from("venture_documents")
-      .update({ generation_attempts: (attemptRow?.generation_attempts ?? 0) + 1 })
+      .update({ generation_attempts: attemptNo })
       .eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    await logGenEvent(supabase, {
+      snapshotId, documentType, mode, model: modelId, attempt: attemptNo, outcome: "started",
+    });
   }
 
   // Record a failure once, replacing any earlier row for this doc so the UI
   // count reflects reality across retry rounds.
   const recordFailure = async (error: string) => {
+    await logGenEvent(supabase, {
+      snapshotId, documentType, mode, model: modelId, attempt: attemptNo,
+      durationMs: Date.now() - startedAt, outcome: "failed", error,
+    });
     const { data: failedRows } = await supabase.from("venture_documents")
       .update({ status: "failed", last_error: error.slice(0, 600) })
       .eq("snapshot_id", snapshotId)
@@ -398,6 +453,29 @@ async function generateOne(
       console.warn("continuation pass failed", e);
     }
   }
+
+  // ---- Checkpoint. The draft is on the row BEFORE any enrichment pass (each
+  // of which is another model call that can outlive the worker). If this
+  // invocation dies from here on, the watchdog republishes what we had instead
+  // of throwing away a finished draft and starting over.
+  if (!truncated && raw.trim().length > 0) {
+    await supabase.from("venture_documents").upsert({
+      snapshot_id: snapshotId,
+      document_type: documentType,
+      status: "generating",
+      content: raw,
+      word_count: raw.split(/\s+/).filter(Boolean).length,
+      quality_score: quality,
+      last_error: null,
+      blocked_reason: null,
+      metadata: { phase: "draft", checkpointed_at: new Date().toISOString() },
+    }, { onConflict: "snapshot_id,document_type" });
+    await logGenEvent(supabase, {
+      snapshotId, documentType, mode, model: modelId, attempt: attemptNo,
+      phase: "draft", durationMs: Date.now() - startedAt, outcome: "checkpoint",
+    });
+  }
+
 
   // ---- Identity guard: real company name + committed logo, or a repair pass.
   {
@@ -507,15 +585,17 @@ async function generateOne(
 
   const { data: existing } = await supabase
     .from("venture_documents")
-    .select("version, content, content_version_history")
+    .select("version, content, content_version_history, metadata")
     .eq("snapshot_id", snapshotId)
     .eq("document_type", documentType)
     .maybeSingle();
 
-  const nextVersion = existing?.content ? (existing.version ?? 1) + 1 : 1;
+  // Our own checkpoint from this attempt isn't a previous version of the asset.
+  const priorContent = (existing?.metadata as any)?.phase === "draft" ? null : existing?.content;
+  const nextVersion = priorContent ? (existing.version ?? 1) + 1 : 1;
   const history = Array.isArray(existing?.content_version_history) ? existing.content_version_history : [];
-  if (existing?.content) {
-    history.unshift({ version: existing.version ?? 1, content: existing.content, archived_at: new Date().toISOString() });
+  if (priorContent) {
+    history.unshift({ version: existing.version ?? 1, content: priorContent, archived_at: new Date().toISOString() });
   }
 
   await supabase.from("venture_documents").upsert({
@@ -529,7 +609,13 @@ async function generateOne(
     content_version_history: history.slice(0, 10),
     last_error: null,
     blocked_reason: null,
+    metadata: { phase: "final", completed_at: new Date().toISOString() },
   }, { onConflict: "snapshot_id,document_type" });
+
+  await logGenEvent(supabase, {
+    snapshotId, documentType, mode, model: modelId, attempt: attemptNo,
+    phase: "final", durationMs: Date.now() - startedAt, outcome: "complete",
+  });
 
   // It worked — drop any earlier failure row so the founder's count is honest.
   await supabase.from("venture_generation_failures")
@@ -626,7 +712,7 @@ function startHeartbeat(supabase: any, jobId: string, everyMs = 20_000) {
 async function reconcilePersistedArtifacts(supabase: any, snapshotId: string) {
   const { data: rows } = await supabase
     .from("venture_documents")
-    .select("id, document_type, status, content, word_count, quality_score, version")
+    .select("id, document_type, status, content, word_count, quality_score, version, metadata")
     .eq("snapshot_id", snapshotId)
     .neq("status", "complete");
   const recoverable = (rows ?? []).filter((row: any) =>
@@ -634,7 +720,9 @@ async function reconcilePersistedArtifacts(supabase: any, snapshotId: string) {
     row.content.trim().length > 0 &&
     Number(row.word_count ?? 0) > 0 &&
     Number(row.version ?? 0) > 0 &&
-    row.quality_score !== null
+    row.quality_score !== null &&
+    // A checkpoint still owes its enrichment passes — the watchdog owns it.
+    (row.metadata as any)?.phase !== "draft"
   );
   if (recoverable.length) {
     await supabase.from("venture_documents").update({
@@ -652,7 +740,9 @@ async function reconcilePersistedArtifacts(supabase: any, snapshotId: string) {
     .from("venture_document_types")
     .select("type")
     .eq("active", true);
-  const keys = (activeTypes ?? []).map((row: any) => row.type);
+  const keys = (activeTypes ?? [])
+    .map((row: any) => row.type)
+    .filter((type: string) => !BULK_EXCLUDED_TYPES.has(type));
   if (!keys.length) return { recovered: recoverable.length, allDone: false };
   const { data: finalRows } = await supabase
     .from("venture_documents")
@@ -841,6 +931,8 @@ async function clearStaleBlocks(supabase: any, snapshotId: string, since: string
     .from("venture_documents")
     .update({ blocked_reason: null })
     .eq("snapshot_id", snapshotId)
+    // Assets excluded from bulk runs keep their "waiting on brand lock" note.
+    .not("document_type", "in", `(${Array.from(BULK_EXCLUDED_TYPES).join(",")})`)
     .not("blocked_reason", "is", null);
   if (since) q = q.lt("updated_at", since);
   await q;
@@ -963,7 +1055,27 @@ async function runJob(
       .map((d: any) => d.document_type),
   );
   const statusByType = new Map((savedIntakes ?? []).map((d: any) => [d.document_type, d.status]));
-  let types = allTypes ?? [];
+  // The Website PRD is deliberately out of scope for every bulk run — it is a
+  // founder-triggered build that only unlocks once the brand is locked.
+  let types = (allTypes ?? []).filter((t: any) => !BULK_EXCLUDED_TYPES.has(t.type));
+
+  for (const excluded of BULK_EXCLUDED_TYPES) {
+    const { data: exRow } = await supabase
+      .from("venture_documents")
+      .select("status")
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", excluded)
+      .maybeSingle();
+    if (exRow?.status === "complete" || exRow?.status === "generating") continue;
+    await supabase.from("venture_documents").upsert({
+      snapshot_id: snapshotId,
+      document_type: excluded,
+      status: "pending",
+      blocked_reason: "Unlocks once your brand is locked — then build it from the Website PRD card.",
+    }, { onConflict: "snapshot_id,document_type" });
+    await supabase.from("venture_generation_failures")
+      .delete().eq("snapshot_id", snapshotId).eq("document_type", excluded);
+  }
 
   // Sourcing-only asset types don't apply to a non-physical venture. Record
   // them as not_applicable so they stop haunting the "remaining" counter

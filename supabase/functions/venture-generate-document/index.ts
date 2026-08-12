@@ -56,6 +56,7 @@ import {
 } from "../_shared/website-prd.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";
 import { capacityProvider } from "../_shared/capacity-error.ts";
+import { logGenEvent } from "../_shared/gen-events.ts";
 import { jsonResponse, requireSnapshotOwner, requireUser } from "../_shared/auth.ts";
 
 const MAX_USER_PROMPT_CHARS = 120_000;
@@ -154,6 +155,54 @@ function gatewayMessage(status: number, detail: string) {
   return "AI generation is currently unavailable. Please try again shortly.";
 }
 
+/**
+ * Assets that require a *locked* brand — not merely an inferred one — plus the
+ * brand assets they are derived from. These are excluded from bulk runs and
+ * are only ever written when the founder asks for them.
+ */
+export const BRAND_LOCK_REQUIRED_TYPES = new Set<string>(["website_prd"]);
+
+/** Brand assets that must be finished before a brand-locked asset can build. */
+const BRAND_SOURCE_TYPES = ["visual_identity_brief", "logo_brand_asset_pack"];
+
+async function checkBrandLock(
+  supabase: any,
+  snapshotId: string,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const { data: kit } = await supabase
+    .from("venture_brand_kits")
+    .select("status, locked_at, palette, typography, logos")
+    .eq("snapshot_id", snapshotId)
+    .maybeSingle();
+
+  if (kit?.status !== "locked") {
+    return {
+      ok: false,
+      reason: "Lock your brand first — the website brief is built from your final marks, palette and type.",
+    };
+  }
+
+  const { data: brandDocs } = await supabase
+    .from("venture_documents")
+    .select("document_type, status")
+    .eq("snapshot_id", snapshotId)
+    .in("document_type", BRAND_SOURCE_TYPES);
+  const done = new Set(
+    (brandDocs ?? [])
+      .filter((d: any) => d.status === "complete")
+      .map((d: any) => d.document_type),
+  );
+  const missing = BRAND_SOURCE_TYPES.filter((t) => !done.has(t));
+  if (missing.length) {
+    return {
+      ok: false,
+      reason: "Your brand assets aren't finished yet — the website brief unlocks once they are.",
+    };
+  }
+  return { ok: true };
+}
+
+
 // Track tones, specialized prompts, model-tier routing, and the citation
 // stripper all live in supabase/functions/_shared/ so the single-doc path
 // and the bulk path produce identical quality for the same document_type.
@@ -205,6 +254,29 @@ export async function generateOne(
       throw err;
     }
   }
+
+  // Brand-lock gate (Website PRD only). The PRD is the most brand-dependent
+  // artifact we produce, so it is never written from a provisional kit or a
+  // half-finished brand: the founder locks the brand first, then triggers it.
+  if (BRAND_LOCK_REQUIRED_TYPES.has(documentType) && phase !== "refine") {
+    const gate = await checkBrandLock(supabase, snapshotId);
+    if (!gate.ok) {
+      await supabase.from("venture_documents").upsert({
+        snapshot_id: snapshotId,
+        document_type: documentType,
+        status: "pending",
+        blocked_reason: gate.reason,
+      }, { onConflict: "snapshot_id,document_type" });
+      await logGenEvent(supabase, {
+        snapshotId, documentType, phase, outcome: "blocked", error: gate.reason,
+      });
+      const err = new Error(gate.reason);
+      (err as any).code = "brand_lock_required";
+      throw err;
+    }
+  }
+
+
 
 
   // Ensure a snapshot brain exists AND is fresh (recomputes when dirty —
@@ -744,18 +816,31 @@ Deno.serve(async (req) => {
     const DEADLINE_MS = 100_000;
     const PENDING = Symbol("pending");
     let settled = false;
+    const startedAt = Date.now();
     const guarded = work
-      .then((r) => { settled = true; return r; })
+      .then((r: any) => {
+        settled = true;
+        logGenEvent(supabase, {
+          snapshotId, documentType, phase: r?.phase ?? "full",
+          durationMs: Date.now() - startedAt,
+          outcome: r?.phase === "draft" ? "checkpoint" : "complete",
+        });
+        return r;
+      })
       .catch(async (err) => {
         settled = true;
+        const msg = (err instanceof Error ? err.message : String(err)).slice(0, 500);
+        await logGenEvent(supabase, {
+          snapshotId, documentType, durationMs: Date.now() - startedAt,
+          outcome: (err as any)?.code ? "blocked" : "failed", error: msg,
+        });
         try {
-          await supabase.from("venture_documents")
-            .update({
-              status: "failed",
-              last_error: (err instanceof Error ? err.message : String(err)).slice(0, 500),
-            })
-            .eq("snapshot_id", snapshotId)
-            .eq("document_type", documentType);
+          if (!(err as any)?.code) {
+            await supabase.from("venture_documents")
+              .update({ status: "failed", last_error: msg })
+              .eq("snapshot_id", snapshotId)
+              .eq("document_type", documentType);
+          }
         } catch { /* ignore */ }
         throw err;
       });
@@ -783,6 +868,12 @@ Deno.serve(async (req) => {
     if ((e as any)?.code === "brand_kit_required") {
       return new Response(
         JSON.stringify({ ok: false, error: "brand_kit_required", message }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if ((e as any)?.code === "brand_lock_required") {
+      return new Response(
+        JSON.stringify({ ok: false, error: "brand_lock_required", message }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }

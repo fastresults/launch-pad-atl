@@ -3380,6 +3380,62 @@ export type Database = {
           },
         ]
       }
+      venture_generation_events: {
+        Row: {
+          attempt: number
+          created_at: string
+          document_type: string
+          duration_ms: number | null
+          error: string | null
+          error_class: string | null
+          id: string
+          job_id: string | null
+          mode: string | null
+          model: string | null
+          outcome: string
+          phase: string | null
+          snapshot_id: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          document_type: string
+          duration_ms?: number | null
+          error?: string | null
+          error_class?: string | null
+          id?: string
+          job_id?: string | null
+          mode?: string | null
+          model?: string | null
+          outcome: string
+          phase?: string | null
+          snapshot_id: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          document_type?: string
+          duration_ms?: number | null
+          error?: string | null
+          error_class?: string | null
+          id?: string
+          job_id?: string | null
+          mode?: string | null
+          model?: string | null
+          outcome?: string
+          phase?: string | null
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venture_generation_events_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "venture_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venture_generation_failures: {
         Row: {
           attempt: number
