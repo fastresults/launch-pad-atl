@@ -164,6 +164,9 @@ async function generateOne(
       // Blocked isn't a failure — clear any stale error row for this doc.
       await supabase.from("venture_generation_failures")
         .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      await logGenEvent(supabase, {
+        snapshotId, documentType, mode, outcome: "blocked", error: "brand kit unavailable",
+      });
       return; // skip this doc, continue the job
     }
   }
