@@ -325,12 +325,12 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
     <SectionShell className="py-16 md:py-24">
       <div className="mx-auto max-w-3xl text-center">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Two doors
+          Choose your seat
         </p>
         <h2 className="public-heading">Come sit with us, or join us over Zoom.</h2>
         <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
-          One is a morning in Atlanta. The other is a phone call from wherever you are. You end up
-          in the same place: named, priced, online, and talking to a real customer.
+          Both lead to the same place. Pick the one that fits your life — a morning in the room, or a
+          one-on-one call from wherever you are. Either way, you end up named, priced, online, and talking to a real customer.
         </p>
       </div>
 
