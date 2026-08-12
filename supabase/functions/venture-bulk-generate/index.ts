@@ -108,11 +108,16 @@ async function generateOne(
   // separate endpoint and remains the only path allowed to rewrite it.
   const { data: persisted } = await supabase
     .from("venture_documents")
-    .select("status, content, word_count, quality_score, version")
+    .select("status, content, word_count, quality_score, version, metadata")
     .eq("snapshot_id", snapshotId)
     .eq("document_type", documentType)
     .maybeSingle();
+  // A mid-run checkpoint is NOT a finished artifact — it still owes the
+  // enrichment passes, so it must not short-circuit this run.
+  const isCheckpointOnly = (persisted?.metadata as any)?.phase === "draft" &&
+    persisted?.status !== "complete";
   const hasPersistedArtifact =
+    !isCheckpointOnly &&
     typeof persisted?.content === "string" &&
     persisted.content.trim().length > 0 &&
     (persisted.status === "complete" ||
