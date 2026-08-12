@@ -47,7 +47,13 @@ function contentTypeFor(path: string) {
   return "application/octet-stream";
 }
 
+// A request that carries the logo-set fingerprint (`?v=`) is answerable from
+// cache for a long time: a new upload changes the fingerprint, so it can never
+// be served the previous set's verdict. Unversioned requests stay short-lived.
 const CACHE = "public, max-age=300, stale-while-revalidate=86400";
+const CACHE_VERSIONED = "public, max-age=31536000, immutable";
+const cacheFor = (url: URL) => (url.searchParams.get("v") ? CACHE_VERSIONED : CACHE);
+const EXPOSE = { "Access-Control-Expose-Headers": "X-Logo-Verdict, X-Logo-Surface" };
 
 function toDataUri(bytes: Uint8Array, mime: string) {
   let bin = "";
