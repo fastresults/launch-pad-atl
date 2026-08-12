@@ -238,11 +238,12 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
         In the room · Atlanta · {product.priceLabel}
       </p>
       <h3 className="mt-3 text-xl font-semibold leading-snug">
-        Close enough to drive? Take the seat.
+        If you can get to Norcross, get in the room.
       </h3>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        One morning. Twenty seats. You leave with it built.
+        One morning. Twenty chairs. We build it with you while you sit there.
       </p>
+
       <ul className="mt-5 flex-1 space-y-2.5">
         {product.walkOuts.slice(0, 4).map((w) => (
           <li key={w} className="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
