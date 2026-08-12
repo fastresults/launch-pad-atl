@@ -1,4 +1,14 @@
 import {
+
+import wkBrand from "@/assets/workshops/brand.jpg.asset.json";
+import wkWebsite from "@/assets/workshops/website.jpg.asset.json";
+import wkSocial from "@/assets/workshops/social.jpg.asset.json";
+import wkContent from "@/assets/workshops/content.jpg.asset.json";
+import wkAi from "@/assets/workshops/ai.jpg.asset.json";
+import wkRevenue from "@/assets/workshops/revenue.jpg.asset.json";
+import wkSales from "@/assets/workshops/sales.jpg.asset.json";
+import wkScaffold from "@/assets/workshops/scaffold.jpg.asset.json";
+
   FileText,
   Eye,
   AlertCircle,
@@ -252,12 +262,16 @@ export type BuildLayerItem = {
   subtitle: string;
   description: string;
   capability: string;
+  image?: string;
+  imageAlt?: string;
 };
 
 export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: Palette,
     title: "Build your brand",
+    image: wkBrand.url,
+    imageAlt: "Open brand swatch book and colour chips on a dark desk",
     subtitle: "Your brand in a day. No agency required.",
     description:
       "Logo, palette, type system, and guidelines — finished before you leave. No retainer, no six-week wait, no committee.",
@@ -266,6 +280,8 @@ export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: Globe,
     title: "Convert your website",
+    image: wkWebsite.url,
+    imageAlt: "A glowing laptop screen on a dark desk at night",
     subtitle: "Build the site your customers actually buy from.",
     description:
       "Not a brochure. A revenue surface wired to payments and analytics, written for the buyer you're actually trying to win.",
@@ -274,6 +290,8 @@ export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: Share2,
     title: "Own your social presence",
+    image: wkSocial.url,
+    imageAlt: "A phone glowing face-up on a dark marble counter",
     subtitle: "30 days of content before you leave the room.",
     description:
       "A month of on-brand posts, captions, and hooks — drafted, scheduled, and ready to publish the morning after the workshop.",
@@ -282,6 +300,8 @@ export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: PenTool,
     title: "Engineer your content",
+    image: wkContent.url,
+    imageAlt: "An open notebook and fountain pen under a warm lamp",
     subtitle: "Rank, publish, repeat. Your content machine is live.",
     description:
       "An SEO-aware content engine with pillars, topics, and the next 90 days mapped — so traffic compounds instead of costing more every month.",
@@ -290,6 +310,8 @@ export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: Sparkles,
     title: "Run on AI",
+    image: wkAi.url,
+    imageAlt: "An illuminated control console of switches and dials",
     subtitle: "Automate 5 real workflows. Today.",
     description:
       "Five AI workflows wired into your actual operation — drafting, qualifying, follow-up, reporting, support — so two people do the work of ten.",
@@ -298,6 +320,8 @@ export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: Mail,
     title: "Automate your revenue",
+    image: wkRevenue.url,
+    imageAlt: "A stack of envelopes in a metal mail tray",
     subtitle: "16 emails written. Your sales machine is running.",
     description:
       "A 16-email nurture and follow-up sequence loaded and ready. Most revenue lives in the second, fifth, and twelfth touch — automated, on time, on brand.",
@@ -306,6 +330,8 @@ export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: TrendingUp,
     title: "Close more sales",
+    image: wkSales.url,
+    imageAlt: "A handshake across a dark conference table",
     subtitle: "Walk out with a sales script that qualifies and closes.",
     description:
       "A repeatable script and pipeline that moves a stranger to a signed deal — with the objections, the asks, and the close already written.",
@@ -314,6 +340,8 @@ export const BUILD_LAYER: BuildLayerItem[] = [
   {
     icon: Scale,
     title: "Scaffold your business",
+    image: wkScaffold.url,
+    imageAlt: "Legal documents with a brass stamp and fountain pen",
     subtitle: "Entity. Contracts. Books. Done.",
     description:
       "LLC, EIN, operating agreement, client contracts, and a clean books setup — the boring scaffolding that keeps you legal, bankable, and ready to scale.",
