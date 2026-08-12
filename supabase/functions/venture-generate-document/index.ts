@@ -858,6 +858,12 @@ Deno.serve(async (req) => {
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+    if ((e as any)?.code === "brand_lock_required") {
+      return new Response(
+        JSON.stringify({ ok: false, error: "brand_lock_required", message }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     if (e instanceof GatewayError) {
       const detail = String((e as any).detail ?? "").toLowerCase();
       const workspaceCap = e.status === 403 && detail.includes("credit_limit_reached");
