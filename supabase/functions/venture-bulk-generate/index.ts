@@ -712,7 +712,7 @@ function startHeartbeat(supabase: any, jobId: string, everyMs = 20_000) {
 async function reconcilePersistedArtifacts(supabase: any, snapshotId: string) {
   const { data: rows } = await supabase
     .from("venture_documents")
-    .select("id, document_type, status, content, word_count, quality_score, version")
+    .select("id, document_type, status, content, word_count, quality_score, version, metadata")
     .eq("snapshot_id", snapshotId)
     .neq("status", "complete");
   const recoverable = (rows ?? []).filter((row: any) =>
@@ -720,7 +720,9 @@ async function reconcilePersistedArtifacts(supabase: any, snapshotId: string) {
     row.content.trim().length > 0 &&
     Number(row.word_count ?? 0) > 0 &&
     Number(row.version ?? 0) > 0 &&
-    row.quality_score !== null
+    row.quality_score !== null &&
+    // A checkpoint still owes its enrichment passes — the watchdog owns it.
+    (row.metadata as any)?.phase !== "draft"
   );
   if (recoverable.length) {
     await supabase.from("venture_documents").update({
@@ -738,7 +740,9 @@ async function reconcilePersistedArtifacts(supabase: any, snapshotId: string) {
     .from("venture_document_types")
     .select("type")
     .eq("active", true);
-  const keys = (activeTypes ?? []).map((row: any) => row.type);
+  const keys = (activeTypes ?? [])
+    .map((row: any) => row.type)
+    .filter((type: string) => !BULK_EXCLUDED_TYPES.has(type));
   if (!keys.length) return { recovered: recoverable.length, allDone: false };
   const { data: finalRows } = await supabase
     .from("venture_documents")
