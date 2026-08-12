@@ -267,6 +267,57 @@ export function hueSafeInk(paint: string, surface: string): string {
 }
 
 /**
+ * The single authority every renderer must use before it paints a mark.
+ *
+ * Templates used to assign specimen inks directly — brand primary on paper,
+ * flat charcoal on a tinted card — and the quality gate then rejected the page
+ * they produced. Chooser and judge now share one rule: ask for the ink you
+ * want, get back the nearest legible form of it on that ground.
+ *
+ * `min` defaults to the logo floor (3.0), comfortably above the QC floor (2.4),
+ * so a resolved ink can never be the reason a page is blocked.
+ */
+export function resolveInk(
+  desired: string | null | undefined,
+  ground: string,
+  opts: { min?: number } = {},
+): string {
+  const surface = normHex(ground) ?? ground;
+  const min = opts.min ?? LOGO_MIN_CONTRAST;
+  const hex = desired ? normHex(desired) : null;
+  if (!hex) return legibleInkFor(surface);
+  if (contrastRatio(hex, surface) >= min) return hex;
+  const repaired = hueSafeInk(hex, surface);
+  return contrastRatio(repaired, surface) >= min ? repaired : legibleInkFor(surface);
+}
+
+/**
+ * Resolve every palette role against every ground the brand paints on, once,
+ * at lock time. Downstream renderers read these instead of each recomputing —
+ * and a role with no legible form on a ground is visible to the founder in the
+ * Brand Studio rather than discovered eleven assets later.
+ */
+export function resolveBrandInks(
+  roles: Record<string, string | null | undefined>,
+  grounds: Record<string, string | null | undefined>,
+): Record<string, Record<string, string>> {
+  const out: Record<string, Record<string, string>> = {};
+  for (const [groundName, groundHex] of Object.entries(grounds)) {
+    if (!groundHex) continue;
+    const surface = normHex(groundHex) ?? groundHex;
+    const row: Record<string, string> = {};
+    for (const [roleName, roleHex] of Object.entries(roles)) {
+      if (!roleHex) continue;
+      row[roleName] = resolveInk(roleHex, surface);
+    }
+    out[groundName] = row;
+  }
+  return out;
+}
+
+
+
+/**
  * Repair only failing SVG paints. Passing brand accents remain untouched, so a
  * gold-and-navy mark becomes gold-and-white on dark rather than monochrome, and
  * a failing paint keeps its hue instead of turning into flat ink.
