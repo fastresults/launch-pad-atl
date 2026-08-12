@@ -264,13 +264,6 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
             </p>
           )}
         </div>
-
-          {date && (
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              Next session {date} · 8:45–11:30am
-            </p>
-          )}
-        </div>
       ) : (
         <div className="mt-6 space-y-3">
           <WaitlistForm
@@ -281,9 +274,10 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
             doneMessage="You'll hear from us first."
           />
           <p className="text-center text-xs text-muted-foreground">
-            Seats open {product.opensLabel}. No need to wait — build it with us remotely instead.
+            Seats open {product.opensLabel}. Don't wait — build it with us remotely instead.
           </p>
         </div>
+
       )}
     </Panel>
   );
