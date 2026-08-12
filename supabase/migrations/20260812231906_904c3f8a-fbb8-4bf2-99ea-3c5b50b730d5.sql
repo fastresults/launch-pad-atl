@@ -1,0 +1,1 @@
+UPDATE public.venture_documents SET status = 'pending', last_error = NULL WHERE status = 'failed' AND document_type = 'website_prd';
