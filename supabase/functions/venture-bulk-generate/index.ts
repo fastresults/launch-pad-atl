@@ -226,6 +226,9 @@ async function generateOne(
       }, { onConflict: "snapshot_id,document_type" });
       await supabase.from("venture_generation_failures")
         .delete().eq("snapshot_id", snapshotId).eq("document_type", documentType);
+      await logGenEvent(supabase, {
+        snapshotId, documentType, mode, outcome: "blocked", error: "intake inputs unavailable",
+      });
       return;
     }
   }
