@@ -259,10 +259,13 @@ export function checkIdentity(
     contrastTokensMissing,
     surfaceSystemMissing,
     logoCraftMissing,
+    logoSurfaceUnsafe,
+    motionGeneric,
     brainFactsThin,
     ok: !testimonialPortraitsMissing && !contrastTokensMissing && !surfaceSystemMissing && !copyThin && !copyGeneric && !faqThin && !nameMissing && !logoMissing && !imageryMissing && !imageryThin &&
       !imageryCraftMissing && !portraitCraftMissing && !imageryTooDark &&
-      !artDirectionMissing && !logoCraftMissing && !brainFactsThin,
+      !artDirectionMissing && !logoCraftMissing && !logoSurfaceUnsafe &&
+      !motionGeneric && !brainFactsThin,
   };
 }
 
