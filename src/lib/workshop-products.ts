@@ -472,3 +472,34 @@ const FOUNDATION_FIT = {
     "You'd rather keep researching than say a price out loud",
   ],
 };
+
+/**
+ * The remote, done-for-you path shown at the close of the Foundation page for
+ * anyone who can't get to Atlanta. Price lives here only.
+ */
+export const REMOTE_SETUP = {
+  slug: "foundation",
+  price: "$347",
+  label: "One-on-one · remote · $347",
+  headline: "Not in Atlanta? Press the button. We'll set your startup up for you.",
+  steps: [
+    {
+      title: "Pick a time",
+      detail:
+        "A short discovery call — 20 minutes, at a time that works for you. We learn the idea, who pays, and what you want it called.",
+    },
+    {
+      title: "We build it",
+      detail: "Our team builds your startup out while you go back to your life.",
+    },
+    {
+      title: "Within two business days, we walk you through it",
+      detail:
+        "A second call where we hand over the finished startup, live and working, and show you exactly what to do next.",
+    },
+  ],
+  reassurance:
+    "No homework, no travel, no waiting for the next cohort. The fastest path from idea to something real.",
+  cta: "Schedule my setup — $347",
+  fineprint: "Card details come after the discovery call — nothing is charged to book.",
+} as const;

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -7,10 +8,13 @@ import {
   Minus,
   Layers,
   MessageCircleQuestion,
+  Video,
 } from "lucide-react";
-import { getWorkshopFormats, type WorkshopProduct } from "@/lib/workshop-products";
+import { getWorkshopFormats, REMOTE_SETUP, type WorkshopProduct } from "@/lib/workshop-products";
 import { nextDateLabel } from "@/lib/workshop-catalog";
+import { Button } from "@/components/ui/button";
 import { WaitlistForm } from "@/components/home/workshop/WaitlistForm";
+import { RemoteSetupDialog } from "@/components/home/workshop/RemoteSetupDialog";
 import {
   Panel,
   PrimaryCta,
@@ -172,54 +176,182 @@ export function WorkshopObjections({ product }: { product: WorkshopProduct }) {
 export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
   const isOpen = product.status === "open";
   const date = nextDateLabel(product.slug);
+  const [remoteOpen, setRemoteOpen] = useState(false);
+
+  // Only Foundation offers the remote, done-for-you path.
+  if (product.slug !== REMOTE_SETUP.slug) {
+    return (
+      <SectionShell className="py-16 md:py-24">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
+            The decision moment
+          </p>
+          <h2 className="public-heading">{product.decisionHeadline}</h2>
+          <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
+            {product.decisionBody}
+          </p>
+          <div className="mt-8 flex flex-col items-center gap-4">
+            {isOpen ? (
+              <>
+                <PrimaryCta to={product.href} className="px-7 py-3.5">
+                  Reserve your seat — {product.priceLabel}{" "}
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </PrimaryCta>
+                {date && (
+                  <p className="text-xs text-muted-foreground">
+                    Next session {date} · 8:45–11:30am · IGNITE Center
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="w-full max-w-md">
+                  <WaitlistForm
+                    slug={product.slug}
+                    format="workshop"
+                    tone="card"
+                    label="Get the date"
+                    doneMessage="You'll hear from us first."
+                  />
+                </div>
+                <Link
+                  to={product.href}
+                  className="inline-flex items-center gap-2 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                >
+                  See the full morning <ArrowRight className="size-3.5" aria-hidden="true" />
+                </Link>
+                <p className="text-xs text-muted-foreground">
+                  Opens {product.opensLabel}. Foundation runs now — it comes first anyway.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </SectionShell>
+    );
+  }
+
+  const room = (
+    <Panel accent={isOpen} className="flex h-full flex-col md:p-8">
+      <p className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+        <MapPin className="size-3.5" aria-hidden="true" />
+        In the room · IGNITE Center, Norcross GA
+      </p>
+      <h3 className="mt-3 text-xl font-semibold leading-snug">
+        If you can get to Atlanta, do this one.
+      </h3>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+        One morning, one seat, twenty people — and you walk out with it built.
+      </p>
+      <ul className="mt-5 flex-1 space-y-2.5">
+        {product.walkOuts.slice(0, 4).map((w) => (
+          <li key={w} className="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
+            <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+            <span>{w}</span>
+          </li>
+        ))}
+      </ul>
+
+      {isOpen ? (
+        <div className="mt-6">
+          <PrimaryCta to={product.href} className="w-full justify-center px-6 py-3.5">
+            Reserve your seat — {product.priceLabel}{" "}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </PrimaryCta>
+          {date && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Next session {date} · 8:45–11:30am
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="mt-6 space-y-3">
+          <WaitlistForm
+            slug={product.slug}
+            format="workshop"
+            tone="card"
+            label="Get the date"
+            doneMessage="You'll hear from us first."
+          />
+          <p className="text-center text-xs text-muted-foreground">
+            Seats open {product.opensLabel}. No need to wait — build it with us remotely instead.
+          </p>
+        </div>
+      )}
+    </Panel>
+  );
+
+  const remote = (
+    <Panel accent={!isOpen} className="flex h-full flex-col md:p-8">
+      <p className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+        <Video className="size-3.5" aria-hidden="true" />
+        {REMOTE_SETUP.label}
+      </p>
+      <h3 className="mt-3 text-xl font-semibold leading-snug">{REMOTE_SETUP.headline}</h3>
+      <ol className="mt-5 flex-1 space-y-4">
+        {REMOTE_SETUP.steps.map((s, i) => (
+          <li key={s.title} className="flex gap-3">
+            <span className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-primary/40 text-xs font-semibold text-primary">
+              {i + 1}
+            </span>
+            <span className="text-sm leading-relaxed">
+              <span className="font-semibold text-foreground">{s.title}.</span>{" "}
+              <span className="text-muted-foreground">{s.detail}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-5 text-sm leading-relaxed text-muted-foreground">{REMOTE_SETUP.reassurance}</p>
+      <div className="mt-6">
+        <Button
+          type="button"
+          size="lg"
+          className="h-auto w-full whitespace-normal px-6 py-3.5 text-base"
+          onClick={() => setRemoteOpen(true)}
+        >
+          {REMOTE_SETUP.cta}
+          <ArrowRight className="ml-2 size-4" aria-hidden="true" />
+        </Button>
+        <p className="mt-3 text-center text-xs text-muted-foreground">{REMOTE_SETUP.fineprint}</p>
+      </div>
+    </Panel>
+  );
 
   return (
     <SectionShell className="py-16 md:py-24">
-      <div className="mx-auto max-w-2xl text-center">
+      <div className="mx-auto max-w-3xl text-center">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          The decision moment
+          Two ways in
         </p>
-        <h2 className="public-heading">{product.decisionHeadline}</h2>
+        <h2 className="public-heading">
+          In Atlanta? Come build it in the room. Anywhere else? We'll build it with you.
+        </h2>
         <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
-          {product.decisionBody}
+          Same morning, same team, same outcome — a named startup, a price you can say out loud, a
+          live page, and a first message sent to someone real.
         </p>
-        <div className="mt-8 flex flex-col items-center gap-4">
-          {isOpen ? (
-            <>
-              <PrimaryCta to={product.href} className="px-7 py-3.5">
-                Reserve your seat — {product.priceLabel}{" "}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </PrimaryCta>
-              {date && (
-                <p className="text-xs text-muted-foreground">
-                  Next session {date} · 8:45–11:30am · IGNITE Center
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="w-full max-w-md">
-                <WaitlistForm
-                  slug={product.slug}
-                  format="workshop"
-                  tone="card"
-                  label="Get the date"
-                  doneMessage="You'll hear from us first."
-                />
-              </div>
-              <Link
-                to={product.href}
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-              >
-                See the full morning <ArrowRight className="size-3.5" aria-hidden="true" />
-              </Link>
-              <p className="text-xs text-muted-foreground">
-                Opens {product.opensLabel}. Foundation runs now — it comes first anyway.
-              </p>
-            </>
-          )}
-        </div>
       </div>
+
+      <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
+        {isOpen ? (
+          <>
+            {room}
+            {remote}
+          </>
+        ) : (
+          <>
+            {remote}
+            {room}
+          </>
+        )}
+      </div>
+
+      <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-muted-foreground">
+        Either way, you don't leave with a plan. You leave with a startup.
+      </p>
+
+      <RemoteSetupDialog open={remoteOpen} onOpenChange={setRemoteOpen} />
     </SectionShell>
   );
 }
+
