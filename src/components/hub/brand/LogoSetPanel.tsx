@@ -67,7 +67,14 @@ function readDataUrl(file: File) {
   });
 }
 
-function MarkTile({ label, background, src, alt, light, compact, empty }: any) {
+const VERDICT_CHIP: Record<string, { label: string; className: string }> = {
+  original: { label: "Your artwork", className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  repaired: { label: "Auto-corrected", className: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+  plated: { label: "On plate", className: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+};
+
+function MarkTile({ label, background, src, alt, light, compact, empty, verdict }: any) {
+  const chip = verdict ? VERDICT_CHIP[verdict] : null;
   return (
     <figure className="min-w-0">
       <div
@@ -87,8 +94,13 @@ function MarkTile({ label, background, src, alt, light, compact, empty }: any) {
           </span>
         )}
       </div>
-      <figcaption className="mt-1.5 truncate text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-        {label}
+      <figcaption className="mt-1.5 flex items-center justify-between gap-1">
+        <span className="truncate text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
+        {chip && (
+          <span className={cn("shrink-0 rounded-full px-1.5 py-px text-[9px] font-medium", chip.className)}>
+            {chip.label}
+          </span>
+        )}
       </figcaption>
     </figure>
   );
