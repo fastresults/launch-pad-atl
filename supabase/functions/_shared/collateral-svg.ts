@@ -1783,9 +1783,13 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
 }
 
 
-export type RenderResult = { pages: Page[]; fontBuffers: Uint8Array[]; fontsOk: boolean };
+export type RenderResult = { pages: Page[]; pageNames: string[]; totalPages: number; fontBuffers: Uint8Array[]; fontsOk: boolean };
 
-export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx): Promise<RenderResult> {
+export async function renderCollateral(
+  kind: CollateralKind,
+  ctx: CollateralCtx,
+  window?: { start: number; count: number },
+): Promise<RenderResult> {
   const wantHead = ctx.fonts?.heading || "Inter";
   const wantBody = ctx.fonts?.body || "Inter";
   const [head, bodyFont] = await Promise.all([
@@ -1812,6 +1816,7 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
   const headStack = `${heading}, ${fallbackFor(heading)}`;
   const bodyStack = `${body}, ${fallbackFor(body)}`;
 
+  let pageNames: string[] = [];
   const draw = (drawCtx: CollateralCtx): Page[] => {
     const args: Args = { ctx: drawCtx, T, defs };
     let raw: Page[];
@@ -1827,7 +1832,14 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
       case "guidelines": raw = guidelines(args); break;
       default: raw = [];
     }
-    return raw.map((p) => {
+    pageNames = raw.map((p) => p.name);
+    // Metrics include overlap detection and font measurement. Apply the worker
+    // window before that work so a one-page invocation never audits the other
+    // nine pages in a deck it will not rasterise or store.
+    const selected = window
+      ? raw.slice(Math.max(0, window.start), Math.max(0, window.start) + Math.max(1, window.count))
+      : raw;
+    return selected.map((p) => {
       const rs = resolveSpec(p.name, p.width, p.height);
       const svg = p.svg
         .replace(/font-family="BrandHead"/g, `font-family="${headStack}"`)
@@ -1837,13 +1849,16 @@ export async function renderCollateral(kind: CollateralKind, ctx: CollateralCtx)
     });
   };
 
+  // Templates compose deterministic page arrays; count once without running
+  // post-processing metrics outside the requested window.
   const pages = draw(ctx);
   // Do not globally shrink a broken composition. Measured templates must pass
   // at their intended scale; the publication gate reports the exact page.
 
 
   const fontBuffers = [head?.bytes, bodyFont?.bytes].filter((b): b is Uint8Array => !!b && b.length > 0);
-  return { pages, fontBuffers, fontsOk: fontBuffers.length > 0 };
+  const totalPages = pageNames.length;
+  return { pages, pageNames, totalPages, fontBuffers, fontsOk: fontBuffers.length > 0 };
 }
 
 

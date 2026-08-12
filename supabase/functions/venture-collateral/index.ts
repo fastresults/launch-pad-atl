@@ -191,10 +191,11 @@ async function loadMarkArtwork(admin: any, path: string): Promise<string | null>
  * it. Collateral used to leave a grey box labelled "Image" on the deck while a
  * committed, art-directed mood board sat one table away.
  *
- * Mood board tiles are full-size generated PNGs (1–2MB). Embedded raw, resvg
- * decodes that whole bitmap on every page raster and the worker runs out of
- * CPU. Each tile is downscaled once here to well above its printed size, and
- * every later pass decodes the small one.
+ * Mood board tiles are full-size generated PNGs (1–2MB). Never download and
+ * resize those originals in this worker: that adds one wasm raster pass per
+ * tile before the actual page raster and can exhaust the edge CPU allowance.
+ * Storage serves a transformed derivative instead, so resvg only decodes the
+ * page-sized bitmap it needs.
  */
 async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
   const tiles = (Array.isArray(kit?.moodboard) ? kit.moodboard : [])
@@ -202,15 +203,16 @@ async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
   const out: string[] = [];
   for (const path of tiles) {
     try {
-      const { data: file } = await admin.storage.from(BUCKET).download(path);
-      if (!file) continue;
-      const bytes = new Uint8Array(await file.arrayBuffer());
+      const { data: signed, error } = await admin.storage.from(BUCKET).createSignedUrl(path, 300, {
+        transform: { width: 560, height: 560, resize: "cover", quality: 78 },
+      });
+      if (error || !signed?.signedUrl) continue;
+      const response = await fetch(signed.signedUrl);
+      if (!response.ok) continue;
+      const bytes = new Uint8Array(await response.arrayBuffer());
       if (!bytes.length) continue;
-      const ext = path.split(".").pop()?.toLowerCase();
-      const mime = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : "image/png";
-      const raw = `data:${mime};base64,${b64(bytes)}`;
-      const small = await downscaleDataUri(raw, 560);
-      out.push(small ?? raw);
+      const contentType = response.headers.get("content-type")?.split(";")[0] || "image/webp";
+      out.push(`data:${contentType};base64,${b64(bytes)}`);
     } catch (e) {
       console.warn("[collateral imagery] skipped a tile:", (e as Error).message);
     }
@@ -218,27 +220,6 @@ async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
   console.log(`[collateral imagery] ${out.length} venture image(s) available to the templates`);
   return out;
 }
-
-/** One resvg pass that re-encodes an image at page-appropriate size. */
-async function downscaleDataUri(href: string, width = 900): Promise<string | null> {
-  try {
-    const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
-      `width="${width}" height="${width}" viewBox="0 0 ${width} ${width}">` +
-      `<image x="0" y="0" width="${width}" height="${width}" preserveAspectRatio="xMidYMid slice" ` +
-      `xlink:href="${href}" href="${href}"/></svg>`;
-    const png = await rasterizeSvgToBytes(svg, width);
-    if (!png?.length || png.length >= href.length) return null;
-    return `data:image/png;base64,${b64(png)}`;
-  } catch {
-    return null;
-  }
-}
-
-
-
-
-
 
 async function buildCtx(
   admin: any,
@@ -559,7 +540,12 @@ async function generateKind(
     );
   }
 
-  const { pages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx);
+  const PAGE_BUDGET = 1;
+  const from = Math.max(0, startPage);
+  const { pages, pageNames, totalPages, fontBuffers, fontsOk } = await renderCollateral(kind, ctx, {
+    start: from,
+    count: PAGE_BUDGET,
+  });
   // Fail loudly. Without a real TTF the rasteriser silently drops every line of
   // type, and we would store a "finished" page that is a logo on blank paper.
   if (!fontsOk) throw new Error("Brand fonts could not be loaded — refusing to render type-less pages");
@@ -568,17 +554,15 @@ async function generateKind(
   // ten-page guideline set still rasterised every page in one worker and hit
   // CPU Time exceeded. Each invocation rasterises a bounded slice and reports
   // where to resume, so no single worker can run itself into the ground.
-  const PAGE_BUDGET = 3;
-  const TIME_BUDGET_MS = 45_000;
-  const startedAt = Date.now();
-  const from = Math.max(0, startPage);
-  const slice = pages.slice(from, from + PAGE_BUDGET);
+  // A hard one-page boundary is intentional. CPU limits are cumulative rather
+  // than wall-clock limits, so checking elapsed time between pages cannot save
+  // a worker that spends its allowance inside wasm or synchronous PNG decode.
+  const slice = pages;
 
   const candidates: Array<{ page: typeof pages[number]; bytes: Uint8Array; verdict: QcVerdict }> = [];
   const verdicts: QcVerdict[] = [];
   let processed = 0;
   for (const p of slice) {
-    if (processed > 0 && Date.now() - startedAt > TIME_BUDGET_MS) break;
     const expectedText = (p.svg.match(/<text\b/g) || []).length;
     if (expectedText === 0 && !/design_tokens|email_signature/.test(kind)) {
       throw new Error(`${p.name}: no type was set on the page`);
@@ -594,7 +578,7 @@ async function generateKind(
     // Ten-slide decks blew the worker CPU allowance at 1100px a page. QC reads
     // ink coverage and contrast, both of which survive a smaller raster, so
     // multi-page kinds review (and preview) at a lighter width.
-    const rasterWidth = Math.min(p.width, pages.length > 6 ? 560 : 960);
+    const rasterWidth = Math.min(p.width, totalPages > 6 ? 560 : 960);
     const bytes = await rasterizeSvgToBytes(p.svg, rasterWidth, undefined, fontBuffers);
 
     // Quarantine in memory: nothing is promoted until every page in this slice
@@ -636,10 +620,10 @@ async function generateKind(
   }
 
   const nextPage = from + processed;
-  if (nextPage < pages.length) {
+  if (nextPage < totalPages) {
     // More pages remain: leave superseded files in place until the last slice
     // lands, so the founder never sees a half-swept set.
-    return { kind, files: wrote.length, qc: verdicts, nextPage, totalPages: pages.length };
+    return { kind, files: wrote.length, qc: verdicts, nextPage, totalPages };
   }
 
 
@@ -648,7 +632,12 @@ async function generateKind(
     await store(admin, snapshotId, userId, kind, "email-signature-html", signatureHtml(ctx), "text/html", null, null);
     wrote.push("email-signature-html");
   }
-  await sweepKind(admin, snapshotId, kind, wrote);
+  // Earlier page slices are already stored. Keep the complete deterministic
+  // name set when the final slice sweeps superseded files, not just the names
+  // written by this last invocation.
+  const expectedNames = pageNames.flatMap((name) => [name, `${name}-preview`]);
+  if (kind === "email_signature") expectedNames.push("email-signature-html");
+  await sweepKind(admin, snapshotId, kind, expectedNames);
   return { kind, files: candidates.length, qc: verdicts };
 }
 
