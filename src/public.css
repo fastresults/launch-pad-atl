@@ -1066,7 +1066,7 @@
 :root.light .public-surface,
 :root.light .marketing-dialog,
 :root.light .marketing-sheet {
-  --background: oklch(0.985 0.003 260);
+  --background: oklch(0.9377 0 0); /* #ECECEC */
   --foreground: oklch(0.19 0.02 268);
   --surface: oklch(1 0 0);
   --card: oklch(1 0 0);
@@ -1103,7 +1103,7 @@
 /* Header repaints with the page — except while it floats over the hero. */
 :root.light .sl-site-header {
   border-bottom-color: oklch(0.24 0.03 268 / 14%);
-  background: oklch(0.985 0.003 260 / 86%);
+  background: oklch(0.9377 0 0 / 88%); /* #ECECEC */
 }
 
 :root.light .public-surface :is(input, textarea, select):not([type="checkbox"]):not([type="radio"]) {
