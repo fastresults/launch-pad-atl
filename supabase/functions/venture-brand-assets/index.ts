@@ -1445,19 +1445,34 @@ Deno.serve(async (req) => {
       if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("That file is over 5 MB — please upload a smaller logo.");
       // Uploaded SVG is user-authored markup rendered inline elsewhere, so strip
       // scripts and inline event handlers before it ever reaches storage.
+      // The grounds this brand actually paints on — not just black and white.
+      // A mark that clears paper and ink can still die on the brand colour, so
+      // the audit has to include the palette itself.
+      const { data: paletteRow } = await supabase
+        .from("venture_brand_kits").select("palette").eq("snapshot_id", snapshotId).maybeSingle();
+      const paletteColors: Record<string, string> = (paletteRow?.palette as any)?.colors ?? {};
+      const auditSurfaces = [
+        LIGHT_SURFACE,
+        DARK_SURFACE,
+        ...["primary", "accent", "secondary"]
+          .map((k) => paletteColors[k])
+          .filter((v) => typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v)),
+      ];
       if (contentType.includes("svg")) {
         const cleaned = new TextDecoder().decode(bytes)
           .replace(/<script[\s\S]*?<\/script>/gi, "")
           .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
           .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
           .replace(/javascript:/gi, "");
+        const surfaces = auditSvgSurfaces(cleaned, auditSurfaces);
         const passesDark = svgPaintsPass(cleaned, DARK_SURFACE);
         const passesLight = svgPaintsPass(cleaned, LIGHT_SURFACE);
         contrastAudit = {
           paints: svgPaints(cleaned),
           passes_dark: passesDark,
           passes_light: passesLight,
-          repair_available: !passesDark || !passesLight,
+          surfaces,
+          repair_available: surfaces.some((s) => !s.passes && s.repairable),
         };
         bytes = new TextEncoder().encode(cleaned);
       }
