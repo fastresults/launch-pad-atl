@@ -76,11 +76,11 @@ type ProductMeta = {
 const PRODUCT_META: Record<string, ProductMeta> = {
   /* ─────────── FOUNDATION ─────────── */
   foundation: {
-    costEyebrow: "The cost of circling",
+    costEyebrow: "Your startup is waiting",
     costStat: "14 months",
-    costStatCaption: "average time between “I have an idea” and the first dollar",
+    costStatCaption: "from idea to first dollar — if you go it alone. This morning closes that gap.",
     costBody:
-      "Nothing is wrong with your idea. What's wrong is that it has never left your head — no name you'd say out loud, no price, no page, no message sent to a stranger who could pay you. Every week it stays in there, it gets heavier and less likely. One morning ends that.",
+      "You already have the idea. The people who need it are already out there. What we do in one morning is turn what you've been carrying into something you can name, price, publish, and sell — before lunch. No more holding it in your head. No more waiting for the right time. The right time is the morning you show up.",
     artifactPreview: {
       kind: "Your live page",
       title: "northsidegutterco.com",
@@ -90,20 +90,20 @@ const PRODUCT_META: Record<string, ProductMeta> = {
         "[ Book your slot ]",
         "— first message sent 11:18am to 12 neighbors on Nextdoor",
       ],
-      stamp: "Written with you in the room · live before lunch",
+      stamp: "Built with you in the room · live by lunch",
     },
     objections: [
       {
         q: "I don't have the idea nailed down yet.",
-        a: "That is the morning. You arrive with a direction and a hunch; you leave with a named startup pointed at one specific buyer. Founders who arrive certain usually leave having changed something anyway.",
+        a: "Perfect. Most people don't. That's what the morning is for. You arrive with a direction and a hunch; you leave with a named startup pointed at one specific buyer. Founders who arrive certain usually leave having changed something anyway.",
       },
       {
         q: "Can't I get all of this from AI for free?",
-        a: "You can get words for free. What you can't get is someone across the table who won't let you leave with a price you're afraid to say, or a page that never goes live. The AI writes fast. The room makes you ship.",
+        a: "AI can write fast. But it won't look you in the eye and make sure you actually ship. The room does that. You leave with a live page, a real price, and a first message sent — not another draft.",
       },
       {
         q: "What if I can't build the rest myself?",
-        a: "Then you have eight more mornings, or you hand it to our team. Either way, you own what gets written that day — the name, the offer, the page, the first message. Nothing is locked behind us.",
+        a: "That's exactly why there are eight more mornings, and why you can hand it to our team. Either way, you own what gets written that day — the name, the offer, the page, the first message. Nothing is locked behind us.",
       },
     ],
     decisionHeadline: "By lunch, your startup exists outside your head.",
