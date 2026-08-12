@@ -1053,7 +1053,9 @@ async function runJob(
       .map((d: any) => d.document_type),
   );
   const statusByType = new Map((savedIntakes ?? []).map((d: any) => [d.document_type, d.status]));
-  let types = allTypes ?? [];
+  // The Website PRD is deliberately out of scope for every bulk run — it is a
+  // founder-triggered build that only unlocks once the brand is locked.
+  let types = (allTypes ?? []).filter((t: any) => !BULK_EXCLUDED_TYPES.has(t.type));
 
   // Sourcing-only asset types don't apply to a non-physical venture. Record
   // them as not_applicable so they stop haunting the "remaining" counter
