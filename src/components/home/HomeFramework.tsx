@@ -21,6 +21,8 @@ import {
 } from "@/lib/framework-deliverables";
 import { DeliverableCheck } from "@/components/home/DeliverableCheck";
 import { BuildLayerCard } from "@/components/home/BuildLayerCard";
+import { FoundationPillars } from "@/components/home/FoundationPillars";
+
 
 
 import { BUILD_WORKSHOPS } from "@/lib/build-workshops";
