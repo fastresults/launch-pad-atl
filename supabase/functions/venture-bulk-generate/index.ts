@@ -931,6 +931,8 @@ async function clearStaleBlocks(supabase: any, snapshotId: string, since: string
     .from("venture_documents")
     .update({ blocked_reason: null })
     .eq("snapshot_id", snapshotId)
+    // Assets excluded from bulk runs keep their "waiting on brand lock" note.
+    .not("document_type", "in", `(${Array.from(BULK_EXCLUDED_TYPES).join(",")})`)
     .not("blocked_reason", "is", null);
   if (since) q = q.lt("updated_at", since);
   await q;
