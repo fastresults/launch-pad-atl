@@ -325,14 +325,13 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
     <SectionShell className="py-16 md:py-24">
       <div className="mx-auto max-w-3xl text-center">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Two ways in
+          Two doors
         </p>
-        <h2 className="public-heading">Pick your way in. Both end the same way.</h2>
+        <h2 className="public-heading">Come sit with us, or we'll do it without you.</h2>
         <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
-          Same team, same result: your startup named, a price you can say out loud, a live page, and
-          the first message sent to a real customer.
+          One is a morning in Atlanta. The other is a phone call from wherever you are. You end up
+          in the same place: named, priced, online, and talking to a real customer.
         </p>
-
       </div>
 
       <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
@@ -350,8 +349,9 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
       </div>
 
       <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-muted-foreground">
-        Either way, you don't leave with a plan. You leave with a startup.
+        Nobody walks away holding a plan. You walk away holding the thing.
       </p>
+
 
       <RemoteSetupDialog open={remoteOpen} onOpenChange={setRemoteOpen} />
     </SectionShell>
