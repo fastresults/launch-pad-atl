@@ -1134,16 +1134,11 @@
   );
 }
 
-/* In light mode the photos are dark and low-key: a long milky fade greys them
-   out. Keep a short fade to the grey card body only at the very bottom edge. */
+/* In light mode the photos are dark and low-key. Any fade to the grey card
+   body reads as a dirty haze over the image, so drop the scrim entirely and
+   let the photo meet the card on a clean edge. */
 :root.light .public-surface .sl-photo-scrim {
-  --sl-card-bg: var(--muted);
-  background-image: linear-gradient(
-    to top,
-    var(--sl-card-bg) 0%,
-    color-mix(in oklab, var(--sl-card-bg) 55%, transparent) 6%,
-    transparent 16%
-  );
+  background-image: none;
 }
 
 /* --- The hero never changes mode -------------------------------
