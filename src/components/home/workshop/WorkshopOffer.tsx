@@ -238,11 +238,12 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
         In the room · Atlanta · {product.priceLabel}
       </p>
       <h3 className="mt-3 text-xl font-semibold leading-snug">
-        Close enough to drive? Take the seat.
+        If you can get to Norcross, get in the room.
       </h3>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        One morning. Twenty seats. You leave with it built.
+        One morning. Twenty chairs. We build it with you while you sit there.
       </p>
+
       <ul className="mt-5 flex-1 space-y-2.5">
         {product.walkOuts.slice(0, 4).map((w) => (
           <li key={w} className="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
@@ -255,9 +256,10 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
       {isOpen ? (
         <div className="mt-6">
           <PrimaryCta to={product.href} className="w-full justify-center px-6 py-3.5">
-            Claim my seat — {product.priceLabel}{" "}
+            Take a seat — {product.priceLabel}{" "}
             <ArrowRight className="size-4" aria-hidden="true" />
           </PrimaryCta>
+
           {date && (
             <p className="mt-3 text-center text-xs text-muted-foreground">
               {date} · 8:45–11:30am · IGNITE Center, Norcross GA
@@ -274,9 +276,10 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
             doneMessage="You'll hear from us first."
           />
           <p className="text-center text-xs text-muted-foreground">
-            Seats open {product.opensLabel}. Don't wait — build it with us remotely instead.
+            Next seats open {product.opensLabel}. If that's too long to wait, take the other door.
           </p>
         </div>
+
 
       )}
     </Panel>
@@ -322,14 +325,13 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
     <SectionShell className="py-16 md:py-24">
       <div className="mx-auto max-w-3xl text-center">
         <p className="mb-3 text-xs uppercase tracking-[0.18em] text-muted-foreground md:text-sm md:tracking-[0.2em]">
-          Two ways in
+          Two doors
         </p>
-        <h2 className="public-heading">Pick your way in. Both end the same way.</h2>
+        <h2 className="public-heading">Come sit with us, or we'll do it without you.</h2>
         <p className="mt-5 text-base leading-relaxed text-muted-foreground md:text-lg">
-          Same team, same result: your startup named, a price you can say out loud, a live page, and
-          the first message sent to a real customer.
+          One is a morning in Atlanta. The other is a phone call from wherever you are. You end up
+          in the same place: named, priced, online, and talking to a real customer.
         </p>
-
       </div>
 
       <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
@@ -347,8 +349,9 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
       </div>
 
       <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-muted-foreground">
-        Either way, you don't leave with a plan. You leave with a startup.
+        Nobody walks away holding a plan. You walk away holding the thing.
       </p>
+
 
       <RemoteSetupDialog open={remoteOpen} onOpenChange={setRemoteOpen} />
     </SectionShell>
