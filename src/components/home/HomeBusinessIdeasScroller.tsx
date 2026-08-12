@@ -26,7 +26,7 @@ function IdeaCard({ idea }: { idea: BusinessIdea }) {
   return (
     <div
       tabIndex={0}
-      className="group/idea relative w-[300px] shrink-0 overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-card to-card/40 shadow-sm outline-none transition-colors hover:border-primary/40 focus-visible:border-primary/60 sm:w-[340px]"
+      className="group/idea relative w-[300px] shrink-0 overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-card to-card/40 shadow-sm outline-none transition-colors hover:border-primary/40 focus-visible:border-primary/60 sm:w-[340px] sl-card-with-image"
     >
       <div className="relative aspect-video w-full overflow-hidden bg-muted">
         <img
