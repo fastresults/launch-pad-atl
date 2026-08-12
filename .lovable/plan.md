@@ -25,15 +25,19 @@ The legacy SQL cron `sweep-stuck-generations` (every 5 min) still runs `UPDATE v
 
 **2. Checkpointing everywhere, not just the PRD.** Every asset writes its first complete draft to the row before enrichment, with `metadata.phase='draft'`. Any worker death after that point publishes real content instead of a failure.
 
-The bulk run's dependency layer already respects an order per type. We will harden the PRD (`website_prd`) to be a **terminal layer** that only begins after the Brand asset layer is fully complete (`brand_kit`, `logo_lockups`, `brand_voice_guide`, `archetype`, `color_palette`, `typography`, `moodboard`). If any brand asset is blocked or failed, the PRD is skipped with a blocked reason instead of running on partial/derived brand data. This removes the current failure mode where the PRD starts in a layer mixed with cheaper assets and dies before its checkpoint can land.
+**3. Run PRD last, after the brand layer is complete.** The bulk run's dependency layer already respects an order per type. We will harden the PRD (`website_prd`) to be a **terminal layer** that only begins after the Brand asset layer is fully complete (`brand_kit`, `logo_lockups`, `brand_voice_guide`, `archetype`, `color_palette`, `typography`, `moodboard`). If any brand asset is blocked or failed, the PRD is skipped with a blocked reason instead of running on partial/derived brand data. This removes the current failure mode where the PRD starts in a layer mixed with cheaper assets and dies before its checkpoint can land.
 
-**5. Per-asset circuit budget with an honest terminal state.** Cap total attempts per asset across a run (bulk + watchdog share the counter). On exhaustion, record `venture_generation_failures` with the real gateway error and mark the asset `failed` with founder-readable text — never leave it spinning.
+**4. Split the PRD into bounded stages.** Within its terminal layer, draft → imagery/copy enrichment → repair, each its own invocation with its own wall clock and each persisted. No stage exceeds ~90s of model time.
 
-**6. Observability.** A `venture_generation_events` table (one row per attempt: asset, round, mode, model, duration, outcome, error class) plus an admin panel showing failure rate by asset type, p95 duration, and gateway error classes. Right now the only forensic trail is a truncated `last_error` string.
+**5. Retire the legacy SQL sweeper.** Rewrite `sweep_stuck_generations()` to leave `venture_documents` and `venture_generation_jobs` alone (keeping only the pipeline/roadmap sweeps), so the checkpoint-aware watchdog is the single authority over generation state. Add `failed` jobs to the watchdog's resume set as a safety net.
 
-**7. Preflight validation.** Before a run starts, check the gateway is reachable and the brand/intake gates for each asset. Assets that cannot succeed are marked `blocked` up front rather than burning three retry rounds.
+**6. Per-asset circuit budget with an honest terminal state.** Cap total attempts per asset across a run (bulk + watchdog share the counter). On exhaustion, record `venture_generation_failures` with the real gateway error and mark the asset `failed` with founder-readable text — never leave it spinning.
 
-**8. Unstick this venture.** Re-run `website_prd` for snapshot `4968b647…` on the staged path once shipped.
+**7. Observability.** A `venture_generation_events` table (one row per attempt: asset, round, mode, model, duration, outcome, error class) plus an admin panel showing failure rate by asset type, p95 duration, and gateway error classes. Right now the only forensic trail is a truncated `last_error` string.
+
+**8. Preflight validation.** Before a run starts, check the gateway is reachable and the brand/intake gates for each asset. Assets that cannot succeed are marked `blocked` up front rather than burning three retry rounds.
+
+**9. Unstick this venture.** Re-run `website_prd` for snapshot `4968b647…` on the staged path once shipped.
 
 ## Technical notes
 
