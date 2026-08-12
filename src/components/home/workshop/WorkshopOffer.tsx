@@ -235,13 +235,13 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
     <Panel accent={isOpen} className="flex h-full flex-col md:p-8">
       <p className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.16em] text-muted-foreground">
         <MapPin className="size-3.5" aria-hidden="true" />
-        In the room · IGNITE Center, Norcross GA
+        In the room · Atlanta · {product.priceLabel}
       </p>
       <h3 className="mt-3 text-xl font-semibold leading-snug">
-        If you can get to Atlanta, do this one.
+        Close enough to drive? Take the seat.
       </h3>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-        One morning, one seat, twenty people — and you walk out with it built.
+        One morning. Twenty seats. You leave with it built.
       </p>
       <ul className="mt-5 flex-1 space-y-2.5">
         {product.walkOuts.slice(0, 4).map((w) => (
@@ -255,9 +255,16 @@ export function WorkshopDecision({ product }: { product: WorkshopProduct }) {
       {isOpen ? (
         <div className="mt-6">
           <PrimaryCta to={product.href} className="w-full justify-center px-6 py-3.5">
-            Reserve your seat — {product.priceLabel}{" "}
+            Claim my seat — {product.priceLabel}{" "}
             <ArrowRight className="size-4" aria-hidden="true" />
           </PrimaryCta>
+          {date && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              {date} · 8:45–11:30am · IGNITE Center, Norcross GA
+            </p>
+          )}
+        </div>
+
           {date && (
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Next session {date} · 8:45–11:30am
