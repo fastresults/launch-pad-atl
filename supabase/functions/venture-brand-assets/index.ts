@@ -63,7 +63,7 @@ import {
   juryInstruction,
   parseJuryVerdict,
 } from "../_shared/logo-jury.ts";
-import { svgPaints, svgPaintsPass, DARK_SURFACE, LIGHT_SURFACE } from "../_shared/logo-ink.ts";
+import { svgPaints, svgPaintsPass, auditSvgSurfaces, DARK_SURFACE, LIGHT_SURFACE } from "../_shared/logo-ink.ts";
 
 
 const corsHeaders = {
