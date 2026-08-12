@@ -65,9 +65,9 @@ const FOUNDATION: CatalogWorkshop = {
     "Your live page — real words, real price, real link",
     "The first message sent to a real prospective customer",
   ],
-  painHeadline: "You have the idea. What you don't have is the first real thing.",
+  painHeadline: "You already have the idea. Let's make it the first real thing.",
   painBody:
-    "Most founders spend months circling — reading, planning, waiting to feel ready. One morning at the IGNITE Center and the circling stops: your startup has a name, a price, a page, and a first customer conversation in motion.",
+    "You don't need more time to think. You need one morning where someone sits with you and turns the idea into a name, a price, a live page, and a first real conversation. That's what happens at the IGNITE Center. You show up with the idea. You leave with the startup.",
 };
 
 /** Per-workshop hero copy and rollout month, keyed by BUILD_WORKSHOPS slug. */
