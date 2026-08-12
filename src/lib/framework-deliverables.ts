@@ -1,14 +1,4 @@
 import {
-
-import wkBrand from "@/assets/workshops/brand.jpg.asset.json";
-import wkWebsite from "@/assets/workshops/website.jpg.asset.json";
-import wkSocial from "@/assets/workshops/social.jpg.asset.json";
-import wkContent from "@/assets/workshops/content.jpg.asset.json";
-import wkAi from "@/assets/workshops/ai.jpg.asset.json";
-import wkRevenue from "@/assets/workshops/revenue.jpg.asset.json";
-import wkSales from "@/assets/workshops/sales.jpg.asset.json";
-import wkScaffold from "@/assets/workshops/scaffold.jpg.asset.json";
-
   FileText,
   Eye,
   AlertCircle,
@@ -65,6 +55,14 @@ import wkScaffold from "@/assets/workshops/scaffold.jpg.asset.json";
   Send,
   type LucideIcon,
 } from "lucide-react";
+import wkBrand from "@/assets/workshops/brand.jpg.asset.json";
+import wkWebsite from "@/assets/workshops/website.jpg.asset.json";
+import wkSocial from "@/assets/workshops/social.jpg.asset.json";
+import wkContent from "@/assets/workshops/content.jpg.asset.json";
+import wkAi from "@/assets/workshops/ai.jpg.asset.json";
+import wkRevenue from "@/assets/workshops/revenue.jpg.asset.json";
+import wkSales from "@/assets/workshops/sales.jpg.asset.json";
+import wkScaffold from "@/assets/workshops/scaffold.jpg.asset.json";
 
 
 
