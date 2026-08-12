@@ -6,6 +6,7 @@ import { StartupLabsLogo } from "@/components/brand/StartupLabsLogo";
 import { WORKSHOP_PRICE_LABEL } from "@/lib/framework-deliverables";
 import { AccessModeDialog } from "@/components/home/AccessModeDialog";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 
 import { MobileCtaBar } from "@/components/site/MobileCtaBar";
@@ -27,6 +28,7 @@ export function SiteHeader() {
   const { isAuthenticated, isAdmin, signOut } = useAuth();
   const [modesOpen, setModesOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { theme, toggle } = useTheme();
   const ctaFull = `Reserve seat — ${WORKSHOP_PRICE_LABEL}`;
 
   return (
