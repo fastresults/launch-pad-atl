@@ -530,17 +530,34 @@ function markAt(
   const dx = x + (boxW - drawnW) / 2 - box.x * s;
   const dy = y + (boxH - drawnH) / 2 - box.y * s;
 
+  // The plate is the ground the untintable artwork reads best on, not always
+  // white: a white-ink raster needs a dark plate to be visible at all.
+  const plateFill = plate
+    ? (measuredFills.length &&
+        measuredFills.every((f) => contrastRatio(f, "#111111") >= MIN) &&
+        !measuredFills.every((f) => contrastRatio(f, "#ffffff") >= MIN)
+      ? "#111111"
+      : "#ffffff")
+    : "";
   const pad = Math.round(Math.max(drawnW, drawnH) * 0.14);
   const plateSvg = plate
-    ? `<rect x="${r(x + (boxW - drawnW) / 2 - pad)}" y="${r(y + (boxH - drawnH) / 2 - pad)}" width="${r(drawnW + pad * 2)}" height="${r(drawnH + pad * 2)}" rx="${r(pad * 0.6)}" fill="#ffffff" opacity="0.94"/>`
+    ? `<rect x="${r(x + (boxW - drawnW) / 2 - pad)}" y="${r(y + (boxH - drawnH) / 2 - pad)}" width="${r(drawnW + pad * 2)}" height="${r(drawnH + pad * 2)}" rx="${r(pad * 0.6)}" fill="${plateFill}" opacity="0.94"/>`
     : "";
 
   // The drawn size is recorded on the group so QC can verify the mark landed
   // inside the size band this piece's standard allows; the surface, the artwork
   // used and the ink it was actually drawn in are recorded so QC can measure
   // the specimen's real legibility rather than trusting a variant label.
-  const effectiveBg = plate ? "#ffffff" : (bg ?? "");
-  const drawnInk = use ?? (untintable ? "" : (fillsIn(inner)[0] ?? ""));
+  const effectiveBg = plate ? plateFill : (bg ?? "");
+  // Report what was actually painted. Untintable artwork keeps its own paint no
+  // matter what ink the template asked for, so reporting the request would tell
+  // QC a comfortable lie.
+  const drawnInk = untintable
+    ? (measuredFills.slice().sort((a, b) =>
+        contrastRatio(a, effectiveBg || "#ffffff") - contrastRatio(b, effectiveBg || "#ffffff")
+      )[0] ?? "")
+    : (use ?? measuredFills[0] ?? "");
+
   return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 }
 
