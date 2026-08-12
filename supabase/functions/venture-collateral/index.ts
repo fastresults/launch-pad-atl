@@ -505,7 +505,15 @@ async function generateKind(
   ctx: CollateralCtx,
   extras: StyleSystemExtras = {},
   startPage = 0,
-): Promise<{ kind: CollateralKind; files: number; qc: QcVerdict[]; nextPage?: number; totalPages?: number }> {
+): Promise<{
+  kind: CollateralKind;
+  files: number;
+  qc: QcVerdict[];
+  blocked?: Array<{ page: string; reasons: string[] }>;
+  nextPage?: number;
+  totalPages?: number;
+}> {
+
 
   const wrote: string[] = [];
   if (kind === "style_system") {
@@ -592,14 +600,18 @@ async function generateKind(
     processed++;
   }
 
-  const rejected = verdicts.filter((v) => !v.ok);
-  if (rejected.length || candidates.length !== processed) {
-    const detail = rejected.map((v) => `${v.page}: ${v.reasons.join("; ")}`).join(" | ");
-    throw new Error(`QUALITY_GATE_FAILED${detail ? ` — ${detail}` : " — one or more previews could not be rendered"}`);
+  // A failed page fails a page, not the whole piece. Everything that cleared
+  // review is promoted; a blocked page is reported with its reason and the run
+  // moves on to the next page. Only a kind that produced nothing at all is a
+  // failure — that is decided on the final slice, below.
+  const passing = candidates.filter((c) => c.verdict.ok);
+  const blockedPages = verdicts.filter((v) => !v.ok).map((v) => ({ page: v.page, reasons: v.reasons }));
+  if (candidates.length !== processed) {
+    blockedPages.push({ page: slice[0]?.name ?? kind, reasons: ["The preview raster could not be produced."] });
   }
 
-  // Promotion: only now may passing candidates replace approved files.
-  for (const candidate of candidates) {
+  // Promotion: only pages that passed review may replace approved files.
+  for (const candidate of passing) {
     const p = candidate.page;
     const verdict = candidate.verdict;
 
@@ -623,7 +635,7 @@ async function generateKind(
   if (nextPage < totalPages) {
     // More pages remain: leave superseded files in place until the last slice
     // lands, so the founder never sees a half-swept set.
-    return { kind, files: wrote.length, qc: verdicts, nextPage, totalPages };
+    return { kind, files: wrote.length, qc: verdicts, blocked: blockedPages, nextPage, totalPages };
   }
 
 
@@ -638,8 +650,23 @@ async function generateKind(
   const expectedNames = pageNames.flatMap((name) => [name, `${name}-preview`]);
   if (kind === "email_signature") expectedNames.push("email-signature-html");
   await sweepKind(admin, snapshotId, kind, expectedNames);
-  return { kind, files: candidates.length, qc: verdicts };
+
+  // Nothing survived across every slice of this kind: that is a real failure
+  // and the founder should be told, rather than shown an empty piece.
+  if (blockedPages.length) {
+    const { count } = await admin
+      .from("venture_brand_collateral")
+      .select("id", { count: "exact", head: true })
+      .eq("snapshot_id", snapshotId)
+      .eq("kind", kind);
+    if (!count) {
+      const detail = blockedPages.map((b) => `${b.page}: ${b.reasons.join("; ")}`).join(" | ");
+      throw new Error(`QUALITY_GATE_FAILED — ${detail}`);
+    }
+  }
+  return { kind, files: passing.length, qc: verdicts, blocked: blockedPages };
 }
+
 
 
 Deno.serve(async (req) => {
@@ -821,7 +848,14 @@ Deno.serve(async (req) => {
             phase: typeof result.nextPage === "number" ? `pages ${fromPage}-${result.nextPage}` : "final",
             mode: "collateral",
             durationMs: Date.now() - startedAt,
-            outcome: typeof result.nextPage === "number" ? "checkpoint" : "complete",
+            outcome: typeof result.nextPage === "number"
+              ? "checkpoint"
+              : result.blocked?.length
+              ? "blocked"
+              : "complete",
+            error: result.blocked?.length
+              ? result.blocked.map((b: any) => `${b.page}: ${b.reasons.join("; ")}`).join(" | ")
+              : null,
           });
         } catch (e) {
           console.error("collateral failed", kind, e);

@@ -7,7 +7,7 @@
 // form of it that clears the gate on that ground.
 
 import { describe, expect, it } from "vitest";
-import { LOGO_MIN_CONTRAST, resolveBrandInks, resolveInk } from "./logo-ink.ts";
+import { LOGO_MIN_CONTRAST, resolveBrandInks, resolveInk, specimenVerdict } from "./logo-ink.ts";
 import { contrastRatio } from "./color-spaces.ts";
 
 /** The floor the collateral quality gate applies to a specimen. */
@@ -79,6 +79,33 @@ describe("resolveBrandInks", () => {
       for (const ink of Object.values(roles)) {
         expect(contrastRatio(ink, surface)).toBeGreaterThanOrEqual(QC_FLOOR);
       }
+    }
+  });
+});
+
+// The specimen rule: a multi-tone mark is legible when any painted fill reads,
+// and the ink we report for triage is the worst of them. Reporting the *first*
+// fill is what blocked a readable cyan-and-charcoal mark on paper.
+describe("specimenVerdict", () => {
+  it("passes a two-tone mark whose main shape reads", () => {
+    const v = specimenVerdict(["#101014", "#21c0ff"], PAPER);
+    expect(v.visible).toBe(true);
+    expect(v.ink).toBe("#21c0ff");
+  });
+
+  it("blocks a mark where nothing clears the floor", () => {
+    const v = specimenVerdict(["#F2F2F2", "#EFEFEF"], PAPER);
+    expect(v.visible).toBe(false);
+  });
+
+  it("treats an unpainted mark as nothing to judge", () => {
+    expect(specimenVerdict([], PAPER)).toEqual({ ink: "", visible: true });
+  });
+
+  it("agrees with resolveInk: a resolved ink is always visible", () => {
+    for (const ground of GROUNDS) {
+      const ink = resolveInk("#21c0ff", ground);
+      expect(specimenVerdict([ink], ground).visible, `${ink} on ${ground}`).toBe(true);
     }
   });
 });

@@ -9,7 +9,7 @@
 import { colorSpaces, contrastRatio, inkOn, isDarkSurface } from "./color-spaces.ts";
 import { stripSvgBackground } from "./logo-raster.ts";
 import { inkAspect, inkBox } from "./logo-geometry.ts";
-import { resolveInk } from "./logo-ink.ts";
+import { specimenVerdict, resolveInk } from "./logo-ink.ts";
 
 import { fitBox, fitLine, measure } from "./text-metrics.ts";
 import {
@@ -511,12 +511,14 @@ function markAt(
       const visible = measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
       if (dark || (measuredFills.length && !visible)) use = inkOn(bg);
     }
+    // One authority: whatever ink we settled on is resolved against the ground
+    // before a single path is painted, so the gate never has to repair.
     if (use) use = resolveInk(use, bg);
   } else if (bg && untintable) {
-    const visible = measuredFills.length > 0 &&
-      measuredFills.every((f) => contrastRatio(f, bg) >= MIN);
+    const visible = measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
     if (dark || !visible) plate = true;
   }
+
 
 
   if (use && !untintable) inner = tint(inner, use);
@@ -550,16 +552,18 @@ function markAt(
   // used and the ink it was actually drawn in are recorded so QC can measure
   // the specimen's real legibility rather than trusting a variant label.
   const effectiveBg = plate ? plateFill : (bg ?? "");
-  // Report what was actually painted. Untintable artwork keeps its own paint no
-  // matter what ink the template asked for, so reporting the request would tell
-  // QC a comfortable lie.
-  const drawnInk = untintable
-    ? (measuredFills.slice().sort((a, b) =>
-        contrastRatio(a, effectiveBg || "#ffffff") - contrastRatio(b, effectiveBg || "#ffffff")
-      )[0] ?? "")
-    : (use ?? measuredFills[0] ?? "");
+  // Report what was actually painted, measured the same way the gate measures
+  // it. One rule for both branches: the recorded ink is the fill a reader would
+  // struggle with most on this ground, and `visible` says whether *any* painted
+  // fill clears the floor. A two-tone mark whose primary shape reads is legible
+  // even though its accent fill does not — previously the first fill in the
+  // file was reported and a perfectly readable specimen was blocked.
+  const paintedFills = !untintable && use ? [use] : measuredFills;
+  const ground = effectiveBg || "#ffffff";
+  const { ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN });
 
-  return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+
 }
 
 
@@ -1751,6 +1755,7 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
   const markArts = [...svg.matchAll(/data-mark-art="([^"]*)"/g)].map((m) => m[1]);
   const markBgs = [...svg.matchAll(/data-mark-bg="([^"]*)"/g)].map((m) => m[1]);
   const markInks = [...svg.matchAll(/data-mark-ink="([^"]*)"/g)].map((m) => m[1]);
+  const markVis = [...svg.matchAll(/data-mark-visible="([^"]*)"/g)].map((m) => m[1] === "1");
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
   const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
   const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
@@ -1768,6 +1773,7 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
       art: markArts[i] ?? "",
       bg: markBgs[i] ?? "",
       ink: markInks[i] ?? "",
+      visible: markVis[i] ?? true,
     })),
     markBand: isLockup(ctx) ? rs.lockupBand : rs.logoBand,
 

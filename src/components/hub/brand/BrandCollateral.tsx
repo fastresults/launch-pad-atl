@@ -19,6 +19,10 @@ import { CollateralDetailsDialog } from "@/components/hub/brand/CollateralDetail
 import { CollateralPieceCard } from "@/components/hub/brand/CollateralPieceCard";
 
 
+const KIND_LABELS: Record<string, string> = Object.fromEntries(
+  COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => [k.kind, k.label])),
+);
+
 export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: boolean }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
@@ -27,6 +31,8 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
   const [detailsOpen, setDetailsOpen] = useState(false);
   /** Set when a generate attempt was blocked, so we can retry after confirming. */
   const [pendingKinds, setPendingKinds] = useState<string[] | undefined>(undefined);
+  /** Per-piece outcome of the last run, so a partial run reads as partial. */
+  const [runReport, setRunReport] = useState<Array<{ kind: string; status: "published" | "blocked" | "failed"; detail?: string }> | null>(null);
 
   const detailsQ = useQuery({
     queryKey: ["collateralDetails", snapshot.id],
@@ -72,7 +78,7 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
       }
       return { ok: true, generated, failed, qcIssues, artDirection };
     },
-    onMutate: (kinds) => setBusyKind(kinds?.length === 1 ? kinds[0] : "all"),
+    onMutate: (kinds) => { setRunReport(null); setBusyKind(kinds?.length === 1 ? kinds[0] : "all"); },
     onSettled: () => setBusyKind(null),
 
     onSuccess: (res: any) => {
@@ -80,6 +86,24 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
       const failed = res?.failed ?? [];
       const arch = res?.artDirection?.archetype;
       const issues = res?.qcIssues ?? [];
+
+      // A run is a list of outcomes, not a single pass/fail. Report every piece
+      // so a blocked page reads as one blocked page, not "generation broke".
+      const attempted = (busyKind && busyKind !== "all" ? [busyKind] : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind)));
+      setRunReport(attempted.map((kind) => {
+        const hardFail = failed.find((f: any) => f.kind === kind);
+        if (hardFail) return { kind, status: "failed" as const, detail: String(hardFail.error ?? "").replace(/^QUALITY_GATE_FAILED\s*—\s*/, "") };
+        const pageIssues = issues.filter((i: any) => i.kind === kind);
+        if (pageIssues.length) {
+          return {
+            kind,
+            status: "blocked" as const,
+            detail: `${pageIssues.length} page${pageIssues.length === 1 ? "" : "s"} held back — ${pageIssues[0].reasons?.[0] ?? "failed the print check"}`,
+          };
+        }
+        return { kind, status: "published" as const };
+      }));
+
       if (failed.length) toast.warning(`Generated with ${failed.length} skipped: ${failed.map((f: any) => f.kind).join(", ")}`);
       else if (issues.length) {
         toast.warning(`${issues.length} page${issues.length === 1 ? "" : "s"} failed the print check`, {
@@ -207,6 +231,28 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
           </p>
         )}
       </div>
+
+      {runReport && runReport.some((r) => r.status !== "published") && (
+        <div className="rounded-xl border border-status-warning/30 bg-status-warning/5 p-4">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-status-warning">Last run</div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {runReport.filter((r) => r.status === "published").length} of {runReport.length} pieces published. The rest are listed below with the reason — everything that passed is already in your library.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {runReport.filter((r) => r.status !== "published").map((r) => (
+              <li key={r.kind} className="flex flex-wrap items-start justify-between gap-2 rounded-lg border border-border bg-background/60 p-2.5">
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold">{KIND_LABELS[r.kind] ?? r.kind}</div>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{r.detail}</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => requestGen([r.kind])} disabled={gen.isPending}>
+                  Retry
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {COLLATERAL_TIERS.map((tier) => {
         const doneInTier = tier.kinds.filter((k) => (byKind[k.kind] ?? []).length > 0).length;

@@ -6,6 +6,8 @@ import { contrastRatio, inkOn, relLuminance } from "./color-spaces.ts";
 
 /** Contrast a lone mark needs against its ground before we call it legible. */
 export const LOGO_MIN_CONTRAST = 3.0;
+/** The floor the collateral quality gate applies to a drawn specimen. */
+export const SPECIMEN_MIN_CONTRAST = 2.4;
 
 export const DARK_SURFACE = "#0B0B12";
 export const LIGHT_SURFACE = "#FFFFFF";
@@ -404,4 +406,29 @@ export function platedSvg(dataUri: string, surface: string, size = 512): string 
     `<rect x="0" y="0" width="${size}" height="${size}" rx="${Math.round(size * 0.12)}" fill="${plate}"/>` +
     `<image x="${pad}" y="${pad}" width="${inner}" height="${inner}" href="${dataUri}" preserveAspectRatio="xMidYMid meet"/>` +
     `</svg>`;
+}
+
+/**
+ * What a renderer records about one drawn specimen, measured the same way the
+ * quality gate measures it.
+ *
+ * A mark is rarely one colour. Reporting the first fill in the file blocked
+ * perfectly readable two-tone marks — a strong primary shape with a light
+ * accent detail — because the accent alone failed the floor. The rule here:
+ * `ink` is the fill a reader would struggle with most (worth surfacing in
+ * triage), and `visible` says whether *any* painted fill clears the floor,
+ * which is what legibility actually means.
+ */
+export function specimenVerdict(
+  fills: string[],
+  ground: string,
+  opts: { min?: number } = {},
+): { ink: string; visible: boolean } {
+  const min = opts.min ?? SPECIMEN_MIN_CONTRAST;
+  const painted = fills.filter(Boolean);
+  if (!painted.length) return { ink: "", visible: true };
+  const worst = painted
+    .slice()
+    .sort((a, b) => contrastRatio(a, ground) - contrastRatio(b, ground))[0];
+  return { ink: worst, visible: painted.some((f) => contrastRatio(f, ground) >= min) };
 }
