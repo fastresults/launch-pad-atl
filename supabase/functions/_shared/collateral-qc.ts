@@ -66,20 +66,23 @@ export function qcPage(
     }
   }
 
-  // Every specimen must be *visibly* on its tile. Since every renderer now
-  // resolves its ink through `resolveInk` before drawing, reaching this branch
-  // means the chooser and the judge disagreed — a renderer bug, not a brand
-  // problem. It is labelled as one so it shows up in triage instead of reading
-  // like something the founder can fix.
+  // Every specimen must be *visibly* on its tile. The renderer resolves its ink
+  // through `resolveInk` before drawing and reports the worst-contrast painted
+  // fill plus whether any painted fill clears the floor. The question that
+  // matters is "does this mark read on this tile?" — a two-tone mark with one
+  // low-contrast accent is legible and must not block the page. Reaching this
+  // branch means nothing on the mark reads, which is a renderer bug rather than
+  // something the founder can fix, so it is labelled as one for triage.
   for (const m of metrics.marks ?? []) {
     if (!m.bg || !m.ink) continue;
-    if (contrastRatio(m.ink, m.bg) < 2.4) {
+    if (m.visible === false || (m.visible === undefined && contrastRatio(m.ink, m.bg) < 2.4)) {
       reasons.push(
         `RENDERER_BUG: a logo specimen was drawn in ${m.ink} on ${m.bg} — too little contrast to be visible.`,
       );
       break;
     }
   }
+
 
 
 
