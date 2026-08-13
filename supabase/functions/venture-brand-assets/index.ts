@@ -1494,6 +1494,11 @@ Deno.serve(async (req) => {
         };
         bytes = new TextEncoder().encode(cleaned);
       }
+      // Measure the artwork, then reconcile it with the slot the founder chose.
+      const measurement = measureArtwork(bytes, contentType);
+      const reconciled = reconcileSlot(chosenVariant as any, measurement);
+      variant = reconciled.variant;
+
       const ext = contentType.includes("svg") ? "svg" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : contentType.includes("webp") ? "webp" : "png";
       const path = `${userId}/brand/${snapshotId}/logo-${variant}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("user-media").upload(path, bytes, { contentType, upsert: true });
@@ -1505,6 +1510,12 @@ Deno.serve(async (req) => {
         kind: "upload",
         source: "upload",
         variant,
+        form: reconciled.form,
+        tone: reconciled.tone,
+        aspect: measurement ? Math.round(measurement.aspect * 1000) / 1000 : null,
+        intrinsic_width: measurement?.width ?? null,
+        intrinsic_height: measurement?.height ?? null,
+        form_label: FORM_LABEL[reconciled.form],
         primary: variant === "primary",
         url: signed?.signedUrl ?? null,
         preview_url: signed?.signedUrl ?? null,
