@@ -261,6 +261,9 @@ function SlotTile({ slot, logo, busy, onPick, onRemove }: any) {
       <div className="mt-1 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
         {slot.toneLabel ?? slot.label}
       </div>
+      {!logo?.url && !busy ? (
+        <div className="truncate text-[9px] text-muted-foreground/70">Not supplied</div>
+      ) : null}
       {logo?.aspect ? (
         <div className="truncate text-[9px] tabular-nums text-muted-foreground/70">
           {Number(logo.aspect).toFixed(2)}:1
@@ -383,8 +386,8 @@ export function LogoSetPanel({
     const rows = await Promise.all(
       list.map(async (file) => {
         const aspect = await measureFile(file);
-        const { form, tone } = classifyFile(file.name, aspect);
-        return { file, aspect, form, tone };
+        const { form, tone, inferred } = await classifyFile(file, aspect);
+        return { file, aspect, form, tone, inferred };
       }),
     );
     setReview(rows);
