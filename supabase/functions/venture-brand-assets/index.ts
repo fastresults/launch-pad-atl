@@ -1423,10 +1423,12 @@ Deno.serve(async (req) => {
     }
 
     // Founder uploads their own mark. Each upload targets one slot of the logo
-    // set (primary / reversed / icon / wordmark) and replaces only that slot.
+    // set (primary / reversed / stacked / stacked_reversed / icon / wordmark)
+    // and replaces only that slot.
     if (kind === "logo_upload_own") {
-      const VARIANTS = ["primary", "reversed", "icon", "wordmark"];
+      const VARIANTS = ["primary", "reversed", "stacked", "stacked_reversed", "icon", "wordmark"];
       const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
+
       const dataUrl = typeof body?.dataUrl === "string" ? body.dataUrl : "";
       const filename = typeof body?.filename === "string" ? body.filename : "logo.png";
       // Some browsers/OSes hand over a file with no MIME type at all
