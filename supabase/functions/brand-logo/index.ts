@@ -97,15 +97,16 @@ Deno.serve(async (req) => {
     /* ---------- contrast-aware pick ---------- */
     if (variant === "auto") {
       const surface = surfaceHex(url.searchParams.get("on")) ?? "#FFFFFF";
-      // `lockup=stacked|horizontal` (or an explicit `aspect`) lets a caller ask
-      // for the lockup that fits its placement box.
-      const lockup = (url.searchParams.get("lockup") ?? "").toLowerCase();
+      // `form=stacked|horizontal|symbol|wordmark` (or the older
+      // `lockup=`, or an explicit `aspect`) lets a caller ask for the lockup
+      // that fits its placement box.
+      const form = (url.searchParams.get("form") ?? url.searchParams.get("lockup") ?? "").toLowerCase();
       const askedAspect = Number(url.searchParams.get("aspect"));
       const boxAspect = Number.isFinite(askedAspect) && askedAspect > 0
         ? askedAspect
-        : lockup === "stacked"
+        : form === "stacked" || form === "symbol"
         ? 1
-        : lockup === "horizontal"
+        : form === "horizontal" || form === "wordmark"
         ? 4
         : undefined;
       const candidates = logoCandidates(logos, surface, boxAspect);
