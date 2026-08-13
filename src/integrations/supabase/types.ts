@@ -2835,6 +2835,7 @@ export type Database = {
           id: string
           ink_safe: Json
           locked_at: string | null
+          logo_set_version: number
           logos: Json
           moodboard: Json
           palette: Json | null
@@ -2858,6 +2859,7 @@ export type Database = {
           id?: string
           ink_safe?: Json
           locked_at?: string | null
+          logo_set_version?: number
           logos?: Json
           moodboard?: Json
           palette?: Json | null
@@ -2881,6 +2883,7 @@ export type Database = {
           id?: string
           ink_safe?: Json
           locked_at?: string | null
+          logo_set_version?: number
           logos?: Json
           moodboard?: Json
           palette?: Json | null
@@ -4931,6 +4934,16 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      mutate_venture_logo_set: {
+        Args: {
+          p_entry?: Json
+          p_expected_path?: string
+          p_operation: string
+          p_snapshot_id: string
+          p_variant: string
+        }
+        Returns: Json
       }
       promote_application: { Args: { _app_id: string }; Returns: string }
       publish_brand_logo_direction: {
