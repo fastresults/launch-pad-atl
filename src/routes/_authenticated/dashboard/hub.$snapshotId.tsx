@@ -14,6 +14,8 @@ import type { LaunchDay } from "@/lib/launch-14day-plan";
 
 import { Button } from "@/components/ui/button";
 import { ShareLinkBar } from "@/components/hub/ShareLinkBar";
+import { PipelineStrip } from "@/components/hub/PipelineStrip";
+
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
