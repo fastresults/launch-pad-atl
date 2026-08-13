@@ -19,6 +19,7 @@ import {
   copySourceToSnapshot,
   deleteVentureSource,
   updateVentureSourceIntent,
+  recoverOrRetryExtraction,
   type VentureSource,
 } from "@/lib/venture-sources";
 import { supabase } from "@/integrations/supabase/client";
