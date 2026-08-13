@@ -42,11 +42,12 @@ import { archetypeForPrompt } from "../_shared/site-art-direction.ts";
 import { renderPrdPortraits } from "../_shared/prd-portraits.ts";
 import {
   brandFactsFromKit,
-  enforceWebsitePrdDepth,
+  applyCraftContract,
   expandWebsitePrdMasterPrompt,
   expandWebsitePrdPageCopy,
   masterPromptStats,
   prdQualityMetrics,
+  repairWebsitePrdCraft,
   type PrdVentureFacts,
 } from "../_shared/website-prd.ts";
 import { LAUNCH_14DAY_PLAN } from "../_shared/launch-14day-plan.ts";
@@ -551,7 +552,19 @@ async function generateOne(
         : null,
     };
     raw = await expandWebsitePrdMasterPrompt(raw, prdFacts, LOVABLE_API_KEY);
-    raw = enforceWebsitePrdDepth(raw, prdFacts);
+    raw = applyCraftContract(raw, prdFacts);
+    // Layout & interaction gate: a PRD that never specifies a container, real
+    // buttons or overlay surfaces produced the edge-to-edge, text-link sites we
+    // shipped before. Repair once, then log the verdict either way.
+    const craft = await repairWebsitePrdCraft(raw, prdFacts, LOVABLE_API_KEY);
+    raw = craft.raw;
+    if (!craft.verdict.ok) {
+      console.warn("website_prd craft gate", JSON.stringify({
+        snapshotId,
+        repaired: craft.repaired,
+        failures: craft.verdict.failures,
+      }));
+    }
     // Render the portrait rows ourselves so the builder inherits finished
     // photographs instead of a paragraph of instructions.
     try {
