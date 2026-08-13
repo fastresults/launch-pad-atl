@@ -56,19 +56,49 @@ async function download(admin: any, path: string): Promise<Uint8Array | null> {
   return new Uint8Array(await data.arrayBuffer());
 }
 
+/** Which lockup shape a placement wants. */
+export type LockupPreference = "horizontal" | "stacked";
+
+export type LogoBitmapOpts = {
+  /** Prefer the stacked (mark over wordmark) lockup for square / tall boxes. */
+  lockup?: LockupPreference;
+  /** True when the mark lands on a dark ground — prefers reversed artwork. */
+  dark?: boolean;
+};
+
+/** Picks the stored logo entry that best matches the requested lockup. */
+function pickEntry(logos: any[], opts: LogoBitmapOpts): any {
+  const slot = (l: any) => String(l?.variant ?? (l?.primary ? "primary" : "")).toLowerCase();
+  const wanted: string[] = [];
+  if (opts.lockup === "stacked") {
+    wanted.push(opts.dark ? "stacked_reversed" : "stacked", opts.dark ? "stacked" : "stacked_reversed");
+  }
+  if (opts.dark) wanted.push("reversed");
+  for (const w of wanted) {
+    const hit = logos.find((l) => slot(l) === w && (l?.path || l?.storage_path));
+    if (hit) return hit;
+  }
+  return logos.find((l) => l?.primary) ?? logos[0];
+}
+
 /**
  * Resolves the brand kit's primary logo to PNG/JPEG bytes.
  * SVG marks are rasterised (transparent background) and the result is cached
  * next to the source so later generations skip the wasm round-trip.
  */
-export async function fetchPrimaryLogoBitmap(admin: any, kit: any): Promise<LogoBitmap> {
+export async function fetchPrimaryLogoBitmap(
+  admin: any,
+  kit: any,
+  opts: LogoBitmapOpts = {},
+): Promise<LogoBitmap> {
   try {
     const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
     if (!logos.length) {
       console.warn("[brand-logo] skipped: no_logos on brand kit");
       return { dataUrl: null, bytes: null, svgText: null, skipReason: "no_logos" };
     }
-    const primary = logos.find((l) => l?.primary) ?? logos[0];
+    const primary = pickEntry(logos, opts);
+
     const rawPath: string | undefined = primary?.path || primary?.storage_path;
     if (!rawPath) {
       console.warn("[brand-logo] skipped: primary entry has no path");
