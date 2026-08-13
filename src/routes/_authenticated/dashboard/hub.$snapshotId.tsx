@@ -1285,6 +1285,34 @@ function GenerateStep({ snapshot }: { snapshot: any }) {
 
       <ShareLinkBar snapshotId={snapshot.id} />
 
+      <PipelineStrip
+        stages={[
+          {
+            label: "Assets",
+            detail: `${completeCount}/${total}`,
+            state: completeCount >= total && total > 0 ? "done" : jobRunning ? "running" : "idle",
+          },
+          {
+            label: "Brand",
+            state: brandKitLocked ? "done" : brandKitInferred ? "running" : "waiting",
+          },
+          {
+            label: "Website brief",
+            state: (() => {
+              const prd = docs.find((d: any) => d.document_type === "website_prd");
+              if (prd?.status === "complete") return "done";
+              if (prd?.status === "generating") return "running";
+              return brandKitLocked ? "idle" : "waiting";
+            })(),
+          },
+          {
+            label: "Collateral & artwork",
+            state: brandKitLocked ? "idle" : "waiting",
+          },
+        ]}
+      />
+
+
       {/* Hero — either the generate/next-action card, OR the Founder Roadmap once the kit is done */}
       {heroDone ? (
         <FounderRoadmapCard snapshot={snapshot} documentCount={completeCount} docs={docs} />
