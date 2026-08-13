@@ -9,20 +9,44 @@ import { cn } from "@/lib/utils";
 
 /**
  * The one place a founder sees and changes their mark. Renders the committed
- * logo on light / dark / brand, then exposes the four slots of the logo set so
- * any of them can be uploaded or replaced in place — used both on the Brand
- * Studio identity board and at the top of the Brand Wizard.
+ * logo on light / dark / brand, then exposes the logo set as a FORM x TONE
+ * grid — symbol / horizontal / stacked / wordmark, each in colour and inverse —
+ * so there is never a question about which file goes where.
  */
 
-export const LOGO_SLOTS = [
-  { key: "primary", label: "Primary", hint: "Horizontal mark, light backgrounds" },
-  { key: "reversed", label: "Reversed", hint: "Horizontal mark, dark backgrounds" },
-  { key: "stacked", label: "Stacked", hint: "Mark over wordmark, light backgrounds" },
-  { key: "stacked_reversed", label: "Stacked reversed", hint: "Mark over wordmark, dark backgrounds" },
-  { key: "icon", label: "Icon", hint: "Favicon, avatar, small placements" },
-  { key: "wordmark", label: "Wordmark", hint: "Header and letterhead lockups" },
+export const LOGO_FORMS = [
+  { form: "symbol", label: "Symbol", hint: "Mark alone — favicon, avatar, small square placements" },
+  { form: "horizontal", label: "Horizontal", hint: "Mark beside the name — headers, wide banners" },
+  { form: "stacked", label: "Stacked", hint: "Mark above the name — square and tall placements" },
+  { form: "wordmark", label: "Wordmark", hint: "Name alone — letterhead, footers, fine print" },
 ] as const;
 
+export const LOGO_TONES = [
+  { tone: "colour", label: "Colour", hint: "for light grounds" },
+  { tone: "inverse", label: "Inverse", hint: "for dark grounds" },
+] as const;
+
+/** Slot keys are the storage contract; form x tone is how humans read them. */
+export const SLOT_BY_FORM_TONE: Record<string, string> = {
+  "symbol|colour": "icon",
+  "symbol|inverse": "icon_reversed",
+  "horizontal|colour": "primary",
+  "horizontal|inverse": "reversed",
+  "stacked|colour": "stacked",
+  "stacked|inverse": "stacked_reversed",
+  "wordmark|colour": "wordmark",
+  "wordmark|inverse": "wordmark_reversed",
+};
+
+export const LOGO_SLOTS = LOGO_FORMS.flatMap((f) =>
+  LOGO_TONES.map((t) => ({
+    key: SLOT_BY_FORM_TONE[`${f.form}|${t.tone}`],
+    form: f.form,
+    tone: t.tone,
+    label: `${f.label} · ${t.label}`,
+    hint: `${f.hint} — ${t.hint}`,
+  })),
+);
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/svg+xml";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -53,16 +77,36 @@ export function logoSetFrom(logos: any): Record<string, any> {
   return set;
 }
 
-/** Filename hints let a multi-file drop land in the right slots. */
-function guessSlot(name: string): string {
-  const n = name.toLowerCase();
-  const inverse = /(reversed|reverse|dark|white|knockout|inverse)/.test(n);
-  if (/(stacked|stack|vertical|centred|centered)/.test(n)) return inverse ? "stacked_reversed" : "stacked";
-  if (inverse) return "reversed";
-  if (/(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)) return "icon";
-  if (/(wordmark|word-mark|logotype|lockup)/.test(n)) return "wordmark";
-  return "primary";
+/** Measure a dropped file so multi-file assignment is geometric, not lexical. */
+async function measureFile(file: File): Promise<number | null> {
+  const url = URL.createObjectURL(file);
+  try {
+    const aspect = await new Promise<number | null>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img.naturalWidth > 0 && img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : null);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+    return aspect;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
+
+/** Filename hints only decide tone and wordmark/symbol intent; shape is measured. */
+function classifyFile(name: string, aspect: number | null): { form: string; tone: string } {
+  const n = name.toLowerCase();
+  const tone = /(reversed|reverse|dark|white|knockout|inverse|inv)/.test(n) ? "inverse" : "colour";
+  if (/(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)) return { form: "symbol", tone };
+  if (/(wordmark|word-mark|logotype)/.test(n)) return { form: "wordmark", tone };
+  if (/(stacked|stack|vertical|centred|centered)/.test(n)) return { form: "stacked", tone };
+  if (/(horizontal|horiz|lockup|wide)/.test(n)) return { form: "horizontal", tone };
+  if (aspect == null) return { form: "horizontal", tone };
+  if (aspect >= 2.2) return { form: "horizontal", tone };
+  if (aspect >= 1.15) return { form: "stacked", tone };
+  return { form: "symbol", tone };
+}
+
 
 
 function readDataUrl(file: File) {
@@ -159,7 +203,14 @@ function SlotTile({ slot, logo, busy, onPick, onRemove }: any) {
           <Upload className="h-4 w-4 text-muted-foreground" />
         )}
       </button>
-      <div className="mt-1 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{slot.label}</div>
+      <div className="mt-1 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+        {slot.toneLabel ?? slot.label}
+      </div>
+      {logo?.aspect ? (
+        <div className="truncate text-[9px] tabular-nums text-muted-foreground/70">
+          {Number(logo.aspect).toFixed(2)}:1
+        </div>
+      ) : null}
       {logo?.source === "upload" && !busy && (
         <button
           type="button"
@@ -194,6 +245,7 @@ export function LogoSetPanel({
   const qc = useQueryClient();
   const [override, setOverride] = useState<any[] | null>(null);
   const [pending, setPending] = useState<string | null>(null);
+  const [review, setReview] = useState<{ file: File; aspect: number | null; form: string; tone: string }[] | null>(null);
   const multiRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => { setOverride(null); }, [kit?.logos]);
@@ -242,7 +294,11 @@ export function LogoSetPanel({
       if (Array.isArray(out?.logos)) setOverride(out.logos);
       qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
       qc.invalidateQueries({ queryKey: ["hub"] });
-      toast.success(`${LOGO_SLOTS.find((s) => s.key === vars.variant)?.label ?? "Logo"} saved to your brand`);
+      // The server measures the artwork and may file it where it belongs; say
+      // so out loud rather than silently moving it.
+      const saved = LOGO_SLOTS.find((s) => s.key === (out?.variant ?? vars.variant))?.label ?? "Logo";
+      if (out?.moved && out?.notice) toast.warning(out.notice);
+      else toast.success(`${saved} saved to your brand`);
     },
     onError: (e: any) => toast.error(e?.message ?? "Upload failed"),
     onSettled: () => setPending(null),
@@ -265,20 +321,28 @@ export function LogoSetPanel({
     upload.mutate({ variant, file });
   };
 
-  // Multi-file: assign by filename hint, then upload sequentially so slots
-  // don't race each other writing the same kit row.
+  // Multi-file: classify each file by measuring it, then let the founder
+  // confirm or correct the assignment before anything is written.
   const pickMany = async (files: FileList | File[]) => {
     const list = Array.from(files).slice(0, LOGO_SLOTS.length);
-    const used = new Set<string>();
-    for (const file of list) {
-      let variant = guessSlot(file.name);
-      if (used.has(variant)) {
-        variant = LOGO_SLOTS.map((s) => s.key).find((k) => !used.has(k)) ?? variant;
-      }
-      used.add(variant);
+    const rows = await Promise.all(
+      list.map(async (file) => {
+        const aspect = await measureFile(file);
+        const { form, tone } = classifyFile(file.name, aspect);
+        return { file, aspect, form, tone };
+      }),
+    );
+    setReview(rows);
+  };
+
+  const commitReview = async () => {
+    const rows = review ?? [];
+    setReview(null);
+    for (const row of rows) {
+      const variant = SLOT_BY_FORM_TONE[`${row.form}|${row.tone}`] ?? "primary";
       setPending(variant);
       try {
-        await upload.mutateAsync({ variant, file });
+        await upload.mutateAsync({ variant, file: row.file });
       } catch {
         break;
       }
@@ -352,27 +416,94 @@ export function LogoSetPanel({
 
       </div>
 
+      {review?.length ? (
+        <div className="space-y-2 rounded-xl border border-primary/40 bg-primary/5 p-3">
+          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Check these before saving
+          </div>
+          {review.map((row, i) => (
+            <div key={`${row.file.name}-${i}`} className="flex flex-wrap items-center gap-2 text-[11px]">
+              <span className="min-w-0 flex-1 truncate">{row.file.name}</span>
+              <span className="tabular-nums text-muted-foreground">
+                {row.aspect ? `${row.aspect.toFixed(2)}:1` : "vector"}
+              </span>
+              <select
+                value={row.form}
+                onChange={(e) =>
+                  setReview((r) => (r ?? []).map((x, j) => (j === i ? { ...x, form: e.target.value } : x)))
+                }
+                className="rounded-md border border-border/60 bg-background px-1.5 py-1 text-[11px]"
+              >
+                {LOGO_FORMS.map((f) => (
+                  <option key={f.form} value={f.form}>{f.label}</option>
+                ))}
+              </select>
+              <select
+                value={row.tone}
+                onChange={(e) =>
+                  setReview((r) => (r ?? []).map((x, j) => (j === i ? { ...x, tone: e.target.value } : x)))
+                }
+                className="rounded-md border border-border/60 bg-background px-1.5 py-1 text-[11px]"
+              >
+                {LOGO_TONES.map((t) => (
+                  <option key={t.tone} value={t.tone}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+          ))}
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              type="button"
+              onClick={commitReview}
+              disabled={busy}
+              className="rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground disabled:opacity-50"
+            >
+              Save {review.length} file{review.length === 1 ? "" : "s"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setReview(null)}
+              className="text-[11px] text-muted-foreground hover:underline"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <details className="group rounded-xl border border-border/60 bg-background/30">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
           <span>Logo set · {LOGO_SLOTS.filter((s) => set[s.key]).length}/{LOGO_SLOTS.length} lockups</span>
           <span className="text-primary transition-transform group-open:rotate-180">▾</span>
         </summary>
-        <div className="space-y-2.5 border-t border-border/60 p-3">
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {LOGO_SLOTS.map((slot) => (
-              <SlotTile
-                key={slot.key}
-                slot={slot}
-                logo={set[slot.key]}
-                busy={pending === slot.key}
-                onPick={pick}
-                onRemove={(v: string) => { setPending(v); remove.mutate(v); }}
-              />
-            ))}
-          </div>
+        <div className="space-y-3 border-t border-border/60 p-3">
+          {LOGO_FORMS.map((f) => (
+            <div key={f.form} className="grid grid-cols-[6.5rem_1fr] items-start gap-3">
+              <div className="pt-1">
+                <div className="text-[11px] font-medium">{f.label}</div>
+                <div className="text-[9px] leading-tight text-muted-foreground">{f.hint}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {LOGO_TONES.map((t) => {
+                  const slot = LOGO_SLOTS.find((s) => s.form === f.form && s.tone === t.tone)!;
+                  return (
+                    <SlotTile
+                      key={slot.key}
+                      slot={{ ...slot, toneLabel: t.label }}
+                      logo={set[slot.key]}
+                      busy={pending === slot.key}
+                      onPick={pick}
+                      onRemove={(v: string) => { setPending(v); remove.mutate(v); }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
           <p className="text-[10px] leading-relaxed text-muted-foreground">
-            Drop files anywhere here or click a slot to replace it. SVG is best — PNG, JPG and WebP work too, up to 5 MB.
-            Each preview audits every color in the mark and repairs only colors that fail on that surface.
+            Form is the shape of the lockup; tone is the ground it's drawn for — colour for light, inverse for dark.
+            Drop several files at once and we'll measure each one and show you where it's going before saving.
+            SVG is best — PNG, JPG and WebP work too, up to 5 MB.
           </p>
         </div>
       </details>

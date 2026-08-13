@@ -64,6 +64,13 @@ import {
   parseJuryVerdict,
 } from "../_shared/logo-jury.ts";
 import { svgPaints, svgPaintsPass, auditSvgSurfaces, DARK_SURFACE, LIGHT_SURFACE } from "../_shared/logo-ink.ts";
+import {
+  LOGO_VARIANTS,
+  FORM_LABEL,
+  formToneOf,
+  measureArtwork,
+  reconcileSlot,
+} from "../_shared/logo-form.ts";
 
 
 const corsHeaders = {
@@ -1423,11 +1430,15 @@ Deno.serve(async (req) => {
     }
 
     // Founder uploads their own mark. Each upload targets one slot of the logo
-    // set (primary / reversed / stacked / stacked_reversed / icon / wordmark)
-    // and replaces only that slot.
+    // set — a form (symbol / horizontal / stacked / wordmark) crossed with a
+    // tone (colour / inverse) — and replaces only that slot. The artwork is
+    // measured on the way in, so a file that plainly disagrees with the slot it
+    // was dropped on is filed where it belongs instead of lying in place.
     if (kind === "logo_upload_own") {
-      const VARIANTS = ["primary", "reversed", "stacked", "stacked_reversed", "icon", "wordmark"];
-      const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
+      const chosenVariant = (LOGO_VARIANTS as readonly string[]).includes(body?.variant)
+        ? body.variant
+        : "primary";
+      let variant = chosenVariant;
 
       const dataUrl = typeof body?.dataUrl === "string" ? body.dataUrl : "";
       const filename = typeof body?.filename === "string" ? body.filename : "logo.png";
@@ -1483,6 +1494,11 @@ Deno.serve(async (req) => {
         };
         bytes = new TextEncoder().encode(cleaned);
       }
+      // Measure the artwork, then reconcile it with the slot the founder chose.
+      const measurement = measureArtwork(bytes, contentType);
+      const reconciled = reconcileSlot(chosenVariant as any, measurement);
+      variant = reconciled.variant;
+
       const ext = contentType.includes("svg") ? "svg" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : contentType.includes("webp") ? "webp" : "png";
       const path = `${userId}/brand/${snapshotId}/logo-${variant}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("user-media").upload(path, bytes, { contentType, upsert: true });
@@ -1494,6 +1510,12 @@ Deno.serve(async (req) => {
         kind: "upload",
         source: "upload",
         variant,
+        form: reconciled.form,
+        tone: reconciled.tone,
+        aspect: measurement ? Math.round(measurement.aspect * 1000) / 1000 : null,
+        intrinsic_width: measurement?.width ?? null,
+        intrinsic_height: measurement?.height ?? null,
+        form_label: FORM_LABEL[reconciled.form],
         primary: variant === "primary",
         url: signed?.signedUrl ?? null,
         preview_url: signed?.signedUrl ?? null,
@@ -1505,10 +1527,18 @@ Deno.serve(async (req) => {
 
       const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos, dna").eq("snapshot_id", snapshotId).maybeSingle();
       const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
-      // Legacy uploads carry no variant — treat them as the primary slot.
+      // Legacy uploads carry no variant — treat them as the primary slot, and
+      // backfill form/tone on anything written before the measurement existed.
       const slotOf = (l: any) => (l?.variant ?? "primary");
+      const withFormTone = (l: any) => {
+        if (!l || typeof l !== "object" || (l.form && l.tone)) return l;
+        const ft = formToneOf(slotOf(l));
+        return { ...l, form: l.form ?? ft.form, tone: l.tone ?? ft.tone };
+      };
       const superseded = existing.filter((l: any) => l?.source === "upload" && slotOf(l) === variant);
-      const kept = existing.filter((l: any) => !(l?.source === "upload" && slotOf(l) === variant));
+      const kept = existing
+        .filter((l: any) => !(l?.source === "upload" && slotOf(l) === variant))
+        .map(withFormTone);
       const nextLogos =
         variant === "primary"
           ? [uploaded, ...kept.map((l: any) => ({ ...l, primary: false }))]
@@ -1531,13 +1561,23 @@ Deno.serve(async (req) => {
 
       if (runId && variant === "primary") await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
 
-      return new Response(JSON.stringify({ ok: true, logo: uploaded, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          logo: uploaded,
+          logos: nextLogos,
+          variant,
+          requested_variant: chosenVariant,
+          moved: reconciled.moved,
+          notice: reconciled.reason,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // Clear one slot of the uploaded logo set.
     if (kind === "logo_remove_upload") {
-      const VARIANTS = ["primary", "reversed", "stacked", "stacked_reversed", "icon", "wordmark"];
-      const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
+      const variant = (LOGO_VARIANTS as readonly string[]).includes(body?.variant) ? body.variant : "primary";
 
       const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos").eq("snapshot_id", snapshotId).maybeSingle();
       const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];

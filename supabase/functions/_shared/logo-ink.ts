@@ -152,79 +152,129 @@ export function surfaceHex(on: string | null | undefined): string | null {
 /**
  * Preferred stored variants for a surface, best first.
  *
- * `boxAspect` (width / height of the placement box) decides whether the
- * horizontal or the stacked lockup leads: wide boxes want the horizontal
- * lockup, square / tall boxes want the stacked one. Omit it and the historic
- * horizontal-first order is used.
+ * Kept for callers that only have slot names. New code should rely on
+ * `logoCandidates`, which scores the measured form and tone of each entry.
  */
 export function variantOrder(surface: string, boxAspect?: number): string[] {
   const dark = relLuminance(surface) < 0.35;
   const preferStacked = typeof boxAspect === "number" && boxAspect > 0 && boxAspect < 2.2;
   if (dark) {
-    const order = preferStacked
-      ? ["stacked_reversed", "reversed", "knockout", "mono", "stacked", "mark", "horizontal", "icon"]
-      : ["reversed", "knockout", "mono", "mark", "horizontal", "stacked_reversed", "stacked", "icon"];
-    return order;
+    return preferStacked
+      ? ["stacked_reversed", "reversed", "knockout", "mono", "stacked", "mark", "horizontal", "icon_reversed", "icon"]
+      : ["reversed", "knockout", "mono", "mark", "horizontal", "stacked_reversed", "stacked", "icon_reversed", "icon"];
   }
   return preferStacked
     ? ["stacked", "mark", "primary", "horizontal", "icon", "mono", "knockout", "stacked_reversed", "reversed"]
     : ["mark", "primary", "horizontal", "stacked", "icon", "mono", "knockout", "stacked_reversed", "reversed"];
 }
 
+export type CandidateForm = "symbol" | "horizontal" | "stacked" | "wordmark";
+export type CandidateTone = "colour" | "inverse";
 
 export interface LogoCandidate {
   /** Storage path of the artwork. */
   path: string;
-  /** Which slot it came from — used only for ordering and debugging. */
+  /** Slot or generated-variant name it came from — ordering and debugging. */
   variant: string;
+  /** Shape of the lockup, measured at upload where available. */
+  form: CandidateForm;
+  /** Which ground the artwork is drawn for. */
+  tone: CandidateTone;
+  /** width / height when known. */
+  aspect: number | null;
 }
 
+/** Name → form/tone for entries with no stored measurement (legacy + studio). */
+const NAME_FORM_TONE: Record<string, { form: CandidateForm; tone: CandidateTone }> = {
+  primary: { form: "horizontal", tone: "colour" },
+  reversed: { form: "horizontal", tone: "inverse" },
+  horizontal: { form: "horizontal", tone: "colour" },
+  stacked: { form: "stacked", tone: "colour" },
+  stacked_reversed: { form: "stacked", tone: "inverse" },
+  vertical: { form: "stacked", tone: "colour" },
+  icon: { form: "symbol", tone: "colour" },
+  icon_reversed: { form: "symbol", tone: "inverse" },
+  monogram: { form: "symbol", tone: "colour" },
+  // The Logo Studio writes the *symbol alone* as `mark`; `knockout` is the same
+  // symbol drawn white, `mono` the same symbol drawn near-black.
+  mark: { form: "symbol", tone: "colour" },
+  mono: { form: "symbol", tone: "colour" },
+  knockout: { form: "symbol", tone: "inverse" },
+  wordmark: { form: "wordmark", tone: "colour" },
+  wordmark_reversed: { form: "wordmark", tone: "inverse" },
+};
+
+const normName = (v: string) => {
+  const s = v.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (s === "stacked_knockout" || s === "stacked_reverse" || s === "stacked_dark") return "stacked_reversed";
+  if (s === "reverse" || s === "inverse") return "reversed";
+  return s;
+};
+
 /**
- * Every mark a venture has, ordered best-first for a surface.
+ * Every mark a venture has, ordered best-first for a surface and placement box.
  *
- * Founders upload light and reversed artwork as *sibling entries* in the
- * `logos` array (each carrying its own `variant`), while the generator writes
- * `variants.knockout` / `variants.mono` inside a single entry. Both shapes are
- * collected here so an uploaded reversed mark is never overlooked.
+ * Founders upload artwork as *sibling entries* in the `logos` array (each with
+ * its own slot, plus the measured `form` / `tone` / `aspect` recorded at upload
+ * time), while the generator writes `variants.knockout` / `variants.mono`
+ * inside a single entry. Both shapes are collected and scored on the same two
+ * axes, so a symbol can never be mistaken for a horizontal lockup.
  */
 export function logoCandidates(logos: any[], surface: string, boxAspect?: number): LogoCandidate[] {
   const out: LogoCandidate[] = [];
   const seen = new Set<string>();
-  const add = (path: unknown, variant: string) => {
+  const add = (path: unknown, name: string, meta?: any) => {
     const p = typeof path === "string" ? path.trim() : "";
     if (!p || seen.has(p)) return;
     seen.add(p);
-    out.push({ path: p, variant });
-  };
-  // Slot names differ across uploads and generated variants; normalise the
-  // aliases so stacked artwork ranks wherever it was written.
-  const norm = (v: string) => {
-    const s = v.trim().toLowerCase().replace(/[\s-]+/g, "_");
-    if (s === "primary") return "mark";
-    if (s === "stacked_knockout" || s === "stacked_reverse" || s === "stacked_dark") return "stacked_reversed";
-    if (s === "vertical") return "stacked";
-    return s;
+    const key = normName(name);
+    const fallback = NAME_FORM_TONE[key] ?? { form: "horizontal" as const, tone: "colour" as const };
+    const aspect = Number(meta?.aspect);
+    const form = (meta?.form as CandidateForm) ?? fallback.form;
+    const tone = (meta?.tone as CandidateTone) ?? fallback.tone;
+    out.push({
+      path: p,
+      variant: key,
+      form: ["symbol", "horizontal", "stacked", "wordmark"].includes(form) ? form : fallback.form,
+      tone: tone === "inverse" ? "inverse" : "colour",
+      aspect: Number.isFinite(aspect) && aspect > 0 ? aspect : null,
+    });
   };
 
   for (const l of Array.isArray(logos) ? logos : []) {
     if (!l || typeof l !== "object") continue;
-    const own = norm(String(l.variant ?? (l.primary ? "primary" : "mark")));
-    add(l.svg_path ?? l.path, own);
+    const variantsObj = l.variants && typeof l.variants === "object" ? l.variants : {};
+    // A Logo Studio entry carries generated lockups beside it — its own file is
+    // then the *symbol*, never a horizontal lockup, whatever the slot is called.
+    const studioEntry = Boolean(variantsObj.horizontal || variantsObj.stacked || variantsObj.mark);
+    const own = studioEntry ? "mark" : String(l.variant ?? (l.primary ? "primary" : "mark"));
+    add(l.svg_path ?? l.path, own, studioEntry ? { ...l, form: l.form ?? "symbol" } : l);
     const variants = l.variants && typeof l.variants === "object" ? l.variants : {};
     for (const [name, v] of Object.entries(variants as Record<string, any>)) {
-      add(v?.path ?? v?.svg_path, norm(String(name)));
+      add(v?.path ?? v?.svg_path, String(name), v);
     }
   }
 
-  const order = variantOrder(surface, boxAspect);
-  const rank = (v: string) => {
-    const i = order.indexOf(norm(v));
-    return i === -1 ? order.length : i;
+  const dark = relLuminance(surface) < 0.35;
+  const wantTone: CandidateTone = dark ? "inverse" : "colour";
+  const wantForm: CandidateForm | null =
+    typeof boxAspect === "number" && boxAspect > 0 ? (boxAspect >= 2.2 ? "horizontal" : "stacked") : null;
+
+  // Tone is the stronger signal — an illegible mark is useless whatever its
+  // shape — so it outweighs form fit.
+  const formScore = (c: LogoCandidate): number => {
+    if (!wantForm) return c.form === "horizontal" ? 0 : c.form === "stacked" ? 1 : c.form === "symbol" ? 2 : 3;
+    if (c.form === wantForm) return 0;
+    if (wantForm === "stacked" && c.form === "symbol") return 1;
+    if (wantForm === "horizontal" && c.form === "wordmark") return 1;
+    if (c.form === "symbol") return 2;
+    return 3;
   };
+  const score = (c: LogoCandidate) => (c.tone === wantTone ? 0 : 10) + formScore(c);
 
   return out
     .map((c, i) => ({ c, i }))
-    .sort((a, b) => rank(a.c.variant) - rank(b.c.variant) || a.i - b.i)
+    .sort((a, b) => score(a.c) - score(b.c) || a.i - b.i)
     .map(({ c }) => c);
 }
 
