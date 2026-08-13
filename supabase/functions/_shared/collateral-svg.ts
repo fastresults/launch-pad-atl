@@ -503,7 +503,7 @@ function markAt(
   ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number,
   ink: string | null, bg?: string,
 ): string {
-  const picked = markSvgFor(ctx, bg);
+  const picked = markSvgFor(ctx, bg, boxH > 0 ? boxW / boxH : undefined);
   const svg = picked.svg;
   if (!svg) return "";
   // Drop full-bleed background plates so the mark sits directly on the paper.
