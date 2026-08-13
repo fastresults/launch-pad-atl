@@ -114,9 +114,10 @@ function mimeFromPath(p: string): string {
 // helper, so covers are never generated blind to the brand mark.
 export type { LogoSkipReason } from "../_shared/brand-logo-bitmap.ts";
 
-async function fetchPrimaryLogo(admin: any, kit: any) {
-  return await fetchPrimaryLogoBitmap(admin, kit);
+async function fetchPrimaryLogo(admin: any, kit: any, opts: LogoBitmapOpts = {}) {
+  return await fetchPrimaryLogoBitmap(admin, kit, opts);
 }
+
 
 
 // Multimodal call: Gemini image model via OpenRouter chat shape. Returns b64 PNG.
