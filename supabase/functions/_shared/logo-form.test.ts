@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { measureSvg, reconcileSlot, slotFor, formToneOf } from "./logo-form.ts";
+import { measureSvg, reconcileSlot, slotFor, formToneOf, classifyArtwork, countShapes, inkTone } from "./logo-form.ts";
 import { logoCandidates } from "./logo-ink.ts";
 
 const LIGHT = "#FFFFFF";
@@ -28,7 +28,7 @@ describe("slot reconciliation", () => {
     expect(out.moved).toBe(false);
   });
 
-  it("never second-guesses a symbol or wordmark slot", () => {
+  it("never second-guesses a symbol or wordmark slot on geometry alone", () => {
     expect(reconcileSlot("icon", { width: 900, height: 100, aspect: 9 }).variant).toBe("icon");
     expect(reconcileSlot("wordmark_reversed", { width: 100, height: 900, aspect: 0.11 }).variant).toBe(
       "wordmark_reversed",
@@ -62,5 +62,51 @@ describe("candidate ranking on form and tone", () => {
     const studio = [{ primary: true, path: "sym.svg", variants: { horizontal: { path: "wide.svg" } } }];
     expect(logoCandidates(studio, LIGHT, 5)[0].path).toBe("wide.svg");
     expect(logoCandidates(studio, LIGHT, 1)[0].path).toBe("sym.svg");
+  });
+});
+
+const enc = (s: string) => new TextEncoder().encode(s);
+const shapes = (n: number, fill: string) =>
+  Array.from({ length: n }, () => `<path fill="${fill}" d="M0 0h1v1z"/>`).join("");
+
+describe("classifying the real Friendship House files", () => {
+  it("counts ink and reads tone", () => {
+    expect(countShapes(shapes(21, "#0055a4"))).toBe(21);
+    expect(inkTone(`<svg>${shapes(3, "#fdfeff")}</svg>`)?.tone).toBe("inverse");
+    expect(inkTone(`<svg>${shapes(3, "#0055a4"))}</svg>`.replace(")}", "}"))?.tone).toBe("colour");
+  });
+
+  it("files a near-square colour lockup as stacked, not a symbol", () => {
+    const svg = `<svg viewBox="0 0 678.95 731.62">${shapes(21, "#0055a4")}</svg>`;
+    const c = classifyArtwork(enc(svg), "image/svg+xml", { form: "horizontal", tone: "colour" });
+    expect(c.form).toBe("stacked");
+    expect(c.tone).toBe("colour");
+    expect(reconcileSlot("primary", c).variant).toBe("stacked");
+  });
+
+  it("reads a light-ink lockup as inverse however it is named", () => {
+    const svg = `<svg viewBox="0 0 2384.47 408.85">${shapes(21, "#e2e2e2")}</svg>`;
+    const c = classifyArtwork(enc(svg), "image/svg+xml", { form: "horizontal", tone: "colour" });
+    expect(c.form).toBe("horizontal");
+    expect(c.tone).toBe("inverse");
+    expect(reconcileSlot("primary", c).variant).toBe("reversed");
+  });
+
+  it("keeps a three-shape near-square file a symbol", () => {
+    const svg = `<svg viewBox="0 0 434.01 408.85">${shapes(3, "#fdfeff")}</svg>`;
+    const c = classifyArtwork(enc(svg), "image/svg+xml", { form: "stacked", tone: "colour" });
+    expect(c.form).toBe("symbol");
+    expect(c.tone).toBe("inverse");
+    expect(reconcileSlot("stacked", c).variant).toBe("icon_reversed");
+  });
+
+  it("marks a raster classification as inferred", () => {
+    const png = new Uint8Array(32);
+    png[0] = 0x89; png[1] = 0x50;
+    new DataView(png.buffer).setUint32(16, 800);
+    new DataView(png.buffer).setUint32(20, 200);
+    const c = classifyArtwork(png, "image/png", { form: "horizontal", tone: "colour" });
+    expect(c.inferred).toBe(true);
+    expect(c.form).toBe("horizontal");
   });
 });
