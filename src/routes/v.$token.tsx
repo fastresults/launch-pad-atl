@@ -521,6 +521,16 @@ export default function VentureSharePage() {
                     Ask this venture
                   </Button>
                 )}
+                <Button
+                  variant="ghost"
+                  size={condensed ? "sm" : "default"}
+                  className="hidden shrink-0 text-muted-foreground hover:text-foreground md:inline-flex"
+                  onClick={openWelcome}
+                  aria-label="How to use this showcase"
+                >
+                  <HelpCircle className="mr-1.5 h-4 w-4" />
+                  How to use this
+                </Button>
               </div>
             </header>
           )}
