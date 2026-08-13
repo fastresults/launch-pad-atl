@@ -267,21 +267,25 @@ export function logoBox(
   fillWidth = false,
 ): { w: number; h: number; clear: number } {
   const [lo, hi] = isLockup ? rs.lockupBand : rs.logoBand;
+  const a = Math.max(aspect, 0.2);
   // `fillWidth` lets a wide lockup use the slot it was given, still clamped to
   // the legal height band — a lockup set at a square mark's height reads tiny.
   let h = fillWidth
-    ? Math.min(hi, Math.max(lo, maxWidth / Math.max(aspect, 0.2)))
+    ? Math.min(hi, Math.max(lo, maxWidth / a))
     : lo + (hi - lo) * Math.min(1, Math.max(0, bias));
-  let w = h * Math.max(aspect, 0.2);
+  let w = h * a;
   if (w > maxWidth) {
-    // Never break the band to fit a column: narrow the box, keep the height
-    // legal, and let the caller give it a wider slot if it needs one.
-    const scaled = maxWidth / Math.max(aspect, 0.2);
+    // Narrow the box toward the slot, but never below the legal height floor —
+    // and never narrower than the artwork's own aspect demands at that height.
+    // A box that is wider-than-tall relative to the artwork makes the renderer
+    // fit-to-width, which is exactly how a legal box produced an illegal mark.
+    const scaled = maxWidth / a;
     h = Math.max(lo, Math.min(h, scaled));
-    w = Math.min(maxWidth, h * Math.max(aspect, 0.2));
+    w = h * a;
   }
   return { w: Math.round(w), h: Math.round(h), clear: Math.round(h * rs.clearSpace) };
 }
+
 
 /**
  * Machine-readable print metadata for the vector master, so a printer (or any
