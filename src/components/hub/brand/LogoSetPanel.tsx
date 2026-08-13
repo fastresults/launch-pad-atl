@@ -394,6 +394,7 @@ export function LogoSetPanel({
     onSuccess: (out: any) => {
       if (Array.isArray(out?.logos)) setOverride(out.logos);
       qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+      qc.invalidateQueries({ queryKey: ["hub"] });
       if (out?.removed_count > 0) toast.success("Logo removed");
       else toast.info("That logo was already removed");
     },

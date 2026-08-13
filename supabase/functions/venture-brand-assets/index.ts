@@ -1448,9 +1448,10 @@ Deno.serve(async (req) => {
     // tone (colour / inverse) — and replaces only that slot. Measurement is
     // evidence shown to the founder; a confirmed assignment is never rewritten.
     if (kind === "logo_upload_own") {
-      const chosenVariant = (LOGO_VARIANTS as readonly string[]).includes(body?.variant)
-        ? body.variant
-        : "primary";
+      if (!(LOGO_VARIANTS as readonly string[]).includes(body?.variant)) {
+        throw new Error("Choose a valid logo slot before uploading.");
+      }
+      const chosenVariant = body.variant;
       let variant = chosenVariant;
       const assignmentConfirmed = body?.assignmentConfirmed === true;
 
@@ -1601,7 +1602,10 @@ Deno.serve(async (req) => {
 
     // Clear one slot of the uploaded logo set.
     if (kind === "logo_remove_upload") {
-      const variant = (LOGO_VARIANTS as readonly string[]).includes(body?.variant) ? body.variant : "primary";
+      if (!(LOGO_VARIANTS as readonly string[]).includes(body?.variant)) {
+        throw new Error("Choose a valid logo slot before removing it.");
+      }
+      const variant = body.variant;
 
       const expectedPath = typeof body?.path === "string" && body.path ? body.path : null;
       if (!expectedPath) throw new Error("The logo file identity is required.");
