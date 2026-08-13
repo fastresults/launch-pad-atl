@@ -110,7 +110,9 @@ export async function uploadVentureSource(opts: {
     // a read failure, and treating it as one used to strand the founder's
     // primary brief with "Couldn't read file" while extraction was still live.
     void extractPromise;
-    const fresh = await waitForExtractedText(row.id);
+    const fresh = await waitForExtractedText(row.id, {
+      onTick: (_r, elapsed) => opts.onExtractionTick?.(elapsed),
+    });
     if (fresh) { notifySourcesChanged(); return fresh; }
   }
   notifySourcesChanged();
