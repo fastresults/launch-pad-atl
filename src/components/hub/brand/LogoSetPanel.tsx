@@ -66,14 +66,13 @@ function luminance(hex: string): number {
 }
 
 
-/** Legacy kits store uploads with no `variant` — read those as the primary slot. */
+/** A grid cell reflects only its stored slot. Never alias a default mark into it. */
 export function logoSetFrom(logos: any): Record<string, any> {
   const list = Array.isArray(logos) ? logos.filter((l: any) => l?.url) : [];
   const set: Record<string, any> = {};
   for (const l of list) {
     if (l?.source === "upload") set[slotOf(l)] ??= l;
   }
-  set.primary ??= list.find((l: any) => l?.primary) ?? list[0] ?? null;
   return set;
 }
 
@@ -299,7 +298,7 @@ function SlotTile({ slot, logo, busy, onPick, onRemove }: any) {
       {logo?.source === "upload" && !busy && (
         <button
           type="button"
-          onClick={() => onRemove(slot.key)}
+          onClick={() => onRemove(slot.key, logo.path)}
           className="absolute right-1 top-1 rounded-full bg-background/80 p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
           aria-label={`Remove ${slot.label} logo`}
         >
@@ -347,7 +346,7 @@ export function LogoSetPanel({
   // set fingerprint retires the previous verdict the moment a slot changes.
   const logoEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/brand-logo/${snapshotId}/auto`;
   const fp = useMemo(() => logoSetFingerprint(logos), [logos]);
-  const hasMark = Boolean(set.primary?.url || set.reversed?.url || set.icon?.url || set.wordmark?.url);
+  const hasMark = Array.isArray(logos) && logos.some((logo: any) => logo?.url || logo?.path);
   const lightMark = hasMark ? `${logoEndpoint}?on=light&v=${fp}` : null;
   const reversedMark = hasMark ? `${logoEndpoint}?on=dark&v=${fp}` : null;
   const brandIsDark = luminance(brandBg) < 0.5;
@@ -374,17 +373,15 @@ export function LogoSetPanel({
       if (file.size > MAX_BYTES) throw new Error("That file is over 5 MB — please upload a smaller logo.");
       const dataUrl = await readDataUrl(file);
       return generateBrandAsset({
-        data: { snapshotId, kind: "logo_upload_own", variant, dataUrl, filename: file.name },
+        data: { snapshotId, kind: "logo_upload_own", variant, dataUrl, filename: file.name, assignmentConfirmed: true },
       });
     },
     onSuccess: (out: any, vars) => {
       if (Array.isArray(out?.logos)) setOverride(out.logos);
       qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
       qc.invalidateQueries({ queryKey: ["hub"] });
-      // The server measures the artwork and may file it where it belongs; say
-      // so out loud rather than silently moving it.
       const saved = LOGO_SLOTS.find((s) => s.key === (out?.variant ?? vars.variant))?.label ?? "Logo";
-      if (out?.moved && out?.notice) toast.warning(out.notice);
+      if (out?.measurement_notice) toast.warning(out.measurement_notice);
       else toast.success(`${saved} saved to your brand`);
     },
     onError: (e: any) => toast.error(e?.message ?? "Upload failed"),
@@ -392,12 +389,13 @@ export function LogoSetPanel({
   });
 
   const remove = useMutation({
-    mutationFn: async (variant: string) =>
-      generateBrandAsset({ data: { snapshotId, kind: "logo_remove_upload", variant } }),
+    mutationFn: async ({ variant, path }: { variant: string; path: string }) =>
+      generateBrandAsset({ data: { snapshotId, kind: "logo_remove_upload", variant, path } }),
     onSuccess: (out: any) => {
       if (Array.isArray(out?.logos)) setOverride(out.logos);
       qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
-      toast.success("Logo removed");
+      if (out?.removed_count > 0) toast.success("Logo removed");
+      else toast.info("That logo was already removed");
     },
     onError: (e: any) => toast.error(e?.message ?? "Could not remove that logo"),
     onSettled: () => setPending(null),
@@ -580,7 +578,7 @@ export function LogoSetPanel({
                       logo={set[slot.key]}
                       busy={pending === slot.key}
                       onPick={pick}
-                      onRemove={(v: string) => { setPending(v); remove.mutate(v); }}
+                      onRemove={(v: string, path: string) => { setPending(v); remove.mutate({ variant: v, path }); }}
                     />
                   );
                 })}

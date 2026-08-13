@@ -107,6 +107,7 @@ describe("classifying the real Friendship House files", () => {
     new DataView(png.buffer).setUint32(20, 200);
     const c = classifyArtwork(png, "image/png", { form: "horizontal", tone: "colour" });
     expect(c.inferred).toBe(true);
+    expect(c.confidence).toBe(0.5);
     expect(c.form).toBe("horizontal");
   });
 });

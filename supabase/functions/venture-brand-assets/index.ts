@@ -831,11 +831,24 @@ async function uploadAsset(supabase: any, snapshotId: string, userId: string, ki
   return { path, url: signed?.signedUrl };
 }
 
+async function signLogoUrls(supabase: any, logos: any[]): Promise<any[]> {
+  return await Promise.all(logos.map(async (logo: any) => {
+    if (!logo?.path) return logo;
+    const { data } = await supabase.storage.from("user-media").createSignedUrl(logo.path, 60 * 60 * 24 * 7);
+    return data?.signedUrl ? { ...logo, url: data.signedUrl, preview_url: data.signedUrl } : logo;
+  }));
+}
+
+function logoMutationLog(requestId: string, snapshotId: string, operation: string, details: Record<string, unknown>) {
+  console.info(`[logo-mutation ${requestId}]`, JSON.stringify({ snapshotId, operation, ...details }));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
     const body = await req.json();
+    const requestId = crypto.randomUUID().slice(0, 8);
     const { snapshotId, kind = "logo", count, extra, referenceImages, regenerateDirection, direction, reviewNote, runId, directionId, defer, angleOffset = 0, tiles, replace } = body ?? {};
     if (!snapshotId) throw new Error("snapshotId required");
     // Durable logo stages share the logo preset.
@@ -1432,14 +1445,14 @@ Deno.serve(async (req) => {
 
     // Founder uploads their own mark. Each upload targets one slot of the logo
     // set — a form (symbol / horizontal / stacked / wordmark) crossed with a
-    // tone (colour / inverse) — and replaces only that slot. The artwork is
-    // measured on the way in, so a file that plainly disagrees with the slot it
-    // was dropped on is filed where it belongs instead of lying in place.
+    // tone (colour / inverse) — and replaces only that slot. Measurement is
+    // evidence shown to the founder; a confirmed assignment is never rewritten.
     if (kind === "logo_upload_own") {
       const chosenVariant = (LOGO_VARIANTS as readonly string[]).includes(body?.variant)
         ? body.variant
         : "primary";
       let variant = chosenVariant;
+      const assignmentConfirmed = body?.assignmentConfirmed === true;
 
       const dataUrl = typeof body?.dataUrl === "string" ? body.dataUrl : "";
       const filename = typeof body?.filename === "string" ? body.filename : "logo.png";
@@ -1499,7 +1512,8 @@ Deno.serve(async (req) => {
       const intent = formToneOf(chosenVariant as any);
       const classification = classifyArtwork(bytes, contentType, intent);
       const reconciled = reconcileSlot(chosenVariant as any, classification);
-      variant = reconciled.variant;
+      variant = assignmentConfirmed ? chosenVariant : reconciled.variant;
+      const assigned = formToneOf(variant as any);
 
       const ext = contentType.includes("svg") ? "svg" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : contentType.includes("webp") ? "webp" : "png";
       const path = `${userId}/brand/${snapshotId}/logo-${variant}-${Date.now()}.${ext}`;
@@ -1512,14 +1526,19 @@ Deno.serve(async (req) => {
         kind: "upload",
         source: "upload",
         variant,
-        form: reconciled.form,
-        tone: reconciled.tone,
+        form: assigned.form,
+        tone: assigned.tone,
+        assigned_form: assigned.form,
+        assigned_tone: assigned.tone,
+        measured_form: classification.form,
+        measured_tone: classification.tone,
         aspect: classification.aspect,
         intrinsic_width: classification.width,
         intrinsic_height: classification.height,
         shapes: classification.shapes,
         inferred: classification.inferred,
-        form_label: FORM_LABEL[reconciled.form],
+        confidence: classification.confidence,
+        form_label: FORM_LABEL[assigned.form],
         primary: variant === "primary",
         url: signed?.signedUrl ?? null,
         preview_url: signed?.signedUrl ?? null,
@@ -1529,38 +1548,36 @@ Deno.serve(async (req) => {
         contrast_audit: contrastAudit,
       };
 
-      const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos, dna").eq("snapshot_id", snapshotId).maybeSingle();
-      const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
-      // Legacy uploads carry no variant — treat them as the primary slot, and
-      // backfill form/tone on anything written before the measurement existed.
-      const slotOf = (l: any) => (l?.variant ?? "primary");
-      const withFormTone = (l: any) => {
-        if (!l || typeof l !== "object" || (l.form && l.tone)) return l;
-        const ft = formToneOf(slotOf(l));
-        return { ...l, form: l.form ?? ft.form, tone: l.tone ?? ft.tone };
-      };
-      const superseded = existing.filter((l: any) => l?.source === "upload" && slotOf(l) === variant);
-      const kept = existing
-        .filter((l: any) => !(l?.source === "upload" && slotOf(l) === variant))
-        .map(withFormTone);
-      const nextLogos =
-        variant === "primary"
-          ? [uploaded, ...kept.map((l: any) => ({ ...l, primary: false }))]
-          : [...kept, uploaded];
-      const dnaPatch = variant === "primary" ? { selected_logo_direction_id: null } : {};
-      const { error: kitErr } = await supabase
-        .from("venture_brand_kits")
-        .update({ logos: nextLogos, dna: { ...(kitRow?.dna ?? {}), ...dnaPatch } })
-        .eq("snapshot_id", snapshotId);
-      if (kitErr) throw new Error(`Could not save your logo: ${kitErr.message}`);
+      const { data: mutation, error: kitErr } = await supabase.rpc("mutate_venture_logo_set", {
+        p_snapshot_id: snapshotId,
+        p_operation: "replace",
+        p_variant: variant,
+        p_entry: uploaded,
+        p_expected_path: null,
+      });
+      if (kitErr) {
+        await supabase.storage.from("user-media").remove([path]).catch(() => null);
+        throw new Error(`Could not save your logo: ${kitErr.message}`);
+      }
+      const storedLogos: any[] = Array.isArray(mutation?.logos) ? mutation.logos : [];
+      const nextLogos = await signLogoUrls(supabase, storedLogos);
 
       // Replacing a slot deletes the file it replaced — never leave orphans.
-      const stalePaths = superseded
+      const stalePaths = (Array.isArray(mutation?.removed) ? mutation.removed : [])
         .map((l: any) => l?.path)
         .filter((p: any) => typeof p === "string" && p && p !== path);
       if (stalePaths.length) {
         await supabase.storage.from("user-media").remove(stalePaths).catch(() => null);
       }
+
+      logoMutationLog(requestId, snapshotId, "replace", {
+        requestedVariant: chosenVariant, confirmedVariant: variant,
+        measuredForm: classification.form, measuredTone: classification.tone,
+        aspect: classification.aspect, shapes: classification.shapes,
+        confidence: classification.confidence, replacedCount: mutation?.removed_count ?? 0,
+        version: mutation?.version, slots: storedLogos.map((logo: any) => logo?.variant ?? "primary"),
+        storageCleanupCount: stalePaths.length,
+      });
 
 
       if (runId && variant === "primary") await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
@@ -1572,8 +1589,11 @@ Deno.serve(async (req) => {
           logos: nextLogos,
           variant,
           requested_variant: chosenVariant,
-          moved: reconciled.moved,
-          notice: reconciled.reason,
+          moved: false,
+          measurement_notice: assignmentConfirmed && reconciled.moved
+            ? `Saved where you assigned it. Measurement suggests ${FORM_LABEL[classification.form]} · ${classification.tone === "inverse" ? "Inverse" : "Colour"}.`
+            : null,
+          version: mutation?.version,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -1583,21 +1603,28 @@ Deno.serve(async (req) => {
     if (kind === "logo_remove_upload") {
       const variant = (LOGO_VARIANTS as readonly string[]).includes(body?.variant) ? body.variant : "primary";
 
-      const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos").eq("snapshot_id", snapshotId).maybeSingle();
-      const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
-      const slotOf = (l: any) => (l?.variant ?? "primary");
-      const removed = existing.filter((l: any) => l?.source === "upload" && slotOf(l) === variant);
-      const nextLogos = existing.filter((l: any) => !(l?.source === "upload" && slotOf(l) === variant));
-      // Promote whatever remains so the venture is never left without a primary.
-      if (variant === "primary" && nextLogos.length && !nextLogos.some((l: any) => l?.primary)) {
-        nextLogos[0] = { ...nextLogos[0], primary: true };
-      }
-      const { error: kitErr } = await supabase.from("venture_brand_kits").update({ logos: nextLogos }).eq("snapshot_id", snapshotId);
+      const expectedPath = typeof body?.path === "string" && body.path ? body.path : null;
+      if (!expectedPath) throw new Error("The logo file identity is required.");
+      const { data: mutation, error: kitErr } = await supabase.rpc("mutate_venture_logo_set", {
+        p_snapshot_id: snapshotId,
+        p_operation: "remove",
+        p_variant: variant,
+        p_entry: null,
+        p_expected_path: expectedPath,
+      });
       if (kitErr) throw new Error(`Could not remove that logo: ${kitErr.message}`);
+      const removed = Array.isArray(mutation?.removed) ? mutation.removed : [];
       for (const r of removed) {
         if (r?.path) await supabase.storage.from("user-media").remove([r.path]).catch(() => null);
       }
-      return new Response(JSON.stringify({ ok: true, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const storedLogos: any[] = Array.isArray(mutation?.logos) ? mutation.logos : [];
+      const nextLogos = await signLogoUrls(supabase, storedLogos);
+      logoMutationLog(requestId, snapshotId, "remove", {
+        requestedVariant: variant, expectedPath, removedCount: mutation?.removed_count ?? 0,
+        version: mutation?.version, slots: storedLogos.map((logo: any) => logo?.variant ?? "primary"),
+        storageCleanupCount: removed.length,
+      });
+      return new Response(JSON.stringify({ ok: true, logos: nextLogos, removed_count: mutation?.removed_count ?? 0, removed, version: mutation?.version }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Signed URLs for uploaded marks expire; re-sign every stored logo path so
@@ -1605,14 +1632,8 @@ Deno.serve(async (req) => {
     if (kind === "logo_refresh_urls") {
       const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos").eq("snapshot_id", snapshotId).maybeSingle();
       const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
-      const nextLogos = await Promise.all(
-        existing.map(async (l: any) => {
-          if (!l?.path) return l;
-          const { data: signed } = await supabase.storage.from("user-media").createSignedUrl(l.path, 60 * 60 * 24 * 7);
-          return signed?.signedUrl ? { ...l, url: signed.signedUrl, preview_url: signed.signedUrl } : l;
-        }),
-      );
-      await supabase.from("venture_brand_kits").update({ logos: nextLogos }).eq("snapshot_id", snapshotId);
+      const nextLogos = await signLogoUrls(supabase, existing);
+      logoMutationLog(requestId, snapshotId, "refresh", { slots: existing.map((logo: any) => logo?.variant ?? "primary") });
       return new Response(JSON.stringify({ ok: true, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 

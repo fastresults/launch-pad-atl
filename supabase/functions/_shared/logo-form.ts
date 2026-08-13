@@ -190,6 +190,8 @@ export type Classification = {
   shapes: number | null;
   /** True when form or tone was guessed rather than read from the artwork. */
   inferred: boolean;
+  /** 1 means both axes were read from SVG evidence; lower values need review. */
+  confidence: number;
 };
 
 /**
@@ -250,6 +252,7 @@ export function classifyArtwork(
     height: measurement?.height ?? null,
     shapes,
     inferred,
+    confidence: inferred ? 0.5 : 1,
   };
 }
 
@@ -295,6 +298,7 @@ export function reconcileSlot(
           height: (measurement as Measurement)!.height,
           shapes: null,
           inferred: true,
+          confidence: 0.5,
         };
 
   const form = cls.form;
