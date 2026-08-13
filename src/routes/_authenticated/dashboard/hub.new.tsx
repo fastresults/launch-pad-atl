@@ -215,68 +215,60 @@ function Inner() {
   const [otherVenturesOpen, setOtherVenturesOpen] = useState(false);
   const resetStepOneRef = useRef(false);
 
-  // Returning founders (already have a venture) opt in to prior memory.
-  // First-timers keep the auto-attach so their first run isn't an empty page.
-  // Default to opt-in while the count loads so nothing flashes pre-selected.
-  const [isReturningFounder, setIsReturningFounder] = useState(true);
-  const [ventureCountLoaded, setVentureCountLoaded] = useState(false);
-  useEffect(() => {
-    countSnapshots()
-      .then((n) => setIsReturningFounder(n > 0))
-      .catch(() => setIsReturningFounder(true))
-      .finally(() => setVentureCountLoaded(true));
+  // The corpus is per venture, so the source row shows ONLY what the founder
+  // gave THIS startup during this intake — uploads, scrapes, voice captures,
+  // and anything they explicitly pulled in from the library. Nothing that
+  // merely exists in founder-level memory is listed or auto-attached; a
+  // months-old unfiled capture must never ride along into a new venture.
+  const [sessionSourceIds, setSessionSourceIds] = useState<Set<string>>(() => new Set());
+  const markSessionSource = useCallback((id: string) => {
+    setSessionSourceIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
   }, []);
 
   useEffect(() => {
-    if (!ventureCountLoaded) return;
     listVentureSources({ orphansOnly: true })
-      .then((rows) => {
-        setReusable(rows);
-        if (resetStepOneRef.current) return;
-        // First venture only: auto-attach everything readable from the
-        // founder's own unassigned memory (brief sources, scraped URLs,
-        // founder bio). Returning founders pick what applies.
-        if (isReturningFounder) return;
-        setReuseSelected((prev) => {
-          const next = { ...prev };
-          for (const r of rows) {
-            if ((r.extracted_text ?? "").trim()) next[r.id] = true;
-          }
-          return next;
-        });
-      })
+      .then(setReusable)
       .catch(() => {});
     listSourcesByOtherVentures()
       .then(setOtherVentures)
       .catch(() => {});
-  }, [ventureCountLoaded, isReturningFounder]);
+  }, []);
 
-  // Memory chips = every readable source already on file for this founder.
-  const memoryChips = useMemo(() => {
-    return reusable
-      .filter((r) => !!(r.extracted_text ?? "").trim() || r.extraction_error)
-      .map((r) => {
-        const name = r.original_name ?? "source";
-        const lower = name.toLowerCase();
-        // Any .md/.markdown source in our pipeline is a scraped URL or a
-        // brief capture — render with the globe icon.
-        const isUrlCapture = lower.endsWith(".md") || lower.endsWith(".markdown");
-        const isAudio = /\.(mp3|m4a|wav|webm|ogg)$/i.test(name);
-        const isImage = /\.(png|jpe?g|webp|gif)$/i.test(name);
-        let origin: "brief" | "founder" | "venture" | "other" = "other";
-        if (r.used_in_brief || r.kind === "brief_source") origin = "brief";
-        else if (r.kind === "founder_bio") origin = "founder";
-        else if (r.snapshot_id) origin = "venture";
-        const meta = isUrlCapture
-          ? parseUrlCaptureMeta(r.extracted_text)
-          : { intent: "own" as UrlIntent, url: null, title: null };
-        return { row: r, name, isUrlCapture, isAudio, isImage, origin, intent: meta.intent, capturedUrl: meta.url, capturedTitle: meta.title };
-      });
-  }, [reusable]);
+  // Shared chip descriptor for both the session row and the library panel.
+  const describeChip = useCallback((r: VentureSource) => {
+    const name = r.original_name ?? "source";
+    const lower = name.toLowerCase();
+    // Any .md/.markdown source in our pipeline is a scraped URL or a
+    // brief capture — render with the globe icon.
+    const isUrlCapture = lower.endsWith(".md") || lower.endsWith(".markdown");
+    const isAudio = /\.(mp3|m4a|wav|webm|ogg)$/i.test(name);
+    const isImage = /\.(png|jpe?g|webp|gif)$/i.test(name);
+    let origin: "brief" | "founder" | "venture" | "other" = "other";
+    if (r.used_in_brief || r.kind === "brief_source") origin = "brief";
+    else if (r.kind === "founder_bio") origin = "founder";
+    else if (r.snapshot_id) origin = "venture";
+    const meta = isUrlCapture
+      ? parseUrlCaptureMeta(r.extracted_text)
+      : { intent: "own" as UrlIntent, url: null, title: null };
+    return { row: r, name, isUrlCapture, isAudio, isImage, origin, intent: meta.intent, capturedUrl: meta.url, capturedTitle: meta.title };
+  }, []);
 
+  const readableOrFailed = (r: VentureSource) => !!(r.extracted_text ?? "").trim() || !!r.extraction_error;
+
+  // Memory chips = sources added to THIS venture during this intake.
+  const memoryChips = useMemo(
+    () => reusable.filter((r) => sessionSourceIds.has(r.id) && readableOrFailed(r)).map(describeChip),
+    [reusable, sessionSourceIds, describeChip],
+  );
+
+  // Library chips = the founder's earlier unfiled material. Opt-in only.
+  const libraryChips = useMemo(
+    () => reusable.filter((r) => !sessionSourceIds.has(r.id) && readableOrFailed(r)).map(describeChip),
+    [reusable, sessionSourceIds, describeChip],
+  );
 
   const activeMemoryChips = memoryChips.filter(({ row }) => !!reuseSelected[row.id]);
-  const inactiveMemoryChips = memoryChips.filter(({ row }) => !reuseSelected[row.id]);
+  const inactiveMemoryChips = libraryChips;
   const memoryEmpty = activeMemoryChips.length === 0;
   const showCollectionUI = memoryEmpty || addMoreOpen;
 
@@ -287,6 +279,30 @@ function Inner() {
     resetStepOneRef.current = false;
     setReusable((prev) => (prev.some((r) => r.id === row.id) ? prev : [row, ...prev]));
     setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
+    markSessionSource(row.id);
+  }, [markSessionSource]);
+
+  // Pull an earlier unfiled source into this venture's corpus, explicitly.
+  const adoptFromLibrary = useCallback((row: VentureSource) => {
+    resetStepOneRef.current = false;
+    setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
+    markSessionSource(row.id);
+  }, [markSessionSource]);
+
+  // Retire a stale library source for good.
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const removeFromLibrary = useCallback(async (row: VentureSource) => {
+    if (!window.confirm(`Delete "${row.original_name ?? "this source"}" permanently?`)) return;
+    setDeletingId(row.id);
+    try {
+      await deleteVentureSource(row.id);
+      setReusable((prev) => prev.filter((r) => r.id !== row.id));
+      toast.success("Source deleted");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete that source");
+    } finally {
+      setDeletingId(null);
+    }
   }, []);
 
   // Copy (never move) a file that belongs to another venture into this
