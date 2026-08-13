@@ -777,6 +777,15 @@ export default function VentureSharePage() {
 
           <ShareOutroDialog open={outroOpen} onOpenChange={setOutroOpen} token={token} />
 
+          <ShareWelcomeModal
+            open={welcomeOpen}
+            onOpenChange={dismissWelcome}
+            token={token}
+            payload={payload}
+            persist={persistWelcome}
+            onPersistChange={setPersistWelcome}
+          />
+
         </div>
       )}
 
