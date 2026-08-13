@@ -53,6 +53,7 @@ import {
   Compass,
   RotateCcw,
   Type as TypeIcon,
+  Trash2,
 } from "lucide-react";
 import { VoiceRecorder } from "@/components/voice/VoiceRecorder";
 import { toast } from "sonner";
