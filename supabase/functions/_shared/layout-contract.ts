@@ -77,5 +77,8 @@ Verify each item on the built site before it is considered done. Any unchecked l
 - [ ] Every hero with a background image runs the three-plane parallax stack, and it collapses to a static composition under prefers-reduced-motion.
 - [ ] Display and text faces are a stated pairing on a named modular scale, with hierarchy driven by the 100 / 72 / 56 / 38% opacity ladder rather than arbitrary values.
 - [ ] Every image was generated on the Pro-tier image model at full resolution — no upscaled or placeholder art.
+- [ ] The home route ships at least 8 images and every interior route at least 4, and no section is text-only.
+- [ ] Every hero and full-bleed plate is properly exposed (subject 35–55% luminance) with its darkening applied as a CSS scrim, not baked into the render.
+- [ ] Every image carries a printed caption or credit and sits beside the body sentence it illustrates.
 - [ ] Every route has a unique title, meta description, canonical, one H1, an above-the-fold CTA and accessible alt text.`;
 }
