@@ -32,6 +32,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ExternalLink,
+  HelpCircle,
   Loader2,
   Lock,
   Menu,
