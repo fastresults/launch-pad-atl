@@ -102,15 +102,18 @@ export default function VentureSharePage() {
     }
   }, [payload, token, submitted]);
 
-  // Open the welcome modal once per showcase token, unless the visitor has dismissed it.
+  // Greet once per visit. Only an explicit "don't show again" silences it for good.
   useEffect(() => {
     if (!payload) return;
     try {
-      if (!localStorage.getItem(welcomeKey)) {
+      const optedOut = localStorage.getItem(welcomeKey) === "1";
+      const seenThisVisit = sessionStorage.getItem(welcomeKey) === "1";
+      if (!optedOut && !seenThisVisit) {
+        sessionStorage.setItem(welcomeKey, "1");
         setWelcomeOpen(true);
       }
     } catch {
-      /* private mode */
+      setWelcomeOpen(true);
     }
   }, [payload, welcomeKey]);
 
