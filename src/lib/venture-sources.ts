@@ -183,24 +183,6 @@ export async function listVentureSources(opts: {
 }
 
 /**
- * Permanently remove a source (storage object + row). Used by hub.new's
- * library panel so stale unfiled captures can be retired instead of
- * resurfacing on every future intake.
- */
-export async function deleteVentureSource(documentId: string): Promise<void> {
-  const userId = await uid();
-  const { data: row } = await supabase
-    .from("attendee_documents").select("storage_path,user_id").eq("id", documentId).maybeSingle();
-  if (!row || row.user_id !== userId) throw new Error("Source not found");
-  if (row.storage_path) {
-    await supabase.storage.from("attendee-docs").remove([row.storage_path]);
-  }
-  const { error } = await supabase.from("attendee_documents").delete().eq("id", documentId);
-  if (error) throw new Error(error.message);
-  notifySourcesChanged();
-}
-
-/**
  * Sources that already belong to another venture, grouped by that venture.
  * Used by hub.new's explicit "reuse from another venture" picker — these are
  * never auto-selected, and reusing one COPIES it (see `copySourceToSnapshot`).
