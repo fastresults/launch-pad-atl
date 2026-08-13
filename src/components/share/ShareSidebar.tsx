@@ -156,11 +156,18 @@ export function ShareSidebar({
 
           {pinned.map((p) => {
             const active = activeKey === p.key;
+            const isWelcome = p.key === "tool:welcome";
             return (
               <button
                 key={p.key}
                 type="button"
-                onClick={() => onNavigate?.(p.key)}
+                onClick={() => {
+                  if (isWelcome) {
+                    onShowWelcome?.();
+                  } else {
+                    onNavigate?.(p.key);
+                  }
+                }}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-xl border px-3 text-left transition-colors",
                   sheet ? "min-h-[52px] py-3" : "py-2.5",
