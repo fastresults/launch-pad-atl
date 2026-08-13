@@ -140,6 +140,8 @@ HARD RULES for the block between the delimiters:
 - First line of the block, immediately after the BEGIN delimiter, is the literal: \`# AI Builder Brief — {Company} Website\`
 - Last line of the block, immediately before the END delimiter, is the literal: \`Begin scaffolding now. Generate all images on first run. Do not ask clarifying questions.\`
 
+After the END delimiter, close the document with a \`## BUILD ACCEPTANCE CHECKLIST\` section: a markdown checkbox list the founder and builder verify against the built site, covering at minimum no horizontal scroll at 360 / 768 / 1280 / 1920 px, nothing touching the viewport edge, every CTA rendering as a real button with its states, active nav legibility distinct from the focus ring, every overlay carrying its own surface and covering no headline or CTA, no empty second columns, accent deployment on every route, CSS scrims under all type on imagery, prices or an explicit basis on the pricing route, and per-route SEO (unique title, description, canonical, single H1, alt text).
+
 Required subsections, in this order:
 
 1) **Role + outcome** — "You are a senior product designer + frontend engineer building a multi-page marketing site for {Company}." State the bar explicitly: Awwwards / Site of the Day / CSSDA quality, motion-rich, image-rich, fully accessible, Lighthouse ≥ 95 on Performance / Accessibility / Best Practices / SEO. State the stack: React + Vite + TypeScript + Tailwind + shadcn/ui + framer-motion.
