@@ -3240,6 +3240,36 @@ export type Database = {
           },
         ]
       }
+      venture_document_scrub_backup: {
+        Row: {
+          content: string | null
+          created_at: string
+          document_id: string
+          document_type: string | null
+          id: string
+          reason: string | null
+          snapshot_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          document_id: string
+          document_type?: string | null
+          id?: string
+          reason?: string | null
+          snapshot_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          document_id?: string
+          document_type?: string | null
+          id?: string
+          reason?: string | null
+          snapshot_id?: string
+        }
+        Relationships: []
+      }
       venture_document_types: {
         Row: {
           active: boolean
