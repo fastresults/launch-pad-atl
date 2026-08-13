@@ -351,24 +351,31 @@ export function LogoSetPanel({
 
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {LOGO_SLOTS.map((slot) => (
-          <SlotTile
-            key={slot.key}
-            slot={slot}
-            logo={set[slot.key]}
-            busy={pending === slot.key}
-            onPick={pick}
-            onRemove={(v: string) => { setPending(v); remove.mutate(v); }}
-          />
-        ))}
-      </div>
+      <details className="group rounded-xl border border-border/60 bg-background/30">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          <span>Logo set · {LOGO_SLOTS.filter((s) => set[s.key]).length}/{LOGO_SLOTS.length} lockups</span>
+          <span className="text-primary transition-transform group-open:rotate-180">▾</span>
+        </summary>
+        <div className="space-y-2.5 border-t border-border/60 p-3">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {LOGO_SLOTS.map((slot) => (
+              <SlotTile
+                key={slot.key}
+                slot={slot}
+                logo={set[slot.key]}
+                busy={pending === slot.key}
+                onPick={pick}
+                onRemove={(v: string) => { setPending(v); remove.mutate(v); }}
+              />
+            ))}
+          </div>
+          <p className="text-[10px] leading-relaxed text-muted-foreground">
+            Drop files anywhere here or click a slot to replace it. SVG is best — PNG, JPG and WebP work too, up to 5 MB.
+            Each preview audits every color in the mark and repairs only colors that fail on that surface.
+          </p>
+        </div>
+      </details>
 
-      <p className="text-[10px] leading-relaxed text-muted-foreground">
-        Drop files anywhere here or click a slot to replace it. SVG is best — PNG, JPG and WebP work too, up to 5 MB.
-        Each preview audits every color in the mark and repairs only colors that fail on that surface.
-
-      </p>
     </section>
   );
 }
