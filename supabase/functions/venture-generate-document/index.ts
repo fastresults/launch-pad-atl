@@ -57,6 +57,7 @@ import {
   prdQualityMetrics,
   PRD_PASSES,
   repairWebsitePrdCraft,
+  repairWebsitePrdImagery,
   type PrdVentureFacts,
 } from "../_shared/website-prd.ts";
 import { aiFetch } from "../_shared/ai-fetch.ts";

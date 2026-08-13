@@ -48,6 +48,7 @@ import {
   masterPromptStats,
   prdQualityMetrics,
   repairWebsitePrdCraft,
+  repairWebsitePrdImagery,
   type PrdVentureFacts,
 } from "../_shared/website-prd.ts";
 import { LAUNCH_14DAY_PLAN } from "../_shared/launch-14day-plan.ts";
