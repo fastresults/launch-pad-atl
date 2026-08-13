@@ -406,6 +406,86 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
   return { ok: failures.length === 0, checks, failures };
 }
 
+/** The imagery-specific ids inside `craftVerdict`. */
+export const IMAGERY_CHECK_IDS = [
+  "hero_exposure",
+  "no_baked_darkening",
+  "image_density",
+  "image_copy",
+  "image_tier",
+  "parallax_routes",
+] as const;
+
+const SECTION4B_RE = /(\n##\s*4b[^\n]*\n)([\s\S]*?)(?=\n##\s*5[.)\s]|$)/i;
+
+/**
+ * Targeted repair for the imagery table alone.
+ *
+ * The whole-document craft repair has to re-emit 12,000+ words to fix a table,
+ * which either truncates or drifts. When only imagery checks fail, regenerate
+ * Section 4b on its own and splice it back in.
+ */
+export async function repairWebsitePrdImagery(
+  raw: string,
+  facts: PrdVentureFacts,
+  apiKey: string,
+): Promise<{ raw: string; repaired: boolean }> {
+  const verdict = craftVerdict(raw);
+  const failing = verdict.checks.filter((c) => !c.ok && (IMAGERY_CHECK_IDS as readonly string[]).includes(c.id));
+  if (failing.length === 0) return { raw, repaired: false };
+  const match = raw.match(SECTION4B_RE);
+  if (!match) return { raw, repaired: false };
+
+  const routes = routesInSpec(raw);
+  const floors = routes.map((r) => `${r}: at least ${imageFloorFor(r)} image slots`).join("; ");
+  const name = (facts.companyName ?? "").trim() || "the company";
+  try {
+    const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: modelForTier("pro"),
+        max_tokens: 16000,
+        messages: [
+          {
+            role: "system",
+            content:
+              `You rewrite Section 4b ("Imagery plan") of a Website PRD. Return ONLY the section body as a Markdown table plus any notes — no "## 4b" heading, no commentary, no code fences.\n\n${
+                imageryContractBlock()
+              }`,
+          },
+          {
+            role: "user",
+            content:
+              `This is Section 4b of the Website PRD for ${name}. The review failed on:\n- ${
+                failing.map((f) => f.label).join("\n- ")
+              }\n\nRebuild the table so every row satisfies the contract. Route floors: ${floors}. Keep every existing slot and add the missing ones; keep the route paths exactly as written in Section 4.\n\nCurrent Section 4:\n${
+                routeSpecsRegion(raw).slice(0, 12000)
+              }\n\nCurrent Section 4b:\n${match[2]}`,
+          },
+        ],
+      }),
+    }, { timeoutMs: 240_000, retries: 0 });
+    if (!res.ok) {
+      await res.text();
+      return { raw, repaired: false };
+    }
+    const json = await res.json();
+    const body = String(json.choices?.[0]?.message?.content ?? "").trim();
+    if (!body || !body.includes("|")) return { raw, repaired: false };
+    const next = raw.replace(SECTION4B_RE, `${match[1]}${body}\n`);
+    const nextVerdict = craftVerdict(next);
+    const stillFailing = nextVerdict.checks.filter(
+      (c) => !c.ok && (IMAGERY_CHECK_IDS as readonly string[]).includes(c.id),
+    ).length;
+    if (stillFailing >= failing.length) return { raw, repaired: false };
+    return { raw: next, repaired: true };
+  } catch {
+    return { raw, repaired: false };
+  }
+}
+
+
 /**
  * One targeted repair pass for craft failures — the same shape as the Section 4
  * word-floor repair: name what is missing, rewrite only what is needed, and
