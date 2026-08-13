@@ -455,14 +455,31 @@ function fillsIn(svg: string): string[] {
  * on a light plate rather than left to vanish.
  */
 
-/** Artwork chosen for a surface, plus whether it is the reversed set. */
-function markSvgFor(ctx: CollateralCtx, bg?: string | null): { svg: string | null; dark: boolean } {
+/**
+ * Artwork chosen for a surface, plus whether it is the reversed set.
+ *
+ * `boxAspect` (width / height of the placement box) picks the lockup shape:
+ * wide boxes take the horizontal lockup, square / tall boxes take the stacked
+ * one when the venture has it.
+ */
+function markSvgFor(
+  ctx: CollateralCtx,
+  bg?: string | null,
+  boxAspect?: number,
+): { svg: string | null; dark: boolean } {
+  const preferStacked = typeof boxAspect === "number" && boxAspect > 0 && boxAspect < 2.2;
   if (isDarkSurface(bg)) {
-    const reversed = ctx.symbolSvgDark || ctx.logoSvgDark;
+    const reversed = preferStacked
+      ? ctx.logoSvgStackedDark || ctx.symbolSvgDark || ctx.logoSvgDark
+      : ctx.symbolSvgDark || ctx.logoSvgDark;
     if (reversed) return { svg: reversed, dark: true };
   }
-  return { svg: ctx.symbolSvg || ctx.logoSvg || null, dark: false };
+  const light = preferStacked
+    ? ctx.logoSvgStacked || ctx.symbolSvg || ctx.logoSvg
+    : ctx.symbolSvg || ctx.logoSvg;
+  return { svg: light || null, dark: false };
 }
+
 
 
 
