@@ -69,6 +69,7 @@ import {
   FORM_LABEL,
   formToneOf,
   measureArtwork,
+  classifyArtwork,
   reconcileSlot,
 } from "../_shared/logo-form.ts";
 
@@ -1495,8 +1496,9 @@ Deno.serve(async (req) => {
         bytes = new TextEncoder().encode(cleaned);
       }
       // Measure the artwork, then reconcile it with the slot the founder chose.
-      const measurement = measureArtwork(bytes, contentType);
-      const reconciled = reconcileSlot(chosenVariant as any, measurement);
+      const intent = formToneOf(chosenVariant as any);
+      const classification = classifyArtwork(bytes, contentType, intent);
+      const reconciled = reconcileSlot(chosenVariant as any, classification);
       variant = reconciled.variant;
 
       const ext = contentType.includes("svg") ? "svg" : contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : contentType.includes("webp") ? "webp" : "png";
@@ -1512,9 +1514,11 @@ Deno.serve(async (req) => {
         variant,
         form: reconciled.form,
         tone: reconciled.tone,
-        aspect: measurement ? Math.round(measurement.aspect * 1000) / 1000 : null,
-        intrinsic_width: measurement?.width ?? null,
-        intrinsic_height: measurement?.height ?? null,
+        aspect: classification.aspect,
+        intrinsic_width: classification.width,
+        intrinsic_height: classification.height,
+        shapes: classification.shapes,
+        inferred: classification.inferred,
         form_label: FORM_LABEL[reconciled.form],
         primary: variant === "primary",
         url: signed?.signedUrl ?? null,
