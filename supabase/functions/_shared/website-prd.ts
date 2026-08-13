@@ -179,7 +179,7 @@ export function applyCraftContract(raw: string, facts: PrdVentureFacts): string 
   let out = raw;
   const stats = masterPromptStats(out);
   if (stats.prompt && !out.includes(CRAFT_MARKER)) {
-    const addendum = `${buildDepthAddendum(facts)}\n\n${CRAFT_MARKER}`;
+    const addendum = `${ADDENDUM_BEGIN}${buildDepthAddendum(facts)}\n\n${ADDENDUM_END}\n\n${CRAFT_MARKER}`;
     const nextPrompt = CLOSING_RE.test(stats.prompt)
       ? stats.prompt.replace(CLOSING_RE, `${addendum}\n\n${CLOSING_LINE}`)
       : `${stats.prompt}${addendum}\n\n${CLOSING_LINE}`;
