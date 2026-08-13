@@ -149,13 +149,28 @@ export function surfaceHex(on: string | null | undefined): string | null {
   return normHex(v);
 }
 
-/** Preferred stored variants for a surface, best first. */
-export function variantOrder(surface: string): string[] {
+/**
+ * Preferred stored variants for a surface, best first.
+ *
+ * `boxAspect` (width / height of the placement box) decides whether the
+ * horizontal or the stacked lockup leads: wide boxes want the horizontal
+ * lockup, square / tall boxes want the stacked one. Omit it and the historic
+ * horizontal-first order is used.
+ */
+export function variantOrder(surface: string, boxAspect?: number): string[] {
   const dark = relLuminance(surface) < 0.35;
-  return dark
-    ? ["reversed", "knockout", "mono", "mark", "horizontal", "stacked", "icon"]
-    : ["mark", "primary", "horizontal", "stacked", "icon", "mono", "knockout", "reversed"];
+  const preferStacked = typeof boxAspect === "number" && boxAspect > 0 && boxAspect < 2.2;
+  if (dark) {
+    const order = preferStacked
+      ? ["stacked_reversed", "reversed", "knockout", "mono", "stacked", "mark", "horizontal", "icon"]
+      : ["reversed", "knockout", "mono", "mark", "horizontal", "stacked_reversed", "stacked", "icon"];
+    return order;
+  }
+  return preferStacked
+    ? ["stacked", "mark", "primary", "horizontal", "icon", "mono", "knockout", "stacked_reversed", "reversed"]
+    : ["mark", "primary", "horizontal", "stacked", "icon", "mono", "knockout", "stacked_reversed", "reversed"];
 }
+
 
 export interface LogoCandidate {
   /** Storage path of the artwork. */
