@@ -81,6 +81,16 @@ export async function computeSnapshotBrain(supabase: any, snapshotId: string): P
   }
   brain.generated_at = new Date().toISOString();
 
+  // Compliance rules are operator-set legal facts, never model output. Carry
+  // them across every rebuild so a refresh can't silently drop a legal lock.
+  const { data: prior } = await supabase
+    .from("venture_snapshots")
+    .select("snapshot_brain")
+    .eq("id", snapshotId)
+    .maybeSingle();
+  const priorRules = (prior?.snapshot_brain as VentureBrain | null)?.compliance_rules;
+  if (Array.isArray(priorRules) && priorRules.length) brain.compliance_rules = priorRules;
+
   // Persist and clear the dirty flag in one round-trip.
   await supabase
     .from("venture_snapshots")
@@ -90,6 +100,7 @@ export async function computeSnapshotBrain(supabase: any, snapshotId: string): P
       snapshot_brain_dirty: false,
     })
     .eq("id", snapshotId);
+
 
   return brain;
 }

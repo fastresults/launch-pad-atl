@@ -33,8 +33,15 @@ export type VentureBrain = {
   differentiators?: string[];
   known_numbers?: Record<string, string | number>;
   banned_assumptions?: string[];
+  /**
+   * Hard legal/regulatory facts this venture operates under. Never inferred by
+   * the model — set by an operator and preserved across brain rebuilds. Emitted
+   * verbatim into every generation prompt as a non-negotiable lock.
+   */
+  compliance_rules?: string[];
   generated_at?: string;
 };
+
 
 export async function loadVentureContext(
   supabase: any,
@@ -99,7 +106,16 @@ export function compactPreamble(ctx: VentureContext, opts?: { hasBrandKit?: bool
   lines.push(`- Industry: ${s.industry ?? "[not provided]"}${s.sub_industry ? ` / ${s.sub_industry}` : ""}`);
   lines.push(`- Track: ${s.track ?? "lifestyle"}`);
   lines.push(`- Location: ${[s.city, s.region, s.country].filter(Boolean).join(", ") || "[not provided]"} (scope: ${s.market_scope ?? "local"})`);
+  const compliance = ctx.brain?.compliance_rules?.filter((r) => typeof r === "string" && r.trim()) ?? [];
+  if (compliance.length) {
+    lines.push("");
+    lines.push("## COMPLIANCE LOCK (legally binding — overrides every other instruction)");
+    lines.push("These are verified rules this venture operates under. Never contradict, soften, omit a required qualifier, or invent a different rule or citation. If a claim you want to make would breach one of these, do not make the claim.");
+    for (const r of compliance) lines.push(`- ${r}`);
+    lines.push("");
+  }
   if (s.concept_summary) lines.push(`- North-star concept: ${s.concept_summary}`);
+
   if (s.value_proposition) lines.push(`- Value proposition: ${s.value_proposition}`);
   if (s.differentiation_statement) lines.push(`- Differentiation: ${s.differentiation_statement}`);
   // When a usable Brand Kit is in the prompt it is the ONLY source of colors and
