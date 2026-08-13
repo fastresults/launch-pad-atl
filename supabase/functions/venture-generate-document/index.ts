@@ -42,6 +42,7 @@ import {
 import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
 import { profileFor } from "../_shared/prompt-profiles.ts";
 import { checkIdentity, correctionPrompt, substituteIdentity } from "../_shared/identity-guard.ts";
+import { checkCompliance, compliancePrompt } from "../_shared/compliance-guard.ts";
 import { brandLogoUrl } from "../_shared/venture-context.ts";
 import { archetypeForPrompt } from "../_shared/site-art-direction.ts";
 import { renderPrdPortraits } from "../_shared/prd-portraits.ts";
