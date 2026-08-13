@@ -187,7 +187,7 @@ export interface LogoCandidate {
  * `variants.knockout` / `variants.mono` inside a single entry. Both shapes are
  * collected here so an uploaded reversed mark is never overlooked.
  */
-export function logoCandidates(logos: any[], surface: string): LogoCandidate[] {
+export function logoCandidates(logos: any[], surface: string, boxAspect?: number): LogoCandidate[] {
   const out: LogoCandidate[] = [];
   const seen = new Set<string>();
   const add = (path: unknown, variant: string) => {
@@ -196,22 +196,32 @@ export function logoCandidates(logos: any[], surface: string): LogoCandidate[] {
     seen.add(p);
     out.push({ path: p, variant });
   };
+  // Slot names differ across uploads and generated variants; normalise the
+  // aliases so stacked artwork ranks wherever it was written.
+  const norm = (v: string) => {
+    const s = v.trim().toLowerCase().replace(/[\s-]+/g, "_");
+    if (s === "primary") return "mark";
+    if (s === "stacked_knockout" || s === "stacked_reverse" || s === "stacked_dark") return "stacked_reversed";
+    if (s === "vertical") return "stacked";
+    return s;
+  };
 
   for (const l of Array.isArray(logos) ? logos : []) {
     if (!l || typeof l !== "object") continue;
-    const own = String(l.variant ?? (l.primary ? "primary" : "mark")).toLowerCase();
-    add(l.svg_path ?? l.path, own === "primary" ? "mark" : own);
+    const own = norm(String(l.variant ?? (l.primary ? "primary" : "mark")));
+    add(l.svg_path ?? l.path, own);
     const variants = l.variants && typeof l.variants === "object" ? l.variants : {};
     for (const [name, v] of Object.entries(variants as Record<string, any>)) {
-      add(v?.path ?? v?.svg_path, String(name).toLowerCase());
+      add(v?.path ?? v?.svg_path, norm(String(name)));
     }
   }
 
-  const order = variantOrder(surface);
+  const order = variantOrder(surface, boxAspect);
   const rank = (v: string) => {
-    const i = order.indexOf(v === "primary" ? "mark" : v);
+    const i = order.indexOf(norm(v));
     return i === -1 ? order.length : i;
   };
+
   return out
     .map((c, i) => ({ c, i }))
     .sort((a, b) => rank(a.c.variant) - rank(b.c.variant) || a.i - b.i)
