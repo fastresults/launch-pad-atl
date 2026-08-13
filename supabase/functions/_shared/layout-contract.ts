@@ -58,6 +58,28 @@ Two adjacent CTAs declare their gap (minimum 12px) and their order — primary f
 Restate this contract as its own subsection in Section 3, apply it in every route's Section 4 spec, and repeat the rules that touch generated code verbatim inside the Section 8 master prompt.`;
 }
 
+/**
+ * The imagery half of the contract, on its own so the targeted Section 4b
+ * repair can be handed exactly the rules it failed without re-sending the
+ * whole layout contract.
+ */
+export function imageryContractBlock(): string {
+  return `## IMAGERY CONTRACT (LOCKED)
+
+Section 4b is one Markdown table with these columns, in this order:
+
+Route | Section | Slot name | Visual type | Aspect ratio | Treatment | Exposure & contrast target | Text-overlay plan | Parallax plan | Caption / on-page copy | Narrative role | Alt text | Generation prompt
+
+- **Density**: the home route (\`/\`) carries at least 8 rows; every interior route carries at least 4. Every section named in Section 4 has at least one row. Cover the slots founders always miss: proof/logo bar, every process step, every feature card, the results/stats visual, one portrait per testimonial, and a closing full-bleed CTA band.
+- **Exposure**: every row states a numeric target (e.g. "subject at 35–55% luminance, open shadows"). Adjectives like "moody", "dark" or "near-black" are only allowed alongside that number.
+- **Hero and full-bleed rows** state that darkening is a CSS gradient scrim applied over a clean, properly exposed image and never baked into the render, and name the clean side of the frame.
+- **Parallax plan**: hero and full-bleed rows declare the three-plane stack (plate 0.25x / midground 0.6x / type 1.0x) with the \`prefers-reduced-motion\` fallback; interior bands may declare the two-plane version; everything else says "static".
+- **Caption / on-page copy**: the real words printed beside the image, in the venture's voice. Only texture / gradient bands may say "none".
+- **Narrative role**: the one sentence of Section 4 body copy this image illustrates, quoted so it can be matched.
+- **Production**: Pro-tier image model (\`google/gemini-3-pro-image\`), one image per call, hero plates wide enough for 1920px at 2x density; state the model, source pixel dimensions and aspect ratio per row.
+- Portraits use the portrait recipe (85mm equivalent, ~f/2, soft 45-degree key with fill and rim, catchlights, real skin texture). No generated image contains text, numbers, hex codes, logos or watermarks.`;
+}
+
 /** The human-checkable list the PRD must close with. */
 export function buildAcceptanceChecklist(): string {
   return `## BUILD ACCEPTANCE CHECKLIST
