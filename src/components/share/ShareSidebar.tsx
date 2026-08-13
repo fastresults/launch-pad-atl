@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { SharePayload } from "@/lib/venture-share.functions";
-import { ArrowUpRight, ChevronRight, ExternalLink, FileText, Hammer, Image as ImageIcon, Images, ListChecks, Route, Search, Sparkle } from "lucide-react";
+import { ArrowUpRight, ChevronRight, ExternalLink, FileText, Hammer, HelpCircle, Image as ImageIcon, Images, ListChecks, Route, Search, Sparkle } from "lucide-react";
 import { mediaHintForItem, sectionHasMedia, type MediaHint } from "@/components/share/share-media-hint";
 
 /** Small muted glyph marking rows whose preview contains pictures. */
@@ -65,12 +65,15 @@ export function ShareSidebar({
   payload,
   activeKey,
   onNavigate,
+  onShowWelcome,
   variant = "rail",
   viewedKeys,
 }: {
   payload: SharePayload;
   activeKey: string | null;
   onNavigate?: (key: string) => void;
+  /** Re-open the first-time welcome note from Adam. */
+  onShowWelcome?: () => void;
   /** "sheet" renders thumb-sized rows for the mobile contents sheet. */
   variant?: "rail" | "sheet";
   /** Assets already read, marked with a dot so progress is visible. */
@@ -111,6 +114,9 @@ export function ShareSidebar({
   );
 
   const pinned = [
+    ...(onShowWelcome
+      ? [{ key: "tool:welcome", label: "How to use this", hint: "A quick note from Adam", icon: HelpCircle }]
+      : []),
     ...(brainOn
       ? [{ key: BRAIN_KEY, label: "Second brain", hint: "Ask anything · mind map", icon: Sparkle }]
       : []),
@@ -150,11 +156,18 @@ export function ShareSidebar({
 
           {pinned.map((p) => {
             const active = activeKey === p.key;
+            const isWelcome = p.key === "tool:welcome";
             return (
               <button
                 key={p.key}
                 type="button"
-                onClick={() => onNavigate?.(p.key)}
+                onClick={() => {
+                  if (isWelcome) {
+                    onShowWelcome?.();
+                  } else {
+                    onNavigate?.(p.key);
+                  }
+                }}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-xl border px-3 text-left transition-colors",
                   sheet ? "min-h-[52px] py-3" : "py-2.5",

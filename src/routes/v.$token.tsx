@@ -14,6 +14,7 @@ import { SectionExportMenu } from "@/components/share/SectionExportMenu";
 import { buildFullDoc, buildSectionDoc } from "@/lib/share-export";
 import { SHARE_UI_VERSION } from "@/components/share/preview-copy";
 import { ShareOutroDialog } from "@/components/share/ShareOutroDialog";
+import { ShareWelcomeModal } from "@/components/share/ShareWelcomeModal";
 import { ShareOpsRunway } from "@/components/share/ShareOpsRunway";
 
 
@@ -31,6 +32,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ExternalLink,
+  HelpCircle,
   Loader2,
   Lock,
   Menu,
@@ -68,6 +70,10 @@ export default function VentureSharePage() {
   const tracked = useRef(false);
   /** The closing "next step" invitation — opened from the nav, never by scrolling. */
   const [outroOpen, setOutroOpen] = useState(false);
+  /** First-time welcome modal from Adam. */
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [persistWelcome, setPersistWelcome] = useState(true);
+  const welcomeKey = useMemo(() => `share-welcome:${token}`, [token]);
 
   const touchX = useRef<number | null>(null);
   const touchY = useRef<number | null>(null);
@@ -95,6 +101,18 @@ export default function VentureSharePage() {
       void trackShareView(token, submitted);
     }
   }, [payload, token, submitted]);
+
+  // Open the welcome modal once per showcase token, unless the visitor has dismissed it.
+  useEffect(() => {
+    if (!payload) return;
+    try {
+      if (!localStorage.getItem(welcomeKey)) {
+        setWelcomeOpen(true);
+      }
+    } catch {
+      /* private mode */
+    }
+  }, [payload, welcomeKey]);
 
 
   // One asset at a time: 60+ documents in a single scroll is unreadable.
@@ -216,6 +234,24 @@ export default function VentureSharePage() {
       /* private mode */
     }
   };
+
+  /** Persist the welcome dismissal only if the visitor has opted out of seeing it again. */
+  const dismissWelcome = (open: boolean) => {
+    setWelcomeOpen(open);
+    if (!open) {
+      try {
+        if (persistWelcome) {
+          localStorage.setItem(welcomeKey, "1");
+        } else {
+          localStorage.removeItem(welcomeKey);
+        }
+      } catch {
+        /* private mode */
+      }
+    }
+  };
+
+  const openWelcome = () => setWelcomeOpen(true);
 
 
   /** Phones have a native share sheet; everything else copies the link. */
@@ -415,6 +451,10 @@ export default function VentureSharePage() {
                         goTo(k);
                         setNavOpen(false);
                       }}
+                      onShowWelcome={() => {
+                        openWelcome();
+                        setNavOpen(false);
+                      }}
                     />
                   </SheetContent>
                 </Sheet>
@@ -481,6 +521,16 @@ export default function VentureSharePage() {
                     Ask this venture
                   </Button>
                 )}
+                <Button
+                  variant="ghost"
+                  size={condensed ? "sm" : "default"}
+                  className="hidden shrink-0 text-muted-foreground hover:text-foreground md:inline-flex"
+                  onClick={openWelcome}
+                  aria-label="How to use this showcase"
+                >
+                  <HelpCircle className="mr-1.5 h-4 w-4" />
+                  How to use this
+                </Button>
               </div>
             </header>
           )}
@@ -492,7 +542,12 @@ export default function VentureSharePage() {
             }`}
           >
             <aside className="hidden w-72 shrink-0 py-8 lg:block">
-              <ShareSidebar payload={payload} activeKey={activeKey} onNavigate={goTo} />
+              <ShareSidebar
+                payload={payload}
+                activeKey={activeKey}
+                onNavigate={goTo}
+                onShowWelcome={openWelcome}
+              />
             </aside>
 
             <main
@@ -703,6 +758,10 @@ export default function VentureSharePage() {
                       goTo(k);
                       setNavOpen(false);
                     }}
+                    onShowWelcome={() => {
+                      openWelcome();
+                      setNavOpen(false);
+                    }}
                   />
                 </SheetContent>
               </Sheet>
@@ -740,6 +799,15 @@ export default function VentureSharePage() {
           )}
 
           <ShareOutroDialog open={outroOpen} onOpenChange={setOutroOpen} token={token} />
+
+          <ShareWelcomeModal
+            open={welcomeOpen}
+            onOpenChange={dismissWelcome}
+            token={token}
+            payload={payload}
+            persist={persistWelcome}
+            onPersistChange={setPersistWelcome}
+          />
 
         </div>
       )}
