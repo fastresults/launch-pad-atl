@@ -245,6 +245,7 @@ export function LogoSetPanel({
   const qc = useQueryClient();
   const [override, setOverride] = useState<any[] | null>(null);
   const [pending, setPending] = useState<string | null>(null);
+  const [review, setReview] = useState<{ file: File; aspect: number | null; form: string; tone: string }[] | null>(null);
   const multiRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => { setOverride(null); }, [kit?.logos]);
