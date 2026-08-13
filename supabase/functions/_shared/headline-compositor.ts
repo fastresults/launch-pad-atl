@@ -231,6 +231,6 @@ export async function compositeHeadline(
     cursorY += fit.lineHeight;
   }
 
-  try { return await base.encode(); }
+  try { return await base.encode(1); }
   catch (e) { console.warn("headline-compositor: encode failed", e); return baseBytes; }
 }

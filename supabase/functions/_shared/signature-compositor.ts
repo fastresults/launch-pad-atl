@@ -3,6 +3,7 @@
 
 import { PNG } from "npm:pngjs@7.0.0";
 import { Buffer } from "node:buffer";
+import { readPng, writePng } from "./png-codec.ts";
 import type { CanvasPlan, SignaturePlacement } from "./canvas-plan.ts";
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -121,7 +122,7 @@ function applyPlacement(png: PNG, placement: SignaturePlacement, rgb: [number, n
 export function compositeSignatureSplash(baseBytes: Uint8Array, plan: CanvasPlan): Uint8Array {
   let png: PNG;
   try {
-    png = PNG.sync.read(Buffer.from(baseBytes));
+    png = readPng(baseBytes);
   } catch (e) {
     console.warn("signature-compositor: decode failed, returning original", e);
     return baseBytes;
@@ -132,5 +133,5 @@ export function compositeSignatureSplash(baseBytes: Uint8Array, plan: CanvasPlan
   const pct = requiredPct(plan);
   applyPlacement(png, plan.signaturePlacement || "auto", rgb, pct);
 
-  return new Uint8Array(PNG.sync.write(png));
+  return writePng(png);
 }

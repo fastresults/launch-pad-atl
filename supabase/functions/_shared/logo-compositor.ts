@@ -337,13 +337,13 @@ export async function buildVectorInkLogoPng(opts: {
       const mono = await rasterizeSvgMono(opts.svgText, opts.inkHex, width);
       if (mono) {
         const img = knockoutAndTrim(await Image.decode(mono));
-        const out = await img.encode();
+        const out = await img.encode(1);
         built = { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
       }
     }
     if (!built && opts.bytes && opts.bytes.byteLength) {
       const img = tintMark(knockoutAndTrim(await Image.decode(opts.bytes)), opts.inkHex);
-      const out = await img.encode();
+      const out = await img.encode(1);
       built = { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
     }
     if (built) {
@@ -486,6 +486,6 @@ export async function compositeLogo(
     `[logo-compositor] placement=${opts.placement} size=${size} aspect=${finalAspect.toFixed(2)} box=${finalBox.w}x${finalBox.h} @${finalBox.x},${finalBox.y} ink=${inkHex} contrast=${contrast.toFixed(2)} scrim=${scrim} vector=${!!opts.svgText} canvas=${base.width}x${base.height}`,
   );
 
-  const out = await base.encode();
+  const out = await base.encode(1);
   return { bytes: out, contrast, inkHex, scrim };
 }
