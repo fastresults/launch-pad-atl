@@ -65,7 +65,7 @@ type DroppedFile = {
   id: string;
   name: string;
   size: number;
-  status: "uploading" | "ready" | "error";
+  status: "uploading" | "extracting" | "ready" | "error";
   documentId?: string;
   text?: string;
   error?: string;
