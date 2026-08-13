@@ -733,10 +733,11 @@ export const PRD_PASSES: PrdPass[] = [
   {
     id: "c",
     label: "Sections 4b–7 (imagery plan, SEO, conversion, tech)",
-    maxTokens: 12000,
+    maxTokens: 16000,
     directive:
-      "PASS 3 of 4. Output ONLY Sections 4b, 5, 6 and 7, complete and to spec. The Section 4b imagery table must carry a row for every section of every route named above. Do NOT write Section 8 or 9, and do NOT repeat earlier sections.",
+      "PASS 3 of 4. Output ONLY Sections 4b, 5, 6 and 7, complete and to spec. The Section 4b imagery table must carry a row for every section of every route named above, at a minimum of 8 rows for the home route and 4 rows for each interior route, and every row must fill all of its columns — including Exposure & contrast target (a numeric luminance range), Parallax plan, Caption / on-page copy and Narrative role. Hero and full-bleed rows state the three-plane parallax stack and that darkening is a CSS scrim, never baked into the render. Finish the whole table — a truncated table is a failed pass. Do NOT write Section 8 or 9, and do NOT repeat earlier sections.",
   },
+
   {
     id: "d",
     label: "Sections 8–9 (master prompt, build checklist)",
