@@ -1527,10 +1527,18 @@ Deno.serve(async (req) => {
 
       const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos, dna").eq("snapshot_id", snapshotId).maybeSingle();
       const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
-      // Legacy uploads carry no variant — treat them as the primary slot.
+      // Legacy uploads carry no variant — treat them as the primary slot, and
+      // backfill form/tone on anything written before the measurement existed.
       const slotOf = (l: any) => (l?.variant ?? "primary");
+      const withFormTone = (l: any) => {
+        if (!l || typeof l !== "object" || (l.form && l.tone)) return l;
+        const ft = formToneOf(slotOf(l));
+        return { ...l, form: l.form ?? ft.form, tone: l.tone ?? ft.tone };
+      };
       const superseded = existing.filter((l: any) => l?.source === "upload" && slotOf(l) === variant);
-      const kept = existing.filter((l: any) => !(l?.source === "upload" && slotOf(l) === variant));
+      const kept = existing
+        .filter((l: any) => !(l?.source === "upload" && slotOf(l) === variant))
+        .map(withFormTone);
       const nextLogos =
         variant === "primary"
           ? [uploaded, ...kept.map((l: any) => ({ ...l, primary: false }))]
