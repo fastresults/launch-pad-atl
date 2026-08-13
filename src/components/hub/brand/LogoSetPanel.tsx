@@ -56,11 +56,14 @@ export function logoSetFrom(logos: any): Record<string, any> {
 /** Filename hints let a multi-file drop land in the right slots. */
 function guessSlot(name: string): string {
   const n = name.toLowerCase();
-  if (/(reversed|reverse|dark|white|knockout|inverse)/.test(n)) return "reversed";
+  const inverse = /(reversed|reverse|dark|white|knockout|inverse)/.test(n);
+  if (/(stacked|stack|vertical|centred|centered)/.test(n)) return inverse ? "stacked_reversed" : "stacked";
+  if (inverse) return "reversed";
   if (/(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)) return "icon";
   if (/(wordmark|word-mark|logotype|lockup)/.test(n)) return "wordmark";
   return "primary";
 }
+
 
 function readDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
