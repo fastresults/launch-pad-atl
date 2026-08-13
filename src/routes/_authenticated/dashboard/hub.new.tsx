@@ -1421,7 +1421,7 @@ function Inner() {
                     <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate">{f.name}</span>
                     <span
-                      className={`shrink-0 text-[11px] uppercase tracking-wider ${
+                      className={`flex shrink-0 items-center gap-1.5 text-[11px] uppercase tracking-wider ${
                         f.status === "ready"
                           ? "text-status-success"
                           : f.status === "error"
@@ -1429,8 +1429,40 @@ function Inner() {
                             : "text-muted-foreground"
                       }`}
                     >
-                      {f.status === "uploading" ? "Uploading…" : f.status === "ready" ? "Saved" : (f.error ?? "Couldn't read")}
+                      {f.status === "extracting" && <Loader2 className="h-3 w-3 animate-spin" />}
+                      {f.status === "uploading"
+                        ? "Uploading…"
+                        : f.status === "extracting"
+                          ? "Still reading — large files take a minute"
+                          : f.status === "ready"
+                            ? "Saved"
+                            : (f.error ?? "Couldn't read")}
                     </span>
+                    {f.status === "error" && f.documentId && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const id = f.documentId!;
+                          setFiles((curr) => curr.map((x) => (x.id === f.id ? { ...x, status: "extracting", error: undefined } : x)));
+                          const fresh = await recoverOrRetryExtraction(id);
+                          if (fresh && (fresh.extracted_text ?? "").trim()) {
+                            appendToMemory(fresh);
+                            setFiles((curr) => curr.filter((x) => x.id !== f.id));
+                          } else {
+                            setFiles((curr) =>
+                              curr.map((x) =>
+                                x.id === f.id
+                                  ? { ...x, status: "error", error: fresh?.extraction_error ?? "Still unreadable — try again" }
+                                  : x,
+                              ),
+                            );
+                          }
+                        }}
+                        className="shrink-0 text-[11px] uppercase tracking-wider text-primary hover:underline"
+                      >
+                        Retry
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => removeFile(f.id)}
