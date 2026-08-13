@@ -1274,32 +1274,19 @@ function Inner() {
         {showCollectionUI && inactiveMemoryChips.length > 0 && addMoreOpen && (
           <div className="space-y-2 rounded-xl border border-border bg-background/40 p-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="text-sm font-medium">Saved library sources</div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetStepOneRef.current = false;
-                    setReuseSelected((prev) => {
-                      const next = { ...prev };
-                      for (const { row } of inactiveMemoryChips) {
-                        if ((row.extracted_text ?? "").trim()) next[row.id] = true;
-                      }
-                      return next;
-                    });
-                  }}
-                  className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
-                >
-                  Select all
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAddMoreOpen(false)}
-                  className="text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
-                >
-                  Done
-                </button>
+              <div>
+                <div className="text-sm font-medium">Reuse something from earlier</div>
+                <div className="text-xs text-muted-foreground">
+                  Unfiled material from before this startup. Nothing here is used until you add it.
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setAddMoreOpen(false)}
+                className="shrink-0 text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground"
+              >
+                Done
+              </button>
             </div>
             <div className="flex flex-wrap gap-2">
               {inactiveMemoryChips.map(({ row, name, isUrlCapture, isAudio, isImage, origin, intent }) => {
@@ -1308,6 +1295,9 @@ function Inner() {
                 const isPattern = intent === "pattern";
                 const originLabel =
                   origin === "brief" ? "Brief" : origin === "founder" ? "Founder" : origin === "venture" ? "Venture" : "Library";
+                const savedOn = row.created_at
+                  ? new Date(row.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+                  : null;
                 return (
                   <div
                     key={row.id}
@@ -1318,7 +1308,7 @@ function Inner() {
                           ? `Couldn't read · from ${originLabel}`
                           : `Still reading — large files take a minute · from ${originLabel}`
                     }
-                    className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1.5 text-xs opacity-80 transition hover:opacity-100"
+                    className="group inline-flex max-w-[320px] items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1.5 text-xs opacity-80 transition hover:opacity-100"
                   >
                     <span
                       className={`h-1.5 w-1.5 shrink-0 rounded-full ${
@@ -1327,6 +1317,9 @@ function Inner() {
                     />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
+                    <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {savedOn ? `${originLabel} · ${savedOn}` : originLabel}
+                    </span>
                     {isUrlCapture ? (
                       <button
                         type="button"
@@ -1343,15 +1336,26 @@ function Inner() {
                     ) : null}
                     <button
                       type="button"
-                      onClick={() => {
-                        resetStepOneRef.current = false;
-                        setReuseSelected((prev) => ({ ...prev, [row.id]: true }));
-                      }}
+                      onClick={() => adoptFromLibrary(row)}
                       className="shrink-0 text-muted-foreground hover:text-foreground"
                       aria-label="Add to this venture"
                       title="Add to this venture"
                     >
                       <Plus className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeFromLibrary(row)}
+                      disabled={deletingId === row.id}
+                      className="shrink-0 text-muted-foreground/60 hover:text-status-danger disabled:opacity-50"
+                      aria-label="Delete permanently"
+                      title="Delete permanently"
+                    >
+                      {deletingId === row.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
                     </button>
                   </div>
                 );
