@@ -620,12 +620,13 @@ function markAt(
 
 
 
-function logoAspect(ctx: CollateralCtx, bg?: string | null): number {
+function logoAspect(ctx: CollateralCtx, bg?: string | null, boxAspect?: number): number {
   // Measure the artwork that will actually be painted on this ground. Sizing
   // from the light variant and then drawing the reversed one (a different
   // aspect) is how a legally-sized box produced a half-height mark.
-  const svg = markSvgFor(ctx, bg ?? null).svg;
+  const svg = markSvgFor(ctx, bg ?? null, boxAspect).svg;
   return svg ? inkAspect(svg) : 1;
+
 
 }
 
