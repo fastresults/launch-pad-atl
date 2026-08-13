@@ -48,10 +48,14 @@ import { renderPrdPortraits } from "../_shared/prd-portraits.ts";
 import {
   brandFactsFromKit,
   applyCraftContract,
+  assemblePrdPasses,
   expandWebsitePrdMasterPrompt,
   expandWebsitePrdPageCopy,
   masterPromptStats,
+  prdChat,
+  prdPassContinuity,
   prdQualityMetrics,
+  PRD_PASSES,
   repairWebsitePrdCraft,
   type PrdVentureFacts,
 } from "../_shared/website-prd.ts";
@@ -516,6 +520,103 @@ export async function generateOne(
     }
   }
 
+  // ---- Website PRD: sectioned generation. ------------------------------
+  // One 24k-token call over the whole venture reliably died upstream at ~91s
+  // with a 503. The document is now written in four smaller passes, each with
+  // a retry and a Flash fallback, checkpointed after every pass so a killed
+  // worker resumes where it stopped instead of starting over.
+  if (!raw && isPrd) {
+    const { data: passRow } = await supabase
+      .from("venture_documents")
+      .select("metadata")
+      .eq("snapshot_id", snapshotId)
+      .eq("document_type", documentType)
+      .maybeSingle();
+    const baseMeta = (passRow?.metadata ?? {}) as Record<string, unknown>;
+    const parts: Record<string, string> = { ...((baseMeta.prd_passes ?? {}) as Record<string, string>) };
+    const modelsUsed: Record<string, string> = { ...((baseMeta.prd_pass_models ?? {}) as Record<string, string>) };
+    const startedAt = Date.now();
+
+    for (const pass of PRD_PASSES) {
+      if (parts[pass.id]) continue;
+
+      // Bound each invocation: hand the remaining passes to a fresh worker
+      // rather than risk the platform killing this one mid-pass.
+      if (Date.now() - startedAt > 60_000) {
+        await fetch(`${SUPABASE_URL}/functions/v1/venture-generate-document`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-key": SERVICE_KEY,
+            Authorization: `Bearer ${SERVICE_KEY}`,
+          },
+          body: JSON.stringify({ snapshotId, documentType, phase: "draft" }),
+        }).catch((e) => console.warn("pass handoff failed", e));
+        return { wordCount: assemblePrdPasses(parts).split(/\s+/).filter(Boolean).length, quality, phase: "draft" };
+      }
+
+      const passPrompt = [
+        userPrompt,
+        prdPassContinuity(parts),
+        `\n## THIS PASS ONLY\n${pass.directive}\nReturn Markdown only — no commentary, no code fences around the document, and no QUALITY_SCORE line except on the final pass.`,
+      ].join("\n\n");
+
+      let out: Awaited<ReturnType<typeof prdChat>>;
+      try {
+        out = await prdChat(
+          LOVABLE_API_KEY,
+          [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              // Vision only where art direction is actually being written.
+              content: pass.id === "a" || pass.id === "c"
+                ? visionUserContent(passPrompt, visionImages)
+                : passPrompt,
+            },
+          ],
+          pass.maxTokens,
+        );
+      } catch (e) {
+        const msg = `Website brief pass "${pass.label}" failed: ${
+          (e instanceof Error ? e.message : String(e)).slice(0, 240)
+        }`;
+        await supabase.from("venture_documents").update({
+          status: "failed",
+          last_error: msg,
+          metadata: { ...baseMeta, prd_passes: parts, prd_pass_models: modelsUsed, prd_failed_pass: pass.id },
+        }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+        await supabase.from("venture_generation_failures").insert({
+          snapshot_id: snapshotId, document_type: documentType, error: msg,
+        });
+        throw new Error(msg);
+      }
+
+      parts[pass.id] = out.text;
+      modelsUsed[pass.id] = out.model;
+      if (out.truncated) truncated = true;
+
+      const partial = assemblePrdPasses(parts);
+      await supabase.from("venture_documents").update({
+        content: partial,
+        word_count: partial.split(/\s+/).filter(Boolean).length,
+        status: "generating",
+        last_error: null,
+        metadata: {
+          ...baseMeta,
+          phase: "draft",
+          prd_passes: parts,
+          prd_pass_models: modelsUsed,
+          prd_pass_done: PRD_PASSES.filter((p) => parts[p.id]).map((p) => p.id),
+          checkpointed_at: new Date().toISOString(),
+        },
+      }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+    }
+
+    raw = assemblePrdPasses(parts);
+    console.log("website_prd passes", JSON.stringify({ snapshotId, models: modelsUsed }));
+  }
+
   if (!raw) {
     let aiRes: Response;
     try {
@@ -530,7 +631,7 @@ export async function generateOne(
             { role: "user", content: visionUserContent(userPrompt, visionImages) },
           ],
         }),
-      }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: isPrd ? 0 : 2 });
+      }, { timeoutMs: 90_000, retries: 2 });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       await supabase.from("venture_documents").update({
@@ -559,7 +660,9 @@ export async function generateOne(
     raw = aiJson.choices?.[0]?.message?.content ?? "";
     const finishReason = aiJson.choices?.[0]?.finish_reason ?? aiJson.choices?.[0]?.finishReason ?? "";
     truncated = String(finishReason).toLowerCase() === "length";
+  }
 
+  if (phase !== "refine") {
     // Extract quality score line
     const qm = raw.match(/QUALITY_SCORE:\s*(\d{1,3})/i);
     if (qm) {
@@ -577,13 +680,23 @@ export async function generateOne(
     // the long enrichment passes run, so a killed worker can never leave the
     // founder looking at a months-old document.
     if (isPrd && phase === "draft") {
+      const { data: metaRow } = await supabase
+        .from("venture_documents")
+        .select("metadata")
+        .eq("snapshot_id", snapshotId)
+        .eq("document_type", documentType)
+        .maybeSingle();
       await supabase.from("venture_documents").update({
         content: raw,
         word_count: raw.split(/\s+/).filter(Boolean).length,
         quality_score: quality,
         status: "generating",
         last_error: null,
-        metadata: { phase: "draft", checkpointed_at: new Date().toISOString() },
+        metadata: {
+          ...((metaRow?.metadata ?? {}) as Record<string, unknown>),
+          phase: "draft",
+          checkpointed_at: new Date().toISOString(),
+        },
       }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
 
       // Hand the enrichment to a fresh worker with its own wall clock.
@@ -600,6 +713,7 @@ export async function generateOne(
       return { wordCount: raw.split(/\s+/).filter(Boolean).length, quality, phase: "draft" };
     }
   }
+
 
 
   // Page copy depth: deepen Section 4 before the guard so a thin-but-fixable
@@ -837,6 +951,28 @@ Deno.serve(async (req) => {
     if (!own.snapshot || own.snapshot.concept_status !== "locked") {
       return jsonResponse({ error: "Lock your concept summary before generating documents." }, 409, corsHeaders);
     }
+
+    // A founder pressing the button always gets a real attempt: clear the
+    // self-driving budget and any half-written passes from a previous run.
+    if (documentType === "website_prd") {
+      const { data: prior } = await supabase
+        .from("venture_documents")
+        .select("metadata")
+        .eq("snapshot_id", snapshotId)
+        .eq("document_type", documentType)
+        .maybeSingle();
+      const meta = { ...((prior?.metadata ?? {}) as Record<string, unknown>) };
+      delete meta.orchestration_attempts;
+      delete meta.prd_passes;
+      delete meta.prd_pass_models;
+      delete meta.prd_pass_done;
+      delete meta.prd_failed_pass;
+      await supabase.from("venture_documents")
+        .update({ metadata: meta, last_error: null, blocked_reason: null })
+        .eq("snapshot_id", snapshotId)
+        .eq("document_type", documentType);
+    }
+
     const work = generateOne(
       supabase,
       snapshotId,

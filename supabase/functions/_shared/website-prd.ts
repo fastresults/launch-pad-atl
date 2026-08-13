@@ -492,3 +492,116 @@ export async function expandWebsitePrdPageCopy(
     return raw;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Sectioned generation
+// ---------------------------------------------------------------------------
+//
+// The PRD used to be one gateway call: ~200k characters of context in, 24k
+// tokens out. Upstream gave up at ~91 seconds every single time and the
+// gateway answered 503, so the brief never generated at all. It is now written
+// in four smaller passes that each finish well inside the upstream window,
+// with a retry and a Flash fallback per pass, and a checkpoint after each one
+// so a killed worker resumes instead of restarting.
+
+export type PrdPass = {
+  id: string;
+  label: string;
+  maxTokens: number;
+  /** What this pass alone must output. */
+  directive: string;
+};
+
+export const PRD_PASSES: PrdPass[] = [
+  {
+    id: "a",
+    label: "Sections 1–3 (strategy, IA, global elements)",
+    maxTokens: 9000,
+    directive:
+      "PASS 1 of 4. Output ONLY the document title line (`# {Company} — Website PRD`) and Sections 1, 2 and 3, complete and to spec. Do NOT write Section 4 or anything after it, and do NOT add a closing summary — a later pass continues the document verbatim from where you stop.",
+  },
+  {
+    id: "b",
+    label: "Section 4 (page-by-page copy)",
+    maxTokens: 14000,
+    directive:
+      "PASS 2 of 4. Output ONLY Section 4 (`## 4. Page-by-Page Specs`) — every route named in the Section 2 sitemap above, each meeting its word floor, with finished ready-to-ship copy. This is the longest section in the document: at least 3,500 words. Do NOT write Section 4b or any later section, and do NOT repeat Sections 1–3.",
+  },
+  {
+    id: "c",
+    label: "Sections 4b–7 (imagery plan, SEO, conversion, tech)",
+    maxTokens: 12000,
+    directive:
+      "PASS 3 of 4. Output ONLY Sections 4b, 5, 6 and 7, complete and to spec. The Section 4b imagery table must carry a row for every section of every route named above. Do NOT write Section 8 or 9, and do NOT repeat earlier sections.",
+  },
+  {
+    id: "d",
+    label: "Sections 8–9 (master prompt, build checklist)",
+    maxTokens: 14000,
+    directive:
+      "PASS 4 of 4. Output ONLY Sections 8 and 9. Section 8's master prompt is wrapped in the BEGIN_MASTER_PROMPT / END_MASTER_PROMPT delimiters, carries its numbered sections 1) through 11), runs 1,800–2,400 words, and ends with its exact closing line. Do NOT repeat earlier sections.",
+  },
+];
+
+/**
+ * One gateway call for a PRD-sized job: Pro first with a retry, then Flash as a
+ * fallback so a degraded brief still ships instead of a hard failure.
+ */
+export async function prdChat(
+  apiKey: string,
+  messages: unknown[],
+  maxTokens: number,
+  timeoutMs = 80_000,
+): Promise<{ text: string; model: string; truncated: boolean }> {
+  const models = [modelForTier("pro"), modelForTier("flash")];
+  let lastError = "";
+  for (const model of models) {
+    try {
+      const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, max_tokens: maxTokens, messages }),
+      }, { timeoutMs, retries: 1 });
+      if (!res.ok) {
+        lastError = `${model} → ${res.status}: ${(await res.text()).slice(0, 200)}`;
+        // 4xx other than rate limiting will not improve on another model.
+        if (res.status >= 400 && res.status < 500 && res.status !== 429) break;
+        continue;
+      }
+      const json = await res.json();
+      const text = String(json.choices?.[0]?.message?.content ?? "").trim();
+      const finish = String(json.choices?.[0]?.finish_reason ?? json.choices?.[0]?.finishReason ?? "");
+      if (!text) {
+        lastError = `${model} → empty completion`;
+        continue;
+      }
+      return { text, model, truncated: finish.toLowerCase() === "length" };
+    } catch (e) {
+      lastError = `${model} → ${e instanceof Error ? e.message : String(e)}`;
+    }
+  }
+  throw new Error(lastError || "PRD pass failed");
+}
+
+/** Join finished passes into one document. */
+export function assemblePrdPasses(parts: Record<string, string>): string {
+  return PRD_PASSES
+    .map((p) => (parts[p.id] ?? "").trim())
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
+}
+
+/** A trimmed view of what is already written, for continuity in later passes. */
+export function prdPassContinuity(parts: Record<string, string>): string {
+  const written = assemblePrdPasses(parts);
+  if (!written) return "";
+  // Sections 1-3 carry the sitemap, tokens and layout contract every later
+  // pass must obey; the rest is summarised by its headings only.
+  const head = (parts.a ?? "").slice(0, 14_000);
+  const headings = written
+    .split("\n")
+    .filter((l) => /^#{2,3}\s/.test(l))
+    .join("\n");
+  return `\n## Already written (do not repeat — continue the same document, same voice, same route names)\n${head}\n\n### Headings written so far\n${headings}\n`;
+}

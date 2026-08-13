@@ -77,27 +77,51 @@ export async function clearResolvedBlockers(
   return rows.map((r: any) => r.document_type);
 }
 
+/** Infrastructure hiccups (upstream 5xx, timeouts, rate limits) are not the
+ * venture's fault, so they get their own larger allowance and a cooldown
+ * instead of permanently burning the stage's budget. */
+const MAX_INFRA_ATTEMPTS = 12;
+const INFRA_COOLDOWN_MS = 15 * 60_000;
+
+function isInfraFailure(err: string | null | undefined): boolean {
+  const m = String(err ?? "");
+  return /\b(5\d\d|429|timeout|timed out|aborted|unavailable|upstream|overloaded|resource limit)\b/i.test(m);
+}
+
 /** Has this stage already burned its budget for this venture? */
-async function budgetSpent(supabase: any, snapshotId: string, documentType: string): Promise<boolean> {
+async function budgetSpent(supabase: any, snapshotId: string, documentType: string): Promise<string | null> {
   const { data } = await supabase
     .from("venture_documents")
-    .select("metadata, status")
+    .select("metadata, status, last_error")
     .eq("snapshot_id", snapshotId)
     .eq("document_type", documentType)
     .maybeSingle();
-  const attempts = Number((data?.metadata ?? {}).orchestration_attempts ?? 0);
-  return attempts >= MAX_ORCHESTRATION_ATTEMPTS;
+  const metadata = (data?.metadata ?? {}) as Record<string, unknown>;
+  const attempts = Number(metadata.orchestration_attempts ?? 0);
+  const infra = isInfraFailure(data?.last_error);
+
+  if (infra) {
+    if (attempts >= MAX_INFRA_ATTEMPTS) return `${documentType}_infra_budget_exhausted`;
+    const last = Date.parse(String(metadata.orchestrated_at ?? "")) || 0;
+    if (last && Date.now() - last < INFRA_COOLDOWN_MS) return `${documentType}_cooldown`;
+    return null;
+  }
+
+  return attempts >= MAX_ORCHESTRATION_ATTEMPTS ? `${documentType}_budget_exhausted` : null;
 }
 
 async function noteAttempt(supabase: any, snapshotId: string, documentType: string): Promise<void> {
   const { data } = await supabase
     .from("venture_documents")
-    .select("id, metadata")
+    .select("id, metadata, last_error")
     .eq("snapshot_id", snapshotId)
     .eq("document_type", documentType)
     .maybeSingle();
   const metadata = { ...((data?.metadata ?? {}) as Record<string, unknown>) };
-  metadata.orchestration_attempts = Number(metadata.orchestration_attempts ?? 0) + 1;
+  // Only a real, non-infrastructural failure counts against the hard budget.
+  if (!isInfraFailure(data?.last_error)) {
+    metadata.orchestration_attempts = Number(metadata.orchestration_attempts ?? 0) + 1;
+  }
   metadata.orchestrated_at = new Date().toISOString();
   if (data?.id) {
     await supabase.from("venture_documents").update({ metadata }).eq("id", data.id);
@@ -145,8 +169,9 @@ export async function orchestrateNextStage(
 
   const prdSettled = prd?.status === "complete" || prd?.status === "generating";
   if (!prdSettled) {
-    if (await budgetSpent(supabase, snapshotId, "website_prd")) {
-      result.waiting = "website_prd_budget_exhausted";
+    const held = await budgetSpent(supabase, snapshotId, "website_prd");
+    if (held) {
+      result.waiting = held;
       return result;
     }
     await noteAttempt(supabase, snapshotId, "website_prd");

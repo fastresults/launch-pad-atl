@@ -32,6 +32,30 @@ export function useWebsitePrd(
 
   const prd = prdQ.data ?? null;
   const building = prd?.status === "generating";
+  const failed = prd?.status === "failed";
+
+  // The brief is written in four passes; report which ones landed rather than
+  // a generic "unavailable".
+  const PASS_LABELS: Record<string, string> = {
+    a: "strategy & sitemap",
+    b: "page copy",
+    c: "imagery plan",
+    d: "builder prompt",
+  };
+  const passesDone: string[] = (prd?.metadata?.prd_pass_done ?? []) as string[];
+  const passProgress = passesDone.length ? `${passesDone.length} of 4 passes written` : null;
+  const failedPass = prd?.metadata?.prd_failed_pass
+    ? PASS_LABELS[prd.metadata.prd_failed_pass as string] ?? null
+    : null;
+  const lastError: string | null = prd?.last_error ?? null;
+  const statusNote = failed
+    ? `${failedPass ? `The ${failedPass} pass failed` : "The last build failed"}${
+      passProgress ? ` — ${passProgress}` : ""
+    }. It retries itself within 15 minutes, or press Rebuild to start now.`
+    : building && passProgress
+      ? `${passProgress} — it keeps going if you leave this page.`
+      : null;
+
 
   const regenerate = useMutation({
     mutationKey: ["websitePrdRegenerate", snapshotId],
@@ -80,6 +104,11 @@ export function useWebsitePrd(
       ? null
       : "Unlocks once your brand is locked — it's built from your final marks, palette and type.",
     building,
+    failed,
+    statusNote,
+    passProgress,
+    lastError,
+
     loading: prdQ.isLoading,
     running: regenerate.isPending || building,
     regenerate,
