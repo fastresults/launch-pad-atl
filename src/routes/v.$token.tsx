@@ -14,6 +14,7 @@ import { SectionExportMenu } from "@/components/share/SectionExportMenu";
 import { buildFullDoc, buildSectionDoc } from "@/lib/share-export";
 import { SHARE_UI_VERSION } from "@/components/share/preview-copy";
 import { ShareOutroDialog } from "@/components/share/ShareOutroDialog";
+import { ShareWelcomeModal } from "@/components/share/ShareWelcomeModal";
 import { ShareOpsRunway } from "@/components/share/ShareOpsRunway";
 
 
