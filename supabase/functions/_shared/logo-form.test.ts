@@ -73,7 +73,7 @@ describe("classifying the real Friendship House files", () => {
   it("counts ink and reads tone", () => {
     expect(countShapes(shapes(21, "#0055a4"))).toBe(21);
     expect(inkTone(`<svg>${shapes(3, "#fdfeff")}</svg>`)?.tone).toBe("inverse");
-    expect(inkTone(`<svg>${shapes(3, "#0055a4"))}</svg>`.replace(")}", "}"))?.tone).toBe("colour");
+    expect(inkTone(`<svg>${shapes(3, "#0055a4")}</svg>`)?.tone).toBe("colour");
   });
 
   it("files a near-square colour lockup as stacked, not a symbol", () => {
