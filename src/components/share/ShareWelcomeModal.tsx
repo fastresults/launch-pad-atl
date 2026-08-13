@@ -169,7 +169,7 @@ export function ShareWelcomeModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[640px] overflow-hidden p-0">
+      <DialogContent className="theme-dark-scope max-w-[640px] overflow-hidden border-border/60 bg-background p-0 [&>button]:hidden">
         <DialogTitle className="sr-only">Welcome to your venture showcase</DialogTitle>
         {body}
       </DialogContent>
