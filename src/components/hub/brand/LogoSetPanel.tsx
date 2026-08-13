@@ -351,7 +351,7 @@ export function LogoSetPanel({
 
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {LOGO_SLOTS.map((slot) => (
           <SlotTile
             key={slot.key}
