@@ -558,11 +558,39 @@ function markAt(
   // fill clears the floor. A two-tone mark whose primary shape reads is legible
   // even though its accent fill does not — previously the first fill in the
   // file was reported and a perfectly readable specimen was blocked.
-  const paintedFills = !untintable && use ? [use] : measuredFills;
+  let paintedFills = !untintable && use ? [use] : measuredFills;
   const ground = effectiveBg || "#ffffff";
-  const { ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN });
+  let { ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN });
 
-  return `${plateSvg}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  // Self-correcting gate. Reaching "nothing on this mark reads" used to block
+  // the whole piece with a RENDERER_BUG the founder could do nothing about.
+  // The renderer now repairs itself instead: a tintable mark is repainted in
+  // the legible form of its own ink, and artwork that cannot be recoloured is
+  // given a contrast plate. Only a repair that still fails is reported.
+  let repairedPlate = plateSvg;
+  if (!anyVisible) {
+    if (!untintable) {
+      const safeInk = resolveInk(use ?? paintedFills[0] ?? null, ground, { min: MIN });
+      inner = tint(inner, safeInk);
+      use = safeInk;
+      paintedFills = [safeInk];
+    } else {
+      const rescueFill = measuredFills.length &&
+          measuredFills.every((f) => contrastRatio(f, "#111111") >= MIN)
+        ? "#111111"
+        : "#ffffff";
+      const px = Math.round(Math.max(drawnW, drawnH) * 0.14);
+      repairedPlate =
+        `<rect x="${r(x + (boxW - drawnW) / 2 - px)}" y="${r(y + (boxH - drawnH) / 2 - px)}" width="${r(drawnW + px * 2)}" height="${r(drawnH + px * 2)}" rx="${r(px * 0.6)}" fill="${rescueFill}" opacity="0.94"/>`;
+      paintedFills = measuredFills;
+      ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, rescueFill, { min: MIN }));
+      return `${repairedPlate}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="plated" data-mark-bg="${rescueFill}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+    }
+    ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN }));
+  }
+
+  return `${repairedPlate}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+
 
 }
 
