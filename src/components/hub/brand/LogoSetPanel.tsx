@@ -164,6 +164,33 @@ async function classifyFile(
 
 
 
+/**
+ * Recolour a light-ink symbol into brand colours.
+ *
+ * A set can arrive with an inverse symbol and no colour one. Rather than
+ * silently painting the light mark onto a light card, we offer the founder a
+ * derived colour symbol: the lighter ink becomes the primary brand colour, the
+ * darker ink the accent, and nothing else about the drawing changes.
+ */
+async function deriveColourSymbol(url: string, primary: string, accent: string): Promise<string | null> {
+  let svg: string;
+  try {
+    svg = await (await fetch(url)).text();
+  } catch {
+    return null;
+  }
+  if (!/<svg/i.test(svg)) return null;
+  const hexes = Array.from(new Set((svg.match(/#([0-9a-f]{3}|[0-9a-f]{6})\b/gi) ?? []).map((h) => h.toLowerCase())));
+  if (!hexes.length) return null;
+  const sorted = [...hexes].sort((a, b) => luminance(b) - luminance(a));
+  let out = svg;
+  sorted.forEach((hex, i) => {
+    const to = i === 0 ? primary : accent;
+    out = out.replace(new RegExp(hex.replace("#", "#"), "gi"), to);
+  });
+  return out;
+}
+
 function readDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -305,6 +332,8 @@ export function LogoSetPanel({
   const [pending, setPending] = useState<string | null>(null);
   const [review, setReview] = useState<{ file: File; aspect: number | null; form: string; tone: string }[] | null>(null);
   const multiRef = useRef<HTMLInputElement | null>(null);
+  const [derived, setDerived] = useState<string | null>(null);
+  const [deriving, setDeriving] = useState(false);
 
   useEffect(() => { setOverride(null); }, [kit?.logos]);
 
@@ -558,6 +587,63 @@ export function LogoSetPanel({
               </div>
             </div>
           ))}
+          {!set.icon?.url && set.icon_reversed?.url ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-background/40 p-2">
+              {derived ? (
+                <>
+                  <img
+                    src={`data:image/svg+xml;utf8,${encodeURIComponent(derived)}`}
+                    alt="Derived colour symbol"
+                    className="h-10 w-10 object-contain"
+                  />
+                  <span className="text-[10px] text-muted-foreground">Symbol recoloured into your brand ink.</span>
+                  <button
+                    type="button"
+                    className="text-[10px] font-medium uppercase tracking-[0.12em] text-primary"
+                    onClick={() => {
+                      const file = new File([derived], "symbol-colour.svg", { type: "image/svg+xml" });
+                      setDerived(null);
+                      pick("icon", file);
+                    }}
+                  >
+                    Use it
+                  </button>
+                  <button
+                    type="button"
+                    className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground"
+                    onClick={() => setDerived(null)}
+                  >
+                    Discard
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-[10px] text-muted-foreground">
+                    No colour symbol supplied — placements on light grounds fall back to the stacked lockup.
+                  </span>
+                  <button
+                    type="button"
+                    disabled={deriving}
+                    className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.12em] text-primary disabled:opacity-50"
+                    onClick={async () => {
+                      setDeriving(true);
+                      const out = await deriveColourSymbol(
+                        set.icon_reversed.url,
+                        isHex(primaryColor) ? primaryColor : "#0055A4",
+                        isHex(kit?.palette?.colors?.accent) ? kit.palette.colors.accent : "#EF4135",
+                      );
+                      setDeriving(false);
+                      if (out) setDerived(out);
+                      else toast.error("Could not read that symbol file");
+                    }}
+                  >
+                    {deriving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                    Derive colour symbol
+                  </button>
+                </>
+              )}
+            </div>
+          ) : null}
           <p className="text-[10px] leading-relaxed text-muted-foreground">
             Form is the shape of the lockup; tone is the ground it's drawn for — colour for light, inverse for dark.
             Drop several files at once and we'll measure each one and show you where it's going before saving.
