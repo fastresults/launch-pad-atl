@@ -1272,7 +1272,22 @@ async function runJob(
     const edgeRuntime = (globalThis as any).EdgeRuntime;
     if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(sweep);
   } catch { /* best-effort */ }
+
+  // Continuous flow. A settled bulk run is a hand-off, not an ending: release
+  // any blocker the brand lock has since resolved and start the next stage
+  // (the website brief) without waiting for the founder to press anything.
+  try {
+    const next = orchestrateNextStage(supabase, snapshotId)
+      .then((r) => console.log("[orchestrate]", JSON.stringify(r)))
+      .catch((e) => console.error("orchestrate failed", e));
+    const edgeRuntime = (globalThis as any).EdgeRuntime;
+    if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(next);
+    else await next;
+  } catch (e) {
+    console.error("orchestrate dispatch failed", e);
+  }
 }
+
 
 
 
