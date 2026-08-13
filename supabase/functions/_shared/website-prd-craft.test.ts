@@ -43,7 +43,7 @@ function row(route: string, i: number, type = "spot call-out"): string {
     ? "CSS gradient scrim left-to-right, left third stays clean, never baked into the render"
     : "no type on image";
   const parallax = hero ? "plate 0.25x / midground 0.6x / type 1.0x, static under prefers-reduced-motion" : "static";
-  return `| ${route} | Section ${i} | Slot ${i} | ${type} | 16:9 | full-bleed | ${exposure} | ${overlay} | ${parallax} | "We answer in an hour." | Adjusters answer every claim within the hour. | Alt text ${i} | google/gemini-3-pro-image, 3840x2160, editorial photograph #0055A4 #EF4135 |`;
+  return `| ${route} | Section ${i} | Slot ${i} | ${type} | 16:9 | ${hero ? "full-bleed" : "inset"} | ${exposure} | ${overlay} | ${parallax} | "We answer in an hour." | Adjusters answer every claim within the hour. | Alt text ${i} | google/gemini-3-pro-image, 3840x2160, editorial photograph #0055A4 #EF4135 |`;
 }
 
 function imageryTable(): string {

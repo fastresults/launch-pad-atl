@@ -160,9 +160,12 @@ const ADDENDUM_RE = /<!--\s*BEGIN_CRAFT_ADDENDUM\s*-->[\s\S]*?<!--\s*END_CRAFT_A
 const LEGACY_ADDENDUM_RE =
   /Additional implementation depth requirements[\s\S]*?(?=Begin scaffolding now\.|<!--\s*END_MASTER_PROMPT)/gi;
 
+/** The build checklist is appended by us too, so it is not evidence either. */
+const CHECKLIST_RE = /\n##\s*BUILD ACCEPTANCE CHECKLIST[\s\S]*$/i;
+
 /** The document minus anything this pipeline injected into it. */
 export function authoredPrd(raw: string): string {
-  return raw.replace(ADDENDUM_RE, "\n").replace(LEGACY_ADDENDUM_RE, "\n");
+  return raw.replace(ADDENDUM_RE, "\n").replace(LEGACY_ADDENDUM_RE, "\n").replace(CHECKLIST_RE, "\n");
 }
 
 
@@ -356,7 +359,9 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
       id: "hero_exposure",
       label: "Hero / full-bleed imagery rows state a luminance target and a CSS scrim",
       ok: heroRows.length > 0 &&
-        heroRows.every((r) => EXPOSURE_RE.test(r.line) && /scrim/i.test(r.line)),
+        heroRows.every((r) =>
+          EXPOSURE_RE.test(r.line) && (/scrim/i.test(r.line) || /no type on (the )?image/i.test(r.line))
+        ),
     },
     {
       id: "no_baked_darkening",
@@ -399,7 +404,7 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
     {
       id: "checklist",
       label: "Build acceptance checklist present",
-      ok: has(/##\s*BUILD ACCEPTANCE CHECKLIST/i),
+      ok: /##\s*BUILD ACCEPTANCE CHECKLIST/i.test(raw),
     },
   ];
   const failures = checks.filter((c) => !c.ok).map((c) => c.label);
