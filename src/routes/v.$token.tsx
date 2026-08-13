@@ -235,6 +235,24 @@ export default function VentureSharePage() {
     }
   };
 
+  /** Persist the welcome dismissal only if the visitor has opted out of seeing it again. */
+  const dismissWelcome = (open: boolean) => {
+    setWelcomeOpen(open);
+    if (!open) {
+      try {
+        if (persistWelcome) {
+          localStorage.setItem(welcomeKey, "1");
+        } else {
+          localStorage.removeItem(welcomeKey);
+        }
+      } catch {
+        /* private mode */
+      }
+    }
+  };
+
+  const openWelcome = () => setWelcomeOpen(true);
+
 
   /** Phones have a native share sheet; everything else copies the link. */
   const shareLink = async () => {
