@@ -203,7 +203,14 @@ function SlotTile({ slot, logo, busy, onPick, onRemove }: any) {
           <Upload className="h-4 w-4 text-muted-foreground" />
         )}
       </button>
-      <div className="mt-1 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{slot.label}</div>
+      <div className="mt-1 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+        {slot.toneLabel ?? slot.label}
+      </div>
+      {logo?.aspect ? (
+        <div className="truncate text-[9px] tabular-nums text-muted-foreground/70">
+          {Number(logo.aspect).toFixed(2)}:1
+        </div>
+      ) : null}
       {logo?.source === "upload" && !busy && (
         <button
           type="button"
