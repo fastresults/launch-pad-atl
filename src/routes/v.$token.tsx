@@ -70,6 +70,10 @@ export default function VentureSharePage() {
   const tracked = useRef(false);
   /** The closing "next step" invitation — opened from the nav, never by scrolling. */
   const [outroOpen, setOutroOpen] = useState(false);
+  /** First-time welcome modal from Adam. */
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [persistWelcome, setPersistWelcome] = useState(true);
+  const welcomeKey = useMemo(() => `share-welcome:${token}`, [token]);
 
   const touchX = useRef<number | null>(null);
   const touchY = useRef<number | null>(null);
