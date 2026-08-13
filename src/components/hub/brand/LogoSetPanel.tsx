@@ -416,27 +416,94 @@ export function LogoSetPanel({
 
       </div>
 
+      {review?.length ? (
+        <div className="space-y-2 rounded-xl border border-primary/40 bg-primary/5 p-3">
+          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Check these before saving
+          </div>
+          {review.map((row, i) => (
+            <div key={`${row.file.name}-${i}`} className="flex flex-wrap items-center gap-2 text-[11px]">
+              <span className="min-w-0 flex-1 truncate">{row.file.name}</span>
+              <span className="tabular-nums text-muted-foreground">
+                {row.aspect ? `${row.aspect.toFixed(2)}:1` : "vector"}
+              </span>
+              <select
+                value={row.form}
+                onChange={(e) =>
+                  setReview((r) => (r ?? []).map((x, j) => (j === i ? { ...x, form: e.target.value } : x)))
+                }
+                className="rounded-md border border-border/60 bg-background px-1.5 py-1 text-[11px]"
+              >
+                {LOGO_FORMS.map((f) => (
+                  <option key={f.form} value={f.form}>{f.label}</option>
+                ))}
+              </select>
+              <select
+                value={row.tone}
+                onChange={(e) =>
+                  setReview((r) => (r ?? []).map((x, j) => (j === i ? { ...x, tone: e.target.value } : x)))
+                }
+                className="rounded-md border border-border/60 bg-background px-1.5 py-1 text-[11px]"
+              >
+                {LOGO_TONES.map((t) => (
+                  <option key={t.tone} value={t.tone}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+          ))}
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              type="button"
+              onClick={commitReview}
+              disabled={busy}
+              className="rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground disabled:opacity-50"
+            >
+              Save {review.length} file{review.length === 1 ? "" : "s"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setReview(null)}
+              className="text-[11px] text-muted-foreground hover:underline"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <details className="group rounded-xl border border-border/60 bg-background/30">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
           <span>Logo set · {LOGO_SLOTS.filter((s) => set[s.key]).length}/{LOGO_SLOTS.length} lockups</span>
           <span className="text-primary transition-transform group-open:rotate-180">▾</span>
         </summary>
-        <div className="space-y-2.5 border-t border-border/60 p-3">
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {LOGO_SLOTS.map((slot) => (
-              <SlotTile
-                key={slot.key}
-                slot={slot}
-                logo={set[slot.key]}
-                busy={pending === slot.key}
-                onPick={pick}
-                onRemove={(v: string) => { setPending(v); remove.mutate(v); }}
-              />
-            ))}
-          </div>
+        <div className="space-y-3 border-t border-border/60 p-3">
+          {LOGO_FORMS.map((f) => (
+            <div key={f.form} className="grid grid-cols-[6.5rem_1fr] items-start gap-3">
+              <div className="pt-1">
+                <div className="text-[11px] font-medium">{f.label}</div>
+                <div className="text-[9px] leading-tight text-muted-foreground">{f.hint}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {LOGO_TONES.map((t) => {
+                  const slot = LOGO_SLOTS.find((s) => s.form === f.form && s.tone === t.tone)!;
+                  return (
+                    <SlotTile
+                      key={slot.key}
+                      slot={{ ...slot, toneLabel: t.label }}
+                      logo={set[slot.key]}
+                      busy={pending === slot.key}
+                      onPick={pick}
+                      onRemove={(v: string) => { setPending(v); remove.mutate(v); }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
           <p className="text-[10px] leading-relaxed text-muted-foreground">
-            Drop files anywhere here or click a slot to replace it. SVG is best — PNG, JPG and WebP work too, up to 5 MB.
-            Each preview audits every color in the mark and repairs only colors that fail on that surface.
+            Form is the shape of the lockup; tone is the ground it's drawn for — colour for light, inverse for dark.
+            Drop several files at once and we'll measure each one and show you where it's going before saving.
+            SVG is best — PNG, JPG and WebP work too, up to 5 MB.
           </p>
         </div>
       </details>
