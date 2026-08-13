@@ -12,6 +12,7 @@ import { aiFetch } from "./ai-fetch.ts";
 import { modelForTier } from "./deliverable-prompts.ts";
 import type { SiteArchetype } from "./site-art-direction.ts";
 import { copyCraftBlock, SECTION4_WORD_FLOOR } from "./copy-craft.ts";
+import { buildAcceptanceChecklist, layoutContractBlock } from "./layout-contract.ts";
 
 const MASTER_RE = /<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i;
 const CLOSING_RE =
@@ -128,6 +129,8 @@ Motion & depth: build the art direction's motion character, not a default fade. 
 
 Typography: display type ships a clamp range (e.g. clamp(2.75rem, 6vw, 7rem)) with stated tracking and a 62–70 character measure, and one editorial device is mandatory somewhere on the home page — a drop cap, an oversized pull quote, or a statistic set as display type. Numerals tabular in every table and metric.
 
+Layout & interaction (non-negotiable): one Container primitive — 1280px max, gutters 24px at 360px rising to 48px at desktop — wraps the content of every band including the announcement bar, header, footer and cookie banner; the shell sets overflow-x: hidden and no route scrolls horizontally at 360, 768, 1280 or 1920px, and nothing touches the viewport edge. Every CTA is a real button: primary filled in the accent with its paired foreground, 44px minimum target, hover / active / focus-visible / disabled states, secondary outlined, adjacent CTAs with a declared gap and the primary first — a CTA rendered as bare text is a hard failure. The active nav state and focus-visible are two different treatments; the active label holds 4.5:1 against the header surface and a focus ring is never the active marker. Overlays (announcement bar, cookie banner, mobile nav, modals) each carry their own opaque or blurred surface, foreground pair, elevation and a z-index from the named ladder, and none may cover a headline, caption or CTA. No two-column section ships an empty column, section spacing comes from a named rhythm scale rather than ad-hoc padding, and no route opens with a lede and a body paragraph that restate the same point. All type over imagery declares its CSS scrim and the clean side of the frame, and never crosses the focal subject. Every route deploys the accent in at least the primary CTA plus one band or editorial accent; eyebrows are tracked micro-caps, not body text. Pricing tiers render as cards with a price or an explicit basis, full-sentence inclusions and a CTA per tier.
+
 Detail layer: focus-visible rings on the brand accent, a custom 404 and cookie banner drawn in the art direction, fonts preloaded with font-display: swap, and no layout shift on image load.
 
 Conversion: primary CTA above the fold, after proof, after the offer explanation and in the footer. Forms have validation, success and error states. Emit analytics events for CTA clicks, form submits, pricing views, FAQ opens and scroll depth.
@@ -137,15 +140,167 @@ Engineering: clear structure (routes, components, data, lib, assets, styles), ty
 Final QA: every route has a unique title, meta description, canonical, H1, above-the-fold CTA, accessible alt text, no placeholder copy and no broken links. The result should be shippable to real customers the day it is generated.`;
 }
 
-/** Ensure the master prompt is deep enough, using venture-specific guidance. */
+/**
+ * Marker proving the craft contract was applied, so re-runs neither stack the
+ * addendum nor silently skip it.
+ */
+export const CRAFT_MARKER = "<!-- CRAFT_CONTRACT_APPLIED -->";
+
+/**
+ * Apply the craft contract to every PRD, unconditionally.
+ *
+ * This used to bail out whenever the master prompt was already complete and
+ * ≥1800 words — which meant the grid, layout, motion, scrim and detail rules
+ * only ever reached *short* drafts. A verbose, generic PRD skipped the entire
+ * craft layer and the builder shipped a wireframe. Length is a separate
+ * concern, handled by `expandWebsitePrdMasterPrompt`; craft is not optional.
+ */
+export function applyCraftContract(raw: string, facts: PrdVentureFacts): string {
+  let out = raw;
+  const stats = masterPromptStats(out);
+  if (stats.prompt && !out.includes(CRAFT_MARKER)) {
+    const addendum = `${buildDepthAddendum(facts)}\n\n${CRAFT_MARKER}`;
+    const nextPrompt = CLOSING_RE.test(stats.prompt)
+      ? stats.prompt.replace(CLOSING_RE, `${addendum}\n\n${CLOSING_LINE}`)
+      : `${stats.prompt}${addendum}\n\n${CLOSING_LINE}`;
+    out = out.replace(MASTER_RE, `<!-- BEGIN_MASTER_PROMPT -->\n${nextPrompt.trim()}\n<!-- END_MASTER_PROMPT -->`);
+  }
+  // The checklist is what a founder can hold the built site against, so it
+  // ships on the document itself rather than only inside the builder prompt.
+  if (!/##\s*BUILD ACCEPTANCE CHECKLIST/i.test(out)) {
+    out = `${out.trimEnd()}\n\n${buildAcceptanceChecklist()}\n`;
+  }
+  return out;
+}
+
+/** @deprecated Use `applyCraftContract` — kept so both callers stay in step. */
 export function enforceWebsitePrdDepth(raw: string, facts: PrdVentureFacts): string {
-  const stats = masterPromptStats(raw);
-  if (!stats.complete || stats.words >= 1800) return raw;
-  const addendum = buildDepthAddendum(facts);
-  const nextPrompt = CLOSING_RE.test(stats.prompt)
-    ? stats.prompt.replace(CLOSING_RE, `${addendum}\n\n${CLOSING_LINE}`)
-    : `${stats.prompt}${addendum}\n\n${CLOSING_LINE}`;
-  return raw.replace(MASTER_RE, `<!-- BEGIN_MASTER_PROMPT -->\n${nextPrompt.trim()}\n<!-- END_MASTER_PROMPT -->`);
+  return applyCraftContract(raw, facts);
+}
+
+// ---------------------------------------------------------------------------
+// Craft gate
+// ---------------------------------------------------------------------------
+
+export type CraftCheck = { id: string; label: string; ok: boolean };
+
+/**
+ * Craft assertions read from the generated markdown.
+ *
+ * The old metrics counted words, imagery rows and hex mentions — every one of
+ * which passes while the page has no container, no buttons and an illegible
+ * active nav state. These check the things that actually broke.
+ */
+export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; failures: string[] } {
+  const has = (re: RegExp) => re.test(raw);
+  const checks: CraftCheck[] = [
+    {
+      id: "container",
+      label: "Container max-width and responsive gutters are specified",
+      ok: has(/max[- ]width[^\n]{0,40}\b1[0-9]{3}\s*px/i) && has(/gutter/i),
+    },
+    {
+      id: "no_overflow",
+      label: "Horizontal-overflow rule stated for the shell",
+      ok: has(/overflow-x\s*:?\s*hidden/i) || has(/no (?:route |page )?(?:may )?scrolls? horizontally/i),
+    },
+    {
+      id: "button_anatomy",
+      label: "Button variants specified with hover / focus-visible / disabled states",
+      ok: has(/\bbuttons?\b/i) && has(/\bprimary\b/i) && has(/\bfilled\b|\bvariant\b/i) &&
+        has(/focus-visible/i) && has(/\bdisabled\b/i),
+    },
+    {
+      id: "nav_states",
+      label: "Active nav state is distinct from focus-visible",
+      ok: has(/active (?:route|nav|state|link|item)/i) && has(/focus-visible/i) &&
+        !has(/focus (?:ring|state) (?:is|as) the active/i),
+    },
+    {
+      id: "overlays",
+      label: "Overlay surfaces and a z-index ladder are declared",
+      ok: has(/z-index/i) && has(/cookie/i) && has(/\boverlay\b/i),
+    },
+    {
+      id: "composition",
+      label: "Empty-column and section-rhythm rules stated",
+      ok: has(/empty column|empty second column/i) && has(/rhythm/i),
+    },
+    {
+      id: "scrim",
+      label: "Type over imagery declares a CSS scrim",
+      ok: has(/scrim/i) && has(/\bCSS\b/),
+    },
+    {
+      id: "accent_deployment",
+      label: "Brand accent deployment named per route",
+      ok: has(/accent/i) && has(/primary CTA/i),
+    },
+    {
+      id: "pricing_tiers",
+      label: "Pricing tiers carry a price or explicit basis and a CTA each",
+      ok: !has(/\/pricing|\/packages/i) ||
+        (has(/tier/i) && has(/price|pricing basis|\$|per month|retainer|contingency/i)),
+    },
+    {
+      id: "checklist",
+      label: "Build acceptance checklist present",
+      ok: has(/##\s*BUILD ACCEPTANCE CHECKLIST/i),
+    },
+  ];
+  const failures = checks.filter((c) => !c.ok).map((c) => c.label);
+  return { ok: failures.length === 0, checks, failures };
+}
+
+/**
+ * One targeted repair pass for craft failures — the same shape as the Section 4
+ * word-floor repair: name what is missing, rewrite only what is needed, and
+ * re-verify. Returns the raw document unchanged if the pass cannot improve it.
+ */
+export async function repairWebsitePrdCraft(
+  raw: string,
+  facts: PrdVentureFacts,
+  apiKey: string,
+): Promise<{ raw: string; verdict: ReturnType<typeof craftVerdict>; repaired: boolean }> {
+  let verdict = craftVerdict(raw);
+  if (verdict.ok) return { raw, verdict, repaired: false };
+  const name = (facts.companyName ?? "").trim() || "the company";
+  try {
+    const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: modelForTier("pro"),
+        max_tokens: 16000,
+        messages: [
+          {
+            role: "system",
+            content:
+              `You repair a Website PRD that failed its layout and interaction review. Return ONLY the full corrected Markdown document — no commentary, no code fences. Preserve every existing route, heading, table and paragraph; add and correct only what the review names.\n\n${layoutContractBlock()}`,
+          },
+          {
+            role: "user",
+            content:
+              `This is the Website PRD for ${name}. The review failed on:\n- ${verdict.failures.join("\n- ")}\n\nRestate the layout contract as a subsection of Section 3, apply the failed rules to every route in Section 4, repeat the code-facing rules inside the Section 8 master prompt between its BEGIN/END delimiters, and keep the master prompt's numbered sections 1) through 11) and its exact closing line intact.\n\n${raw}`,
+          },
+        ],
+      }),
+    }, { timeoutMs: 240_000, retries: 0 });
+    if (!res.ok) {
+      await res.text();
+      return { raw, verdict, repaired: false };
+    }
+    const json = await res.json();
+    const fixed = String(json.choices?.[0]?.message?.content ?? "").trim();
+    if (!fixed || fixed.length < raw.length * 0.8) return { raw, verdict, repaired: false };
+    const next = applyCraftContract(fixed, facts);
+    const nextVerdict = craftVerdict(next);
+    if (nextVerdict.failures.length >= verdict.failures.length) return { raw, verdict, repaired: false };
+    verdict = nextVerdict;
+    return { raw: next, verdict, repaired: true };
+  } catch {
+    return { raw, verdict, repaired: false };
+  }
 }
 
 /** Expand a short master prompt to full length, then re-check depth. */
@@ -206,6 +361,7 @@ export function prdQualityMetrics(raw: string, facts: PrdVentureFacts) {
   const imageryRows = (raw.match(/^\|\s*\/[^|\n]*\|/gm) ?? []).length;
   const hexes = (facts.hexes ?? []).filter(Boolean);
   const hexHits = hexes.filter((h) => new RegExp(h.replace("#", "#?"), "i").test(raw)).length;
+  const craft = craftVerdict(raw);
   return {
     words: raw.split(/\s+/).filter(Boolean).length,
     masterPromptWords: stats.words,
@@ -225,6 +381,9 @@ export function prdQualityMetrics(raw: string, facts: PrdVentureFacts) {
     // Headline + microcopy contract actually applied.
     copyCraftPass: /placeholder|helper text|error state|success (state|message)/i.test(raw) &&
       !/\b(Learn more|Get started)\b/.test(raw),
+    craftContractApplied: raw.includes(CRAFT_MARKER),
+    craftPass: craft.ok,
+    craftFailures: craft.failures,
   };
 }
 
