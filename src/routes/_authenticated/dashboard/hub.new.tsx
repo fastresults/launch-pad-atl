@@ -1250,14 +1250,10 @@ function Inner() {
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background/40 p-3">
             <div className="text-sm">
               <span className="font-medium">
-                {isReturningFounder
-                  ? `You have ${inactiveMemoryChips.length} saved source${inactiveMemoryChips.length === 1 ? "" : "s"}.`
-                  : "Want to reuse something saved?"}
+                {`You have ${inactiveMemoryChips.length} earlier source${inactiveMemoryChips.length === 1 ? "" : "s"} on file.`}
               </span>{" "}
               <span className="text-muted-foreground">
-                {isReturningFounder
-                  ? "Pick any that apply to this startup — nothing is used until you select it."
-                  : "Your library is still saved, but nothing is active for this startup."}
+                None of it is used here — pick anything that belongs to this startup.
               </span>
             </div>
             <Button
@@ -1269,7 +1265,7 @@ function Inner() {
                 setAddMoreOpen(true);
               }}
             >
-              {isReturningFounder ? "Choose sources" : "Yes, add more"}
+              Reuse something from earlier
             </Button>
           </div>
         )}
