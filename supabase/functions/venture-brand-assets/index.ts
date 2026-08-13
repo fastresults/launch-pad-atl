@@ -869,12 +869,17 @@ Deno.serve(async (req) => {
       userId = snap.user_id;
     }
 
-    const { data: kit } = await supabase.from("venture_brand_kits").select("palette, typography, dna, logos, moodboard").eq("snapshot_id", snapshotId).maybeSingle();
+    const { data: kit } = await supabase.from("venture_brand_kits").select("palette, typography, dna, logos, moodboard, art_direction").eq("snapshot_id", snapshotId).maybeSingle();
     const tokens = {
       colors: kit?.palette?.colors ?? snap.brand_tokens?.colors,
       fonts: kit?.typography ? { heading: kit.typography.heading?.family, body: kit.typography.body?.family } : snap.brand_tokens?.fonts,
       mood: kit?.dna?.mood ?? kit?.dna?.personality ?? snap.brand_tokens?.mood,
     };
+    // A founder- or admin-authored art direction is binding on every generated
+    // image for this venture: it names the world to shoot and the clichés to avoid.
+    const kitArtDirection = typeof (kit as any)?.art_direction === "string" && (kit as any).art_direction.trim()
+      ? `ART DIRECTION (binding): ${(kit as any).art_direction.trim().slice(0, 1200)}`
+      : "";
 
     const n = Math.max(1, Math.min(4, count ?? preset.defaultCount));
     const results: any[] = [];
@@ -1770,7 +1775,7 @@ Deno.serve(async (req) => {
           const angle = kind === "moodboard"
             ? MOODBOARD_ANGLES[(myIdx + angleOffset) % MOODBOARD_ANGLES.length]
             : undefined;
-          const prompt = buildPromptGeneric(kind, ctx, tokens, extra, angle);
+          const prompt = buildPromptGeneric(kind, ctx, tokens, [kitArtDirection, extra].filter(Boolean).join(" "), angle);
           try {
             const b64 = await generateOne(prompt, preset.size);
             const up = await uploadAsset(supabase, snapshotId, userId, kind, b64, prompt);
