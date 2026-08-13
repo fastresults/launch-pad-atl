@@ -1430,11 +1430,15 @@ Deno.serve(async (req) => {
     }
 
     // Founder uploads their own mark. Each upload targets one slot of the logo
-    // set (primary / reversed / stacked / stacked_reversed / icon / wordmark)
-    // and replaces only that slot.
+    // set — a form (symbol / horizontal / stacked / wordmark) crossed with a
+    // tone (colour / inverse) — and replaces only that slot. The artwork is
+    // measured on the way in, so a file that plainly disagrees with the slot it
+    // was dropped on is filed where it belongs instead of lying in place.
     if (kind === "logo_upload_own") {
-      const VARIANTS = ["primary", "reversed", "stacked", "stacked_reversed", "icon", "wordmark"];
-      const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
+      const chosenVariant = (LOGO_VARIANTS as readonly string[]).includes(body?.variant)
+        ? body.variant
+        : "primary";
+      let variant = chosenVariant;
 
       const dataUrl = typeof body?.dataUrl === "string" ? body.dataUrl : "";
       const filename = typeof body?.filename === "string" ? body.filename : "logo.png";
