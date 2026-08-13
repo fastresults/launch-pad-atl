@@ -770,7 +770,7 @@ export async function generateOne(
     fetch(`${SUPABASE_URL}/functions/v1/venture-document-image`, {
       method: "POST",
       headers: { Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ snapshotId, documentType, force: forceImage }),
+      body: JSON.stringify({ snapshotId, documentType, force: forceImage, quality: "hq" }),
     }).catch(() => {});
   } catch { /* ignore */ }
 
