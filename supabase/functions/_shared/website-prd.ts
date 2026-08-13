@@ -12,7 +12,7 @@ import { aiFetch } from "./ai-fetch.ts";
 import { modelForTier } from "./deliverable-prompts.ts";
 import type { SiteArchetype } from "./site-art-direction.ts";
 import { copyCraftBlock, SECTION4_WORD_FLOOR } from "./copy-craft.ts";
-import { buildAcceptanceChecklist, layoutContractBlock } from "./layout-contract.ts";
+import { buildAcceptanceChecklist, imageryContractBlock, layoutContractBlock } from "./layout-contract.ts";
 
 const MASTER_RE = /<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i;
 const CLOSING_RE =
@@ -149,6 +149,27 @@ Final QA: every route has a unique title, meta description, canonical, H1, above
 export const CRAFT_MARKER = "<!-- CRAFT_CONTRACT_APPLIED -->";
 
 /**
+ * The depth addendum is injected by us, so any check that greps for its words
+ * over the whole document passes on our own boilerplate. Fence it so the craft
+ * gate can read only what the model actually authored.
+ */
+export const ADDENDUM_BEGIN = "<!-- BEGIN_CRAFT_ADDENDUM -->";
+export const ADDENDUM_END = "<!-- END_CRAFT_ADDENDUM -->";
+const ADDENDUM_RE = /<!--\s*BEGIN_CRAFT_ADDENDUM\s*-->[\s\S]*?<!--\s*END_CRAFT_ADDENDUM\s*-->/gi;
+// Documents generated before the fence existed still carry the addendum text.
+const LEGACY_ADDENDUM_RE =
+  /Additional implementation depth requirements[\s\S]*?(?=Begin scaffolding now\.|<!--\s*END_MASTER_PROMPT)/gi;
+
+/** The build checklist is appended by us too, so it is not evidence either. */
+const CHECKLIST_RE = /\n##\s*BUILD ACCEPTANCE CHECKLIST[\s\S]*$/i;
+
+/** The document minus anything this pipeline injected into it. */
+export function authoredPrd(raw: string): string {
+  return raw.replace(ADDENDUM_RE, "\n").replace(LEGACY_ADDENDUM_RE, "\n").replace(CHECKLIST_RE, "\n");
+}
+
+
+/**
  * Apply the craft contract to every PRD, unconditionally.
  *
  * This used to bail out whenever the master prompt was already complete and
@@ -161,7 +182,7 @@ export function applyCraftContract(raw: string, facts: PrdVentureFacts): string 
   let out = raw;
   const stats = masterPromptStats(out);
   if (stats.prompt && !out.includes(CRAFT_MARKER)) {
-    const addendum = `${buildDepthAddendum(facts)}\n\n${CRAFT_MARKER}`;
+    const addendum = `${ADDENDUM_BEGIN}${buildDepthAddendum(facts)}\n\n${ADDENDUM_END}\n\n${CRAFT_MARKER}`;
     const nextPrompt = CLOSING_RE.test(stats.prompt)
       ? stats.prompt.replace(CLOSING_RE, `${addendum}\n\n${CLOSING_LINE}`)
       : `${stats.prompt}${addendum}\n\n${CLOSING_LINE}`;
@@ -186,16 +207,88 @@ export function enforceWebsitePrdDepth(raw: string, facts: PrdVentureFacts): str
 
 export type CraftCheck = { id: string; label: string; ok: boolean };
 
+export type ImageryRow = {
+  route: string;
+  type: string;
+  caption: string;
+  narrative: string;
+  line: string;
+};
+
+/** Section 4b (the imagery table), with anything we injected removed. */
+export function imageryRegion(raw: string): string {
+  return authoredPrd(raw).match(/\n##\s*4b[^\n]*\n([\s\S]*?)(?=\n##\s*5[.)\s]|$)/i)?.[1] ?? "";
+}
+
+/** Section 4 (per-route specs), with anything we injected removed. */
+export function routeSpecsRegion(raw: string): string {
+  return authoredPrd(raw).match(SECTION4_RE)?.[2] ?? "";
+}
+
+/** Every imagery row, keyed off a leading route cell. */
+export function imageryRowsParsed(raw: string): ImageryRow[] {
+  const region = imageryRegion(raw);
+  const header = region.split("\n").find((l) => /^\|/.test(l.trim())) ?? "";
+  const cols = header.split("|").map((c) => c.trim().toLowerCase());
+  const idx = (re: RegExp) => cols.findIndex((c) => re.test(c));
+  const typeAt = idx(/type|slot|visual/);
+  const capAt = idx(/caption|on-page copy/);
+  const narrAt = idx(/narrative|supporting copy|illustrat/);
+  const rows: ImageryRow[] = [];
+  for (const line of region.split("\n")) {
+    const t = line.trim();
+    if (!t.startsWith("|") || /^\|[\s|:-]+\|?$/.test(t)) continue;
+    const cells = t.split("|").map((c) => c.trim());
+    const route = cells.find((c) => /^\//.test(c));
+    if (!route) continue;
+    rows.push({
+      route,
+      type: typeAt >= 0 ? (cells[typeAt] ?? "") : cells.slice(0, 4).join(" "),
+      caption: capAt >= 0 ? (cells[capAt] ?? "") : "",
+      narrative: narrAt >= 0 ? (cells[narrAt] ?? "") : "",
+      line: t,
+    });
+  }
+  return rows;
+}
+
+/** Routes declared by Section 4 headings, e.g. `### / — Home`. */
+export function routesInSpec(raw: string): string[] {
+  const out = new Set<string>();
+  for (const m of routeSpecsRegion(raw).matchAll(/^#{2,4}\s*(\/[^\s—–|-]*)/gm)) out.add(m[1]);
+  return [...out];
+}
+
+/** Per-route imagery floor: the home page carries the site, interiors less. */
+export function imageFloorFor(route: string): number {
+  return route === "/" ? 8 : 4;
+}
+
+const TEXTURE_RE = /texture|band|pattern|gradient|noise/i;
+const HERO_RE = /hero|full[- ]bleed|banner|cover/i;
+const DARK_RE = /\b(dark|darkened|moody|near-black|shadowy|dim|low-key)\b/i;
+const EXPOSURE_RE = /\b\d{2}\s*(?:–|-|to)\s*\d{2}\s*%|\b\d{2}\s*%\s*luminance|luminance[^|]{0,24}\d{2}\s*%/i;
+
 /**
  * Craft assertions read from the generated markdown.
  *
- * The old metrics counted words, imagery rows and hex mentions — every one of
- * which passes while the page has no container, no buttons and an illegible
- * active nav state. These check the things that actually broke.
+ * Everything is measured against `authoredPrd(raw)` — the document minus the
+ * depth addendum this pipeline injects. Grepping the whole document made the
+ * parallax, scrim, opacity and image-tier checks self-satisfying: they matched
+ * our own boilerplate while no route spec and no imagery row carried the rule.
  */
 export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; failures: string[] } {
-  const has = (re: RegExp) => re.test(raw);
+  const authored = authoredPrd(raw);
+  const has = (re: RegExp) => re.test(authored);
+  const rows = imageryRowsParsed(raw);
+  const routes = routesInSpec(raw);
+  const routeBlocks = routeSpecsRegion(raw).split(/^#{2,4}\s*(?=\/)/m).filter((b) => /^\//.test(b.trim()));
+  const heroRows = rows.filter((r) => HERO_RE.test(r.type) || HERO_RE.test(r.line));
+  const thinRoutes = routes.filter(
+    (route) => rows.filter((r) => r.route === route).length < imageFloorFor(route),
+  );
   const checks: CraftCheck[] = [
+
     {
       id: "container",
       label: "Container max-width and responsive gutters are specified",
@@ -247,14 +340,48 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
     {
       id: "logo_scale",
       label: "Header and footer logo heights specified at brand scale",
-      ok: /header[^\n]{0,200}\b(4[4-9]|5[0-9]|6[0-9]|7[0-2])\s*px/i.test(raw) &&
-        /footer[^\n]{0,200}\b(7[2-9]|[89][0-9]|1[01][0-9]|120|320)\s*px/i.test(raw),
+      ok: /header[^\n]{0,200}\b(4[4-9]|5[0-9]|6[0-9]|7[0-2])\s*px/i.test(authored) &&
+        /footer[^\n]{0,200}\b(7[2-9]|[89][0-9]|1[01][0-9]|120|320)\s*px/i.test(authored),
     },
     {
       id: "parallax_hero",
       label: "Hero parallax depth stack specified with reduced-motion fallback",
       ok: has(/parallax/i) && has(/0\.25x|0\.6x|depth stack|three-plane/i) &&
         has(/prefers-reduced-motion/i),
+    },
+    {
+      id: "parallax_routes",
+      label: "Every route with a hero or full-bleed band names its parallax treatment in Section 4",
+      ok: routeBlocks.length > 0 &&
+        routeBlocks.every((b) => !HERO_RE.test(b) || /parallax/i.test(b)),
+    },
+    {
+      id: "hero_exposure",
+      label: "Hero / full-bleed imagery rows state a luminance target and a CSS scrim",
+      ok: heroRows.length > 0 &&
+        heroRows.every((r) =>
+          EXPOSURE_RE.test(r.line) && (/scrim/i.test(r.line) || /no type on (the )?image/i.test(r.line))
+        ),
+    },
+    {
+      id: "no_baked_darkening",
+      label: "No imagery prompt asks for a dark render without an exposure target",
+      ok: rows.every((r) => !DARK_RE.test(r.line) || EXPOSURE_RE.test(r.line)),
+    },
+    {
+      id: "image_density",
+      label: "Imagery table meets the per-route floor (8 slots on /, 4 on interiors)",
+      ok: routes.length > 0 && thinRoutes.length === 0,
+    },
+    {
+      id: "image_copy",
+      label: "Every non-texture imagery row carries a caption and the sentence it illustrates",
+      ok: rows.length > 0 &&
+        rows.every((r) =>
+          TEXTURE_RE.test(r.type) ||
+          (r.caption.length > 2 && !/^n\/?a$/i.test(r.caption) &&
+            r.narrative.length > 2 && !/^n\/?a$/i.test(r.narrative))
+        ),
     },
     {
       id: "type_contract",
@@ -265,7 +392,7 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
     {
       id: "opacity_ladder",
       label: "Text opacity ladder (100 / 72 / 56 / 38) declared",
-      ok: /72\s*%/.test(raw) && /56\s*%/.test(raw) && /38\s*%/.test(raw),
+      ok: /72\s*%/.test(authored) && /56\s*%/.test(authored) && /38\s*%/.test(authored),
     },
     {
       id: "image_tier",
@@ -273,15 +400,96 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
       ok: has(/gemini-3-pro-image|pro-tier image model/i) &&
         has(/1920|2x density|resolution/i),
     },
+
     {
       id: "checklist",
       label: "Build acceptance checklist present",
-      ok: has(/##\s*BUILD ACCEPTANCE CHECKLIST/i),
+      ok: /##\s*BUILD ACCEPTANCE CHECKLIST/i.test(raw),
     },
   ];
   const failures = checks.filter((c) => !c.ok).map((c) => c.label);
   return { ok: failures.length === 0, checks, failures };
 }
+
+/** The imagery-specific ids inside `craftVerdict`. */
+export const IMAGERY_CHECK_IDS = [
+  "hero_exposure",
+  "no_baked_darkening",
+  "image_density",
+  "image_copy",
+  "image_tier",
+  "parallax_routes",
+] as const;
+
+const SECTION4B_RE = /(\n##\s*4b[^\n]*\n)([\s\S]*?)(?=\n##\s*5[.)\s]|$)/i;
+
+/**
+ * Targeted repair for the imagery table alone.
+ *
+ * The whole-document craft repair has to re-emit 12,000+ words to fix a table,
+ * which either truncates or drifts. When only imagery checks fail, regenerate
+ * Section 4b on its own and splice it back in.
+ */
+export async function repairWebsitePrdImagery(
+  raw: string,
+  facts: PrdVentureFacts,
+  apiKey: string,
+): Promise<{ raw: string; repaired: boolean }> {
+  const verdict = craftVerdict(raw);
+  const failing = verdict.checks.filter((c) => !c.ok && (IMAGERY_CHECK_IDS as readonly string[]).includes(c.id));
+  if (failing.length === 0) return { raw, repaired: false };
+  const match = raw.match(SECTION4B_RE);
+  if (!match) return { raw, repaired: false };
+
+  const routes = routesInSpec(raw);
+  const floors = routes.map((r) => `${r}: at least ${imageFloorFor(r)} image slots`).join("; ");
+  const name = (facts.companyName ?? "").trim() || "the company";
+  try {
+    const res = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: modelForTier("pro"),
+        max_tokens: 16000,
+        messages: [
+          {
+            role: "system",
+            content:
+              `You rewrite Section 4b ("Imagery plan") of a Website PRD. Return ONLY the section body as a Markdown table plus any notes — no "## 4b" heading, no commentary, no code fences.\n\n${
+                imageryContractBlock()
+              }`,
+          },
+          {
+            role: "user",
+            content:
+              `This is Section 4b of the Website PRD for ${name}. The review failed on:\n- ${
+                failing.map((f) => f.label).join("\n- ")
+              }\n\nRebuild the table so every row satisfies the contract. Route floors: ${floors}. Keep every existing slot and add the missing ones; keep the route paths exactly as written in Section 4.\n\nCurrent Section 4:\n${
+                routeSpecsRegion(raw).slice(0, 12000)
+              }\n\nCurrent Section 4b:\n${match[2]}`,
+          },
+        ],
+      }),
+    }, { timeoutMs: 240_000, retries: 0 });
+    if (!res.ok) {
+      await res.text();
+      return { raw, repaired: false };
+    }
+    const json = await res.json();
+    const body = String(json.choices?.[0]?.message?.content ?? "").trim();
+    if (!body || !body.includes("|")) return { raw, repaired: false };
+    const next = raw.replace(SECTION4B_RE, `${match[1]}${body}\n`);
+    const nextVerdict = craftVerdict(next);
+    const stillFailing = nextVerdict.checks.filter(
+      (c) => !c.ok && (IMAGERY_CHECK_IDS as readonly string[]).includes(c.id),
+    ).length;
+    if (stillFailing >= failing.length) return { raw, repaired: false };
+    return { raw: next, repaired: true };
+  } catch {
+    return { raw, repaired: false };
+  }
+}
+
 
 /**
  * One targeted repair pass for craft failures — the same shape as the Section 4
@@ -393,12 +601,25 @@ export function prdQualityMetrics(raw: string, facts: PrdVentureFacts) {
   const hexes = (facts.hexes ?? []).filter(Boolean);
   const hexHits = hexes.filter((h) => new RegExp(h.replace("#", "#?"), "i").test(raw)).length;
   const craft = craftVerdict(raw);
+  const rows = imageryRowsParsed(raw);
+  const routes = routesInSpec(raw);
+  const perRoute = Object.fromEntries(
+    routes.map((r) => [r, rows.filter((x) => x.route === r).length]),
+  );
+  const ok = (id: string) => craft.checks.find((c) => c.id === id)?.ok ?? false;
   return {
     words: raw.split(/\s+/).filter(Boolean).length,
     masterPromptWords: stats.words,
     masterPromptComplete: stats.complete,
     imageryRows,
+    imagesPerRoute: perRoute,
+    thinRoutes: routes.filter((r) => (perRoute[r] ?? 0) < imageFloorFor(r)),
+    heroExposureOk: ok("hero_exposure"),
+    parallaxRoutesOk: ok("parallax_routes"),
+    imageCopyOk: ok("image_copy"),
+    imageDensityOk: ok("image_density"),
     brandHexesUsed: `${hexHits}/${hexes.length}`,
+
     section4Words: section4Words(raw),
     archetype: facts.archetype?.name ?? null,
     archetypeNamed: facts.archetype ? raw.includes(facts.archetype.name) : null,
@@ -530,10 +751,11 @@ export const PRD_PASSES: PrdPass[] = [
   {
     id: "c",
     label: "Sections 4b–7 (imagery plan, SEO, conversion, tech)",
-    maxTokens: 12000,
+    maxTokens: 16000,
     directive:
-      "PASS 3 of 4. Output ONLY Sections 4b, 5, 6 and 7, complete and to spec. The Section 4b imagery table must carry a row for every section of every route named above. Do NOT write Section 8 or 9, and do NOT repeat earlier sections.",
+      "PASS 3 of 4. Output ONLY Sections 4b, 5, 6 and 7, complete and to spec. The Section 4b imagery table must carry a row for every section of every route named above, at a minimum of 8 rows for the home route and 4 rows for each interior route, and every row must fill all of its columns — including Exposure & contrast target (a numeric luminance range), Parallax plan, Caption / on-page copy and Narrative role. Hero and full-bleed rows state the three-plane parallax stack and that darkening is a CSS scrim, never baked into the render. Finish the whole table — a truncated table is a failed pass. Do NOT write Section 8 or 9, and do NOT repeat earlier sections.",
   },
+
   {
     id: "d",
     label: "Sections 8–9 (master prompt, build checklist)",
