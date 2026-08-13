@@ -72,7 +72,7 @@ export default function VentureSharePage() {
   const [outroOpen, setOutroOpen] = useState(false);
   /** First-time welcome modal from Adam. */
   const [welcomeOpen, setWelcomeOpen] = useState(false);
-  const [persistWelcome, setPersistWelcome] = useState(true);
+  const [persistWelcome, setPersistWelcome] = useState(false);
   const welcomeKey = useMemo(() => `share-welcome:${token}`, [token]);
 
   const touchX = useRef<number | null>(null);
