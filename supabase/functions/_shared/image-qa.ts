@@ -4,6 +4,7 @@
 
 import { PNG } from "npm:pngjs@7.0.0";
 import { Buffer } from "node:buffer";
+import { readPng } from "./png-codec.ts";
 import { contrastRatio, lightness } from "./palette-rules.ts";
 import type { CanvasPlan } from "./canvas-plan.ts";
 
@@ -146,7 +147,7 @@ export function runContrastQa(pngBytes: Uint8Array, plan: CanvasPlan): QaVerdict
   const reasons: string[] = [];
   let png: PNG;
   try {
-    png = PNG.sync.read(Buffer.from(pngBytes));
+    png = readPng(pngBytes);
   } catch (e) {
     return {
       ok: true,
@@ -242,7 +243,7 @@ export function runContrastQa(pngBytes: Uint8Array, plan: CanvasPlan): QaVerdict
 // Cheap dominant-ink estimator for a logo PNG (used to pick avatar surface).
 export function logoDominantInk(pngBytes: Uint8Array): string | null {
   try {
-    const png = PNG.sync.read(Buffer.from(pngBytes));
+    const png = readPng(pngBytes);
     const { width: W, height: H } = png;
     // Look at the central 60% region, weight darker / more saturated pixels.
     const x0 = Math.floor(W * 0.2), x1 = Math.floor(W * 0.8);

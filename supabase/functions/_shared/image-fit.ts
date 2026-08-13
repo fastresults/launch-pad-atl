@@ -13,15 +13,16 @@
 
 import { PNG } from "npm:pngjs@7.0.0";
 import { Buffer } from "node:buffer";
+import { readPng, writePng } from "./png-codec.ts";
 
 export type Gravity = "center" | "top";
 
 function decode(bytes: Uint8Array): PNG {
-  return PNG.sync.read(Buffer.from(bytes));
+  return readPng(bytes);
 }
 
 function encode(png: PNG): Uint8Array {
-  return new Uint8Array(PNG.sync.write(png));
+  return writePng(png);
 }
 
 function px(png: PNG, x: number, y: number): [number, number, number] {
