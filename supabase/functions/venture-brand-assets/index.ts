@@ -64,6 +64,13 @@ import {
   parseJuryVerdict,
 } from "../_shared/logo-jury.ts";
 import { svgPaints, svgPaintsPass, auditSvgSurfaces, DARK_SURFACE, LIGHT_SURFACE } from "../_shared/logo-ink.ts";
+import {
+  LOGO_VARIANTS,
+  FORM_LABEL,
+  formToneOf,
+  measureArtwork,
+  reconcileSlot,
+} from "../_shared/logo-form.ts";
 
 
 const corsHeaders = {
