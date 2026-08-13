@@ -9,20 +9,44 @@ import { cn } from "@/lib/utils";
 
 /**
  * The one place a founder sees and changes their mark. Renders the committed
- * logo on light / dark / brand, then exposes the four slots of the logo set so
- * any of them can be uploaded or replaced in place — used both on the Brand
- * Studio identity board and at the top of the Brand Wizard.
+ * logo on light / dark / brand, then exposes the logo set as a FORM x TONE
+ * grid — symbol / horizontal / stacked / wordmark, each in colour and inverse —
+ * so there is never a question about which file goes where.
  */
 
-export const LOGO_SLOTS = [
-  { key: "primary", label: "Primary", hint: "Horizontal mark, light backgrounds" },
-  { key: "reversed", label: "Reversed", hint: "Horizontal mark, dark backgrounds" },
-  { key: "stacked", label: "Stacked", hint: "Mark over wordmark, light backgrounds" },
-  { key: "stacked_reversed", label: "Stacked reversed", hint: "Mark over wordmark, dark backgrounds" },
-  { key: "icon", label: "Icon", hint: "Favicon, avatar, small placements" },
-  { key: "wordmark", label: "Wordmark", hint: "Header and letterhead lockups" },
+export const LOGO_FORMS = [
+  { form: "symbol", label: "Symbol", hint: "Mark alone — favicon, avatar, small square placements" },
+  { form: "horizontal", label: "Horizontal", hint: "Mark beside the name — headers, wide banners" },
+  { form: "stacked", label: "Stacked", hint: "Mark above the name — square and tall placements" },
+  { form: "wordmark", label: "Wordmark", hint: "Name alone — letterhead, footers, fine print" },
 ] as const;
 
+export const LOGO_TONES = [
+  { tone: "colour", label: "Colour", hint: "for light grounds" },
+  { tone: "inverse", label: "Inverse", hint: "for dark grounds" },
+] as const;
+
+/** Slot keys are the storage contract; form x tone is how humans read them. */
+export const SLOT_BY_FORM_TONE: Record<string, string> = {
+  "symbol|colour": "icon",
+  "symbol|inverse": "icon_reversed",
+  "horizontal|colour": "primary",
+  "horizontal|inverse": "reversed",
+  "stacked|colour": "stacked",
+  "stacked|inverse": "stacked_reversed",
+  "wordmark|colour": "wordmark",
+  "wordmark|inverse": "wordmark_reversed",
+};
+
+export const LOGO_SLOTS = LOGO_FORMS.flatMap((f) =>
+  LOGO_TONES.map((t) => ({
+    key: SLOT_BY_FORM_TONE[`${f.form}|${t.tone}`],
+    form: f.form,
+    tone: t.tone,
+    label: `${f.label} · ${t.label}`,
+    hint: `${f.hint} — ${t.hint}`,
+  })),
+);
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/svg+xml";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -53,16 +77,36 @@ export function logoSetFrom(logos: any): Record<string, any> {
   return set;
 }
 
-/** Filename hints let a multi-file drop land in the right slots. */
-function guessSlot(name: string): string {
-  const n = name.toLowerCase();
-  const inverse = /(reversed|reverse|dark|white|knockout|inverse)/.test(n);
-  if (/(stacked|stack|vertical|centred|centered)/.test(n)) return inverse ? "stacked_reversed" : "stacked";
-  if (inverse) return "reversed";
-  if (/(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)) return "icon";
-  if (/(wordmark|word-mark|logotype|lockup)/.test(n)) return "wordmark";
-  return "primary";
+/** Measure a dropped file so multi-file assignment is geometric, not lexical. */
+async function measureFile(file: File): Promise<number | null> {
+  const url = URL.createObjectURL(file);
+  try {
+    const aspect = await new Promise<number | null>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img.naturalWidth > 0 && img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : null);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+    return aspect;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
+
+/** Filename hints only decide tone and wordmark/symbol intent; shape is measured. */
+function classifyFile(name: string, aspect: number | null): { form: string; tone: string } {
+  const n = name.toLowerCase();
+  const tone = /(reversed|reverse|dark|white|knockout|inverse|inv)/.test(n) ? "inverse" : "colour";
+  if (/(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)) return { form: "symbol", tone };
+  if (/(wordmark|word-mark|logotype)/.test(n)) return { form: "wordmark", tone };
+  if (/(stacked|stack|vertical|centred|centered)/.test(n)) return { form: "stacked", tone };
+  if (/(horizontal|horiz|lockup|wide)/.test(n)) return { form: "horizontal", tone };
+  if (aspect == null) return { form: "horizontal", tone };
+  if (aspect >= 2.2) return { form: "horizontal", tone };
+  if (aspect >= 1.15) return { form: "stacked", tone };
+  return { form: "symbol", tone };
+}
+
 
 
 function readDataUrl(file: File) {
