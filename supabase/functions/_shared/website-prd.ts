@@ -204,16 +204,88 @@ export function enforceWebsitePrdDepth(raw: string, facts: PrdVentureFacts): str
 
 export type CraftCheck = { id: string; label: string; ok: boolean };
 
+export type ImageryRow = {
+  route: string;
+  type: string;
+  caption: string;
+  narrative: string;
+  line: string;
+};
+
+/** Section 4b (the imagery table), with anything we injected removed. */
+export function imageryRegion(raw: string): string {
+  return authoredPrd(raw).match(/\n##\s*4b[^\n]*\n([\s\S]*?)(?=\n##\s*5[.)\s]|$)/i)?.[1] ?? "";
+}
+
+/** Section 4 (per-route specs), with anything we injected removed. */
+export function routeSpecsRegion(raw: string): string {
+  return authoredPrd(raw).match(SECTION4_RE)?.[2] ?? "";
+}
+
+/** Every imagery row, keyed off a leading route cell. */
+export function imageryRowsParsed(raw: string): ImageryRow[] {
+  const region = imageryRegion(raw);
+  const header = region.split("\n").find((l) => /^\|/.test(l.trim())) ?? "";
+  const cols = header.split("|").map((c) => c.trim().toLowerCase());
+  const idx = (re: RegExp) => cols.findIndex((c) => re.test(c));
+  const typeAt = idx(/type|slot|visual/);
+  const capAt = idx(/caption|on-page copy/);
+  const narrAt = idx(/narrative|supporting copy|illustrat/);
+  const rows: ImageryRow[] = [];
+  for (const line of region.split("\n")) {
+    const t = line.trim();
+    if (!t.startsWith("|") || /^\|[\s|:-]+\|?$/.test(t)) continue;
+    const cells = t.split("|").map((c) => c.trim());
+    const route = cells.find((c) => /^\//.test(c));
+    if (!route) continue;
+    rows.push({
+      route,
+      type: typeAt >= 0 ? (cells[typeAt] ?? "") : cells.slice(0, 4).join(" "),
+      caption: capAt >= 0 ? (cells[capAt] ?? "") : "",
+      narrative: narrAt >= 0 ? (cells[narrAt] ?? "") : "",
+      line: t,
+    });
+  }
+  return rows;
+}
+
+/** Routes declared by Section 4 headings, e.g. `### / — Home`. */
+export function routesInSpec(raw: string): string[] {
+  const out = new Set<string>();
+  for (const m of routeSpecsRegion(raw).matchAll(/^#{2,4}\s*(\/[^\s—–|-]*)/gm)) out.add(m[1]);
+  return [...out];
+}
+
+/** Per-route imagery floor: the home page carries the site, interiors less. */
+export function imageFloorFor(route: string): number {
+  return route === "/" ? 8 : 4;
+}
+
+const TEXTURE_RE = /texture|band|pattern|gradient|noise/i;
+const HERO_RE = /hero|full[- ]bleed|banner|cover/i;
+const DARK_RE = /\b(dark|darkened|moody|near-black|shadowy|dim|low-key)\b/i;
+const EXPOSURE_RE = /\b\d{2}\s*(?:–|-|to)\s*\d{2}\s*%|\b\d{2}\s*%\s*luminance|luminance[^|]{0,24}\d{2}\s*%/i;
+
 /**
  * Craft assertions read from the generated markdown.
  *
- * The old metrics counted words, imagery rows and hex mentions — every one of
- * which passes while the page has no container, no buttons and an illegible
- * active nav state. These check the things that actually broke.
+ * Everything is measured against `authoredPrd(raw)` — the document minus the
+ * depth addendum this pipeline injects. Grepping the whole document made the
+ * parallax, scrim, opacity and image-tier checks self-satisfying: they matched
+ * our own boilerplate while no route spec and no imagery row carried the rule.
  */
 export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; failures: string[] } {
-  const has = (re: RegExp) => re.test(raw);
+  const authored = authoredPrd(raw);
+  const has = (re: RegExp) => re.test(authored);
+  const rows = imageryRowsParsed(raw);
+  const routes = routesInSpec(raw);
+  const routeBlocks = routeSpecsRegion(raw).split(/^#{2,4}\s*(?=\/)/m).filter((b) => /^\//.test(b.trim()));
+  const heroRows = rows.filter((r) => HERO_RE.test(r.type) || HERO_RE.test(r.line));
+  const thinRoutes = routes.filter(
+    (route) => rows.filter((r) => r.route === route).length < imageFloorFor(route),
+  );
   const checks: CraftCheck[] = [
+
     {
       id: "container",
       label: "Container max-width and responsive gutters are specified",
