@@ -149,6 +149,24 @@ Final QA: every route has a unique title, meta description, canonical, H1, above
 export const CRAFT_MARKER = "<!-- CRAFT_CONTRACT_APPLIED -->";
 
 /**
+ * The depth addendum is injected by us, so any check that greps for its words
+ * over the whole document passes on our own boilerplate. Fence it so the craft
+ * gate can read only what the model actually authored.
+ */
+export const ADDENDUM_BEGIN = "<!-- BEGIN_CRAFT_ADDENDUM -->";
+export const ADDENDUM_END = "<!-- END_CRAFT_ADDENDUM -->";
+const ADDENDUM_RE = /<!--\s*BEGIN_CRAFT_ADDENDUM\s*-->[\s\S]*?<!--\s*END_CRAFT_ADDENDUM\s*-->/gi;
+// Documents generated before the fence existed still carry the addendum text.
+const LEGACY_ADDENDUM_RE =
+  /Additional implementation depth requirements[\s\S]*?(?=Begin scaffolding now\.|<!--\s*END_MASTER_PROMPT)/gi;
+
+/** The document minus anything this pipeline injected into it. */
+export function authoredPrd(raw: string): string {
+  return raw.replace(ADDENDUM_RE, "\n").replace(LEGACY_ADDENDUM_RE, "\n");
+}
+
+
+/**
  * Apply the craft contract to every PRD, unconditionally.
  *
  * This used to bail out whenever the master prompt was already complete and
