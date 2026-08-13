@@ -456,9 +456,8 @@ function markSvgFor(ctx: CollateralCtx, bg?: string | null): { svg: string | nul
   return { svg: ctx.symbolSvg || ctx.logoSvg || null, dark: false };
 }
 
-function markSvgOf(ctx: CollateralCtx): string | null {
-  return markSvgFor(ctx, null).svg;
-}
+
+
 
 /** Artwork whose colour we cannot rewrite: pixels, or gradient/pattern paint. */
 function isUntintable(svg: string): boolean {
