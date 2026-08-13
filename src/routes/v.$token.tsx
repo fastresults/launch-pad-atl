@@ -102,6 +102,18 @@ export default function VentureSharePage() {
     }
   }, [payload, token, submitted]);
 
+  // Open the welcome modal once per showcase token, unless the visitor has dismissed it.
+  useEffect(() => {
+    if (!payload) return;
+    try {
+      if (!localStorage.getItem(welcomeKey)) {
+        setWelcomeOpen(true);
+      }
+    } catch {
+      /* private mode */
+    }
+  }, [payload, welcomeKey]);
+
 
   // One asset at a time: 60+ documents in a single scroll is unreadable.
   // The hash keeps every asset individually linkable.
