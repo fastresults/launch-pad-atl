@@ -456,9 +456,8 @@ function markSvgFor(ctx: CollateralCtx, bg?: string | null): { svg: string | nul
   return { svg: ctx.symbolSvg || ctx.logoSvg || null, dark: false };
 }
 
-function markSvgOf(ctx: CollateralCtx): string | null {
-  return markSvgFor(ctx, null).svg;
-}
+
+
 
 /** Artwork whose colour we cannot rewrite: pixels, or gradient/pattern paint. */
 function isUntintable(svg: string): boolean {
@@ -596,8 +595,11 @@ function markAt(
 
 
 
-function logoAspect(ctx: CollateralCtx): number {
-  const svg = markSvgOf(ctx);
+function logoAspect(ctx: CollateralCtx, bg?: string | null): number {
+  // Measure the artwork that will actually be painted on this ground. Sizing
+  // from the light variant and then drawing the reversed one (a different
+  // aspect) is how a legally-sized box produced a half-height mark.
+  const svg = markSvgFor(ctx, bg ?? null).svg;
   return svg ? inkAspect(svg) : 1;
 
 }
@@ -618,9 +620,12 @@ function clearSpace(height: number): number {
  * The mark box this piece's standard calls for — height inside the spec band,
  * width from the artwork's own aspect. Templates never hand-pick a logo size.
  */
-function markBoxFor(ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.85, fillWidth = false) {
-  return logoBox(rs, logoAspect(ctx), isLockup(ctx), maxWidth, bias, fillWidth);
+function markBoxFor(
+  ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.85, fillWidth = false, bg?: string | null,
+) {
+  return logoBox(rs, logoAspect(ctx, bg), isLockup(ctx), maxWidth, bias, fillWidth);
 }
+
 
 /** Draw the mark at its spec size, top-left anchored at (x, y). */
 function specMark(
@@ -737,11 +742,17 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   // and a short descriptor.
   const fieldBg = invert ? paper : primary;
   const fieldInk = inkOn(fieldBg);
-  const markBox = markBoxFor(ctx, rsF, W * 0.32, 1, true);
+  const markBox = markBoxFor(ctx, rsF, W * 0.32, 1, true, fieldBg);
   const clear = markBox.clear;
-  const fieldW = Math.round(Math.min(W * 0.44, Math.max(W * 0.3, markBox.w + clear * 2)));
+  // The field is sized to the mark, not the other way round: a wide lockup at
+  // its legal height needs the room, and shrinking the field only forced the
+  // renderer to draw the mark under its size band.
+  const fieldW = Math.round(
+    Math.min(W * 0.62, Math.max(W * 0.3, markBox.w + clear * 2)),
+  );
   const fieldX = W - fieldW;
-  const colW = fieldX - M - Math.round(clear * 0.5);
+  const colW = Math.max(W * 0.24, fieldX - M - Math.round(clear * 0.5));
+
 
   const nameSize = Math.max(rsF.minType * 2.2, step(ad, 1.2));
   const descSize = Math.max(rsF.minType, step(ad, -0.5));
@@ -773,8 +784,12 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const titleS = Math.max(rsB.minType, step(ad, -0.6));
   const rowS = Math.max(rsB.minType, step(ad, -0.7));
   const rowGap = rowS * 1.62;
-  const backMark = markBoxFor(ctx, rsB, W * 0.26, 0.8, true);
-  const backColW = Math.min(g.span(Math.max(4, Math.round(ad.grid.columns * 0.62))), W - M * 2 - backMark.w - backMark.clear);
+  const backMark = markBoxFor(ctx, rsB, W * 0.26, 0.8, true, paper);
+  const backColW = Math.max(
+    W * 0.32,
+    Math.min(g.span(Math.max(4, Math.round(ad.grid.columns * 0.62))), W - M * 2 - backMark.w - backMark.clear),
+  );
+
 
   // Optically centre the whole back block. Pinning it to either trim edge left
   // half the card as dead space.
