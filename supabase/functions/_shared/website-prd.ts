@@ -12,7 +12,7 @@ import { aiFetch } from "./ai-fetch.ts";
 import { modelForTier } from "./deliverable-prompts.ts";
 import type { SiteArchetype } from "./site-art-direction.ts";
 import { copyCraftBlock, SECTION4_WORD_FLOOR } from "./copy-craft.ts";
-import { buildAcceptanceChecklist, layoutContractBlock } from "./layout-contract.ts";
+import { buildAcceptanceChecklist, imageryContractBlock, layoutContractBlock } from "./layout-contract.ts";
 
 const MASTER_RE = /<!--\s*BEGIN_MASTER_PROMPT\s*-->[\s\S]*?<!--\s*END_MASTER_PROMPT\s*-->/i;
 const CLOSING_RE =
