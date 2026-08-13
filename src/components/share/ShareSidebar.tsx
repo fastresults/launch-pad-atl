@@ -65,12 +65,15 @@ export function ShareSidebar({
   payload,
   activeKey,
   onNavigate,
+  onShowWelcome,
   variant = "rail",
   viewedKeys,
 }: {
   payload: SharePayload;
   activeKey: string | null;
   onNavigate?: (key: string) => void;
+  /** Re-open the first-time welcome note from Adam. */
+  onShowWelcome?: () => void;
   /** "sheet" renders thumb-sized rows for the mobile contents sheet. */
   variant?: "rail" | "sheet";
   /** Assets already read, marked with a dot so progress is visible. */
