@@ -1134,7 +1134,21 @@ async function runJob(
 
   const layers = dependencyLayers(types);
   const total = types.length;
-  const state: RunState = { done: 0, total, fails: 0, canceled: false, keys: types.map((t: any) => t.type) };
+  // Progress is measured against every active asset this venture will ever
+  // have — including the website brief and anything a category/retry run isn't
+  // touching — so the bar means the same thing in every run.
+  const progressScope = (allTypes ?? [])
+    .map((t: any) => t.type)
+    .filter((t: string) => !notApplicable.includes(t));
+  const state: RunState = {
+    done: 0,
+    total,
+    fails: 0,
+    canceled: false,
+    keys: types.map((t: any) => t.type),
+    allKeys: progressScope,
+  };
+
 
   const startedAt = new Date().toISOString();
   await supabase.from("venture_generation_jobs").update({
