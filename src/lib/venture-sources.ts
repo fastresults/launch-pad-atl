@@ -65,8 +65,10 @@ export async function uploadVentureSource(opts: {
   snapshotId?: string | null;
   kind?: VentureSourceKind;
   usedInBrief?: boolean;
-  /** Wait for extraction to finish before returning (default true, max 30s). */
+  /** Wait for extraction to finish before returning (default true, ~4 min ceiling). */
   waitForExtraction?: boolean;
+  /** Called on each poll while extraction is still running. */
+  onExtractionTick?: (elapsedMs: number) => void;
 }): Promise<VentureSource> {
   const { file, snapshotId = null, kind = "venture_source", usedInBrief = false } = opts;
   const userId = await uid();
