@@ -528,7 +528,12 @@ export default function VentureSharePage() {
             }`}
           >
             <aside className="hidden w-72 shrink-0 py-8 lg:block">
-              <ShareSidebar payload={payload} activeKey={activeKey} onNavigate={goTo} />
+              <ShareSidebar
+                payload={payload}
+                activeKey={activeKey}
+                onNavigate={goTo}
+                onShowWelcome={openWelcome}
+              />
             </aside>
 
             <main
