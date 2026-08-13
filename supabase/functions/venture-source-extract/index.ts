@@ -166,6 +166,11 @@ Deno.serve(async (req) => {
     const buf = new Uint8Array(await blob.arrayBuffer());
     if (buf.byteLength > MAX_BYTES) throw new Error("File too large to extract");
 
+    // Stamp the start so the client can tell "queued" from "never started".
+    await admin.from("attendee_documents")
+      .update({ extraction_started_at: new Date().toISOString(), extraction_error: null })
+      .eq("id", documentId);
+
     let text = "";
     let extractionError: string | null = null;
     try {
