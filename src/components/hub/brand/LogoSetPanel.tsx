@@ -93,19 +93,74 @@ async function measureFile(file: File): Promise<number | null> {
   }
 }
 
-/** Filename hints only decide tone and wordmark/symbol intent; shape is measured. */
-function classifyFile(name: string, aspect: number | null): { form: string; tone: string } {
-  const n = name.toLowerCase();
-  const tone = /(reversed|reverse|dark|white|knockout|inverse|inv)/.test(n) ? "inverse" : "colour";
-  if (/(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)) return { form: "symbol", tone };
-  if (/(wordmark|word-mark|logotype)/.test(n)) return { form: "wordmark", tone };
-  if (/(stacked|stack|vertical|centred|centered)/.test(n)) return { form: "stacked", tone };
-  if (/(horizontal|horiz|lockup|wide)/.test(n)) return { form: "horizontal", tone };
-  if (aspect == null) return { form: "horizontal", tone };
-  if (aspect >= 2.2) return { form: "horizontal", tone };
-  if (aspect >= 1.15) return { form: "stacked", tone };
-  return { form: "symbol", tone };
+/** Drawn shapes — a bare symbol has a handful, a lockup has dozens. */
+const WORDMARK_SHAPE_FLOOR = 8;
+
+function countShapes(svg: string) {
+  return (svg.match(/<(path|polygon|polyline|circle|ellipse|rect|line|text|tspan|use|image)\b/gi) ?? []).length;
 }
+
+/** Mean ink luminance: light ink exists to sit on a dark ground. */
+function inkTone(svg: string): "colour" | "inverse" | null {
+  const hits = svg.replace(/<!--[\s\S]*?-->/g, "").match(/#([0-9a-f]{3}|[0-9a-f]{6})\b/gi) ?? [];
+  if (!hits.length) return null;
+  const mean = hits.map((h) => luminance(h)).reduce((a, b) => a + b, 0) / hits.length;
+  return mean >= 0.75 ? "inverse" : "colour";
+}
+
+/**
+ * What a dropped file actually is.
+ *
+ * Form comes from the ink (no wordmark shapes means a symbol, whatever the box)
+ * plus the aspect; tone comes from ink luminance. Filenames only break ties on
+ * rasters, where there is nothing to count.
+ */
+async function classifyFile(
+  file: File,
+  aspect: number | null,
+): Promise<{ form: string; tone: string; inferred: boolean }> {
+  const n = file.name.toLowerCase();
+  const hintTone = /(reversed|reverse|dark|white|knockout|inverse|inv)/.test(n) ? "inverse" : "colour";
+  const hintForm = /(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)
+    ? "symbol"
+    : /(wordmark|word-mark|logotype)/.test(n)
+    ? "wordmark"
+    : /(stacked|stack|vertical|centred|centered)/.test(n)
+    ? "stacked"
+    : /(horizontal|horiz|lockup|wide)/.test(n)
+    ? "horizontal"
+    : null;
+
+  let svg = "";
+  if (file.type.includes("svg") || n.endsWith(".svg")) {
+    try {
+      svg = await file.text();
+    } catch {
+      svg = "";
+    }
+  }
+
+  if (svg) {
+    const shapes = countShapes(svg);
+    const tone = inkTone(svg) ?? hintTone;
+    const form =
+      shapes < WORDMARK_SHAPE_FLOOR
+        ? "symbol"
+        : hintForm === "wordmark"
+        ? "wordmark"
+        : (aspect ?? 1) >= 2.2
+        ? "horizontal"
+        : "stacked";
+    return { form, tone, inferred: false };
+  }
+
+  if (hintForm) return { form: hintForm, tone: hintTone, inferred: true };
+  if (aspect == null) return { form: "horizontal", tone: hintTone, inferred: true };
+  if (aspect >= 2.2) return { form: "horizontal", tone: hintTone, inferred: true };
+  if (aspect >= 1.15) return { form: "stacked", tone: hintTone, inferred: true };
+  return { form: "symbol", tone: hintTone, inferred: true };
+}
+
 
 
 
