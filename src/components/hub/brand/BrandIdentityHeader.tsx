@@ -129,7 +129,8 @@ export function BrandIdentityHeader({
   if (!hasAnything) return null;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
+    <div className="space-y-6">
+      {/* 1 — the mark, full width so the previews and lockups can breathe */}
       <LogoSetPanel
         snapshotId={snapshotId}
         kit={kit}
@@ -137,69 +138,93 @@ export function BrandIdentityHeader({
         onEditMark={onEditMark}
       />
 
+      <div className="h-px bg-border/60" />
 
-      {/* Colour */}
-      <section className="min-w-0 space-y-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <Label>Colour</Label>
-          <span className="text-[10px] text-muted-foreground">Click to edit</span>
-        </div>
-        {core.length > 0 && (
-          <div className="grid grid-cols-3 gap-2">
-            {core.map((k) => (
-              <Swatch
-                key={k}
-                tokenKey={k}
-                value={colors[k]}
-                pairValue={colors[PAIR_OF[k]]}
-                onChange={onChangeColor}
-              />
-            ))}
+      {/* 2 — colour and type side by side */}
+      <div className="grid gap-6 lg:grid-cols-[1.35fr_1fr]">
+        <section className="min-w-0 space-y-4">
+          <div className="flex items-baseline justify-between gap-2">
+            <Label>Colour</Label>
+            <span className="text-[10px] text-muted-foreground">Click any swatch to edit</span>
           </div>
-        )}
-        {(surface.length > 0 || extras.length > 0) && (
-          <div className="grid grid-cols-4 gap-2">
-            {[...surface, ...extras].map((k) => (
-              <Swatch key={k} tokenKey={k} value={colors[k]} size="neutral" onChange={onChangeColor} />
-            ))}
-          </div>
-        )}
-      </section>
 
-      {/* Type */}
-      <section className="min-w-0 space-y-3">
-        <Label>Typography</Label>
-        {(headingFamily || bodyFamily) ? (
-          <div className="space-y-2">
-            <div className="rounded-xl border border-border/60 bg-background/40 p-3.5">
-              <div
-                className="line-clamp-2 text-2xl leading-tight tracking-tight"
-                style={headingFamily ? { fontFamily: `"${headingFamily}", serif` } : undefined}
-              >
-                {companyName || "Aa Bb Cc"}
-              </div>
-              <div className="mt-1.5 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                Headings · {headingFamily ?? "—"}
+          {core.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground/70">Brand</span>
+              <div className="grid grid-cols-3 gap-3">
+                {core.map((k) => (
+                  <Swatch
+                    key={k}
+                    tokenKey={k}
+                    value={colors[k]}
+                    pairValue={colors[PAIR_OF[k]]}
+                    onChange={onChangeColor}
+                  />
+                ))}
               </div>
             </div>
-            <div className="rounded-xl border border-border/60 bg-background/40 p-3.5">
-              <div
-                className="line-clamp-3 text-sm leading-relaxed text-foreground/90"
-                style={bodyFamily ? { fontFamily: `"${bodyFamily}", sans-serif` } : undefined}
-              >
-                The quick brown fox jumps over the lazy dog.
-              </div>
-              <div className="mt-1.5 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                Body · {bodyFamily ?? "—"}
+          )}
+
+          {surface.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground/70">Surfaces</span>
+              <div className="grid grid-cols-4 gap-3">
+                {surface.map((k) => (
+                  <Swatch key={k} tokenKey={k} value={colors[k]} size="neutral" onChange={onChangeColor} />
+                ))}
               </div>
             </div>
-          </div>
-        ) : (
-          <p className="rounded-xl border border-dashed border-border/60 p-3.5 text-[11px] text-muted-foreground">
-            Typography locks in step 3 of the brand wizard.
-          </p>
-        )}
-      </section>
+          )}
+
+          {extras.length > 0 && (
+            <details className="group">
+              <summary className="cursor-pointer list-none text-[9px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                Supporting · {extras.length} <span className="text-primary transition-transform group-open:rotate-180">▾</span>
+              </summary>
+              <div className="mt-2 grid grid-cols-4 gap-3">
+                {extras.map((k) => (
+                  <Swatch key={k} tokenKey={k} value={colors[k]} size="neutral" onChange={onChangeColor} />
+                ))}
+              </div>
+            </details>
+          )}
+        </section>
+
+        <section className="min-w-0 space-y-4">
+          <Label>Typography</Label>
+          {(headingFamily || bodyFamily) ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-border/60 bg-background/40 p-4">
+                <div
+                  className="line-clamp-2 text-2xl leading-tight tracking-tight"
+                  style={headingFamily ? { fontFamily: `"${headingFamily}", serif` } : undefined}
+                >
+                  {companyName || "Aa Bb Cc"}
+                </div>
+                <div className="mt-2 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  Headings · {headingFamily ?? "—"}
+                </div>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-background/40 p-4">
+                <div
+                  className="line-clamp-3 text-sm leading-relaxed text-foreground/90"
+                  style={bodyFamily ? { fontFamily: `"${bodyFamily}", sans-serif` } : undefined}
+                >
+                  The quick brown fox jumps over the lazy dog.
+                </div>
+                <div className="mt-2 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  Body · {bodyFamily ?? "—"}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="rounded-xl border border-dashed border-border/60 p-3.5 text-[11px] text-muted-foreground">
+              Typography locks in step 3 of the brand wizard.
+            </p>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
+
