@@ -916,7 +916,9 @@ function Inner() {
 
   const step1Blocker = drafting
     ? "Reading your sources…"
-    : "Add a source or describe the startup (20+ characters)";
+    : files.some((f) => f.status === "uploading" || f.status === "extracting")
+      ? "Still reading your file — large documents take a minute"
+      : "Add a source or describe the startup (20+ characters)";
 
   // Move to a step, unlocking it as the furthest reached, and scroll it in.
   const goToStep = useCallback((n: number) => {
