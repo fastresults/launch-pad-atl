@@ -785,8 +785,12 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const titleS = Math.max(rsB.minType, step(ad, -0.6));
   const rowS = Math.max(rsB.minType, step(ad, -0.7));
   const rowGap = rowS * 1.62;
-  const backMark = markBoxFor(ctx, rsB, W * 0.26, 0.8, true);
-  const backColW = Math.min(g.span(Math.max(4, Math.round(ad.grid.columns * 0.62))), W - M * 2 - backMark.w - backMark.clear);
+  const backMark = markBoxFor(ctx, rsB, W * 0.26, 0.8, true, paper);
+  const backColW = Math.max(
+    W * 0.32,
+    Math.min(g.span(Math.max(4, Math.round(ad.grid.columns * 0.62))), W - M * 2 - backMark.w - backMark.clear),
+  );
+
 
   // Optically centre the whole back block. Pinning it to either trim edge left
   // half the card as dead space.
