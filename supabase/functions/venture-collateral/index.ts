@@ -307,6 +307,20 @@ async function buildCtx(
     null;
   const logoSvgDark = darkPath ? await loadMarkArtwork(admin, String(darkPath)) : null;
 
+  // Stacked lockups (mark over wordmark). Optional — pieces fall back to the
+  // horizontal lockup when a venture has not supplied them.
+  const stackedSlot = logos.find((l: any) => l?.variant === "stacked" && (l?.svg_path ?? l?.path));
+  const stackedDarkSlot = logos.find(
+    (l: any) => l?.variant === "stacked_reversed" && (l?.svg_path ?? l?.path),
+  );
+  const stackedPath = stackedSlot?.svg_path ?? stackedSlot?.path ?? null;
+  const stackedDarkPath = stackedDarkSlot?.svg_path ?? stackedDarkSlot?.path ?? null;
+  const logoSvgStacked = stackedPath ? await loadMarkArtwork(admin, String(stackedPath)) : null;
+  const logoSvgStackedDark = stackedDarkPath
+    ? await loadMarkArtwork(admin, String(stackedDarkPath))
+    : null;
+
+
 
   const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
   const brain = vctx?.brain ?? {};
