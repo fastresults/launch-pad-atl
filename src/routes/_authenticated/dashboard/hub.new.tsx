@@ -1101,7 +1101,7 @@ function Inner() {
                         ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
                         : row.extraction_error
                           ? `Couldn't read · from ${originLabel}`
-                          : `Processing… · from ${originLabel}`)
+                          : `Still reading — large files take a minute · from ${originLabel}`)
                     }
                     className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs transition"
                   >
