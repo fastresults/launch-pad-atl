@@ -245,6 +245,35 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
         (has(/tier/i) && has(/price|pricing basis|\$|per month|retainer|contingency/i)),
     },
     {
+      id: "logo_scale",
+      label: "Header and footer logo heights specified at brand scale",
+      ok: /header[^\n]{0,200}\b(4[4-9]|5[0-9]|6[0-9]|7[0-2])\s*px/i.test(raw) &&
+        /footer[^\n]{0,200}\b(7[2-9]|[89][0-9]|1[01][0-9]|120|320)\s*px/i.test(raw),
+    },
+    {
+      id: "parallax_hero",
+      label: "Hero parallax depth stack specified with reduced-motion fallback",
+      ok: has(/parallax/i) && has(/0\.25x|0\.6x|depth stack|three-plane/i) &&
+        has(/prefers-reduced-motion/i),
+    },
+    {
+      id: "type_contract",
+      label: "Display / text pairing, modular scale and tracking specified",
+      ok: has(/display\b[^\n]{0,120}\b(face|family|type)/i) &&
+        has(/modular scale|1\.250|1\.333/i) && has(/tracking/i) && has(/clamp\(/i),
+    },
+    {
+      id: "opacity_ladder",
+      label: "Text opacity ladder (100 / 72 / 56 / 38) declared",
+      ok: /72\s*%/.test(raw) && /56\s*%/.test(raw) && /38\s*%/.test(raw),
+    },
+    {
+      id: "image_tier",
+      label: "Pro-tier image model and source resolution named",
+      ok: has(/gemini-3-pro-image|pro-tier image model/i) &&
+        has(/1920|2x density|resolution/i),
+    },
+    {
       id: "checklist",
       label: "Build acceptance checklist present",
       ok: has(/##\s*BUILD ACCEPTANCE CHECKLIST/i),
