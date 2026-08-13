@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { IndustryCombobox } from "@/components/hub/IndustryCombobox";
 import { TRACKS, TRACK_BY_KEY, pickSeedForTrack, TRACK_SEEDS, type TrackKey, type SeedEntry } from "@/lib/tracks";
 import { SIC_CODES, findSicByCode, parseSicCode, sicValue } from "@/lib/sic-codes";
-import { createSnapshot, countSnapshots } from "@/lib/foundersHub.functions";
+import { createSnapshot } from "@/lib/foundersHub.functions";
 import {
   uploadVentureSource,
   attachSourcesToSnapshot,
