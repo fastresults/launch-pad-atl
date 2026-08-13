@@ -342,10 +342,22 @@ function Inner() {
       queued.forEach(async (entry, i) => {
         const file = accepted[i];
         try {
-          const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
+          const row = await uploadVentureSource({
+            file,
+            kind: "venture_source",
+            waitForExtraction: true,
+            onExtractionTick: () =>
+              setFiles((curr) =>
+                curr.map((x) => (x.id === entry.id && x.status === "uploading" ? { ...x, status: "extracting" } : x)),
+              ),
+          });
           const text = (row.extracted_text ?? "").trim();
-          if (row.extraction_error || !text) {
-            // Keep the failed entry visible so the founder can see why & retry.
+          if (text) {
+            // Success → promote into memory chips and drop the transient row.
+            appendToMemory(row);
+            setFiles((curr) => curr.filter((x) => x.id !== entry.id));
+          } else if (row.extraction_error) {
+            // A real, server-reported read failure.
             setFiles((curr) =>
               curr.map((x) =>
                 x.id === entry.id
@@ -354,9 +366,29 @@ function Inner() {
               ),
             );
           } else {
-            // Success → promote into memory chips and drop the transient row.
-            appendToMemory(row);
-            setFiles((curr) => curr.filter((x) => x.id !== entry.id));
+            // Still reading — never mislabel a slow extraction as a failure.
+            setFiles((curr) =>
+              curr.map((x) => (x.id === entry.id ? { ...x, status: "extracting", documentId: row.id } : x)),
+            );
+            const fresh = await recoverOrRetryExtraction(row.id);
+            const freshText = (fresh?.extracted_text ?? "").trim();
+            if (fresh && freshText) {
+              appendToMemory(fresh);
+              setFiles((curr) => curr.filter((x) => x.id !== entry.id));
+            } else {
+              setFiles((curr) =>
+                curr.map((x) =>
+                  x.id === entry.id
+                    ? {
+                        ...x,
+                        status: "error",
+                        documentId: row.id,
+                        error: fresh?.extraction_error ?? "Still unreadable — try again",
+                      }
+                    : x,
+                ),
+              );
+            }
           }
         } catch (e) {
           setFiles((curr) =>
