@@ -14,6 +14,7 @@
 import { imageCraftBlock } from "./image-craft.ts";
 import { copyCraftBlock } from "./copy-craft.ts";
 import { surfaceSystemBlock } from "./surface-system.ts";
+import { layoutContractBlock } from "./layout-contract.ts";
 
 export type SiteArchetype = {
   key: string;
@@ -465,7 +466,7 @@ export function archetypeForPrompt(input: ArchetypeInput): { archetype: SiteArch
   return {
     archetype,
     block:
-      `${artDirectionBlock(archetype)}\n\n${motionSpecBlock(archetype)}\n\n${imageCraftBlock()}\n\n${copyCraftBlock()}\n\n${surfaceSystemBlock()}`,
+      `${artDirectionBlock(archetype)}\n\n${motionSpecBlock(archetype)}\n\n${imageCraftBlock()}\n\n${copyCraftBlock()}\n\n${surfaceSystemBlock()}\n\n${layoutContractBlock()}`,
   };
 }
 
