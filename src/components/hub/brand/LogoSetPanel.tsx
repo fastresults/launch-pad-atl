@@ -93,21 +93,103 @@ async function measureFile(file: File): Promise<number | null> {
   }
 }
 
-/** Filename hints only decide tone and wordmark/symbol intent; shape is measured. */
-function classifyFile(name: string, aspect: number | null): { form: string; tone: string } {
-  const n = name.toLowerCase();
-  const tone = /(reversed|reverse|dark|white|knockout|inverse|inv)/.test(n) ? "inverse" : "colour";
-  if (/(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)) return { form: "symbol", tone };
-  if (/(wordmark|word-mark|logotype)/.test(n)) return { form: "wordmark", tone };
-  if (/(stacked|stack|vertical|centred|centered)/.test(n)) return { form: "stacked", tone };
-  if (/(horizontal|horiz|lockup|wide)/.test(n)) return { form: "horizontal", tone };
-  if (aspect == null) return { form: "horizontal", tone };
-  if (aspect >= 2.2) return { form: "horizontal", tone };
-  if (aspect >= 1.15) return { form: "stacked", tone };
-  return { form: "symbol", tone };
+/** Drawn shapes — a bare symbol has a handful, a lockup has dozens. */
+const WORDMARK_SHAPE_FLOOR = 8;
+
+function countShapes(svg: string) {
+  return (svg.match(/<(path|polygon|polyline|circle|ellipse|rect|line|text|tspan|use|image)\b/gi) ?? []).length;
+}
+
+/** Mean ink luminance: light ink exists to sit on a dark ground. */
+function inkTone(svg: string): "colour" | "inverse" | null {
+  const hits = svg.replace(/<!--[\s\S]*?-->/g, "").match(/#([0-9a-f]{3}|[0-9a-f]{6})\b/gi) ?? [];
+  if (!hits.length) return null;
+  const mean = hits.map((h) => luminance(h)).reduce((a, b) => a + b, 0) / hits.length;
+  return mean >= 0.75 ? "inverse" : "colour";
+}
+
+/**
+ * What a dropped file actually is.
+ *
+ * Form comes from the ink (no wordmark shapes means a symbol, whatever the box)
+ * plus the aspect; tone comes from ink luminance. Filenames only break ties on
+ * rasters, where there is nothing to count.
+ */
+async function classifyFile(
+  file: File,
+  aspect: number | null,
+): Promise<{ form: string; tone: string; inferred: boolean }> {
+  const n = file.name.toLowerCase();
+  const hintTone = /(reversed|reverse|dark|white|knockout|inverse|inv)/.test(n) ? "inverse" : "colour";
+  const hintForm = /(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)
+    ? "symbol"
+    : /(wordmark|word-mark|logotype)/.test(n)
+    ? "wordmark"
+    : /(stacked|stack|vertical|centred|centered)/.test(n)
+    ? "stacked"
+    : /(horizontal|horiz|lockup|wide)/.test(n)
+    ? "horizontal"
+    : null;
+
+  let svg = "";
+  if (file.type.includes("svg") || n.endsWith(".svg")) {
+    try {
+      svg = await file.text();
+    } catch {
+      svg = "";
+    }
+  }
+
+  if (svg) {
+    const shapes = countShapes(svg);
+    const tone = inkTone(svg) ?? hintTone;
+    const form =
+      shapes < WORDMARK_SHAPE_FLOOR
+        ? "symbol"
+        : hintForm === "wordmark"
+        ? "wordmark"
+        : (aspect ?? 1) >= 2.2
+        ? "horizontal"
+        : "stacked";
+    return { form, tone, inferred: false };
+  }
+
+  if (hintForm) return { form: hintForm, tone: hintTone, inferred: true };
+  if (aspect == null) return { form: "horizontal", tone: hintTone, inferred: true };
+  if (aspect >= 2.2) return { form: "horizontal", tone: hintTone, inferred: true };
+  if (aspect >= 1.15) return { form: "stacked", tone: hintTone, inferred: true };
+  return { form: "symbol", tone: hintTone, inferred: true };
 }
 
 
+
+
+/**
+ * Recolour a light-ink symbol into brand colours.
+ *
+ * A set can arrive with an inverse symbol and no colour one. Rather than
+ * silently painting the light mark onto a light card, we offer the founder a
+ * derived colour symbol: the lighter ink becomes the primary brand colour, the
+ * darker ink the accent, and nothing else about the drawing changes.
+ */
+async function deriveColourSymbol(url: string, primary: string, accent: string): Promise<string | null> {
+  let svg: string;
+  try {
+    svg = await (await fetch(url)).text();
+  } catch {
+    return null;
+  }
+  if (!/<svg/i.test(svg)) return null;
+  const hexes = Array.from(new Set((svg.match(/#([0-9a-f]{3}|[0-9a-f]{6})\b/gi) ?? []).map((h) => h.toLowerCase())));
+  if (!hexes.length) return null;
+  const sorted = [...hexes].sort((a, b) => luminance(b) - luminance(a));
+  let out = svg;
+  sorted.forEach((hex, i) => {
+    const to = i === 0 ? primary : accent;
+    out = out.replace(new RegExp(hex.replace("#", "#"), "gi"), to);
+  });
+  return out;
+}
 
 function readDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -206,6 +288,9 @@ function SlotTile({ slot, logo, busy, onPick, onRemove }: any) {
       <div className="mt-1 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
         {slot.toneLabel ?? slot.label}
       </div>
+      {!logo?.url && !busy ? (
+        <div className="truncate text-[9px] text-muted-foreground/70">Not supplied</div>
+      ) : null}
       {logo?.aspect ? (
         <div className="truncate text-[9px] tabular-nums text-muted-foreground/70">
           {Number(logo.aspect).toFixed(2)}:1
@@ -247,6 +332,8 @@ export function LogoSetPanel({
   const [pending, setPending] = useState<string | null>(null);
   const [review, setReview] = useState<{ file: File; aspect: number | null; form: string; tone: string }[] | null>(null);
   const multiRef = useRef<HTMLInputElement | null>(null);
+  const [derived, setDerived] = useState<string | null>(null);
+  const [deriving, setDeriving] = useState(false);
 
   useEffect(() => { setOverride(null); }, [kit?.logos]);
 
@@ -328,8 +415,8 @@ export function LogoSetPanel({
     const rows = await Promise.all(
       list.map(async (file) => {
         const aspect = await measureFile(file);
-        const { form, tone } = classifyFile(file.name, aspect);
-        return { file, aspect, form, tone };
+        const { form, tone, inferred } = await classifyFile(file, aspect);
+        return { file, aspect, form, tone, inferred };
       }),
     );
     setReview(rows);
@@ -500,6 +587,63 @@ export function LogoSetPanel({
               </div>
             </div>
           ))}
+          {!set.icon?.url && set.icon_reversed?.url ? (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-background/40 p-2">
+              {derived ? (
+                <>
+                  <img
+                    src={`data:image/svg+xml;utf8,${encodeURIComponent(derived)}`}
+                    alt="Derived colour symbol"
+                    className="h-10 w-10 object-contain"
+                  />
+                  <span className="text-[10px] text-muted-foreground">Symbol recoloured into your brand ink.</span>
+                  <button
+                    type="button"
+                    className="text-[10px] font-medium uppercase tracking-[0.12em] text-primary"
+                    onClick={() => {
+                      const file = new File([derived], "symbol-colour.svg", { type: "image/svg+xml" });
+                      setDerived(null);
+                      pick("icon", file);
+                    }}
+                  >
+                    Use it
+                  </button>
+                  <button
+                    type="button"
+                    className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground"
+                    onClick={() => setDerived(null)}
+                  >
+                    Discard
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-[10px] text-muted-foreground">
+                    No colour symbol supplied — placements on light grounds fall back to the stacked lockup.
+                  </span>
+                  <button
+                    type="button"
+                    disabled={deriving}
+                    className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.12em] text-primary disabled:opacity-50"
+                    onClick={async () => {
+                      setDeriving(true);
+                      const out = await deriveColourSymbol(
+                        set.icon_reversed.url,
+                        isHex(primaryColor) ? primaryColor : "#0055A4",
+                        isHex(kit?.palette?.colors?.accent) ? kit.palette.colors.accent : "#EF4135",
+                      );
+                      setDeriving(false);
+                      if (out) setDerived(out);
+                      else toast.error("Could not read that symbol file");
+                    }}
+                  >
+                    {deriving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                    Derive colour symbol
+                  </button>
+                </>
+              )}
+            </div>
+          ) : null}
           <p className="text-[10px] leading-relaxed text-muted-foreground">
             Form is the shape of the lockup; tone is the ground it's drawn for — colour for light, inverse for dark.
             Drop several files at once and we'll measure each one and show you where it's going before saving.

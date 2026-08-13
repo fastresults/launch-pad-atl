@@ -267,8 +267,10 @@ export function logoCandidates(logos: any[], surface: string, boxAspect?: number
     if (c.form === wantForm) return 0;
     if (wantForm === "stacked" && c.form === "symbol") return 1;
     if (wantForm === "horizontal" && c.form === "wordmark") return 1;
-    if (c.form === "symbol") return 2;
-    return 3;
+    // A lockup that still says the name beats a bare symbol in any box.
+    if (c.form === "stacked" || c.form === "horizontal") return 2;
+    if (c.form === "symbol") return 3;
+    return 4;
   };
   const score = (c: LogoCandidate) => (c.tone === wantTone ? 0 : 10) + formScore(c);
 

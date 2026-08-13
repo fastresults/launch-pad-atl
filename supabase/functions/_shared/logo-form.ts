@@ -137,45 +137,188 @@ export function measureArtwork(bytes: Uint8Array, contentType: string): Measurem
   }
 }
 
-/** Wide artwork is a horizontal lockup; everything else is judged by the slot. */
+/** Wide artwork is a horizontal lockup; everything else is judged by the ink. */
 export const HORIZONTAL_ASPECT = 2.2;
 
+/* ---------------- ink: shape count and tone ---------------- */
+
+/** Drawn shapes in an SVG. A bare symbol has a handful; a lockup has dozens. */
+export function countShapes(svg: string): number {
+  return (svg.match(/<(path|polygon|polyline|circle|ellipse|rect|line|text|tspan|use|image)\b/gi) ?? []).length;
+}
+
 /**
- * Reconcile what the founder said with what the file measures.
+ * A wordmark is present when the artwork carries letterforms, and letterforms
+ * mean many small shapes. Geometry alone cannot separate a stacked lockup from
+ * a bare symbol — both sit in a near-square box — but shape count can.
+ */
+export const WORDMARK_SHAPE_FLOOR = 8;
+
+const HEX = /#([0-9a-f]{3}|[0-9a-f]{6})\b/gi;
+
+function hexLuminance(hex: string): number {
+  let h = hex.replace("#", "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  const r = parseInt(h.slice(0, 2), 16) / 255;
+  const g = parseInt(h.slice(2, 4), 16) / 255;
+  const b = parseInt(h.slice(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Which ground the artwork is drawn for, read from its own ink.
  *
- * Only the horizontal-vs-not axis is decidable from geometry (a symbol and a
- * stacked lockup can share a box), so that is the only conflict corrected.
- * Everything else keeps the founder's intent and just records the measurement.
+ * Filenames lie — "bw" says nothing about tone, and a mark drawn in near-white
+ * filed as colour gets painted white-on-white. Mean ink luminance does not lie:
+ * light ink exists to sit on a dark ground.
+ */
+export function inkTone(svg: string): { tone: LogoTone; luminance: number } | null {
+  const body = svg.replace(/<!--[\s\S]*?-->/g, "");
+  const hits = body.match(HEX) ?? [];
+  const lums = hits.map(hexLuminance).filter((n) => Number.isFinite(n));
+  if (!lums.length) return null;
+  const mean = lums.reduce((a, b) => a + b, 0) / lums.length;
+  return { tone: mean >= 0.75 ? "inverse" : "colour", luminance: Math.round(mean * 1000) / 1000 };
+}
+
+export type Classification = {
+  form: LogoForm;
+  tone: LogoTone;
+  aspect: number | null;
+  width: number | null;
+  height: number | null;
+  shapes: number | null;
+  /** True when form or tone was guessed rather than read from the artwork. */
+  inferred: boolean;
+};
+
+/**
+ * What a file actually is: form from ink + box, tone from ink.
+ *
+ * `hint` carries the founder's intent (chosen slot or filename hints) and is
+ * only consulted where the artwork itself is inconclusive — rasters, where
+ * shapes cannot be counted, and mid-tone palettes.
+ */
+export function classifyArtwork(
+  bytes: Uint8Array,
+  contentType: string,
+  hint?: { form?: LogoForm | null; tone?: LogoTone | null },
+): Classification {
+  const measurement = measureArtwork(bytes, contentType);
+  const aspect = measurement?.aspect ?? null;
+  const isSvg = contentType.includes("svg");
+  let svg = "";
+  if (isSvg) {
+    try {
+      svg = new TextDecoder().decode(bytes);
+    } catch {
+      svg = "";
+    }
+  }
+
+  const shapes = svg ? countShapes(svg) : null;
+  const ink = svg ? inkTone(svg) : null;
+
+  let inferred = false;
+
+  let tone: LogoTone;
+  if (ink) tone = ink.tone;
+  else {
+    tone = hint?.tone ?? "colour";
+    inferred = true;
+  }
+
+  let form: LogoForm;
+  if (shapes != null && aspect != null) {
+    if (shapes < WORDMARK_SHAPE_FLOOR) form = "symbol";
+    else if (hint?.form === "wordmark") form = "wordmark";
+    else form = aspect >= HORIZONTAL_ASPECT ? "horizontal" : "stacked";
+  } else if (aspect != null) {
+    // Raster: no ink to count, so fall back to the aspect bands and say so.
+    form = hint?.form ?? formFromAspect(aspect);
+    inferred = true;
+  } else {
+    form = hint?.form ?? "horizontal";
+    inferred = true;
+  }
+
+  return {
+    form,
+    tone,
+    aspect: aspect != null ? Math.round(aspect * 1000) / 1000 : null,
+    width: measurement?.width ?? null,
+    height: measurement?.height ?? null,
+    shapes,
+    inferred,
+  };
+}
+
+/**
+ * Reconcile what the founder said with what the file actually is.
+ *
+ * Both axes are now measurable — form from shape count plus box, tone from ink
+ * luminance — so both are corrected, and every correction is reported rather
+ * than applied silently.
  */
 export function reconcileSlot(
   chosen: LogoVariant,
-  measurement: Measurement,
-): { variant: LogoVariant; form: LogoForm; tone: LogoTone; moved: boolean; reason: string | null } {
-  const { form, tone } = formToneOf(chosen);
-  if (!measurement) return { variant: chosen, form, tone, moved: false, reason: null };
-  const a = measurement.aspect;
+  measurement: Measurement | Classification | null,
+): {
+  variant: LogoVariant;
+  form: LogoForm;
+  tone: LogoTone;
+  moved: boolean;
+  reason: string | null;
+  inferred: boolean;
+} {
+  const intent = formToneOf(chosen);
+  if (!measurement) {
+    return { variant: chosen, ...intent, moved: false, reason: null, inferred: true };
+  }
 
-  if (form === "horizontal" && a < 1.6) {
-    const variant = slotFor("stacked", tone);
-    return {
-      variant,
-      form: "stacked",
-      tone,
-      moved: true,
-      reason: `That artwork is ${a.toFixed(2)}:1 — it reads as a stacked lockup, so it was filed under Stacked.`,
-    };
+  // A bare Measurement (no `form` field) keeps the old geometry-only behaviour.
+  const cls: Classification =
+    "form" in measurement
+      ? (measurement as Classification)
+      : {
+          // Geometry only ever splits horizontal from stacked — a symbol or
+          // wordmark slot is the founder's word and is left alone.
+          form:
+            intent.form === "stacked" && (measurement as Measurement)!.aspect >= 2.4
+              ? "horizontal"
+              : intent.form === "horizontal" && (measurement as Measurement)!.aspect < 1.6
+              ? "stacked"
+              : intent.form,
+          tone: intent.tone,
+          aspect: (measurement as Measurement)!.aspect,
+          width: (measurement as Measurement)!.width,
+          height: (measurement as Measurement)!.height,
+          shapes: null,
+          inferred: true,
+        };
+
+  const form = cls.form;
+  const tone = cls.tone;
+  const variant = slotFor(form, tone);
+  const moved = variant !== chosen;
+
+  let reason: string | null = null;
+  if (moved) {
+    const bits: string[] = [];
+    if (form !== intent.form) {
+      bits.push(
+        cls.shapes != null && cls.shapes < WORDMARK_SHAPE_FLOOR
+          ? "it carries no wordmark, so it reads as a symbol"
+          : `it is ${cls.aspect?.toFixed(2) ?? "?"}:1 with a wordmark, so it reads as a ${FORM_LABEL[form].toLowerCase()}`,
+      );
+    }
+    if (tone !== intent.tone) {
+      bits.push(tone === "inverse" ? "it is drawn in light ink, for dark grounds" : "it is drawn in dark ink, for light grounds");
+    }
+    reason = `That artwork was filed under ${FORM_LABEL[form]} · ${tone === "inverse" ? "Inverse" : "Colour"} — ${bits.join(", and ")}.`;
   }
-  if (form === "stacked" && a >= 2.4) {
-    const variant = slotFor("horizontal", tone);
-    return {
-      variant,
-      form: "horizontal",
-      tone,
-      moved: true,
-      reason: `That artwork is ${a.toFixed(2)}:1 — it reads as a horizontal lockup, so it was filed under Horizontal.`,
-    };
-  }
-  return { variant: chosen, form, tone, moved: false, reason: null };
+
+  return { variant, form, tone, moved, reason, inferred: cls.inferred };
 }
 
 /** Classification used for display and for entries with no explicit slot. */
@@ -184,3 +327,4 @@ export function formFromAspect(aspect: number): LogoForm {
   if (aspect >= 1.15) return "stacked";
   return "symbol";
 }
+
