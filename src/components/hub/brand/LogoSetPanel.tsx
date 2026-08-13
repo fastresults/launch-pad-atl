@@ -15,11 +15,14 @@ import { cn } from "@/lib/utils";
  */
 
 export const LOGO_SLOTS = [
-  { key: "primary", label: "Primary", hint: "Default mark, light backgrounds" },
-  { key: "reversed", label: "Reversed", hint: "For dark backgrounds" },
+  { key: "primary", label: "Primary", hint: "Horizontal mark, light backgrounds" },
+  { key: "reversed", label: "Reversed", hint: "Horizontal mark, dark backgrounds" },
+  { key: "stacked", label: "Stacked", hint: "Mark over wordmark, light backgrounds" },
+  { key: "stacked_reversed", label: "Stacked reversed", hint: "Mark over wordmark, dark backgrounds" },
   { key: "icon", label: "Icon", hint: "Favicon, avatar, small placements" },
   { key: "wordmark", label: "Wordmark", hint: "Header and letterhead lockups" },
 ] as const;
+
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/svg+xml";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -53,11 +56,14 @@ export function logoSetFrom(logos: any): Record<string, any> {
 /** Filename hints let a multi-file drop land in the right slots. */
 function guessSlot(name: string): string {
   const n = name.toLowerCase();
-  if (/(reversed|reverse|dark|white|knockout|inverse)/.test(n)) return "reversed";
+  const inverse = /(reversed|reverse|dark|white|knockout|inverse)/.test(n);
+  if (/(stacked|stack|vertical|centred|centered)/.test(n)) return inverse ? "stacked_reversed" : "stacked";
+  if (inverse) return "reversed";
   if (/(icon|favicon|monogram|glyph|symbol|avatar)/.test(n)) return "icon";
   if (/(wordmark|word-mark|logotype|lockup)/.test(n)) return "wordmark";
   return "primary";
 }
+
 
 function readDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -345,7 +351,7 @@ export function LogoSetPanel({
 
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {LOGO_SLOTS.map((slot) => (
           <SlotTile
             key={slot.key}

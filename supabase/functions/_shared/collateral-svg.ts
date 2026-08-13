@@ -178,6 +178,14 @@ export type CollateralCtx = {
   logoSvgDark?: string | null;
   symbolSvgDark?: string | null;
   /**
+   * Stacked lockups (mark over wordmark). Used when the placement box is not
+   * wide — a square or tall box forces a horizontal lockup to shrink, which is
+   * how marks used to end up hair-thin on a business card back.
+   */
+  logoSvgStacked?: string | null;
+  logoSvgStackedDark?: string | null;
+
+  /**
    * Symbol isolated from a traced lockup. When present it is the artwork every
    * piece draws, and the company name is set in real type beside it instead of
    * shipping the tracer's polygon letterforms.
@@ -447,14 +455,31 @@ function fillsIn(svg: string): string[] {
  * on a light plate rather than left to vanish.
  */
 
-/** Artwork chosen for a surface, plus whether it is the reversed set. */
-function markSvgFor(ctx: CollateralCtx, bg?: string | null): { svg: string | null; dark: boolean } {
+/**
+ * Artwork chosen for a surface, plus whether it is the reversed set.
+ *
+ * `boxAspect` (width / height of the placement box) picks the lockup shape:
+ * wide boxes take the horizontal lockup, square / tall boxes take the stacked
+ * one when the venture has it.
+ */
+function markSvgFor(
+  ctx: CollateralCtx,
+  bg?: string | null,
+  boxAspect?: number,
+): { svg: string | null; dark: boolean } {
+  const preferStacked = typeof boxAspect === "number" && boxAspect > 0 && boxAspect < 2.2;
   if (isDarkSurface(bg)) {
-    const reversed = ctx.symbolSvgDark || ctx.logoSvgDark;
+    const reversed = preferStacked
+      ? ctx.logoSvgStackedDark || ctx.symbolSvgDark || ctx.logoSvgDark
+      : ctx.symbolSvgDark || ctx.logoSvgDark;
     if (reversed) return { svg: reversed, dark: true };
   }
-  return { svg: ctx.symbolSvg || ctx.logoSvg || null, dark: false };
+  const light = preferStacked
+    ? ctx.logoSvgStacked || ctx.symbolSvg || ctx.logoSvg
+    : ctx.symbolSvg || ctx.logoSvg;
+  return { svg: light || null, dark: false };
 }
+
 
 
 
@@ -478,7 +503,7 @@ function markAt(
   ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number,
   ink: string | null, bg?: string,
 ): string {
-  const picked = markSvgFor(ctx, bg);
+  const picked = markSvgFor(ctx, bg, boxH > 0 ? boxW / boxH : undefined);
   const svg = picked.svg;
   if (!svg) return "";
   // Drop full-bleed background plates so the mark sits directly on the paper.
@@ -595,12 +620,13 @@ function markAt(
 
 
 
-function logoAspect(ctx: CollateralCtx, bg?: string | null): number {
+function logoAspect(ctx: CollateralCtx, bg?: string | null, boxAspect?: number): number {
   // Measure the artwork that will actually be painted on this ground. Sizing
   // from the light variant and then drawing the reversed one (a different
   // aspect) is how a legally-sized box produced a half-height mark.
-  const svg = markSvgFor(ctx, bg ?? null).svg;
+  const svg = markSvgFor(ctx, bg ?? null, boxAspect).svg;
   return svg ? inkAspect(svg) : 1;
+
 
 }
 

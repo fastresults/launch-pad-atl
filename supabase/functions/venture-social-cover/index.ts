@@ -23,7 +23,7 @@ import { finishToSpec } from "../_shared/image-fit.ts";
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
-import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
+import { fetchPrimaryLogoBitmap, type LogoBitmapOpts } from "../_shared/brand-logo-bitmap.ts";
 import { replaceSupersededAssets } from "../_shared/replace-asset.ts";
 import { compositeHeadline, type AdAspect } from "../_shared/headline-compositor.ts";
 import { PNG } from "npm:pngjs@7.0.0";
@@ -114,9 +114,10 @@ function mimeFromPath(p: string): string {
 // helper, so covers are never generated blind to the brand mark.
 export type { LogoSkipReason } from "../_shared/brand-logo-bitmap.ts";
 
-async function fetchPrimaryLogo(admin: any, kit: any) {
-  return await fetchPrimaryLogoBitmap(admin, kit);
+async function fetchPrimaryLogo(admin: any, kit: any, opts: LogoBitmapOpts = {}) {
+  return await fetchPrimaryLogoBitmap(admin, kit, opts);
 }
+
 
 
 // Multimodal call: Gemini image model via OpenRouter chat shape. Returns b64 PNG.
@@ -357,7 +358,14 @@ Deno.serve(async (req) => {
     }
     if (sceneBrief) (ctx as any).sceneBrief = sceneBrief;
 
-    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText, skipReason: logoSkipReason } = await fetchPrimaryLogo(admin, kit);
+    // Avatars place the mark in a square box — a horizontal lockup shrinks to
+    // a hairline there, so ask for the stacked artwork when the venture has it.
+    const lockupWanted = placementForAssetKind(asset.kind) === "avatar-center"
+      ? "stacked"
+      : "horizontal";
+    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText, skipReason: logoSkipReason } =
+      await fetchPrimaryLogo(admin, kit, { lockup: lockupWanted });
+
 
 
     const isAvatar = asset.kind === "avatar";
