@@ -178,6 +178,14 @@ export type CollateralCtx = {
   logoSvgDark?: string | null;
   symbolSvgDark?: string | null;
   /**
+   * Stacked lockups (mark over wordmark). Used when the placement box is not
+   * wide — a square or tall box forces a horizontal lockup to shrink, which is
+   * how marks used to end up hair-thin on a business card back.
+   */
+  logoSvgStacked?: string | null;
+  logoSvgStackedDark?: string | null;
+
+  /**
    * Symbol isolated from a traced lockup. When present it is the artwork every
    * piece draws, and the company name is set in real type beside it instead of
    * shipping the tracer's polygon letterforms.
