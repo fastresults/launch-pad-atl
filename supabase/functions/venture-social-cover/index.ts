@@ -357,7 +357,14 @@ Deno.serve(async (req) => {
     }
     if (sceneBrief) (ctx as any).sceneBrief = sceneBrief;
 
-    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText, skipReason: logoSkipReason } = await fetchPrimaryLogo(admin, kit);
+    // Avatars place the mark in a square box — a horizontal lockup shrinks to
+    // a hairline there, so ask for the stacked artwork when the venture has it.
+    const lockupWanted = placementForAssetKind(asset.kind) === "avatar-center"
+      ? "stacked"
+      : "horizontal";
+    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText, skipReason: logoSkipReason } =
+      await fetchPrimaryLogo(admin, kit, { lockup: lockupWanted });
+
 
 
     const isAvatar = asset.kind === "avatar";
