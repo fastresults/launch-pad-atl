@@ -596,12 +596,25 @@ export function prdQualityMetrics(raw: string, facts: PrdVentureFacts) {
   const hexes = (facts.hexes ?? []).filter(Boolean);
   const hexHits = hexes.filter((h) => new RegExp(h.replace("#", "#?"), "i").test(raw)).length;
   const craft = craftVerdict(raw);
+  const rows = imageryRowsParsed(raw);
+  const routes = routesInSpec(raw);
+  const perRoute = Object.fromEntries(
+    routes.map((r) => [r, rows.filter((x) => x.route === r).length]),
+  );
+  const ok = (id: string) => craft.checks.find((c) => c.id === id)?.ok ?? false;
   return {
     words: raw.split(/\s+/).filter(Boolean).length,
     masterPromptWords: stats.words,
     masterPromptComplete: stats.complete,
     imageryRows,
+    imagesPerRoute: perRoute,
+    thinRoutes: routes.filter((r) => (perRoute[r] ?? 0) < imageFloorFor(r)),
+    heroExposureOk: ok("hero_exposure"),
+    parallaxRoutesOk: ok("parallax_routes"),
+    imageCopyOk: ok("image_copy"),
+    imageDensityOk: ok("image_density"),
     brandHexesUsed: `${hexHits}/${hexes.length}`,
+
     section4Words: section4Words(raw),
     archetype: facts.archetype?.name ?? null,
     archetypeNamed: facts.archetype ? raw.includes(facts.archetype.name) : null,
