@@ -243,8 +243,12 @@ export function logoCandidates(logos: any[], surface: string, boxAspect?: number
 
   for (const l of Array.isArray(logos) ? logos : []) {
     if (!l || typeof l !== "object") continue;
-    const own = String(l.variant ?? (l.primary ? "primary" : "mark"));
-    add(l.svg_path ?? l.path, own, l);
+    const variantsObj = l.variants && typeof l.variants === "object" ? l.variants : {};
+    // A Logo Studio entry carries generated lockups beside it — its own file is
+    // then the *symbol*, never a horizontal lockup, whatever the slot is called.
+    const studioEntry = Boolean(variantsObj.horizontal || variantsObj.stacked || variantsObj.mark);
+    const own = studioEntry ? "mark" : String(l.variant ?? (l.primary ? "primary" : "mark"));
+    add(l.svg_path ?? l.path, own, studioEntry ? { ...l, form: l.form ?? "symbol" } : l);
     const variants = l.variants && typeof l.variants === "object" ? l.variants : {};
     for (const [name, v] of Object.entries(variants as Record<string, any>)) {
       add(v?.path ?? v?.svg_path, String(name), v);
