@@ -66,10 +66,7 @@ async function extract(bytes: Uint8Array, filename: string, mime: string): Promi
     return (value ?? "").trim();
   }
   if (ext === "pdf" || mime === "application/pdf") {
-    return await geminiTranscribe([
-      { type: "text", text: `Extract all readable text from this PDF (${filename}).` },
-      { type: "file", file: { filename, file_data: bytesToDataUrl(bytes, "application/pdf") } },
-    ]);
+    return await extractPdf(bytes, filename);
   }
   if (IMAGE_MIMES.has(mime) || ["png", "jpg", "jpeg", "webp"].includes(ext)) {
     const m = mime || (ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg");
