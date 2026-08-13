@@ -15,11 +15,14 @@ import { cn } from "@/lib/utils";
  */
 
 export const LOGO_SLOTS = [
-  { key: "primary", label: "Primary", hint: "Default mark, light backgrounds" },
-  { key: "reversed", label: "Reversed", hint: "For dark backgrounds" },
+  { key: "primary", label: "Primary", hint: "Horizontal mark, light backgrounds" },
+  { key: "reversed", label: "Reversed", hint: "Horizontal mark, dark backgrounds" },
+  { key: "stacked", label: "Stacked", hint: "Mark over wordmark, light backgrounds" },
+  { key: "stacked_reversed", label: "Stacked reversed", hint: "Mark over wordmark, dark backgrounds" },
   { key: "icon", label: "Icon", hint: "Favicon, avatar, small placements" },
   { key: "wordmark", label: "Wordmark", hint: "Header and letterhead lockups" },
 ] as const;
+
 
 const ACCEPT = "image/png,image/jpeg,image/webp,image/svg+xml";
 const MAX_BYTES = 5 * 1024 * 1024;
