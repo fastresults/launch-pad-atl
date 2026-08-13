@@ -402,6 +402,9 @@ async function buildCtx(
     fonts,
     logoSvg,
     logoSvgDark,
+    logoSvgStacked,
+    logoSvgStackedDark,
+
     // A traced lockup ships its wordmark as polygons — rough stems, filled
     // counters. When the symbol can be separated, collateral draws the symbol
     // and sets the company name in the brand's real typeface.
