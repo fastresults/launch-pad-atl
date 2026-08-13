@@ -1301,11 +1301,15 @@ function Inner() {
                         ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
                         : row.extraction_error
                           ? `Couldn't read · from ${originLabel}`
-                          : `Processing… · from ${originLabel}`
+                          : `Still reading — large files take a minute · from ${originLabel}`
                     }
                     className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1.5 text-xs opacity-80 transition hover:opacity-100"
                   >
-                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${ready ? "bg-muted-foreground/40" : "bg-status-danger"}`} />
+                    <span
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                        ready ? "bg-muted-foreground/40" : row.extraction_error ? "bg-status-danger" : "bg-status-warning animate-pulse"
+                      }`}
+                    />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
                     {isUrlCapture ? (
