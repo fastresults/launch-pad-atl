@@ -1085,9 +1085,11 @@ function Inner() {
                 const ready = !!(row.extracted_text ?? "").trim();
                 const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
                 const isPattern = intent === "pattern";
-                const dot = !ready
-                  ? "bg-status-danger"
-                  : "bg-status-success";
+                const dot = ready
+                  ? "bg-status-success"
+                  : row.extraction_error
+                    ? "bg-status-danger"
+                    : "bg-status-warning animate-pulse";
                 const originLabel =
                   origin === "brief" ? "Brief" : origin === "founder" ? "Founder" : origin === "venture" ? "Venture" : "Library";
                 return (
