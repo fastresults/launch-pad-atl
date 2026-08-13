@@ -451,6 +451,10 @@ export default function VentureSharePage() {
                         goTo(k);
                         setNavOpen(false);
                       }}
+                      onShowWelcome={() => {
+                        openWelcome();
+                        setNavOpen(false);
+                      }}
                     />
                   </SheetContent>
                 </Sheet>
@@ -742,6 +746,10 @@ export default function VentureSharePage() {
                     viewedKeys={viewed}
                     onNavigate={(k) => {
                       goTo(k);
+                      setNavOpen(false);
+                    }}
+                    onShowWelcome={() => {
+                      openWelcome();
                       setNavOpen(false);
                     }}
                   />
