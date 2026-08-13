@@ -41,7 +41,19 @@ Two adjacent CTAs declare their gap (minimum 12px) and their order — primary f
 
 **8. Pricing and offer pages.** Tiers render as cards: name, price or an explicit pricing basis, a one-line who-it-is-for, an inclusion list written as full sentences, and a CTA button per tier with its own label. One tier is visually emphasised. A pricing route that shows no price and no explicit basis is a hard failure.
 
-**9. Header and logo.** The logo lockup declares its display height (28–40px desktop) and its clear space (minimum half the mark's height on every side), and sits inside the container. The header declares its surface, its scrolled state, and its mobile behaviour at the stated breakpoint.
+**9. Header and footer logo presence.** The logo is the brand's largest identity moment on the page and must never render as a small icon. Header lockup height: 44–56px desktop, 56–72px when the header sits transparent over a hero, 36–44px mobile; the scrolled state may shrink it by at most 20% and never below 36px desktop. Footer lockup: a deliberate brand moment at 72–120px tall (or a wordmark up to 320px wide) on its own row above the link columns — never inline with the legal line and never the header size reused. Both declare clear space of at least half the mark's height on every side, both sit inside the container, and both use the \`/auto?on=<background hex>\` endpoint on any non-light surface. The header also declares its surface, its scrolled state and its mobile behaviour at the stated breakpoint.
+
+**10. Parallax depth on heroes and full-bleed bands.** Every hero with a background image runs a three-plane parallax depth stack: background plate at 0.25x scroll, midground subject at 0.6x, foreground type at 1.0x. Every full-bleed image band on an interior route runs at minimum a two-plane version. The darkening between plate and type is a CSS gradient scrim, never baked into the render. Animate transform only, reserve \`aspect-ratio\` on every plate, apply \`will-change: transform\` to the plate alone, and collapse the whole stack to a static, finished composition under \`prefers-reduced-motion\`. Each route's Section 4 spec names its parallax treatment; the master prompt repeats the technique verbatim. A hero that scrolls as one flat image is a failure.
+
+**11. Typographic contract.** Type is art-directed, not defaulted.
+- *Pairing*: name which family is display and which is text, and state why the pairing works (serif display against humanist sans text, or grotesk display against serif text). One family doing every job at every size is a failure.
+- *Scale*: a named modular scale (1.250 or 1.333) with a display \`clamp()\` range, and stated tracking per tier — display -0.02 to -0.03em, body 0, eyebrow +0.12–0.16em micro-caps.
+- *Weight and tone*: at most three weights across the whole site; hierarchy comes from size, case and space, not from bolding everything. Body copy 17–19px at 1.6–1.75 leading on a 62–70 character measure.
+- *Opacity ladder*: hierarchy uses a token ladder — primary text 100%, secondary 72%, tertiary/meta 56%, disabled 38%. No arbitrary opacity values. Text set over imagery never drops below 90%; contrast there comes from the scrim, not from fading the type.
+- *Editorial devices*: at least two per site from drop cap, oversized pull quote, statistic set as display type, running section numerals, hanging punctuation.
+- *Hygiene*: tabular numerals in tables and metrics, \`font-display: swap\`, the display face preloaded, no faux bold or faux italic, optical sizing where the face supports it.
+
+**12. Image production tier.** Every generated image is produced on the Pro-tier image model (\`google/gemini-3-pro-image\`) at the highest resolution the model offers — one image per call, never batched into a contact sheet. Hero and full-bleed plates render wide enough to fill 1920px at 2x density without upscaling; card and portrait art renders at 2x its display box. The imagery table states the model, the source pixel dimensions and the aspect ratio for every slot. Low-tier or upscaled placeholder imagery is a hard failure.
 
 Restate this contract as its own subsection in Section 3, apply it in every route's Section 4 spec, and repeat the rules that touch generated code verbatim inside the Section 8 master prompt.`;
 }
@@ -61,5 +73,9 @@ Verify each item on the built site before it is considered done. Any unchecked l
 - [ ] The brand accent appears on every route in at least the primary CTA and one band or editorial accent.
 - [ ] All type over imagery sits on a CSS scrim and clears the image's focal subject.
 - [ ] The pricing route shows a price or an explicit pricing basis and a CTA for every tier.
+- [ ] The header logo renders at 44–56px desktop and the footer logo at 72–120px on its own row — neither is a small inline icon.
+- [ ] Every hero with a background image runs the three-plane parallax stack, and it collapses to a static composition under prefers-reduced-motion.
+- [ ] Display and text faces are a stated pairing on a named modular scale, with hierarchy driven by the 100 / 72 / 56 / 38% opacity ladder rather than arbitrary values.
+- [ ] Every image was generated on the Pro-tier image model at full resolution — no upscaled or placeholder art.
 - [ ] Every route has a unique title, meta description, canonical, one H1, an above-the-fold CTA and accessible alt text.`;
 }

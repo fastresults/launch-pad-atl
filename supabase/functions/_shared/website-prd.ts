@@ -123,11 +123,13 @@ Layout quality: vary section composition down the page — no two consecutive se
 
 Copy: write every headline, subhead, body paragraph, microcopy label, form helper, FAQ answer, testimonial and empty state in ${name}'s own voice, about ${name}'s actual offer${facts.offer ? ` — ${facts.offer}` : ""}. ${ctaLine} No filler, no placeholder brackets, no borrowed positioning from any other company.
 
-Imagery: no section ships text-only and no page may run two consecutive text-only sections. ${moodLine} Give every slot a prompt, alt text, aspect ratio and treatment, and generate all of them on first run into \`src/assets/\` referenced by ES6 imports.${facts.logoUrl ? ` Render the committed logo with <img src="${facts.logoUrl}" alt="${name} logo" /> on light surfaces, and use \`${facts.logoUrl}/auto?on=<the exact background hex>\` for every lockup on a footer, CTA band, brand-colour section or image overlay — never a substitute mark, never the bare URL on a dark band.` : ""} Generate images at the highest-quality tier available, one image per call, and regenerate any image that fails its legibility test.
+Imagery: no section ships text-only and no page may run two consecutive text-only sections. ${moodLine} Give every slot a prompt, alt text, aspect ratio and treatment, and generate all of them on first run into \`src/assets/\` referenced by ES6 imports.${facts.logoUrl ? ` Render the committed logo with <img src="${facts.logoUrl}" alt="${name} logo" /> on light surfaces, and use \`${facts.logoUrl}/auto?on=<the exact background hex>\` for every lockup on a footer, CTA band, brand-colour section or image overlay — never a substitute mark, never the bare URL on a dark band.` : ""} Every image is generated on the Pro-tier image model (google/gemini-3-pro-image) at the highest resolution it offers, one image per call — never a batched contact sheet, never an upscaled placeholder. Hero and full-bleed plates render wide enough to fill 1920px at 2x density without upscaling; card and portrait art renders at 2x its display box. The imagery table states the model, source pixel dimensions and aspect ratio for every slot, and any image that fails its legibility test is regenerated rather than shipped.
 
-Motion & depth: build the art direction's motion character, not a default fade. One signature scroll moment per site, named with its technique and scroll distance. Every full-bleed section runs a parallax depth stack — background plate at 0.25x scroll, midground subject at 0.6x, foreground type at 1.0x — with the darkening applied as a CSS gradient scrim between plate and type. Display headlines mask in line by line via clip-path (420ms, 80ms stagger); cards and body follow at opacity 0→1 plus 16px translateY. Animate transform and opacity only, reserve aspect-ratio on every image, and collapse the whole system to a still, finished composition under prefers-reduced-motion.
+Logo presence: the logo is the largest identity moment on the page and never a small inline icon. Header lockup 44–56px tall on desktop (56–72px when the header floats transparent over a hero), 36–44px on mobile, with the scrolled state shrinking it by at most 20% and never below 36px desktop. Footer lockup 72–120px tall (or a wordmark up to 320px wide) on its own row above the link columns, never inline with the legal line. Both declare clear space of at least half the mark's height and both sit inside the Container.
 
-Typography: display type ships a clamp range (e.g. clamp(2.75rem, 6vw, 7rem)) with stated tracking and a 62–70 character measure, and one editorial device is mandatory somewhere on the home page — a drop cap, an oversized pull quote, or a statistic set as display type. Numerals tabular in every table and metric.
+Motion & depth: build the art direction's motion character, not a default fade. One signature scroll moment per site, named with its technique and scroll distance. Every hero with a background image and every full-bleed band runs a parallax depth stack — background plate at 0.25x scroll, midground subject at 0.6x, foreground type at 1.0x — with the darkening applied as a CSS gradient scrim between plate and type, never baked into the render. Interior full-bleed bands run at minimum a two-plane version. Display headlines mask in line by line via clip-path (420ms, 80ms stagger); cards and body follow at opacity 0→1 plus 16px translateY. Animate transform and opacity only, put will-change: transform on the plate alone, reserve aspect-ratio on every image, and collapse the whole system to a still, finished composition under prefers-reduced-motion. A hero that scrolls as one flat image is a failure.
+
+Typography (art-directed, not defaulted): name which family is display and which is text and why the pairing works — serif display against humanist sans text, or grotesk display against serif text; one family doing every job at every size is a failure. Set a named modular scale (1.250 or 1.333) with a display clamp range (e.g. clamp(2.75rem, 6vw, 7rem)) and stated tracking per tier: display -0.02 to -0.03em, body 0, eyebrow +0.12–0.16em tracked micro-caps. At most three weights across the whole site — hierarchy comes from size, case and space, not from bolding everything. Body copy 17–19px at 1.6–1.75 leading on a 62–70 character measure. Hierarchy uses a token opacity ladder — primary text 100%, secondary 72%, tertiary/meta 56%, disabled 38% — with no arbitrary opacity values; type over imagery never drops below 90% and gets its contrast from the scrim instead. At least two editorial devices per site from drop cap, oversized pull quote, statistic set as display type, running section numerals, hanging punctuation. Numerals tabular in every table and metric, font-display: swap, display face preloaded, no faux bold or faux italic, optical sizing where the face supports it.
 
 Layout & interaction (non-negotiable): one Container primitive — 1280px max, gutters 24px at 360px rising to 48px at desktop — wraps the content of every band including the announcement bar, header, footer and cookie banner; the shell sets overflow-x: hidden and no route scrolls horizontally at 360, 768, 1280 or 1920px, and nothing touches the viewport edge. Every CTA is a real button: primary filled in the accent with its paired foreground, 44px minimum target, hover / active / focus-visible / disabled states, secondary outlined, adjacent CTAs with a declared gap and the primary first — a CTA rendered as bare text is a hard failure. The active nav state and focus-visible are two different treatments; the active label holds 4.5:1 against the header surface and a focus ring is never the active marker. Overlays (announcement bar, cookie banner, mobile nav, modals) each carry their own opaque or blurred surface, foreground pair, elevation and a z-index from the named ladder, and none may cover a headline, caption or CTA. No two-column section ships an empty column, section spacing comes from a named rhythm scale rather than ad-hoc padding, and no route opens with a lede and a body paragraph that restate the same point. All type over imagery declares its CSS scrim and the clean side of the frame, and never crosses the focal subject. Every route deploys the accent in at least the primary CTA plus one band or editorial accent; eyebrows are tracked micro-caps, not body text. Pricing tiers render as cards with a price or an explicit basis, full-sentence inclusions and a CTA per tier.
 
@@ -241,6 +243,35 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
       label: "Pricing tiers carry a price or explicit basis and a CTA each",
       ok: !has(/\/pricing|\/packages/i) ||
         (has(/tier/i) && has(/price|pricing basis|\$|per month|retainer|contingency/i)),
+    },
+    {
+      id: "logo_scale",
+      label: "Header and footer logo heights specified at brand scale",
+      ok: /header[^\n]{0,200}\b(4[4-9]|5[0-9]|6[0-9]|7[0-2])\s*px/i.test(raw) &&
+        /footer[^\n]{0,200}\b(7[2-9]|[89][0-9]|1[01][0-9]|120|320)\s*px/i.test(raw),
+    },
+    {
+      id: "parallax_hero",
+      label: "Hero parallax depth stack specified with reduced-motion fallback",
+      ok: has(/parallax/i) && has(/0\.25x|0\.6x|depth stack|three-plane/i) &&
+        has(/prefers-reduced-motion/i),
+    },
+    {
+      id: "type_contract",
+      label: "Display / text pairing, modular scale and tracking specified",
+      ok: has(/display\b[^\n]{0,120}\b(face|family|type)/i) &&
+        has(/modular scale|1\.250|1\.333/i) && has(/tracking/i) && has(/clamp\(/i),
+    },
+    {
+      id: "opacity_ladder",
+      label: "Text opacity ladder (100 / 72 / 56 / 38) declared",
+      ok: /72\s*%/.test(raw) && /56\s*%/.test(raw) && /38\s*%/.test(raw),
+    },
+    {
+      id: "image_tier",
+      label: "Pro-tier image model and source resolution named",
+      ok: has(/gemini-3-pro-image|pro-tier image model/i) &&
+        has(/1920|2x density|resolution/i),
     },
     {
       id: "checklist",

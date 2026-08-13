@@ -99,9 +99,10 @@ Deno.serve(async (req) => {
     if (!snapshotId || !documentType) {
       return json({ error: "snapshotId and documentType required" }, { status: 400 });
     }
-    // Default to Nano Banana 2 (Flash) — ~3-5x faster than Pro with comparable
-    // quality for editorial illustrations. Pass quality:"hq" to opt into Pro.
-    const imageModel = quality === "hq" ? "google/gemini-3-pro-image" : "google/gemini-3.1-flash-image";
+    // Header art is the first thing a founder sees on a deliverable, so it runs
+    // on the Pro image model by default. Pass quality:"fast" to opt into Nano
+    // Banana 2 (Flash) when speed matters more than fidelity.
+    const imageModel = quality === "fast" ? "google/gemini-3.1-flash-image" : "google/gemini-3-pro-image";
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
     let callerIsAdmin = isServiceRole;
