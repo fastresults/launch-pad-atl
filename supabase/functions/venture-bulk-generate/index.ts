@@ -52,6 +52,8 @@ import {
 } from "../_shared/website-prd.ts";
 import { LAUNCH_14DAY_PLAN } from "../_shared/launch-14day-plan.ts";
 import { logGenEvent } from "../_shared/gen-events.ts";
+import { derivedProgressPct, orchestrateNextStage } from "../_shared/orchestrate.ts";
+
 
 const MAX_USER_PROMPT_CHARS = 120_000;
 
@@ -677,29 +679,38 @@ function dependencyLayers(types: any[]): any[][] {
 
 const CONCURRENCY = 6;
 
-type RunState = { done: number; total: number; fails: number; canceled: boolean; keys?: string[] };
+type RunState = {
+  done: number;
+  total: number;
+  fails: number;
+  canceled: boolean;
+  keys?: string[];
+  /** Every active asset type for this venture, whatever this run covers. */
+  allKeys?: string[];
+};
 
 /**
- * Truthful progress: count what's actually complete in the database for the
- * documents this run covers, instead of counting work done inside this one
- * worker. A resumed / retry-only run used to report a collapse in progress
- * (e.g. "62 of 63 done" next to 37%).
+ * Truthful progress: one definition for the whole product — settled assets
+ * (complete or not applicable) over every active asset type this venture has,
+ * never the counter inside one worker and never scoped to a retry slice. A
+ * retry-only run of three assets used to report a collapse from 90% to 10%.
  */
 async function liveProgressPct(supabase: any, snapshotId: string, state: RunState): Promise<number> {
+  const scope = state.allKeys?.length ? state.allKeys : state.keys ?? [];
   try {
-    let q = supabase
+    if (scope.length) return await derivedProgressPct(supabase, snapshotId, scope);
+    const { count } = await supabase
       .from("venture_documents")
       .select("id", { count: "exact", head: true })
       .eq("snapshot_id", snapshotId)
       .eq("status", "complete");
-    if (state.keys?.length) q = q.in("document_type", state.keys);
-    const { count } = await q;
     const done = Math.min(state.total, Math.max(state.done, count ?? 0));
     return state.total > 0 ? Math.round((done / state.total) * 100) : 0;
   } catch {
     return state.total > 0 ? Math.round((state.done / state.total) * 100) : 0;
   }
 }
+
 
 /**
  * Keep the job's heartbeat fresh *while* a single long document is being
@@ -1123,7 +1134,21 @@ async function runJob(
 
   const layers = dependencyLayers(types);
   const total = types.length;
-  const state: RunState = { done: 0, total, fails: 0, canceled: false, keys: types.map((t: any) => t.type) };
+  // Progress is measured against every active asset this venture will ever
+  // have — including the website brief and anything a category/retry run isn't
+  // touching — so the bar means the same thing in every run.
+  const progressScope = (allTypes ?? [])
+    .map((t: any) => t.type)
+    .filter((t: string) => !notApplicable.includes(t));
+  const state: RunState = {
+    done: 0,
+    total,
+    fails: 0,
+    canceled: false,
+    keys: types.map((t: any) => t.type),
+    allKeys: progressScope,
+  };
+
 
   const startedAt = new Date().toISOString();
   await supabase.from("venture_generation_jobs").update({
@@ -1209,7 +1234,7 @@ async function runJob(
   await supabase.from("venture_generation_jobs").update({
     status: allDone && !noOp ? "completed" : "completed_with_blockers",
     completed_at: new Date().toISOString(),
-    progress_pct: allDone ? 100 : Math.round(((completeCount ?? 0) / Math.max(total, 1)) * 100),
+    progress_pct: await liveProgressPct(supabase, snapshotId, state),
     current_document_type: null,
     circuit_breaker_open: false,
     retry_round: 0,
@@ -1247,7 +1272,22 @@ async function runJob(
     const edgeRuntime = (globalThis as any).EdgeRuntime;
     if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(sweep);
   } catch { /* best-effort */ }
+
+  // Continuous flow. A settled bulk run is a hand-off, not an ending: release
+  // any blocker the brand lock has since resolved and start the next stage
+  // (the website brief) without waiting for the founder to press anything.
+  try {
+    const next = orchestrateNextStage(supabase, snapshotId)
+      .then((r) => console.log("[orchestrate]", JSON.stringify(r)))
+      .catch((e) => console.error("orchestrate failed", e));
+    const edgeRuntime = (globalThis as any).EdgeRuntime;
+    if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(next);
+    else await next;
+  } catch (e) {
+    console.error("orchestrate dispatch failed", e);
+  }
 }
+
 
 
 

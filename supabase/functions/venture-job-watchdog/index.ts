@@ -4,6 +4,8 @@
 
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { orchestrateNextStage } from "../_shared/orchestrate.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -335,9 +337,53 @@ Deno.serve(async (req) => {
       console.error("hero sweep pass failed", e);
     }
 
-    return new Response(JSON.stringify({ ok: true, paused, unstuck, resumed, heroSweeps }), {
+    // Continuous flow safety net. A venture whose assets are done but whose
+    // next stage never started (blocked on a brand lock that has since
+    // happened, or a website brief nobody triggered) is driven forward here,
+    // bounded by the per-stage attempt budget inside the orchestrator.
+    let orchestrated = 0;
+    try {
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: locked } = await supabase
+        .from("venture_brand_kits")
+        .select("snapshot_id")
+        .eq("status", "locked")
+        .gte("updated_at", since)
+        .limit(25);
+      const candidates: string[] = [];
+      for (const kit of locked ?? []) {
+        const { data: pending } = await supabase
+          .from("venture_documents")
+          .select("document_type, status, blocked_reason")
+          .eq("snapshot_id", kit.snapshot_id)
+          .or("blocked_reason.not.is.null,document_type.eq.website_prd")
+          .limit(20);
+        const needsDrive = (pending ?? []).some((d: any) =>
+          d.blocked_reason ||
+          (d.document_type === "website_prd" && d.status !== "complete" && d.status !== "generating")
+        );
+        if (needsDrive) candidates.push(kit.snapshot_id);
+      }
+      const drives = candidates.slice(0, 5).map((snapshotId) =>
+        orchestrateNextStage(supabase, snapshotId)
+          .then((r) => console.log("[watchdog orchestrate]", JSON.stringify(r)))
+          .catch((e) => console.error("watchdog orchestrate failed", e))
+      );
+      orchestrated = drives.length;
+      if (drives.length) {
+        const pending = Promise.allSettled(drives);
+        const edgeRuntime = (globalThis as any).EdgeRuntime;
+        if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(pending);
+        else await pending;
+      }
+    } catch (e) {
+      console.error("orchestration pass failed", e);
+    }
+
+    return new Response(JSON.stringify({ ok: true, paused, unstuck, resumed, heroSweeps, orchestrated }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   } catch (e) {
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },

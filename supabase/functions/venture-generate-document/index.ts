@@ -787,21 +787,47 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "snapshotId and documentType required" }, 400, corsHeaders);
     }
 
-    // Internal phase handoff (draft -> refine) carries the service key and
-    // skips the user checks: the draft phase already authorised the run.
+    // Internal invocation carries the service key. Two cases: the draft→refine
+    // phase handoff, and the orchestrator starting a stage on its own (the
+    // website brief, once the brand is locked). Both are already authorised —
+    // the orchestrator only ever acts on a venture whose own run authorised it
+    // — and both answer immediately with the work running in the background.
     const internal = req.headers.get("x-internal-key") === SERVICE_KEY;
-    if (internal && phase === "refine") {
+    if (internal) {
+      const runPhase = phase === "refine"
+        ? "refine"
+        : documentType === "website_prd"
+        ? "draft"
+        : "full";
       const sb = createClient(SUPABASE_URL, SERVICE_KEY);
-      const job = generateOne(sb, snapshotId, documentType, undefined, undefined, undefined, "refine")
+      const startedAt = Date.now();
+      const job = generateOne(sb, snapshotId, documentType, undefined, undefined, undefined, runPhase)
+        .then((r: any) =>
+          logGenEvent(sb, {
+            snapshotId, documentType, phase: r?.phase ?? runPhase,
+            durationMs: Date.now() - startedAt,
+            outcome: r?.phase === "draft" ? "checkpoint" : "complete",
+          })
+        )
         .catch(async (err) => {
-          await sb.from("venture_documents").update({
-            status: "failed",
-            last_error: (err instanceof Error ? err.message : String(err)).slice(0, 500),
-          }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+          const msg = (err instanceof Error ? err.message : String(err)).slice(0, 500);
+          await logGenEvent(sb, {
+            snapshotId, documentType, phase: runPhase,
+            durationMs: Date.now() - startedAt,
+            outcome: (err as any)?.code ? "blocked" : "failed",
+            error: msg,
+          });
+          if (!(err as any)?.code) {
+            await sb.from("venture_documents").update({
+              status: "failed",
+              last_error: msg,
+            }).eq("snapshot_id", snapshotId).eq("document_type", documentType);
+          }
         });
       try { (globalThis as any).EdgeRuntime?.waitUntil?.(job); } catch { /* ignore */ }
-      return jsonResponse({ ok: true, phase: "refine", pending: true }, 202, corsHeaders);
+      return jsonResponse({ ok: true, phase: runPhase, pending: true }, 202, corsHeaders);
     }
+
 
     const auth = await requireUser(req, corsHeaders);
     if (auth.error) return auth.error;
