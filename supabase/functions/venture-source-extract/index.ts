@@ -54,6 +54,66 @@ async function geminiTranscribe(content: any[]): Promise<string> {
   return (j?.choices?.[0]?.message?.content ?? "").toString();
 }
 
+// A single-shot transcription of a long PDF is what made intake feel broken:
+// one 88k-character master document took 85 seconds, long enough for the
+// uploader to give up. Big PDFs are split into overlapping-free page ranges
+// transcribed in parallel (bounded concurrency) and stitched back in order.
+const PDF_CHUNK_THRESHOLD_BYTES = 400_000;
+const PDF_PAGES_PER_CHUNK = 20;
+const PDF_MAX_CHUNKS = 6;
+const PDF_CONCURRENCY = 3;
+const NO_PAGES = "[[NO_PAGES]]";
+
+async function extractPdf(bytes: Uint8Array, filename: string): Promise<string> {
+  const dataUrl = bytesToDataUrl(bytes, "application/pdf");
+  const single = () =>
+    geminiTranscribe([
+      { type: "text", text: `Extract all readable text from this PDF (${filename}).` },
+      { type: "file", file: { filename, file_data: dataUrl } },
+    ]);
+
+  if (bytes.byteLength <= PDF_CHUNK_THRESHOLD_BYTES) return await single();
+
+  const ranges: Array<[number, number]> = [];
+  for (let i = 0; i < PDF_MAX_CHUNKS; i++) {
+    const start = i * PDF_PAGES_PER_CHUNK + 1;
+    ranges.push([start, start + PDF_PAGES_PER_CHUNK - 1]);
+  }
+
+  const results: string[] = new Array(ranges.length).fill("");
+  let cursor = 0;
+  let sawEnd = false;
+  const worker = async () => {
+    for (;;) {
+      const idx = cursor++;
+      if (idx >= ranges.length || sawEnd) return;
+      const [from, to] = ranges[idx];
+      try {
+        const text = await geminiTranscribe([
+          {
+            type: "text",
+            text:
+              `Extract all readable text from pages ${from} to ${to} of this PDF (${filename}), verbatim and in order. ` +
+              `If the document has fewer than ${from} pages, output exactly ${NO_PAGES} and nothing else.`,
+          },
+          { type: "file", file: { filename, file_data: dataUrl } },
+        ]);
+        const trimmed = (text ?? "").trim();
+        if (!trimmed || trimmed.includes(NO_PAGES)) { sawEnd = true; return; }
+        results[idx] = trimmed;
+      } catch (_e) {
+        // A single failed range shouldn't lose the whole document.
+        results[idx] = "";
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: PDF_CONCURRENCY }, worker));
+
+  const stitched = results.filter(Boolean).join("\n\n").trim();
+  // If the ranged strategy produced nothing usable, fall back to one pass.
+  return stitched || (await single());
+}
+
 async function extract(bytes: Uint8Array, filename: string, mime: string): Promise<string> {
   const lower = filename.toLowerCase();
   const ext = lower.split(".").pop() ?? "";
