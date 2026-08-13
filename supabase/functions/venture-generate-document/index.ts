@@ -42,6 +42,7 @@ import {
 import { renderSourcingBlock } from "../_shared/sourcing-classifier.ts";
 import { profileFor } from "../_shared/prompt-profiles.ts";
 import { checkIdentity, correctionPrompt, substituteIdentity } from "../_shared/identity-guard.ts";
+import { checkCompliance, compliancePrompt } from "../_shared/compliance-guard.ts";
 import { brandLogoUrl } from "../_shared/venture-context.ts";
 import { archetypeForPrompt } from "../_shared/site-art-direction.ts";
 import { renderPrdPortraits } from "../_shared/prd-portraits.ts";
@@ -833,6 +834,74 @@ export async function generateOne(
       ...prdQualityMetrics(raw, prdFacts),
     }));
   }
+
+  // Compliance gate. A regulated venture carries operator-verified rules on its
+  // brain; the COMPLIANCE LOCK asks the model to respect them, this checks that
+  // it did — including inside fenced blocks and paste-ready templates, which is
+  // exactly where a paid-referral email survived the last manual scrub.
+  const complianceRules = [
+    ...((ctx.brain?.compliance_rules ?? []) as string[]),
+    ...((ctx.brain?.banned_assumptions ?? []) as string[]),
+  ].filter((r) => typeof r === "string" && r.trim());
+  if (complianceRules.length) {
+    let verdict = checkCompliance(raw, {
+      compliance_rules: ctx.brain?.compliance_rules as string[] | undefined,
+      banned_assumptions: ctx.brain?.banned_assumptions as string[] | undefined,
+    });
+    if (!verdict.ok) {
+      console.warn("compliance gate failed", documentType, JSON.stringify(verdict.violations));
+      try {
+        const fixRes = await aiFetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: modelId,
+            max_tokens: maxTokens,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "assistant", content: raw.slice(0, 60_000) },
+              { role: "user", content: compliancePrompt(verdict, complianceRules) },
+            ],
+          }),
+        }, { timeoutMs: isPrd ? 180_000 : 90_000, retries: 0 });
+        if (fixRes.ok) {
+          const fixJson = await fixRes.json();
+          const fixed = stripCitations(fixJson.choices?.[0]?.message?.content ?? "");
+          const recheck = checkCompliance(fixed, {
+            compliance_rules: ctx.brain?.compliance_rules as string[] | undefined,
+            banned_assumptions: ctx.brain?.banned_assumptions as string[] | undefined,
+          });
+          // Accept only a substantial repair that is strictly better.
+          if (fixed.length > raw.length * 0.7 && recheck.violations.length < verdict.violations.length) {
+            raw = fixed;
+            verdict = recheck;
+          }
+        } else {
+          await fixRes.text();
+        }
+      } catch (e) {
+        console.warn("compliance repair pass failed", e);
+      }
+    }
+    // A document that still breaches a legal rule must never read as finished.
+    if (!verdict.ok) {
+      quality = Math.min(quality, 55);
+      const notice = verdict.violations.map((v) => `- ${v.message}`).join("\n");
+      raw = `${raw}\n\n<!-- COMPLIANCE REVIEW REQUIRED\n${notice}\n-->\n`;
+    }
+    try {
+      await logGenEvent(supabase, {
+        snapshotId,
+        documentType,
+        phase: "compliance_gate",
+        model: modelId,
+        outcome: verdict.ok ? "checkpoint" : "blocked",
+        error: verdict.ok ? null : verdict.violations.map((v) => v.code).join(","),
+      });
+    } catch { /* telemetry only */ }
+  }
+
+
 
 
 
