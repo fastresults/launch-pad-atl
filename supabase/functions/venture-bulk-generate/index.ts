@@ -1234,7 +1234,7 @@ async function runJob(
   await supabase.from("venture_generation_jobs").update({
     status: allDone && !noOp ? "completed" : "completed_with_blockers",
     completed_at: new Date().toISOString(),
-    progress_pct: allDone ? 100 : Math.round(((completeCount ?? 0) / Math.max(total, 1)) * 100),
+    progress_pct: await liveProgressPct(supabase, snapshotId, state),
     current_document_type: null,
     circuit_breaker_open: false,
     retry_round: 0,
