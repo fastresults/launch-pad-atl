@@ -281,10 +281,12 @@ export function reconcileSlot(
     "form" in measurement
       ? (measurement as Classification)
       : {
+          // Geometry only ever splits horizontal from stacked — a symbol or
+          // wordmark slot is the founder's word and is left alone.
           form:
-            (measurement as Measurement)!.aspect >= 2.4
+            intent.form === "stacked" && (measurement as Measurement)!.aspect >= 2.4
               ? "horizontal"
-              : (measurement as Measurement)!.aspect < 1.6 && intent.form === "horizontal"
+              : intent.form === "horizontal" && (measurement as Measurement)!.aspect < 1.6
               ? "stacked"
               : intent.form,
           tone: intent.tone,
