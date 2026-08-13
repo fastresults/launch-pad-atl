@@ -337,14 +337,46 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
     {
       id: "logo_scale",
       label: "Header and footer logo heights specified at brand scale",
-      ok: /header[^\n]{0,200}\b(4[4-9]|5[0-9]|6[0-9]|7[0-2])\s*px/i.test(raw) &&
-        /footer[^\n]{0,200}\b(7[2-9]|[89][0-9]|1[01][0-9]|120|320)\s*px/i.test(raw),
+      ok: /header[^\n]{0,200}\b(4[4-9]|5[0-9]|6[0-9]|7[0-2])\s*px/i.test(authored) &&
+        /footer[^\n]{0,200}\b(7[2-9]|[89][0-9]|1[01][0-9]|120|320)\s*px/i.test(authored),
     },
     {
       id: "parallax_hero",
       label: "Hero parallax depth stack specified with reduced-motion fallback",
       ok: has(/parallax/i) && has(/0\.25x|0\.6x|depth stack|three-plane/i) &&
         has(/prefers-reduced-motion/i),
+    },
+    {
+      id: "parallax_routes",
+      label: "Every route with a hero or full-bleed band names its parallax treatment in Section 4",
+      ok: routeBlocks.length > 0 &&
+        routeBlocks.every((b) => !HERO_RE.test(b) || /parallax/i.test(b)),
+    },
+    {
+      id: "hero_exposure",
+      label: "Hero / full-bleed imagery rows state a luminance target and a CSS scrim",
+      ok: heroRows.length > 0 &&
+        heroRows.every((r) => EXPOSURE_RE.test(r.line) && /scrim/i.test(r.line)),
+    },
+    {
+      id: "no_baked_darkening",
+      label: "No imagery prompt asks for a dark render without an exposure target",
+      ok: rows.every((r) => !DARK_RE.test(r.line) || EXPOSURE_RE.test(r.line)),
+    },
+    {
+      id: "image_density",
+      label: "Imagery table meets the per-route floor (8 slots on /, 4 on interiors)",
+      ok: routes.length > 0 && thinRoutes.length === 0,
+    },
+    {
+      id: "image_copy",
+      label: "Every non-texture imagery row carries a caption and the sentence it illustrates",
+      ok: rows.length > 0 &&
+        rows.every((r) =>
+          TEXTURE_RE.test(r.type) ||
+          (r.caption.length > 2 && !/^n\/?a$/i.test(r.caption) &&
+            r.narrative.length > 2 && !/^n\/?a$/i.test(r.narrative))
+        ),
     },
     {
       id: "type_contract",
@@ -355,7 +387,7 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
     {
       id: "opacity_ladder",
       label: "Text opacity ladder (100 / 72 / 56 / 38) declared",
-      ok: /72\s*%/.test(raw) && /56\s*%/.test(raw) && /38\s*%/.test(raw),
+      ok: /72\s*%/.test(authored) && /56\s*%/.test(authored) && /38\s*%/.test(authored),
     },
     {
       id: "image_tier",
@@ -363,6 +395,7 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
       ok: has(/gemini-3-pro-image|pro-tier image model/i) &&
         has(/1920|2x density|resolution/i),
     },
+
     {
       id: "checklist",
       label: "Build acceptance checklist present",
