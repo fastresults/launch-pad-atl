@@ -293,7 +293,11 @@ export function LogoSetPanel({
       if (Array.isArray(out?.logos)) setOverride(out.logos);
       qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
       qc.invalidateQueries({ queryKey: ["hub"] });
-      toast.success(`${LOGO_SLOTS.find((s) => s.key === vars.variant)?.label ?? "Logo"} saved to your brand`);
+      // The server measures the artwork and may file it where it belongs; say
+      // so out loud rather than silently moving it.
+      const saved = LOGO_SLOTS.find((s) => s.key === (out?.variant ?? vars.variant))?.label ?? "Logo";
+      if (out?.moved && out?.notice) toast.warning(out.notice);
+      else toast.success(`${saved} saved to your brand`);
     },
     onError: (e: any) => toast.error(e?.message ?? "Upload failed"),
     onSettled: () => setPending(null),
@@ -316,20 +320,28 @@ export function LogoSetPanel({
     upload.mutate({ variant, file });
   };
 
-  // Multi-file: assign by filename hint, then upload sequentially so slots
-  // don't race each other writing the same kit row.
+  // Multi-file: classify each file by measuring it, then let the founder
+  // confirm or correct the assignment before anything is written.
   const pickMany = async (files: FileList | File[]) => {
     const list = Array.from(files).slice(0, LOGO_SLOTS.length);
-    const used = new Set<string>();
-    for (const file of list) {
-      let variant = guessSlot(file.name);
-      if (used.has(variant)) {
-        variant = LOGO_SLOTS.map((s) => s.key).find((k) => !used.has(k)) ?? variant;
-      }
-      used.add(variant);
+    const rows = await Promise.all(
+      list.map(async (file) => {
+        const aspect = await measureFile(file);
+        const { form, tone } = classifyFile(file.name, aspect);
+        return { file, aspect, form, tone };
+      }),
+    );
+    setReview(rows);
+  };
+
+  const commitReview = async () => {
+    const rows = review ?? [];
+    setReview(null);
+    for (const row of rows) {
+      const variant = SLOT_BY_FORM_TONE[`${row.form}|${row.tone}`] ?? "primary";
       setPending(variant);
       try {
-        await upload.mutateAsync({ variant, file });
+        await upload.mutateAsync({ variant, file: row.file });
       } catch {
         break;
       }
