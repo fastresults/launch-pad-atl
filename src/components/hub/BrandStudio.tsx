@@ -177,9 +177,11 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
             className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4 ${
               !locked
                 ? "border-border bg-muted/40"
-                : websitePrd.stale || !websitePrd.exists
-                  ? "border-status-warning/40 bg-status-warning/5"
-                  : "border-border bg-background/40"
+                : websitePrd.failed
+                  ? "border-destructive/40 bg-destructive/5"
+                  : websitePrd.stale || !websitePrd.exists
+                    ? "border-status-warning/40 bg-status-warning/5"
+                    : "border-border bg-background/40"
             }`}
           >
             <div className="min-w-0">
@@ -188,18 +190,23 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
                   ? "Website brief — unlocks after you lock your brand"
                   : websitePrd.building
                     ? "Building your website brief…"
-                    : !websitePrd.exists
-                      ? "No website brief yet"
-                      : websitePrd.stale
-                        ? "Your website brief was written before this brand"
-                        : "Your website brief matches this brand"}
+                    : websitePrd.failed
+                      ? "Your website brief stopped part-way"
+                      : !websitePrd.exists
+                        ? "No website brief yet"
+                        : websitePrd.stale
+                          ? "Your website brief was written before this brand"
+                          : "Your website brief matches this brand"}
               </p>
               <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                 {!locked
                   ? "It's the only asset we hold back from the automatic build — it's written from your final marks, palette and type, so it waits until those are locked."
-                  : "Building writes the brief and its paste-ready builder prompt from your locked palette, typography and committed mark. No extra input needed."}
+                  : websitePrd.statusNote
+                    ? websitePrd.statusNote
+                    : "Building writes the brief and its paste-ready builder prompt from your locked palette, typography and committed mark. No extra input needed."}
               </p>
             </div>
+
             <div className="flex shrink-0 flex-wrap gap-2">
               {locked && websitePrd.exists && (
                 <Button size="sm" variant="outline" onClick={() => setPrdOpen(true)} disabled={websitePrd.running}>
