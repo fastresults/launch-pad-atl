@@ -81,10 +81,15 @@ For EVERY route listed in Section 2, produce a subsection with:
 
 ## 4b. Imagery Plan & Art Direction
 A text-only site is a failed PRD, and so is a dark, muddy or generic one. Render ONE markdown table covering every section of every route. Columns:
-Route | Section | Slot name | Visual type (hero / portrait / spot call-out / product-UI / diagram / data visual / texture band) | Aspect ratio | Treatment (full-bleed, inset, portrait card, background wash) | Exposure & contrast target | Text-overlay plan (scrim direction + which side of the frame stays clean, or "no type on image") | Alt text | Generation prompt (55–90 words, opens with the craft recipe, mood-board language, two exact brand hex values)
+Route | Section | Slot name | Visual type (hero / portrait / spot call-out / product-UI / diagram / data visual / texture band) | Aspect ratio | Treatment (full-bleed, inset, portrait card, background wash) | Exposure & contrast target | Text-overlay plan (scrim direction + which side of the frame stays clean, or "no type on image") | Parallax plan (plate 0.25x / midground 0.6x / type 1.0x, two-plane, or "static") | Caption / on-page copy | Narrative role | Alt text | Generation prompt (55–90 words, opens with the craft recipe, mood-board language, two exact brand hex values)
 
 Rules for the table:
 - Every route in Section 2 appears, and every section named in Section 4 has at least one row. No section may be omitted.
+- **Density floor**: the home route carries at least 8 image slots; every interior route carries at least 4. A route under its floor is a rejected PRD — add the missing slots rather than shrinking the route.
+- **Caption / on-page copy** is the real printed text that ships beside the image — a caption, credit line, stat, or pull quote in the venture's own voice. Only texture / gradient bands may say "none".
+- **Narrative role** is the one sentence of body copy the image illustrates, and that sentence must appear verbatim in that route's Section 4 copy. An image with no surrounding copy is a failure.
+- Hero and full-bleed rows state their **Parallax plan** as the three-plane stack (background plate 0.25x scroll, midground subject 0.6x, foreground type 1.0x) with the reduced-motion fallback; interior full-bleed bands may state the two-plane version. The same treatment is named in that route's Section 4 subsection.
+
 - Every row's **Exposure & contrast target** is a real number range from the IMAGE CRAFT CONTRACT (e.g. "subject at 35–55% luminance, open shadows"), never an adjective like "moody" or "dark".
 - Hero rows must state that darkening for text contrast is applied in CSS as a gradient scrim and is NEVER baked into the render, and must name the clean side of the frame.
 - Every row whose subject includes a person uses the portrait recipe verbatim: 85mm equivalent, ~f/2, soft key at 45 degrees with fill and rim separation, catchlights in both eyes, real skin texture, real environment softly out of focus. Plastic CGI skin, uncanny symmetry, and burned-in text or hex codes are hard failures.
