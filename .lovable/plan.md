@@ -1,41 +1,65 @@
-# Logo art direction — The Friendship House
+# French tricolour palette + moodboard for The Friendship House
 
-Write a single art-direction document that a designer (or the Logo Studio) can execute against. No code changes, no image generation.
+Re-base the brand kit on the French flag — bleu, blanc, rouge — and rebuild the mood board and logo art direction against it.
 
-## What the assets say the brand actually is
+## Where things stand
 
-Derived from the venture snapshot plus the brand strategy, guidelines, voice and messaging documents:
+The kit for this venture is `status: auto`, step 3, with a derived palette called "Franco-American Unity" (`primary #0A2463`, `secondary #C8A2C8` lilac, `accent #E63946`, `bg #F5F5F5`) and 9 mood board tiles generated from it. Typography is locked-feeling and stays: Montserrat 700 headings, Lora 400 body. Nothing is `locked`, so the palette can be replaced without breaking a lock.
 
-- An integration institution and physical destination house in Château-Thierry (Aisne, France) helping Americans settle in France.
-- Dual engine: predictive administrative intelligence (prefecture wait-time dataset, AI filing windows, gamified 2026 civic-exam prep) **and** a real house where members and local French citizens meet.
-- Positioning: neither a legal consultancy nor a social club — the bridge between administrative acquisition and long-term community retention.
-- Archetype: Sage with heavy Caregiver. Empathetic 5, Community 5, Expertise 4, Innovative 4, Optimistic 4.
-- Essence: "Predictive Intelligence. Deep Belonging."
-- Name rule from the guidelines: always **The Friendship House** — never "TFH", never shortened.
+## 1. New palette — "Tricolore"
 
-## Color: one decision to settle first
+Official flag values, adapted so text pairings still pass WCAG AA:
 
-The locked brand guidelines specify Franco-American navy `#0A2463`, red `#E63946`, lilac `#C8A2C8`, bg `#F5F5F5`. The Terracotta & Sage direction chosen (`#C4654A`, `#E8A87C`, `#87A878`, `#4A6741`) reads warmer, more communal, less institutional.
+| Token | Hex | Role |
+| --- | --- | --- |
+| `primary` | `#0055A4` | Bleu — headlines, primary buttons, nav |
+| `onPrimary` | `#FFFFFF` | |
+| `secondary` | `#002654` | Deep navy bleu (flag blue darkened) — institutional surfaces, footers |
+| `onSecondary` | `#FFFFFF` | |
+| `accent` | `#EF4135` | Rouge — critical actions and callouts only |
+| `onAccent` | `#FFFFFF` | |
+| `bg` | `#FFFFFF` | Blanc — the third stripe carries the whole surface |
+| `surface` | `#F4F6F9` | Cool off-white for panels, so blanc stays a brand colour |
+| `fg` | `#1A1D23` | |
+| `muted` | `#5A6472` | |
+| `border` | `#DCE1E8` | |
 
-The document will carry navy as the structural ink and introduce terracotta/sage as a **warmth pair** — terracotta as the accent that replaces the alarm-red `#E63946` in brand marks, sage as the community/second tone. Rationale, exact hexes and a one-ink black/white reduction are stated so the guidelines can be amended rather than contradicted.
+Contrast notes to enforce, not assume: `#EF4135` on white is ~3.7:1, so rouge is never used for body copy or small text — only fills, rules and icons, with white text on top. Same discipline for `#0055A4` as a fill. The existing contrast-audit step re-runs and records the pairings.
 
-## Document contents
+The lilac `#C8A2C8` is retired — it is the one colour pulling the identity away from the flag.
 
-1. **Brand truth in one paragraph** — what the mark must communicate, and the single core idea.
-2. **What this brand is NOT** — no Eiffel-tower/beret Francophilia, no handshake, no globe with a plane, no speech bubbles, no gradient app icon, no clip-art house with a heart in the window, no flag-blending.
-3. **Metaphor territory (one, committed)** — the *threshold*: a house form built from two joined parts, reading as roofline + doorway + shelter. Secondary permitted readings: a seal/écusson (French civic authority), a table people gather at, an open window.
-4. **Three concept routes**, each with: the one shape idea in a sentence, why it is memorable, construction rules (grid, stroke ratio, corner radius, counterform, symmetry), and where it fails.
-   - Route A — *The Joined Threshold*: monogram-free geometric house/door built from two interlocking planes (American and French sides sharing one wall).
-   - Route B — *The Civic Seal*: a modern circular seal, restrained and administrative, with a house counterform at its centre — credibility for prefecture-facing and grant-facing use.
-   - Route C — *The Open Door Wordmark*: a lockup-led route where a single letterform (the H, or the "o" in House) opens into a doorway aperture.
-5. **Construction spec** — 8-unit grid, single stroke weight, one terminal treatment, 2 inks maximum, flat fill, no gradient/shadow/3D/texture, must read as a solid black silhouette at 16px.
-6. **Typography for the lockup** — Montserrat 700 for the wordmark with tightened tracking, Lora reserved for the descriptor line; case, tracking and cap-height alignment to the mark specified. Includes primary horizontal, stacked, and symbol-only lockups plus clear-space (height of the "T") and 150px / 1.5in minimums from the existing guidelines.
-7. **Color application** — full-color, one-ink navy, one-ink terracotta, knockout white on navy, and the accessibility pairings that are allowed.
-8. **Bilingual and civic considerations** — how the mark behaves next to French institutional signage and on a physical building sign in Château-Thierry.
-9. **Rejection criteria** — the checklist any candidate must pass before it is shown to the founder (one idea, silhouette test, no stray text, works at 16px, not reusable by another expat service).
+## 2. Mood board rebuild (9 tiles)
 
-## Files
+Regenerate all 9 tiles with an art direction that reads as French civic warmth, not flag clip-art:
 
-- `.lovable/art-direction/friendship-house-logo.md` (new) — the full brief, also suitable to paste into the Logo Studio.
+- Château-Thierry stone façades, shutters, a French doorway and its numberplate
+- A tricolour on a mairie in flat morning light — one tile only, never five
+- Café table, shared meal, mixed French/American company
+- Prefecture paperwork and stamps shot beautifully, not bureaucratically
+- Blue-white-red as *material* — enamel plaque, painted shutter, linen — rather than as a flag
+- One abstract tile: the three stripes as a spatial device (threshold, corridor, banner edge)
 
-Nothing else changes.
+Guardrails written into the direction: no Eiffel Tower, no berets or baguettes, no waving-flag stock, no US/FR flag mashups, no gradients. Tiles must sample the exact three hexes.
+
+## 3. Logo art direction, revised to the tricolour
+
+The earlier direction assumed terracotta and sage. Rewrite it around bleu/blanc/rouge:
+
+- Metaphor stays **the threshold** — a house/door form; the tricolour supplies the ink, not the idea.
+- Two-ink rule: bleu + rouge on white, with the white stripe read as *counterform* inside the mark (the "blanc" is negative space, not a printed colour).
+- Reductions specified: one-ink bleu, one-ink black, knockout white on `#002654`.
+- Explicit ban on literally drawing the flag or a flag-in-a-house.
+- Lockup: Montserrat 700 wordmark, tightened tracking, "The Friendship House" always in full; clear space and 150px / 1.5in minimums carried over from the existing guidelines.
+
+## 4. Documents that must follow
+
+`brand_guidelines_pdf`, `brand_strategy_framework` and `brand_voice_tone_guide` all name `#0A2463` / `#E63946` / Franco-American Unity in prose. These get regenerated so the written brand and the stored tokens agree — otherwise every downstream asset (collateral, website brief, ads) re-inherits the old hexes.
+
+## Technical notes
+
+- Update `venture_brand_kits.palette` for snapshot `0ca32be1…`: new `colors`, `name: "Tricolore"`, `rationale`, `source: "user-directed"`, and re-run the contrast audit so `palette.contrast.pairings` is truthful.
+- Trigger the existing mood board regeneration path (`venture-brand-wizard` / `useMoodboard`) with the tricolour art direction so all 9 tiles are re-rendered.
+- Regenerate the three brand documents through the normal document pipeline once the palette is saved.
+- Write the revised logo brief to `.lovable/art-direction/friendship-house-logo.md`.
+
+No schema changes, no UI changes.
