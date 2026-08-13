@@ -65,8 +65,10 @@ export async function uploadVentureSource(opts: {
   snapshotId?: string | null;
   kind?: VentureSourceKind;
   usedInBrief?: boolean;
-  /** Wait for extraction to finish before returning (default true, max 30s). */
+  /** Wait for extraction to finish before returning (default true, ~4 min ceiling). */
   waitForExtraction?: boolean;
+  /** Called on each poll while extraction is still running. */
+  onExtractionTick?: (elapsedMs: number) => void;
 }): Promise<VentureSource> {
   const { file, snapshotId = null, kind = "venture_source", usedInBrief = false } = opts;
   const userId = await uid();
@@ -103,13 +105,63 @@ export async function uploadVentureSource(opts: {
 
   const waitForExtraction = opts.waitForExtraction !== false;
   if (waitForExtraction) {
-    await Promise.race([extractPromise, new Promise((r) => setTimeout(r, 30_000))]);
-    const fresh = await supabase
-      .from("attendee_documents").select("*").eq("id", row.id).maybeSingle();
-    if (fresh.data) { notifySourcesChanged(); return fresh.data as VentureSource; }
+    // Big PDFs routinely take 60-120s to transcribe. Poll the row until the
+    // server marks it done instead of racing a short timer — a timeout is not
+    // a read failure, and treating it as one used to strand the founder's
+    // primary brief with "Couldn't read file" while extraction was still live.
+    void extractPromise;
+    const fresh = await waitForExtractedText(row.id, {
+      onTick: (_r, elapsed) => opts.onExtractionTick?.(elapsed),
+    });
+    if (fresh) { notifySourcesChanged(); return fresh; }
   }
   notifySourcesChanged();
   return row as VentureSource;
+}
+
+/** How long we'll wait for a server-side extraction before giving up. */
+export const EXTRACTION_POLL_CEILING_MS = 240_000;
+
+/**
+ * Poll a document row until extraction finishes (text or error recorded), or
+ * the ceiling is hit. Returns the freshest row we saw, or null.
+ */
+export async function waitForExtractedText(
+  documentId: string,
+  opts: { ceilingMs?: number; intervalMs?: number; onTick?: (row: VentureSource, elapsedMs: number) => void } = {},
+): Promise<VentureSource | null> {
+  const ceiling = opts.ceilingMs ?? EXTRACTION_POLL_CEILING_MS;
+  const interval = opts.intervalMs ?? 2000;
+  const started = Date.now();
+  let last: VentureSource | null = null;
+  for (;;) {
+    const { data } = await supabase
+      .from("attendee_documents").select("*").eq("id", documentId).maybeSingle();
+    if (data) {
+      last = data as VentureSource;
+      opts.onTick?.(last, Date.now() - started);
+      const done = !!last.extracted_at || !!last.extraction_error || !!(last.extracted_text ?? "").trim();
+      if (done) return last;
+    }
+    if (Date.now() - started >= ceiling) return last;
+    await new Promise((r) => setTimeout(r, interval));
+  }
+}
+
+/**
+ * Re-check a stuck document before spending another extraction pass. If the
+ * row already carries text (common — the first pass finished after the UI
+ * gave up), we return it as-is; otherwise we re-invoke extraction and wait.
+ */
+export async function recoverOrRetryExtraction(documentId: string): Promise<VentureSource | null> {
+  const { data } = await supabase
+    .from("attendee_documents").select("*").eq("id", documentId).maybeSingle();
+  const row = (data ?? null) as VentureSource | null;
+  if (row && (row.extracted_text ?? "").trim()) { notifySourcesChanged(); return row; }
+  void supabase.functions.invoke("venture-source-extract", { body: { documentId } }).catch(() => {});
+  const fresh = await waitForExtractedText(documentId);
+  notifySourcesChanged();
+  return fresh ?? row;
 }
 
 /** List documents owned by the current user, optionally scoped. */

@@ -403,6 +403,7 @@ export type Database = {
           extracted_at: string | null
           extracted_text: string | null
           extraction_error: string | null
+          extraction_started_at: string | null
           id: string
           kind: string
           mime_type: string | null
@@ -419,6 +420,7 @@ export type Database = {
           extracted_at?: string | null
           extracted_text?: string | null
           extraction_error?: string | null
+          extraction_started_at?: string | null
           id?: string
           kind: string
           mime_type?: string | null
@@ -435,6 +437,7 @@ export type Database = {
           extracted_at?: string | null
           extracted_text?: string | null
           extraction_error?: string | null
+          extraction_started_at?: string | null
           id?: string
           kind?: string
           mime_type?: string | null

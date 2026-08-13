@@ -19,6 +19,7 @@ import {
   copySourceToSnapshot,
   deleteVentureSource,
   updateVentureSourceIntent,
+  recoverOrRetryExtraction,
   type VentureSource,
 } from "@/lib/venture-sources";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +66,7 @@ type DroppedFile = {
   id: string;
   name: string;
   size: number;
-  status: "uploading" | "ready" | "error";
+  status: "uploading" | "extracting" | "ready" | "error";
   documentId?: string;
   text?: string;
   error?: string;
@@ -342,10 +343,22 @@ function Inner() {
       queued.forEach(async (entry, i) => {
         const file = accepted[i];
         try {
-          const row = await uploadVentureSource({ file, kind: "venture_source", waitForExtraction: true });
+          const row = await uploadVentureSource({
+            file,
+            kind: "venture_source",
+            waitForExtraction: true,
+            onExtractionTick: () =>
+              setFiles((curr) =>
+                curr.map((x) => (x.id === entry.id && x.status === "uploading" ? { ...x, status: "extracting" } : x)),
+              ),
+          });
           const text = (row.extracted_text ?? "").trim();
-          if (row.extraction_error || !text) {
-            // Keep the failed entry visible so the founder can see why & retry.
+          if (text) {
+            // Success → promote into memory chips and drop the transient row.
+            appendToMemory(row);
+            setFiles((curr) => curr.filter((x) => x.id !== entry.id));
+          } else if (row.extraction_error) {
+            // A real, server-reported read failure.
             setFiles((curr) =>
               curr.map((x) =>
                 x.id === entry.id
@@ -354,9 +367,29 @@ function Inner() {
               ),
             );
           } else {
-            // Success → promote into memory chips and drop the transient row.
-            appendToMemory(row);
-            setFiles((curr) => curr.filter((x) => x.id !== entry.id));
+            // Still reading — never mislabel a slow extraction as a failure.
+            setFiles((curr) =>
+              curr.map((x) => (x.id === entry.id ? { ...x, status: "extracting", documentId: row.id } : x)),
+            );
+            const fresh = await recoverOrRetryExtraction(row.id);
+            const freshText = (fresh?.extracted_text ?? "").trim();
+            if (fresh && freshText) {
+              appendToMemory(fresh);
+              setFiles((curr) => curr.filter((x) => x.id !== entry.id));
+            } else {
+              setFiles((curr) =>
+                curr.map((x) =>
+                  x.id === entry.id
+                    ? {
+                        ...x,
+                        status: "error",
+                        documentId: row.id,
+                        error: fresh?.extraction_error ?? "Still unreadable — try again",
+                      }
+                    : x,
+                ),
+              );
+            }
           }
         } catch (e) {
           setFiles((curr) =>
@@ -883,7 +916,9 @@ function Inner() {
 
   const step1Blocker = drafting
     ? "Reading your sources…"
-    : "Add a source or describe the startup (20+ characters)";
+    : files.some((f) => f.status === "uploading" || f.status === "extracting")
+      ? "Still reading your file — large documents take a minute"
+      : "Add a source or describe the startup (20+ characters)";
 
   // Move to a step, unlocking it as the furthest reached, and scroll it in.
   const goToStep = useCallback((n: number) => {
@@ -1052,9 +1087,11 @@ function Inner() {
                 const ready = !!(row.extracted_text ?? "").trim();
                 const Icon = isUrlCapture ? Globe : isAudio ? Mic : isImage ? FileText : FileText;
                 const isPattern = intent === "pattern";
-                const dot = !ready
-                  ? "bg-status-danger"
-                  : "bg-status-success";
+                const dot = ready
+                  ? "bg-status-success"
+                  : row.extraction_error
+                    ? "bg-status-danger"
+                    : "bg-status-warning animate-pulse";
                 const originLabel =
                   origin === "brief" ? "Brief" : origin === "founder" ? "Founder" : origin === "venture" ? "Venture" : "Library";
                 return (
@@ -1066,7 +1103,7 @@ function Inner() {
                         ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
                         : row.extraction_error
                           ? `Couldn't read · from ${originLabel}`
-                          : `Processing… · from ${originLabel}`)
+                          : `Still reading — large files take a minute · from ${originLabel}`)
                     }
                     className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs transition"
                   >
@@ -1266,11 +1303,15 @@ function Inner() {
                         ? `${Math.round((row.extracted_text ?? "").length / 1000)}k chars · from ${originLabel}`
                         : row.extraction_error
                           ? `Couldn't read · from ${originLabel}`
-                          : `Processing… · from ${originLabel}`
+                          : `Still reading — large files take a minute · from ${originLabel}`
                     }
                     className="group inline-flex max-w-[280px] items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1.5 text-xs opacity-80 transition hover:opacity-100"
                   >
-                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${ready ? "bg-muted-foreground/40" : "bg-status-danger"}`} />
+                    <span
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                        ready ? "bg-muted-foreground/40" : row.extraction_error ? "bg-status-danger" : "bg-status-warning animate-pulse"
+                      }`}
+                    />
                     <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
                     {isUrlCapture ? (
@@ -1388,7 +1429,7 @@ function Inner() {
                     <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate">{f.name}</span>
                     <span
-                      className={`shrink-0 text-[11px] uppercase tracking-wider ${
+                      className={`flex shrink-0 items-center gap-1.5 text-[11px] uppercase tracking-wider ${
                         f.status === "ready"
                           ? "text-status-success"
                           : f.status === "error"
@@ -1396,8 +1437,40 @@ function Inner() {
                             : "text-muted-foreground"
                       }`}
                     >
-                      {f.status === "uploading" ? "Uploading…" : f.status === "ready" ? "Saved" : (f.error ?? "Couldn't read")}
+                      {f.status === "extracting" && <Loader2 className="h-3 w-3 animate-spin" />}
+                      {f.status === "uploading"
+                        ? "Uploading…"
+                        : f.status === "extracting"
+                          ? "Still reading — large files take a minute"
+                          : f.status === "ready"
+                            ? "Saved"
+                            : (f.error ?? "Couldn't read")}
                     </span>
+                    {f.status === "error" && f.documentId && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const id = f.documentId!;
+                          setFiles((curr) => curr.map((x) => (x.id === f.id ? { ...x, status: "extracting", error: undefined } : x)));
+                          const fresh = await recoverOrRetryExtraction(id);
+                          if (fresh && (fresh.extracted_text ?? "").trim()) {
+                            appendToMemory(fresh);
+                            setFiles((curr) => curr.filter((x) => x.id !== f.id));
+                          } else {
+                            setFiles((curr) =>
+                              curr.map((x) =>
+                                x.id === f.id
+                                  ? { ...x, status: "error", error: fresh?.extraction_error ?? "Still unreadable — try again" }
+                                  : x,
+                              ),
+                            );
+                          }
+                        }}
+                        className="shrink-0 text-[11px] uppercase tracking-wider text-primary hover:underline"
+                      >
+                        Retry
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => removeFile(f.id)}

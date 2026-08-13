@@ -1,0 +1,1 @@
+ALTER TABLE public.attendee_documents ADD COLUMN IF NOT EXISTS extraction_started_at TIMESTAMPTZ;
