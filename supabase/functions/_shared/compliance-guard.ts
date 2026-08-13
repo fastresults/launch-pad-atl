@@ -90,15 +90,24 @@ export function checkCompliance(content: string, input: ComplianceInput): Compli
     if (m) push(`banned_citation:${cite}`, `Cites ${cite}, which this venture's compliance rules forbid.`, m);
   }
 
+  /**
+   * Copy that disclaims a practice ("we never endorse a check", "no gift card
+   * is paid") is the compliant form of the same sentence. Only flag a match
+   * when it is being offered, not refused.
+   */
+  const offered = (m: RegExpMatchArray) => {
+    const before = content.slice(Math.max(0, (m.index ?? 0) - 80), m.index ?? 0);
+    return !/\b(no|not|never|without|nor|bars?|barred|prohibits?|prohibited|forbid(s|den)?|may not|cannot|can't|don'?t|do not|refuse[sd]?)\b[^.!?]*$/i.test(before);
+  };
+
   // 2. Paying for referrals when the rules bar referral compensation.
   if (has(lower, "referral", "refer")) {
-    const barsPaidReferral = /\b(may not|cannot|must not|never|bars?|prohibit)\b[^.]{0,120}\b(compensat|paid referral|referral fee|commission|gift card|kickback)/i.test(lower)
+    const barsPaidReferral =
+      /\b(may not|cannot|must not|never|do not|don'?t|bars?|prohibit|no)\b[^.]{0,140}\b(compensat|paid referral|referral fee|referral incentive|commission|gift card|kickback)/i.test(lower)
       || /\bno (cash|payment|compensation|commission|gift)/i.test(lower);
     if (barsPaidReferral) {
       const m = content.match(/(\$\s?\d[\d,]*\s*(?:referral|bonus|reward|incentive|thank[- ]you)|referral (?:fee|incentive|bonus|reward|commission|payout)|finder'?s fee|gift card|affiliate commission|kickback)/i);
-      // The rules themselves often quote the banned words; only flag when it is
-      // offered rather than disclaimed.
-      if (m && !/\b(no|never|not|without|bars?|prohibit|may not)\b[^.]{0,60}$/i.test(content.slice(Math.max(0, (m.index ?? 0) - 60), m.index ?? 0))) {
+      if (m && offered(m)) {
         push("paid_referral", "Offers payment, a gift card or a commission for a referral, which the compliance rules bar.", m);
       }
     }
@@ -107,7 +116,9 @@ export function checkCompliance(content: string, input: ComplianceInput): Compli
   // 3. Handling the client's settlement money when the rules forbid it.
   if (/\b(payee|endorse|settlement (draft|check))\b/i.test(lower)) {
     const m = content.match(/\b(we (?:will )?endorse|endorse (?:the|a|any) (?:carrier |settlement )?(?:check|draft)|two[- ]party check|payable to (?:us|the adjuster|our firm)|deposited? into our (?:trust |operating )?account)\b/i);
-    if (m) push("check_handling", "Describes the firm handling or endorsing the client's settlement payment, which the compliance rules forbid.", m);
+    if (m && offered(m)) {
+      push("check_handling", "Describes the firm handling or endorsing the client's settlement payment, which the compliance rules forbid.", m);
+    }
   }
 
   // 4. A fee promise stated without a qualifier the rules require.
