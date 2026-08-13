@@ -1561,13 +1561,23 @@ Deno.serve(async (req) => {
 
       if (runId && variant === "primary") await supabase.from("brand_logo_directions").update({ selected: false }).eq("run_id", runId);
 
-      return new Response(JSON.stringify({ ok: true, logo: uploaded, logos: nextLogos }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          logo: uploaded,
+          logos: nextLogos,
+          variant,
+          requested_variant: chosenVariant,
+          moved: reconciled.moved,
+          notice: reconciled.reason,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // Clear one slot of the uploaded logo set.
     if (kind === "logo_remove_upload") {
-      const VARIANTS = ["primary", "reversed", "stacked", "stacked_reversed", "icon", "wordmark"];
-      const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
+      const variant = (LOGO_VARIANTS as readonly string[]).includes(body?.variant) ? body.variant : "primary";
 
       const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos").eq("snapshot_id", snapshotId).maybeSingle();
       const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
