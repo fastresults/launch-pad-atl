@@ -114,6 +114,9 @@ export function ShareSidebar({
   );
 
   const pinned = [
+    ...(onShowWelcome
+      ? [{ key: "tool:welcome", label: "How to use this", hint: "A quick note from Adam", icon: HelpCircle }]
+      : []),
     ...(brainOn
       ? [{ key: BRAIN_KEY, label: "Second brain", hint: "Ask anything · mind map", icon: Sparkle }]
       : []),
