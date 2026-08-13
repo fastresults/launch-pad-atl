@@ -743,11 +743,17 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   // and a short descriptor.
   const fieldBg = invert ? paper : primary;
   const fieldInk = inkOn(fieldBg);
-  const markBox = markBoxFor(ctx, rsF, W * 0.32, 1, true);
+  const markBox = markBoxFor(ctx, rsF, W * 0.32, 1, true, fieldBg);
   const clear = markBox.clear;
-  const fieldW = Math.round(Math.min(W * 0.44, Math.max(W * 0.3, markBox.w + clear * 2)));
+  // The field is sized to the mark, not the other way round: a wide lockup at
+  // its legal height needs the room, and shrinking the field only forced the
+  // renderer to draw the mark under its size band.
+  const fieldW = Math.round(
+    Math.min(W * 0.62, Math.max(W * 0.3, markBox.w + clear * 2)),
+  );
   const fieldX = W - fieldW;
-  const colW = fieldX - M - Math.round(clear * 0.5);
+  const colW = Math.max(W * 0.24, fieldX - M - Math.round(clear * 0.5));
+
 
   const nameSize = Math.max(rsF.minType * 2.2, step(ad, 1.2));
   const descSize = Math.max(rsF.minType, step(ad, -0.5));
