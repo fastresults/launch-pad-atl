@@ -1536,8 +1536,9 @@ Deno.serve(async (req) => {
 
     // Clear one slot of the uploaded logo set.
     if (kind === "logo_remove_upload") {
-      const VARIANTS = ["primary", "reversed", "icon", "wordmark"];
+      const VARIANTS = ["primary", "reversed", "stacked", "stacked_reversed", "icon", "wordmark"];
       const variant = VARIANTS.includes(body?.variant) ? body.variant : "primary";
+
       const { data: kitRow } = await supabase.from("venture_brand_kits").select("logos").eq("snapshot_id", snapshotId).maybeSingle();
       const existing: any[] = Array.isArray(kitRow?.logos) ? kitRow!.logos : [];
       const slotOf = (l: any) => (l?.variant ?? "primary");
