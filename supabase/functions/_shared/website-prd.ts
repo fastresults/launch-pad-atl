@@ -207,7 +207,7 @@ export function craftVerdict(raw: string): { ok: boolean; checks: CraftCheck[]; 
     {
       id: "button_anatomy",
       label: "Button variants specified with hover / focus-visible / disabled states",
-      ok: has(/\bprimary\b[^\n]{0,120}\bbutton\b|\bbutton\b[^\n]{0,120}\bprimary\b/i) &&
+      ok: has(/\bbuttons?\b/i) && has(/\bprimary\b/i) && has(/\bfilled\b|\bvariant\b/i) &&
         has(/focus-visible/i) && has(/\bdisabled\b/i),
     },
     {
