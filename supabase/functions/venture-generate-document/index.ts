@@ -890,11 +890,13 @@ export async function generateOne(
     }
     try {
       await logGenEvent(supabase, {
-        snapshot_id: snapshotId,
-        kind: "compliance_gate",
-        status: verdict.ok ? "ok" : "warn",
-        detail: { documentType, violations: verdict.violations.map((v) => v.code) },
-      } as any);
+        snapshotId,
+        documentType,
+        phase: "compliance_gate",
+        model: modelId,
+        outcome: verdict.ok ? "checkpoint" : "blocked",
+        error: verdict.ok ? null : verdict.violations.map((v) => v.code).join(","),
+      });
     } catch { /* telemetry only */ }
   }
 
