@@ -596,8 +596,11 @@ function markAt(
 
 
 
-function logoAspect(ctx: CollateralCtx): number {
-  const svg = markSvgOf(ctx);
+function logoAspect(ctx: CollateralCtx, bg?: string | null): number {
+  // Measure the artwork that will actually be painted on this ground. Sizing
+  // from the light variant and then drawing the reversed one (a different
+  // aspect) is how a legally-sized box produced a half-height mark.
+  const svg = markSvgFor(ctx, bg ?? null).svg;
   return svg ? inkAspect(svg) : 1;
 
 }
@@ -618,9 +621,12 @@ function clearSpace(height: number): number {
  * The mark box this piece's standard calls for — height inside the spec band,
  * width from the artwork's own aspect. Templates never hand-pick a logo size.
  */
-function markBoxFor(ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.85, fillWidth = false) {
-  return logoBox(rs, logoAspect(ctx), isLockup(ctx), maxWidth, bias, fillWidth);
+function markBoxFor(
+  ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.85, fillWidth = false, bg?: string | null,
+) {
+  return logoBox(rs, logoAspect(ctx, bg), isLockup(ctx), maxWidth, bias, fillWidth);
 }
+
 
 /** Draw the mark at its spec size, top-left anchored at (x, y). */
 function specMark(
