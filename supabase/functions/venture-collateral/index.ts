@@ -1066,11 +1066,14 @@ Deno.serve(async (req) => {
           tone: p.tone,
           fallback: !!p.fallback,
           auto: !!p.auto,
+          mode: p.mode ?? (p.auto ? "auto" : "manual"),
+          source: p.source ?? null,
           reason: p.reason ?? null,
           requested: p.requested,
           // The chosen artwork kept its own colours unless a ground forced a
           // repair — the card says so instead of looking like another cell.
           recoloured: !!ctx.markRecoloured?.[slotId],
+          adapted: !!ctx.markAdapted?.[slotId],
         })),
 
         artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },

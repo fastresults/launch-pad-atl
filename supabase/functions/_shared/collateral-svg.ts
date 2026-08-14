@@ -218,6 +218,8 @@ export type CollateralCtx = {
    * exactly like the cell they picked.
    */
   markRecoloured?: Record<string, boolean>;
+  /** Slots whose surrounding surface changed to preserve exact manual artwork. */
+  markAdapted?: Record<string, boolean>;
 };
 
 export type MarkPickEntry = {
@@ -698,6 +700,10 @@ function markAt(
       return `${repairedPlate}<g data-mark-slot="${opts?.slot ?? ""}" data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="plated"${rescueAttrs} data-mark-adapted="1" data-mark-bg="${rescueFill}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
     }
     ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN }));
+  }
+
+  if (exactManual && (plate || !!repairedPlate)) {
+    ctx.markAdapted = { ...(ctx.markAdapted ?? {}), [opts?.slot ?? "primary"]: true };
   }
 
   const pickAttrs = slotPick?.svg
