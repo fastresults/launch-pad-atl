@@ -26,6 +26,39 @@ import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog"
 import { RotateCcw } from "lucide-react";
 import { edgeStatus, edgeErrorMessage } from "@/lib/edge-errors";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { StudioMarkPicker } from "@/components/hub/brand/StudioMarkPicker";
+import { getBrandKit, setStudioMarkChoice } from "@/lib/brandKit.functions";
+import { studioMarkKind } from "@/lib/brand/collateral-marks";
+
+/**
+ * Every logo placement in the studio gets the same chevron picker as Branded
+ * Collateral. It reads and writes `studio_mark_choice` on the brand kit, so the
+ * pick survives regeneration and the worker places that exact artwork.
+ */
+function MarkPickerFor({ snapshotId, assetKind, used }: { snapshotId: string; assetKind: string; used?: any }) {
+  const qc = useQueryClient();
+  const kitQ = useQuery({ queryKey: ["brandKit", snapshotId], queryFn: () => getBrandKit(snapshotId) });
+  const kit: any = kitQ.data;
+  const markKind = studioMarkKind(assetKind);
+  const save = async (cell: any) => {
+    try {
+      await setStudioMarkChoice(snapshotId, markKind, cell);
+      await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+    } catch (e: any) {
+      toast.error(e?.message || "Could not save the logo choice");
+    }
+  };
+  return (
+    <StudioMarkPicker
+      assetKind={assetKind}
+      logos={kit?.logos ?? null}
+      value={kit?.studio_mark_choice?.[markKind] ?? null}
+      onChange={save}
+      used={used ?? null}
+    />
+  );
+}
+
 
 const PLATFORM_ICONS: Record<string, any> = {
   Instagram, LinkedIn: Linkedin, X: Twitter, Twitter, Facebook,
