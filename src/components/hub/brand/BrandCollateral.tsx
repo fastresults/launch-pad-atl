@@ -95,33 +95,53 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
   }, [kit?.logos]);
 
 
+  /** Pieces deleted mid-run — the loop skips them instead of re-rendering them. */
+  const droppedRef = useRef<Set<string>>(new Set());
+
   const gen = useMutation({
     // Rasterising several pieces in one call blows the edge worker's CPU and
     // memory budget, so we walk through them one at a time.
     mutationFn: async (kinds?: string[]) => {
       const all = kinds?.length ? kinds : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind));
+      const controller = new AbortController();
+      stopRef.current = controller;
+      droppedRef.current = new Set();
       const generated: any[] = [];
       const failed: any[] = [];
       const qcIssues: any[] = [];
+      const attempted: string[] = [];
       let artDirection: any = null;
       const marks: Record<string, any> = {};
       // One piece per call. Multi-page pieces (deck, guidelines) rasterise five
       // pages, and pairing them exhausts the edge worker's CPU budget.
       for (let i = 0; i < all.length; i += 1) {
-        const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 1), markChoice);
+        const kind = all[i];
+        if (controller.signal.aborted) break;
+        if (droppedRef.current.has(kind)) continue;
+        attempted.push(kind);
+        const res: any = await generateCollateral(snapshot.id, [kind], markChoice, { signal: controller.signal });
         generated.push(...(res?.generated ?? []));
         failed.push(...(res?.failed ?? []));
         qcIssues.push(...(res?.qcIssues ?? []));
         artDirection ??= res?.artDirection ?? null;
         Object.assign(marks, res?.marks ?? {});
+        // This piece is finished — release its card immediately.
+        setRunningKinds((prev) => prev.filter((k) => k !== kind));
         qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       }
       setMarksUsed((prev) => ({ ...prev, ...marks }));
-      return { ok: true, generated, failed, qcIssues, artDirection, marks };
+      return { ok: true, generated, failed, qcIssues, artDirection, marks, attempted };
     },
 
-    onMutate: (kinds) => { setRunReport(null); setBusyKind(kinds?.length === 1 ? kinds[0] : "all"); },
-    onSettled: () => setBusyKind(null),
+    onMutate: (kinds) => {
+      setRunReport(null);
+      setRunningKinds(kinds?.length ? [...kinds] : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind)));
+    },
+    onSettled: () => {
+      stopRef.current = null;
+      droppedRef.current = new Set();
+      setRunningKinds([]);
+    },
 
     onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
@@ -131,7 +151,7 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
 
       // A run is a list of outcomes, not a single pass/fail. Report every piece
       // so a blocked page reads as one blocked page, not "generation broke".
-      const attempted = (busyKind && busyKind !== "all" ? [busyKind] : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind)));
+      const attempted: string[] = res?.attempted ?? [];
       setRunReport(attempted.map((kind) => {
         const hardFail = failed.find((f: any) => f.kind === kind);
         if (hardFail) return { kind, status: "failed" as const, detail: String(hardFail.error ?? "").replace(/^QUALITY_GATE_FAILED\s*—\s*/, "") };
@@ -154,6 +174,11 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
       } else toast.success(arch ? `Collateral generated — art direction: ${String(arch).replace(/_/g, " ")}.` : "Collateral generated.");
     },
     onError: (e: any) => {
+      // Stopping is a choice, not a failure.
+      if (e?.code === "ABORTED") {
+        toast.info("Generation stopped. You can generate any piece again.");
+        return;
+      }
       // Missing text is a fixable gap, not a failure — send them to the form.
       if (e?.code === "DETAILS_INCOMPLETE") {
         toast.warning(e.message);
@@ -164,6 +189,17 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
     },
   });
 
+  /** A card is busy only while a run is genuinely in flight and holds that kind. */
+  const running = useMemo(
+    () => new Set(gen.isPending ? runningKinds : []),
+    [gen.isPending, runningKinds],
+  );
+
+  const stopRun = () => {
+    stopRef.current?.abort();
+    setRunningKinds([]);
+  };
+
   /** Generate, but confirm the text inventory first if it has never been signed off. */
   const requestGen = (kinds?: string[]) => {
     setPendingKinds(kinds);
@@ -173,6 +209,7 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
     }
     gen.mutate(kinds);
   };
+
 
   const wipe = useMutation({
     mutationFn: (kind?: string) => clearCollateral(snapshot.id, kind),
