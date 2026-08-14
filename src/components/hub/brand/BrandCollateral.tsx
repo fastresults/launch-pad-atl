@@ -314,10 +314,16 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
                 </Button>
               </>
             )}
+            {gen.isPending && (
+              <Button size="sm" variant="outline" onClick={stopRun}>
+                <CircleSlash className="mr-1 h-3 w-3" />Stop
+              </Button>
+            )}
             <Button size="sm" onClick={() => requestGen(undefined)} disabled={!locked || gen.isPending}>
-              {busyKind === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {gen.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               {items.length > 0 ? "Regenerate all" : "Generate all"}
             </Button>
+
           </div>
         </div>
 
