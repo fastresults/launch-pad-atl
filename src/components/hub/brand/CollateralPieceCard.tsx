@@ -51,7 +51,7 @@ export function CollateralPieceCard({
   /** The founder's chosen form × tone for this piece, or null for automatic. */
   markChoice?: { form: string; tone: string } | null;
   /** What the last run actually drew, so the card can say which mark it carries. */
-  markUsed?: { form: string; tone: string; fallback?: boolean } | null;
+  markUsed?: { form: string; tone: string; fallback?: boolean; recoloured?: boolean } | null;
   /** Slot keys the venture has actually supplied — everything else reads as absent. */
   availableSlots?: Record<string, boolean>;
   onMarkChoice?: (choice: { form: string; tone: string } | null) => void;
@@ -108,6 +108,12 @@ export function CollateralPieceCard({
               {markUsed.fallback ? " (nearest supplied)" : ""}
             </Badge>
           )}
+          {markUsed?.recoloured && (
+            <Badge variant="outline" className="border-status-warning/50 text-[10px] text-status-warning">
+              Recoloured for contrast
+            </Badge>
+          )}
+
         </div>
 
         {qc?.ok === false && (

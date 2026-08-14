@@ -25,6 +25,18 @@ export const POSTER_LAYOUTS: { id: PosterLayout; label: string; blurb: string }[
   { id: "edge-rule", label: "Edge rule", blurb: "Accent rule at the left edge, type stacked" },
 ];
 
+/**
+ * True when the artwork carries more than one colour and at least one of them
+ * reads on a ground of this luminance — the test for "leave the logo alone".
+ */
+function svgReadsOn(svg: string, groundLum: number): boolean {
+  const fills = [...svg.matchAll(/fill\s*[:=]\s*["']?(#[0-9a-fA-F]{3,8})/g)].map((m) => m[1].toLowerCase());
+  const distinct = new Set(fills);
+  if (distinct.size < 2) return false;
+  return [...distinct].some((f) => contrastOf(lum(f), groundLum) >= 3);
+}
+
+
 type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
 type SvgArgs = {
@@ -704,12 +716,23 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
         plateColor = plateFill;
       }
 
+
+      // A plate is a clean ground built for the mark, so full-colour artwork
+      // that reads on it keeps its own colours — knocking a two-colour logo to
+      // flat white on a white plate is how an ad ended up carrying a mark the
+      // founder never chose. Photo-direct placement stays mono: brand colour on
+      // moving pixels is a smudge.
+      const keepColour = plated && args.logoSvgText
+        ? svgReadsOn(args.logoSvgText, lum(plateColor))
+        : false;
+
       const built = await buildVectorInkLogoPng({
         svgText: args.logoSvgText ?? null,
         bytes: args.logoBytes ?? null,
-        inkHex,
+        inkHex: keepColour ? null : inkHex,
         targetWidthPx: chosen.box.boxW,
       });
+
       const href = built?.dataUrl ?? args.logoDataUrl ?? null;
       if (href) {
         // Re-derive the box from the trimmed mark so the inset stays optical.
@@ -736,7 +759,7 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
         );
 
         metrics.logo_corner = chosen.corner;
-        metrics.logo_ink = built ? inkHex : null;
+        metrics.logo_ink = built ? (keepColour ? "artwork" : inkHex) : null;
         metrics.logo_contrast = Number(ratio.toFixed(2));
         (metrics as any).logo_plate = plated;
       }

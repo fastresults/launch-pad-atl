@@ -24,6 +24,7 @@ import {
 import { addressBlock, addressLine, type ContactDetails } from "./collateral-fields.ts";
 import {
   logoBox,
+  markBand,
   type PageMetrics,
   printMeta,
   resolveSpec,
@@ -216,7 +217,14 @@ export type CollateralCtx = {
     requested?: { form: string; tone: string } | null;
     fallback?: boolean;
   } | null;
+  /**
+   * Set by the renderer when the chosen artwork had to be repainted to stay
+   * legible on a surface — reported back so the founder sees why the mark does
+   * not look exactly like the cell they picked.
+   */
+  markRecoloured?: boolean;
 };
+
 
 
 export const COLLATERAL_KINDS = [
@@ -526,7 +534,7 @@ function tint(inner: string, use: string): string {
 
 function markAt(
   ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number,
-  ink: string | null, bg?: string,
+  ink: string | null, bg?: string, opts?: { mono?: boolean },
 ): string {
   const picked = markSvgFor(ctx, bg, boxH > 0 ? boxW / boxH : undefined);
   const svg = picked.svg;
@@ -554,7 +562,18 @@ function markAt(
     f === "white" ? "#ffffff" : f === "black" ? "#000000" : f
   );
 
-  if (bg && !untintable) {
+  // A template's ink is a REQUEST, not a command. Full-colour artwork that
+  // already reads on this ground keeps its own colours — repainting a blue-and-
+  // red mark flat grey is how a chosen "colour" cell came out looking like the
+  // inverse one. Only a monochrome treatment (watermarks, specimen strips) or a
+  // legibility failure is allowed to flatten it.
+  const multiColour = new Set(measuredFills.map((f) => f.toLowerCase())).size >= 2;
+  const readsAsSupplied = !bg || measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
+  const keepArtworkColour = !opts?.mono && multiColour && readsAsSupplied && !untintable;
+
+  if (keepArtworkColour) {
+    use = null;
+  } else if (bg && !untintable) {
     if (picked.dark) use = inkOn(bg);
     if (!use) {
       const visible = measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
@@ -568,9 +587,12 @@ function markAt(
     if (dark || !visible) plate = true;
   }
 
-
+  // Record when a founder's explicit cell had to be repainted, so the piece can
+  // say "recoloured for contrast" instead of silently looking like another cell.
+  if (ctx.markPick?.svg && use && !keepArtworkColour) ctx.markRecoloured = true;
 
   if (use && !untintable) inner = tint(inner, use);
+
 
   // Scale and position by the artwork's INK box, never its file box: traced
   // marks carry the tracer's canvas padding, so fitting the file put roughly
@@ -1565,7 +1587,10 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
           .line(t.note, step(ad, -1.4), muted, { gap: step(ad, 0.2) });
         return [
           `<rect x="${r(x)}" y="${r(y)}" width="${r(tileW)}" height="${r(artH)}" fill="${t.bg}" rx="${ad.material.radius}"${onDark ? "" : ` stroke="${mix(fg, paper, 0.82)}" stroke-width="${r(ad.ink.hairline)}"`}/>`,
-          markAt(ctx, x + tileW * 0.14, y + artH * 0.18, tileW * 0.72, artH * 0.64, t.ink, t.bg),
+          // A specimen tile demonstrates a named treatment, so here the ink IS
+          // the instruction — colour preservation would defeat the page.
+          markAt(ctx, x + tileW * 0.14, y + artH * 0.18, tileW * 0.72, artH * 0.64, t.ink, t.bg, { mono: !!t.ink }),
+
           f.svg(),
         ].join("");
       }),
@@ -1647,7 +1672,9 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
       hMis.svg,
       ...misuse.map((m, i) => {
         const x = g.M + i * (mW + mGap);
-        const art = markAt(ctx, x + mW * 0.16, mTop + mArt * 0.2, mW * 0.68, mArt * 0.6, m.ink ?? null, paper);
+        // "Do not recolour off-palette" has to actually recolour the mark.
+        const art = markAt(ctx, x + mW * 0.16, mTop + mArt * 0.2, mW * 0.68, mArt * 0.6, m.ink ?? null, paper, { mono: !!m.ink });
+
         const f = T.flow(x, mTop + mArt + step(ad, 0.4), mW);
         f.line(m.cap, step(ad, -1.2), fg, { family: "head", weight: 700 });
         return [
@@ -1874,7 +1901,14 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
       ink: markInks[i] ?? "",
       visible: markVis[i] ?? true,
     })),
-    markBand: isLockup(ctx) ? rs.lockupBand : rs.logoBand,
+    // QC measures against the band this mark's own shape is entitled to, so a
+    // stacked lockup sized for equal optical area is not failed as "oversized".
+    markBand: markBand(
+      rs,
+      primaryMark && idx >= 0 && markWs[idx] ? markWs[idx] / primaryMark : 3.2,
+      isLockup(ctx),
+    ),
+
 
 
     safe: rs.safe,
