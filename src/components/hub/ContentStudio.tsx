@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -667,7 +667,13 @@ function Step4BuildAds({
     return out;
   }, [scoped, aspects, ads]);
 
-  const [running, setRunning] = useState(false);
+  // A run is scoped: only the button that started it, and the tile actually in
+  // flight, are allowed to look busy. Everything else is disabled, not spinning.
+  const [run, setRun] = useState<null | { scope: "all" | "week"; week?: number; done: number; total: number }>(null);
+  const running = run != null;
+  const runLock = useRef(false);
+  const inFlight = useRef<Set<string>>(new Set());
+  const autoRan = useRef<Set<number>>(new Set());
   const [runningKeys, setRunningKeys] = useState<Record<string, boolean>>({});
   const [openWeeks, setOpenWeeks] = useState<string[] | null>(null);
 
@@ -703,6 +709,9 @@ function Step4BuildAds({
 
   const doGenerate = async (t: AdTask, opts?: any) => {
     const k = key(t);
+    // Synchronous guard: a second call for the same tile can never reach the worker.
+    if (inFlight.current.has(k)) return;
+    inFlight.current.add(k);
     const knownIds = new Set(ads.filter((ad) => ad.post_id === t.post.id && ad.aspect === t.aspect).map((ad) => ad.id));
     setBusy(k, true);
     try {
@@ -726,31 +735,38 @@ function Step4BuildAds({
       setErrors((p) => ({ ...p, [k]: msg }));
       toast.error(msg);
     } finally {
+      inFlight.current.delete(k);
       setBusy(k, false);
     }
   };
 
   const runWeek = async (week: number, opts?: { force?: boolean }) => {
-    setRunning(true);
+    if (runLock.current) return;
+    runLock.current = true;
+    const queue = tasks.filter((t) => t.post.week === week && (!t.ad || opts?.force));
+    setRun({ scope: "week", week, done: 0, total: queue.length });
     try {
       let refreshedArc = false;
-      for (const t of tasks) {
-        if (t.post.week !== week) continue;
-        if (t.ad && !opts?.force) continue;
-        await doGenerate(t, opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
+      for (let i = 0; i < queue.length; i += 1) {
+        setRun((r) => (r ? { ...r, done: i } : r));
+        await doGenerate(queue[i], opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
         refreshedArc = refreshedArc || !!opts?.force;
       }
       toast.success(opts?.force ? `Week ${week} ads regenerated` : `Week ${week} ads generated`);
     } finally {
-      setRunning(false);
+      runLock.current = false;
+      setRun(null);
     }
   };
 
-  // Auto-kick "Generate week" when arriving via the Step 1 shortcut.
+  // Auto-kick "Generate week" when arriving via the Step 1 shortcut. One-shot per
+  // week: the ref is marked before the async run so a re-render can't fire it twice.
   useEffect(() => {
     if (autoRunWeek == null) return;
-    if (running) return;
+    if (runLock.current) return;
     if (tasks.length === 0) return;
+    if (autoRan.current.has(autoRunWeek)) return;
+    autoRan.current.add(autoRunWeek);
     const pending = tasks.some((t) => t.post.week === autoRunWeek && !t.ad);
     onAutoRunConsumed?.();
     if (pending) void runWeek(autoRunWeek);
@@ -758,20 +774,24 @@ function Step4BuildAds({
   }, [autoRunWeek, tasks.length]);
 
   const runAll = async (opts?: { force?: boolean }) => {
-    setRunning(true);
+    if (runLock.current) return;
+    runLock.current = true;
+    const queue = tasks.filter((t) => !t.ad || opts?.force);
+    setRun({ scope: "all", done: 0, total: queue.length });
     try {
       let refreshedArc = false;
-      for (const t of tasks) {
-        if (!t.ad || opts?.force) {
-          await doGenerate(t, opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
-          refreshedArc = refreshedArc || !!opts?.force;
-        }
+      for (let i = 0; i < queue.length; i += 1) {
+        setRun((r) => (r ? { ...r, done: i } : r));
+        await doGenerate(queue[i], opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
+        refreshedArc = refreshedArc || !!opts?.force;
       }
       toast.success(opts?.force ? "All ads regenerated" : "All ads generated");
     } finally {
-      setRunning(false);
+      runLock.current = false;
+      setRun(null);
     }
   };
+
 
   const doDelete = async (t: AdTask) => {
     if (!t.ad) return;
@@ -844,17 +864,22 @@ function Step4BuildAds({
               <> · <span className="text-status-info">{pendingWeeks.length} more week{pendingWeeks.length === 1 ? "" : "s"} available below</span></>
             )}
           </p>
-
+          {run && (
+            <p className="mt-1 flex items-center gap-1.5 text-[11px] text-status-info">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              {run.scope === "week" ? `Generating week ${run.week}` : "Generating all ads"} — ad {Math.min(run.done + 1, run.total)} of {run.total}
+            </p>
+          )}
         </div>
         {tasks.length > 0 && (
           tasks.some((t) => !t.ad) ? (
             <Button size="sm" onClick={() => runAll()} disabled={running}>
-              {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               Generate all ({tasks.filter((t) => !t.ad).length})
             </Button>
           ) : (
             <Button size="sm" variant="outline" onClick={() => runAll({ force: true })} disabled={running}>
-              {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+              {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
               Regenerate all ({tasks.length})
             </Button>
           )
@@ -906,7 +931,10 @@ function Step4BuildAds({
               const wDone = wTasks.filter((t) => t.ad).length;
               const wTotal = wTasks.length;
               const wPending = wTotal - wDone;
-              const isLoading = autoRunWeek === w || running;
+              // Only the week actually being generated looks busy; other weeks
+              // are simply unavailable while a run is in flight.
+              const isLoading = run?.scope === "week" && run.week === w;
+              const isBlocked = running && !isLoading;
 
               return (
                 <AccordionItem
@@ -937,7 +965,7 @@ function Step4BuildAds({
                         tabIndex={0}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (isLoading) return;
+                          if (running) return;
                           if (isPending) onAddWeek?.(w);
                           else if (wPending > 0) runWeek(w);
                           else if (wTotal > 0) runWeek(w, { force: true });
@@ -946,7 +974,7 @@ function Step4BuildAds({
                           if (e.key === "Enter" || e.key === " ") {
                             e.stopPropagation();
                             e.preventDefault();
-                            if (isLoading) return;
+                            if (running) return;
                             if (isPending) onAddWeek?.(w);
                             else if (wPending > 0) runWeek(w);
                             else if (wTotal > 0) runWeek(w, { force: true });
@@ -954,14 +982,14 @@ function Step4BuildAds({
                         }}
                         className={
                           isPending || wTotal > 0
-                            ? "inline-flex h-7 items-center gap-1 rounded-md border border-input bg-background px-2 text-[11px] hover:bg-accent hover:text-accent-foreground"
+                            ? `inline-flex h-7 items-center gap-1 rounded-md border border-input bg-background px-2 text-[11px] ${isBlocked ? "pointer-events-none opacity-40" : "hover:bg-accent hover:text-accent-foreground"}`
                             : "text-[10px] text-muted-foreground"
                         }
-                        aria-disabled={isLoading}
+                        aria-disabled={running}
                       >
                         {isPending ? (
                           <>
-                            {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                            <Sparkles className="h-3 w-3" />
                             Add &amp; generate
                           </>
                         ) : wPending > 0 ? (
