@@ -909,15 +909,23 @@ Deno.serve(async (req) => {
         }, 400);
       }
 
-      // The founder's chosen mark cell for this piece, if they picked one.
+      // The founder's chosen mark cells for this piece, per slot. A flat
+      // `{ form, tone }` from an older client is read as "the same cell in
+      // every slot", so saved choices keep working.
       const FORMS = ["symbol", "horizontal", "stacked", "wordmark"];
       const TONES = ["colour", "inverse"];
       const rawPick = body?.markChoice && typeof body.markChoice === "object"
         ? body.markChoice[requested[0]]
         : null;
-      const markPick = rawPick && FORMS.includes(rawPick.form) && TONES.includes(rawPick.tone)
-        ? { form: rawPick.form as LogoForm, tone: rawPick.tone as LogoTone }
-        : null;
+      const parsed = slotChoices(requested[0], rawPick);
+      const markPicks: Record<string, { form: LogoForm; tone: LogoTone }> = {};
+      for (const [slotId, cell] of Object.entries(parsed)) {
+        if (FORMS.includes(cell.form) && TONES.includes(cell.tone)) {
+          markPicks[slotId] = { form: cell.form as LogoForm, tone: cell.tone as LogoTone };
+        }
+      }
+      const hasPicks = Object.keys(markPicks).length > 0;
+
 
       let ctx: CollateralCtx;
       let details: ContactDetails;
