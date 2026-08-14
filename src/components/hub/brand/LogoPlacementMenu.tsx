@@ -12,33 +12,39 @@ import { recommendMark, slotsForKind, studioMarkKind } from "@/lib/brand/collate
 const labelFor = (cell: any) => LOGO_SLOTS.find((slot) => slot.form === cell?.form && slot.tone === cell?.tone)?.label;
 
 /** Compact split-action companion used beside every Generate/Regenerate control. */
-export function LogoPlacementMenu({ assetKind, logos, value, onChange, used, disabled, label = "graphic" }: any) {
+export function LogoPlacementMenu({ assetKind, logos, value, onChange, used, disabled, label = "graphic", inherited, inheritedFrom, title, triggerClassName = "rounded-l-none" }: any) {
   const supplied = new Set((logos ?? []).filter((logo: any) => logo?.variant && (logo?.svg_path || logo?.path || logo?.storage_path)).map((logo: any) => logo.variant));
   const slot = slotsForKind(studioMarkKind(assetKind))[0];
   const inventory = LOGO_SLOTS.filter((logo) => supplied.has(logo.key)).map((logo) => ({ form: logo.form, tone: logo.tone }));
   const recommended = recommendMark(slot, inventory);
+  const inheritLabel = inherited ? (labelFor(inherited) ?? `${inherited.form} · ${inherited.tone}`) : null;
   return (
     <div className="inline-flex items-center">
-      {used?.form && (
+      {used?.form ? (
         <Badge variant="outline" className="mr-1 hidden text-[9px] sm:inline-flex">
           {used.mode === "manual" ? "Verified exact" : "AI selected"} · {labelFor(used) ?? `${used.form} · ${used.tone}`}
         </Badge>
-      )}
+      ) : !value && inheritLabel ? (
+        <Badge variant="outline" className="mr-1 hidden text-[9px] sm:inline-flex">
+          Inherited · {inheritLabel}
+        </Badge>
+      ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="outline" aria-label={`Choose logo for ${label}`} className="h-6 rounded-l-none px-1.5" disabled={disabled}>
+          <Button size="sm" variant="outline" aria-label={`Choose logo for ${label}`} className={`h-6 px-1.5 ${triggerClassName}`} disabled={disabled}>
             <ChevronDown className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="max-h-[70vh] w-72 overflow-y-auto">
-          <DropdownMenuLabel className="text-[11px]">Logo for this graphic</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[11px]">{title ?? "Logo for this graphic"}</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={value ? `${value.form}|${value.tone}` : "auto"} onValueChange={(next) => {
             if (next === "auto") onChange(null);
             else { const [form, tone] = next.split("|"); onChange({ form, tone }); }
           }}>
             <DropdownMenuRadioItem value="auto" className="text-[11px]">
-              <Sparkles className="mr-1.5 h-3 w-3" /> Auto — {recommended ? labelFor(recommended) : "AI selects"}
+              <Sparkles className="mr-1.5 h-3 w-3" /> Auto — {inheritLabel ? `inherited ${inheritLabel}` : recommended ? labelFor(recommended) : "AI selects"}
             </DropdownMenuRadioItem>
+
             <DropdownMenuSeparator />
             {["colour", "inverse"].map((tone) => (
               <div key={tone}>
