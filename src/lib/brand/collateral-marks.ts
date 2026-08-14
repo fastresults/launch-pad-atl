@@ -55,7 +55,7 @@ const SLOTS: Record<string, MarkSlot[]> = {
   ],
   presentation: [
     { id: "cover", label: "Cover slide", hint: "Hero mark on the title slide", scale: "hero", align: "edge", ground: "brand", boxAspect: 2.2 },
-    { id: "running", label: "Running corner", hint: "Small mark repeated on every interior slide", scale: "chrome", align: "edge", ground: "paper", boxAspect: 2.4 },
+    { id: "running", label: "Running corner", hint: "Small mark repeated on every interior slide", scale: "chrome", align: "edge", ground: "paper", boxAspect: 1.6 },
     { id: "closing", label: "Closing slide", hint: "Mark centred on the dark sign-off slide", scale: "hero", align: "centred", ground: "dark", boxAspect: 2.2 },
   ],
   guidelines: [
@@ -147,8 +147,11 @@ export function recommendMark(slot: MarkSlot, inventory: MarkCell[]): MarkRecomm
       notes.push("runs along the margin");
     }
 
-    // Fit: how far the artwork's proportions sit from the reserved box.
-    score -= 1.2 * Math.abs(Math.log(aspect / slot.boxAspect));
+    // Fit: how far the artwork's proportions sit from the reserved box. A
+    // chrome slot is a small corner that flexes around the mark, so shape
+    // matters less there than at hero scale, where the box is the composition.
+    const fitWeight = slot.scale === "chrome" ? 0.6 : 1.2;
+    score -= fitWeight * Math.abs(Math.log(aspect / slot.boxAspect));
 
     return { form: cell.form, tone: cell.tone, score, reason: notes[0] ?? "closest fit for this slot" };
   }).sort((a, b) => b.score - a.score);
