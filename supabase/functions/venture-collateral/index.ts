@@ -864,6 +864,16 @@ Deno.serve(async (req) => {
         }, 400);
       }
 
+      // The founder's chosen mark cell for this piece, if they picked one.
+      const FORMS = ["symbol", "horizontal", "stacked", "wordmark"];
+      const TONES = ["colour", "inverse"];
+      const rawPick = body?.markChoice && typeof body.markChoice === "object"
+        ? body.markChoice[requested[0]]
+        : null;
+      const markPick = rawPick && FORMS.includes(rawPick.form) && TONES.includes(rawPick.tone)
+        ? { form: rawPick.form as LogoForm, tone: rawPick.tone as LogoTone }
+        : null;
+
       let ctx: CollateralCtx;
       let details: ContactDetails;
       let extras: StyleSystemExtras;
@@ -873,7 +883,9 @@ Deno.serve(async (req) => {
           redirect: !!body?.redirect,
           needsCopy: ["presentation", "proposal", "invoice", "notecard", "guidelines"].includes(kind),
           needsImagery: kind === "presentation",
+          markPick,
         }));
+
       } catch (e) {
         const code = (e as Error).message;
         const msg = code === "NO_BRAND_KIT"
