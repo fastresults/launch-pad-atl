@@ -345,30 +345,61 @@ async function buildCtx(
     ? await loadMarkArtwork(admin, String(stackedDarkPath))
     : null;
 
-  // The founder's explicit cell for this piece, when they picked one.
-  let markPick: CollateralCtx["markPick"] = null;
-  if (opts.markPick) {
-    const wanted = slotFor(opts.markPick.form, opts.markPick.tone);
-    for (const slot of markPickOrder(opts.markPick.form, opts.markPick.tone)) {
-      const entry = logos.find((l: any) => l?.variant === slot && (l?.svg_path ?? l?.path));
-      const p = entry?.svg_path ?? entry?.path;
-      if (!p) continue;
-      const svg = await loadMarkArtwork(admin, String(p));
-      if (!svg) continue;
-      const ft = formToneOf(slot);
-      markPick = {
-        form: ft.form,
-        tone: ft.tone,
-        svg,
-        requested: { form: opts.markPick.form, tone: opts.markPick.tone },
-        fallback: slot !== wanted,
-      };
-      break;
+  // The mark for every slot this piece renders. A piece is not one logo
+  // decision: a deck cover, its running corner and its closing slide are three
+  // different holes with three different proportions. Explicit choices win;
+  // the rest of a multi-slot piece takes the symmetry recommendation.
+  const markPicks: Record<string, MarkPickEntry> = {};
+  if (opts.kind) {
+    const supplied: { variant: LogoVariant; form: LogoForm; tone: LogoTone }[] = [];
+    for (const l of logos) {
+      const v = l?.variant;
+      if (!v || !(l?.svg_path ?? l?.path)) continue;
+      const ft = formToneOf(v);
+      if (supplied.some((s) => s.variant === v)) continue;
+      supplied.push({ variant: v as LogoVariant, form: ft.form, tone: ft.tone });
     }
-    console.log(
-      `[collateral mark] asked ${wanted} → ${markPick ? `${markPick.form}/${markPick.tone}${markPick.fallback ? " (fallback)" : ""}` : "nothing supplied, using the layout's own pick"}`,
-    );
+    const artwork = new Map<string, string | null>();
+    const load = async (variant: LogoVariant): Promise<string | null> => {
+      if (artwork.has(variant)) return artwork.get(variant) ?? null;
+      const entry = logos.find((l: any) => l?.variant === variant && (l?.svg_path ?? l?.path));
+      const p = entry?.svg_path ?? entry?.path;
+      const svg = p ? await loadMarkArtwork(admin, String(p)) : null;
+      artwork.set(variant, svg);
+      return svg;
+    };
+
+    for (const slot of slotsForKind(opts.kind)) {
+      const explicit = opts.markPicks?.[slot.id] ?? null;
+      const auto = explicit
+        ? null
+        : (isMultiSlot(opts.kind) ? recommendMark(slot, supplied.map((s) => ({ form: s.form, tone: s.tone }))) : null);
+      const want = explicit ?? (auto ? { form: auto.form, tone: auto.tone } : null);
+      if (!want) continue;
+      const wanted = slotFor(want.form, want.tone);
+      for (const variant of markPickOrder(want.form, want.tone)) {
+        const svg = await load(variant);
+        if (!svg) continue;
+        const ft = formToneOf(variant);
+        markPicks[slot.id] = {
+          form: ft.form,
+          tone: ft.tone,
+          svg,
+          requested: { form: want.form, tone: want.tone },
+          fallback: variant !== wanted,
+          auto: !explicit,
+          reason: auto?.reason ?? null,
+        };
+        break;
+      }
+      const got = markPicks[slot.id];
+      console.log(
+        `[collateral mark] ${opts.kind}/${slot.id} asked ${wanted}${explicit ? "" : " (auto)"} → ` +
+          (got ? `${got.form}/${got.tone}${got.fallback ? " (fallback)" : ""}` : "nothing supplied, using the layout's own pick"),
+      );
+    }
   }
+
 
 
   const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
