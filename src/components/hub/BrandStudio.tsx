@@ -83,6 +83,18 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
     if (await confirm({ title: "Reset brand wizard?", description, destructive: true, confirmText: "Reset" })) reset.mutate();
   };
 
+  const onUnlock = async () => {
+    const ok = await confirm({
+      title: "Unlock this brand?",
+      description:
+        "The palette, typography and marks become editable again. Nothing is deleted, but anything built from the locked brand (style guide, collateral, website brief) may read as out of date until you lock it again.",
+      confirmText: "Unlock brand",
+    });
+    if (ok) setLock.mutate(false);
+  };
+
+
+
   return (
     <div className="space-y-3">
       <SectionHeader
