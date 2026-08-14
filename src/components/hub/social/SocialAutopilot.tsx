@@ -26,6 +26,39 @@ import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog"
 import { RotateCcw } from "lucide-react";
 import { edgeStatus, edgeErrorMessage } from "@/lib/edge-errors";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import { StudioMarkPicker } from "@/components/hub/brand/StudioMarkPicker";
+import { getBrandKit, setStudioMarkChoice } from "@/lib/brandKit.functions";
+import { studioMarkKind } from "@/lib/brand/collateral-marks";
+
+/**
+ * Every logo placement in the studio gets the same chevron picker as Branded
+ * Collateral. It reads and writes `studio_mark_choice` on the brand kit, so the
+ * pick survives regeneration and the worker places that exact artwork.
+ */
+function MarkPickerFor({ snapshotId, assetKind, used }: { snapshotId: string; assetKind: string; used?: any }) {
+  const qc = useQueryClient();
+  const kitQ = useQuery({ queryKey: ["brandKit", snapshotId], queryFn: () => getBrandKit(snapshotId) });
+  const kit: any = kitQ.data;
+  const markKind = studioMarkKind(assetKind);
+  const save = async (cell: any) => {
+    try {
+      await setStudioMarkChoice(snapshotId, markKind, cell);
+      await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+    } catch (e: any) {
+      toast.error(e?.message || "Could not save the logo choice");
+    }
+  };
+  return (
+    <StudioMarkPicker
+      assetKind={assetKind}
+      logos={kit?.logos ?? null}
+      value={kit?.studio_mark_choice?.[markKind] ?? null}
+      onChange={save}
+      used={used ?? null}
+    />
+  );
+}
+
 
 const PLATFORM_ICONS: Record<string, any> = {
   Instagram, LinkedIn: Linkedin, X: Twitter, Twitter, Facebook,
@@ -1167,7 +1200,15 @@ function Step5BuildKit({
                                     <span className="h-2.5 w-2.5 rounded-sm border border-border" style={{ background: t.canvas_plan.accent }} />
                                   </div>
                                 )}
+                                <div className="mt-2 max-w-[15rem]">
+                                  <MarkPickerFor
+                                    snapshotId={snapshotId}
+                                    assetKind={t.asset}
+                                    used={t.qa_notes?.logo_mark ?? null}
+                                  />
+                                </div>
                               </div>
+
                             </div>
                             <div className="flex flex-wrap items-center gap-1 sm:ml-auto sm:justify-end">
                               {t.signed_url && (
@@ -1597,6 +1638,22 @@ function Step6Launch({
 
                 </div>
               </div>
+
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <MarkPickerFor
+                  snapshotId={snapshotId}
+                  assetKind="avatar"
+                  used={avatar?.qa_notes?.logo_mark ?? null}
+                />
+                {coverKind && (
+                  <MarkPickerFor
+                    snapshotId={snapshotId}
+                    assetKind={coverKind}
+                    used={cover?.qa_notes?.logo_mark ?? null}
+                  />
+                )}
+              </div>
+
 
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <Button size="sm" className="h-6 px-1.5 text-[10px]" disabled={!!regenerating[`${p}:all`]} onClick={() => regenerate(p)}>
