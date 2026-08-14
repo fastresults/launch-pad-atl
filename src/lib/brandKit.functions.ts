@@ -73,6 +73,18 @@ export async function extractExistingBrand(
   return callWizard({ action: "extract-existing", snapshotId, ...payload });
 }
 
+/** Admin control: flip the kit between locked and draft without touching its content. */
+export async function setBrandKitLock(snapshotId: string, locked: boolean): Promise<BrandKit> {
+  const { data, error } = await supabase
+    .from("venture_brand_kits")
+    .update({ status: locked ? "locked" : "draft", locked_at: locked ? new Date().toISOString() : null })
+    .eq("snapshot_id", snapshotId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as BrandKit;
+}
+
 export async function resetBrandKit(snapshotId: string): Promise<void> {
   const { error } = await supabase
     .from("venture_brand_kits")
