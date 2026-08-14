@@ -1929,44 +1929,50 @@ function textOverlaps(svg: string, T: TypeKit): string[] {
 }
 
 function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: ResolvedSpec, T?: TypeKit): PageMetrics {
-  const markHs = [...svg.matchAll(/data-mark-h="([\d.]+)"/g)].map((m) => Number(m[1]));
-  const markWs = [...svg.matchAll(/data-mark-w="([\d.]+)"/g)].map((m) => Number(m[1]));
-  const markArts = [...svg.matchAll(/data-mark-art="([^"]*)"/g)].map((m) => m[1]);
-  const markBgs = [...svg.matchAll(/data-mark-bg="([^"]*)"/g)].map((m) => m[1]);
-  const markInks = [...svg.matchAll(/data-mark-ink="([^"]*)"/g)].map((m) => m[1]);
-  const markVis = [...svg.matchAll(/data-mark-visible="([^"]*)"/g)].map((m) => m[1] === "1");
-  const markSlots = [...svg.matchAll(/data-mark-slot="([^"]*)"/g)].map((m) => m[1] || undefined);
-  const markForms = [...svg.matchAll(/data-mark-form="([^"]*)"/g)].map((m) => m[1]);
-  const markTones = [...svg.matchAll(/data-mark-tone="([^"]*)"/g)].map((m) => m[1]);
-  const markSources = [...svg.matchAll(/data-mark-source="([^"]*)"/g)].map((m) => m[1]);
-  const markModes = [...svg.matchAll(/data-mark-mode="([^"]*)"/g)].map((m) => m[1]);
-  const markAdapted = [...svg.matchAll(/data-mark-adapted="([^"]*)"/g)].map((m) => m[1] === "1");
+  // Read each mark group as ONE record. Scanning attribute-by-attribute across
+  // the whole page silently misaligns the columns the moment a mark carries no
+  // pick attributes: an unpicked mark inherited the next mark's form/tone, and
+  // a page with a single unpicked mark reported `mode: "manual"` with nothing
+  // to verify — which is how the proposal blocked itself on LOGO_CONTRACT_FAILED
+  // when no logo had been chosen at all.
+  const attr = (tag: string, key: string): string | undefined =>
+    tag.match(new RegExp(`data-mark-${key}="([^"]*)"`))?.[1];
+  const marks = [...svg.matchAll(/<g\b[^>]*data-mark-h="[^"]*"[^>]*>/g)].map((m) => {
+    const tag = m[0];
+    const mode = attr(tag, "mode");
+    return {
+      h: Number(attr(tag, "h") ?? 0),
+      w: Number(attr(tag, "w") ?? 0),
+      art: attr(tag, "art") ?? "",
+      bg: attr(tag, "bg") ?? "",
+      ink: attr(tag, "ink") ?? "",
+      visible: attr(tag, "visible") !== "0",
+      slot: attr(tag, "slot") || undefined,
+      form: attr(tag, "form"),
+      tone: attr(tag, "tone"),
+      source: attr(tag, "source"),
+      // Only a mark that actually declares a manual pick is held to the exact
+      // source contract; anything else is the layout's own choice.
+      mode: mode === "manual" ? "manual" as const : "auto" as const,
+      adapted: attr(tag, "adapted") === "1",
+    };
+  });
 
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
   const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
+  const markHs = marks.map((m) => m.h);
   const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
   const idx = primaryMark !== undefined ? markHs.indexOf(primaryMark) : -1;
   return {
     page: name,
     markH: primaryMark,
-    markW: idx >= 0 ? markWs[idx] : undefined,
-    markArt: idx >= 0 ? markArts[idx] : undefined,
-    markBg: idx >= 0 ? markBgs[idx] : undefined,
+    markW: idx >= 0 ? marks[idx].w : undefined,
+    markArt: idx >= 0 ? marks[idx].art : undefined,
+    markBg: idx >= 0 ? marks[idx].bg : undefined,
     // Every mark on the page, not just the biggest — a specimen sheet stands or
     // falls on the small tiles being legible too.
-    marks: markHs.map((h, i) => ({
-      h,
-      art: markArts[i] ?? "",
-      bg: markBgs[i] ?? "",
-      ink: markInks[i] ?? "",
-      visible: markVis[i] ?? true,
-      slot: markSlots[i],
-      form: markForms[i],
-      tone: markTones[i],
-      source: markSources[i],
-      mode: markModes[i] === "auto" ? "auto" : "manual",
-      adapted: markAdapted[i] ?? false,
-    })),
+    marks,
+
     // QC measures against the band this mark's own shape is entitled to, so a
     // stacked lockup sized for equal optical area is not failed as "oversized".
     markBand: markBand(
