@@ -231,7 +231,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
           </div>
 
 
-          <BrandCollateral snapshot={snapshot} locked={locked} />
+          <BrandCollateral snapshot={snapshot} kit={kit} locked={locked} />
 
         </div>
       )}
