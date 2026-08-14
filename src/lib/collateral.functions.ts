@@ -123,6 +123,7 @@ export async function generateCollateral(
   snapshotId: string,
   kinds?: string[],
   markChoice?: Record<string, MarkChoice>,
+  escape?: RunEscape,
 ) {
   const requested = kinds?.length
     ? kinds
@@ -140,19 +141,32 @@ export async function generateCollateral(
   for (const kind of requested) {
     let fromPage = 0;
     for (let slice = 0; slice < 12; slice++) {
-      const result = await call({ action: "generate", snapshotId, kinds: [kind], fromPage, markChoice });
-      generated.push(...(result?.generated ?? []));
-      failed.push(...(result?.failed ?? []));
-      qcIssues.push(...(result?.qcIssues ?? []));
-      artDirection ??= result?.artDirection ?? null;
-      if (result?.mark) marks[kind] = result.mark;
-      if (!result?.more || typeof result?.nextPage !== "number" || result.nextPage <= fromPage) break;
-      fromPage = result.nextPage;
+      try {
+        const result = await withEscape(
+          call({ action: "generate", snapshotId, kinds: [kind], fromPage, markChoice }),
+          escape,
+        );
+        generated.push(...(result?.generated ?? []));
+        failed.push(...(result?.failed ?? []));
+        qcIssues.push(...(result?.qcIssues ?? []));
+        artDirection ??= result?.artDirection ?? null;
+        if (result?.mark) marks[kind] = result.mark;
+        if (!result?.more || typeof result?.nextPage !== "number" || result.nextPage <= fromPage) break;
+        fromPage = result.nextPage;
+      } catch (e: any) {
+        // A stop request ends the whole run; anything else is one piece's
+        // problem, so the rest of the library still publishes.
+        if (e?.code === "ABORTED") throw e;
+        if (e?.code === "DETAILS_INCOMPLETE") throw e;
+        failed.push({ kind, error: e?.message ?? "Generation failed" });
+        break;
+      }
     }
   }
   return { ok: failed.length === 0, generated, failed, qcIssues, artDirection, marks };
 
 }
+
 
 
 export async function clearCollateral(snapshotId: string, kind?: string) {
