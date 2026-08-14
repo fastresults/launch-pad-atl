@@ -677,7 +677,7 @@ function markAt(
   // given a contrast plate. Only a repair that still fails is reported.
   let repairedPlate = plateSvg;
   if (!anyVisible) {
-    if (!untintable) {
+    if (!untintable && !exactManual) {
       const safeInk = resolveInk(use ?? paintedFills[0] ?? null, ground, { min: MIN });
       inner = tint(inner, safeInk);
       use = safeInk;
@@ -692,7 +692,10 @@ function markAt(
         `<rect x="${r(x + (boxW - drawnW) / 2 - px)}" y="${r(y + (boxH - drawnH) / 2 - px)}" width="${r(drawnW + px * 2)}" height="${r(drawnH + px * 2)}" rx="${r(px * 0.6)}" fill="${rescueFill}" opacity="0.94"/>`;
       paintedFills = measuredFills;
       ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, rescueFill, { min: MIN }));
-      return `${repairedPlate}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="plated" data-mark-bg="${rescueFill}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+      const rescueAttrs = slotPick?.svg
+        ? ` data-mark-form="${slotPick.form}" data-mark-tone="${slotPick.tone}" data-mark-source="${esc(slotPick.source ?? "")}" data-mark-mode="${slotPick.mode ?? (slotPick.auto ? "auto" : "manual")}"`
+        : "";
+      return `${repairedPlate}<g data-mark-slot="${opts?.slot ?? ""}" data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="plated"${rescueAttrs} data-mark-adapted="1" data-mark-bg="${rescueFill}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
     }
     ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN }));
   }

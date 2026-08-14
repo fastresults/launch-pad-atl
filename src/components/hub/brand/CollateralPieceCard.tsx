@@ -125,11 +125,11 @@ export function CollateralPieceCard({
           {stale && (
             <Badge variant="outline" className="border-status-warning/50 text-[10px] text-status-warning">Details changed</Badge>
           )}
-          {used.map((m) => {
+            {used.map((m) => {
             const slot = slots.find((s) => s.id === m.slot);
             return (
-              <Badge key={m.slot} variant="outline" className="text-[10px] text-muted-foreground">
-                 {m.mode === "manual" ? "Verified exact" : "AI selected"} · {slot?.label ?? m.slot}: {cellLabel(m) ?? `${m.form} · ${m.tone}`}
+                <Badge key={m.slot} variant="outline" className="text-[10px] text-muted-foreground">
+                  {m.mode === "manual" ? "Verified exact" : "AI selected"} · {slot?.label ?? m.slot}: {cellLabel(m) ?? `${m.form} · ${m.tone}`}
                 {m.fallback ? " (nearest supplied)" : ""}
               </Badge>
             );

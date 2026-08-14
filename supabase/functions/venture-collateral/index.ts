@@ -400,6 +400,8 @@ async function buildCtx(
           form: ft.form,
           tone: ft.tone,
           svg,
+          source: String(logos.find((l: any) => l?.variant === variant)?.svg_path ?? logos.find((l: any) => l?.variant === variant)?.path ?? variant),
+          mode: explicit ? "manual" : "auto",
           requested: { form: want.form, tone: want.tone },
           fallback: variant !== wanted,
           auto: !explicit,
