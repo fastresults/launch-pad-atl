@@ -526,7 +526,7 @@ function tint(inner: string, use: string): string {
 
 function markAt(
   ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number,
-  ink: string | null, bg?: string,
+  ink: string | null, bg?: string, opts?: { mono?: boolean },
 ): string {
   const picked = markSvgFor(ctx, bg, boxH > 0 ? boxW / boxH : undefined);
   const svg = picked.svg;
@@ -554,7 +554,18 @@ function markAt(
     f === "white" ? "#ffffff" : f === "black" ? "#000000" : f
   );
 
-  if (bg && !untintable) {
+  // A template's ink is a REQUEST, not a command. Full-colour artwork that
+  // already reads on this ground keeps its own colours — repainting a blue-and-
+  // red mark flat grey is how a chosen "colour" cell came out looking like the
+  // inverse one. Only a monochrome treatment (watermarks, specimen strips) or a
+  // legibility failure is allowed to flatten it.
+  const multiColour = new Set(measuredFills.map((f) => f.toLowerCase())).size >= 2;
+  const readsAsSupplied = !bg || measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
+  const keepArtworkColour = !opts?.mono && multiColour && readsAsSupplied && !untintable;
+
+  if (keepArtworkColour) {
+    use = null;
+  } else if (bg && !untintable) {
     if (picked.dark) use = inkOn(bg);
     if (!use) {
       const visible = measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
@@ -568,9 +579,12 @@ function markAt(
     if (dark || !visible) plate = true;
   }
 
-
+  // Record when a founder's explicit cell had to be repainted, so the piece can
+  // say "recoloured for contrast" instead of silently looking like another cell.
+  if (ctx.markPick?.svg && use && !keepArtworkColour) ctx.markRecoloured = true;
 
   if (use && !untintable) inner = tint(inner, use);
+
 
   // Scale and position by the artwork's INK box, never its file box: traced
   // marks carry the tracer's canvas padding, so fitting the file put roughly
