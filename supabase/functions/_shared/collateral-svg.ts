@@ -686,8 +686,9 @@ function markAt(
     ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN }));
   }
 
-  const pickAttrs = ctx.markPick?.svg ? ` data-mark-form="${ctx.markPick.form}" data-mark-tone="${ctx.markPick.tone}"` : "";
-  return `${repairedPlate}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}"${pickAttrs} data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  const pickAttrs = slotPick?.svg ? ` data-mark-form="${slotPick.form}" data-mark-tone="${slotPick.tone}"` : "";
+  return `${repairedPlate}<g data-mark-slot="${opts?.slot ?? ""}" data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}"${pickAttrs} data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+
 
 
 
