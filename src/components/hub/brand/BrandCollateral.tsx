@@ -304,6 +304,17 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
                   stale={isStale(k.kind)}
                   qc={qcState(k.kind)}
                   busy={busyKind === k.kind || (busyKind === "all" && gen.isPending)}
+                  markChoice={markChoice[k.kind] ?? null}
+                  markUsed={marksUsed[k.kind] ?? null}
+                  availableSlots={availableSlots}
+                  onMarkChoice={(choice) =>
+                    setMarkChoice((prev) => {
+                      const next = { ...prev };
+                      if (choice) next[k.kind] = choice;
+                      else delete next[k.kind];
+                      return next;
+                    })}
+
                   canGenerate={!!locked}
                   disabled={!locked || gen.isPending}
                   onPreview={() => setOpenKind(k.kind)}
