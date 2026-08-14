@@ -83,6 +83,21 @@ export function qcPage(
     }
   }
 
+  // A manual choice is an immutable source contract. The renderer records the
+  // exact source on the finished SVG; missing identity means the page cannot be
+  // proven to contain what the admin selected.
+  for (const m of metrics.marks ?? []) {
+    if (m.mode !== "manual") continue;
+    if (!m.slot || !m.form || !m.tone || !m.source) {
+      reasons.push("LOGO_CONTRACT_FAILED: a manually selected logo could not be verified on the final page.");
+      break;
+    }
+    if (m.art === "knockout") {
+      reasons.push(`LOGO_CONTRACT_FAILED: ${m.slot} was recoloured after an exact ${m.form} · ${m.tone} selection.`);
+      break;
+    }
+  }
+
 
 
 
