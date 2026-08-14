@@ -24,6 +24,7 @@ import {
 import { addressBlock, addressLine, type ContactDetails } from "./collateral-fields.ts";
 import {
   logoBox,
+  markBand,
   type PageMetrics,
   printMeta,
   resolveSpec,
