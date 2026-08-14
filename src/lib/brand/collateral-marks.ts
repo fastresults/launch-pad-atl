@@ -103,14 +103,55 @@ export function contentGraphicKey(postId: string, aspect: string): string {
   return ["content", postId, aspect].map((v) => encodeURIComponent(String(v))).join(":");
 }
 
+/** Batch default for every ad in one campaign week. */
+export function contentWeekKey(week: number | string, aspect: string): string {
+  return ["content", "week", String(week), aspect].map((v, i) => (i < 2 ? v : encodeURIComponent(String(v)))).join(":");
+}
+
+/** Batch default for every ad of one aspect in the flight. */
+export function contentAllKey(aspect: string): string {
+  return `content:all:${encodeURIComponent(String(aspect))}`;
+}
+
+/** Batch default for a whole social surface class (Generate all / Launch runs). */
+export function socialAllKey(assetKind: string): string {
+  return `social:all:${encodeURIComponent(String(assetKind))}`;
+}
+
 export function stylePreviewGraphicKey(direction: string): string {
   return `style:${encodeURIComponent(String(direction))}`;
 }
 
-/** Exact graphic choice, with the old broad surface value as migration fallback. */
-export function studioChoiceFor(choices: Record<string, any> | null | undefined, placementKey: string, assetKind: string) {
-  return choices?.[placementKey] ?? choices?.[studioMarkKind(assetKind)] ?? null;
+/**
+ * Resolve the mark for one graphic. Exact per-graphic pick wins; batch defaults
+ * (week, then all) are inherited; the old broad surface value stays as the last
+ * migration fallback. `source` tells the UI whether to label the value inherited.
+ */
+export function resolveStudioChoice(
+  choices: Record<string, any> | null | undefined,
+  placementKey: string,
+  assetKind: string,
+  inherit: string[] = [],
+): { cell: any; source: "exact" | "inherited" | "legacy" | null; from: string | null } {
+  if (choices?.[placementKey]) return { cell: choices[placementKey], source: "exact", from: placementKey };
+  for (const key of inherit) {
+    if (key && choices?.[key]) return { cell: choices[key], source: "inherited", from: key };
+  }
+  const legacyKey = studioMarkKind(assetKind);
+  if (choices?.[legacyKey]) return { cell: choices[legacyKey], source: "legacy", from: legacyKey };
+  return { cell: null, source: null, from: null };
 }
+
+/** Exact graphic choice, with batch defaults and the old broad surface value as fallbacks. */
+export function studioChoiceFor(
+  choices: Record<string, any> | null | undefined,
+  placementKey: string,
+  assetKind: string,
+  inherit: string[] = [],
+) {
+  return resolveStudioChoice(choices, placementKey, assetKind, inherit).cell;
+}
+
 
 /** Every slot this kind renders. Unknown kinds get one generic slot. */
 export function slotsForKind(kind: string): MarkSlot[] {
