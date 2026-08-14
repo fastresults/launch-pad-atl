@@ -216,7 +216,14 @@ export type CollateralCtx = {
     requested?: { form: string; tone: string } | null;
     fallback?: boolean;
   } | null;
+  /**
+   * Set by the renderer when the chosen artwork had to be repainted to stay
+   * legible on a surface — reported back so the founder sees why the mark does
+   * not look exactly like the cell they picked.
+   */
+  markRecoloured?: boolean;
 };
+
 
 
 export const COLLATERAL_KINDS = [
