@@ -28,6 +28,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
 
   const qc = useQueryClient();
   const confirm = useConfirm();
+  const { isAdmin } = useAuth();
   const kitQ = useQuery({
     queryKey: ["brandKit", snapshot.id],
     queryFn: () => getBrandKit(snapshot.id),
