@@ -990,8 +990,17 @@ Deno.serve(async (req) => {
         // (symbol isolated) or the tracer's polygons (nothing to isolate).
         logo: { symbolIsolated: !!ctx.symbolSvg },
         mark: ctx.markPick
-          ? { form: ctx.markPick.form, tone: ctx.markPick.tone, fallback: !!ctx.markPick.fallback, requested: ctx.markPick.requested }
+          ? {
+            form: ctx.markPick.form,
+            tone: ctx.markPick.tone,
+            fallback: !!ctx.markPick.fallback,
+            requested: ctx.markPick.requested,
+            // The chosen artwork kept its own colours unless a ground forced a
+            // repair — the card says so instead of looking like another cell.
+            recoloured: !!ctx.markRecoloured,
+          }
           : null,
+
         artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },
       });
 
