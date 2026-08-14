@@ -71,6 +71,45 @@ async function call(body: any) {
   return data;
 }
 
+/**
+ * The generation itself is model-bound and can legitimately run for minutes, so
+ * we never abort the request — we only give the *UI* a way out. The promise
+ * below settles on stop or on a generous deadline; the in-flight work is left
+ * to finish server-side rather than being cancelled mid-render.
+ */
+export type RunEscape = { signal?: AbortSignal; timeoutMs?: number };
+
+const DEFAULT_ESCAPE_MS = 10 * 60_000;
+
+function withEscape<T>(work: Promise<T>, opts?: RunEscape): Promise<T> {
+  const signal = opts?.signal;
+  const timeoutMs = opts?.timeoutMs ?? DEFAULT_ESCAPE_MS;
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    };
+    const finish = (fn: (v: any) => void, value: any) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      fn(value);
+    };
+    function onAbort() {
+      finish(reject, Object.assign(new Error("Stopped"), { code: "ABORTED" }));
+    }
+    const timer = setTimeout(
+      () => finish(reject, Object.assign(new Error("Timed out — retry this piece"), { code: "TIMEOUT" })),
+      timeoutMs,
+    );
+    if (signal?.aborted) return onAbort();
+    signal?.addEventListener("abort", onAbort, { once: true });
+    work.then((v) => finish(resolve, v), (e) => finish(reject, e));
+  });
+}
+
+
 export async function listCollateral(snapshotId: string): Promise<CollateralItem[]> {
   const data = await call({ action: "list", snapshotId });
   return (data?.items ?? []) as CollateralItem[];
@@ -84,6 +123,7 @@ export async function generateCollateral(
   snapshotId: string,
   kinds?: string[],
   markChoice?: Record<string, MarkChoice>,
+  escape?: RunEscape,
 ) {
   const requested = kinds?.length
     ? kinds
@@ -101,19 +141,32 @@ export async function generateCollateral(
   for (const kind of requested) {
     let fromPage = 0;
     for (let slice = 0; slice < 12; slice++) {
-      const result = await call({ action: "generate", snapshotId, kinds: [kind], fromPage, markChoice });
-      generated.push(...(result?.generated ?? []));
-      failed.push(...(result?.failed ?? []));
-      qcIssues.push(...(result?.qcIssues ?? []));
-      artDirection ??= result?.artDirection ?? null;
-      if (result?.mark) marks[kind] = result.mark;
-      if (!result?.more || typeof result?.nextPage !== "number" || result.nextPage <= fromPage) break;
-      fromPage = result.nextPage;
+      try {
+        const result = await withEscape(
+          call({ action: "generate", snapshotId, kinds: [kind], fromPage, markChoice }),
+          escape,
+        );
+        generated.push(...(result?.generated ?? []));
+        failed.push(...(result?.failed ?? []));
+        qcIssues.push(...(result?.qcIssues ?? []));
+        artDirection ??= result?.artDirection ?? null;
+        if (result?.mark) marks[kind] = result.mark;
+        if (!result?.more || typeof result?.nextPage !== "number" || result.nextPage <= fromPage) break;
+        fromPage = result.nextPage;
+      } catch (e: any) {
+        // A stop request ends the whole run; anything else is one piece's
+        // problem, so the rest of the library still publishes.
+        if (e?.code === "ABORTED") throw e;
+        if (e?.code === "DETAILS_INCOMPLETE") throw e;
+        failed.push({ kind, error: e?.message ?? "Generation failed" });
+        break;
+      }
     }
   }
   return { ok: failed.length === 0, generated, failed, qcIssues, artDirection, marks };
 
 }
+
 
 
 export async function clearCollateral(snapshotId: string, kind?: string) {

@@ -1,9 +1,10 @@
 // @ts-nocheck
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Eye, Loader2, Package, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { CircleSlash, Download, Eye, Loader2, Package, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+
 import { toast } from "sonner";
 import {
   COLLATERAL_TIERS,
@@ -28,7 +29,15 @@ const KIND_LABELS: Record<string, string> = Object.fromEntries(
 export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?: any; locked: boolean }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
-  const [busyKind, setBusyKind] = useState<string | null>(null);
+  /**
+   * The kinds a live run is currently working through. Busy state is derived
+   * from this *and* the mutation being in flight — a leftover value can never
+   * pin a card on "Generating…".
+   */
+  const [runningKinds, setRunningKinds] = useState<string[]>([]);
+  /** Lets the founder escape a run that is taking too long. */
+  const stopRef = useRef<AbortController | null>(null);
+
   const [openKind, setOpenKind] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   /** Set when a generate attempt was blocked, so we can retry after confirming. */
@@ -87,33 +96,53 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
   }, [kit?.logos]);
 
 
+  /** Pieces deleted mid-run — the loop skips them instead of re-rendering them. */
+  const droppedRef = useRef<Set<string>>(new Set());
+
   const gen = useMutation({
     // Rasterising several pieces in one call blows the edge worker's CPU and
     // memory budget, so we walk through them one at a time.
     mutationFn: async (kinds?: string[]) => {
       const all = kinds?.length ? kinds : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind));
+      const controller = new AbortController();
+      stopRef.current = controller;
+      droppedRef.current = new Set();
       const generated: any[] = [];
       const failed: any[] = [];
       const qcIssues: any[] = [];
+      const attempted: string[] = [];
       let artDirection: any = null;
       const marks: Record<string, any> = {};
       // One piece per call. Multi-page pieces (deck, guidelines) rasterise five
       // pages, and pairing them exhausts the edge worker's CPU budget.
       for (let i = 0; i < all.length; i += 1) {
-        const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 1), markChoice);
+        const kind = all[i];
+        if (controller.signal.aborted) break;
+        if (droppedRef.current.has(kind)) continue;
+        attempted.push(kind);
+        const res: any = await generateCollateral(snapshot.id, [kind], markChoice, { signal: controller.signal });
         generated.push(...(res?.generated ?? []));
         failed.push(...(res?.failed ?? []));
         qcIssues.push(...(res?.qcIssues ?? []));
         artDirection ??= res?.artDirection ?? null;
         Object.assign(marks, res?.marks ?? {});
+        // This piece is finished — release its card immediately.
+        setRunningKinds((prev) => prev.filter((k) => k !== kind));
         qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       }
       setMarksUsed((prev) => ({ ...prev, ...marks }));
-      return { ok: true, generated, failed, qcIssues, artDirection, marks };
+      return { ok: true, generated, failed, qcIssues, artDirection, marks, attempted };
     },
 
-    onMutate: (kinds) => { setRunReport(null); setBusyKind(kinds?.length === 1 ? kinds[0] : "all"); },
-    onSettled: () => setBusyKind(null),
+    onMutate: (kinds) => {
+      setRunReport(null);
+      setRunningKinds(kinds?.length ? [...kinds] : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind)));
+    },
+    onSettled: () => {
+      stopRef.current = null;
+      droppedRef.current = new Set();
+      setRunningKinds([]);
+    },
 
     onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
@@ -123,7 +152,7 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
 
       // A run is a list of outcomes, not a single pass/fail. Report every piece
       // so a blocked page reads as one blocked page, not "generation broke".
-      const attempted = (busyKind && busyKind !== "all" ? [busyKind] : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind)));
+      const attempted: string[] = res?.attempted ?? [];
       setRunReport(attempted.map((kind) => {
         const hardFail = failed.find((f: any) => f.kind === kind);
         if (hardFail) return { kind, status: "failed" as const, detail: String(hardFail.error ?? "").replace(/^QUALITY_GATE_FAILED\s*—\s*/, "") };
@@ -146,6 +175,11 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
       } else toast.success(arch ? `Collateral generated — art direction: ${String(arch).replace(/_/g, " ")}.` : "Collateral generated.");
     },
     onError: (e: any) => {
+      // Stopping is a choice, not a failure.
+      if (e?.code === "ABORTED") {
+        toast.info("Generation stopped. You can generate any piece again.");
+        return;
+      }
       // Missing text is a fixable gap, not a failure — send them to the form.
       if (e?.code === "DETAILS_INCOMPLETE") {
         toast.warning(e.message);
@@ -155,6 +189,17 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
       toast.error(e.message || "Generation failed");
     },
   });
+
+  /** A card is busy only while a run is genuinely in flight and holds that kind. */
+  const running = useMemo(
+    () => new Set(gen.isPending ? runningKinds : []),
+    [gen.isPending, runningKinds],
+  );
+
+  const stopRun = () => {
+    stopRef.current?.abort();
+    setRunningKinds([]);
+  };
 
   /** Generate, but confirm the text inventory first if it has never been signed off. */
   const requestGen = (kinds?: string[]) => {
@@ -166,9 +211,26 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
     gen.mutate(kinds);
   };
 
+
   const wipe = useMutation({
     mutationFn: (kind?: string) => clearCollateral(snapshot.id, kind),
-    onSuccess: () => {
+    // Deleting a piece also retires everything the UI still remembers about it,
+    // so a cleared card reads as "Not generated" and stays generatable — even
+    // if a run was in flight when the founder deleted it.
+    onSuccess: (_res, kind) => {
+      const cleared = kind ? [kind] : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind));
+      for (const k of cleared) droppedRef.current.add(k);
+      setRunningKinds((prev) => prev.filter((k) => !cleared.includes(k)));
+      setRunReport((prev) => {
+        const next = (prev ?? []).filter((r) => !cleared.includes(r.kind));
+        return next.length ? next : null;
+      });
+      setMarksUsed((prev) => {
+        const next = { ...prev };
+        for (const k of cleared) delete next[k];
+        return next;
+      });
+      if (!kind) stopRun();
       qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       toast.success("Cleared.");
     },
@@ -180,6 +242,7 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
       wipe.mutate(undefined);
     }
   };
+
 
   const openMeta = useMemo(
     () => COLLATERAL_TIERS.flatMap((t) => t.kinds).find((k) => k.kind === openKind) ?? null,
@@ -252,10 +315,16 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
                 </Button>
               </>
             )}
+            {gen.isPending && (
+              <Button size="sm" variant="outline" onClick={stopRun}>
+                <CircleSlash className="mr-1 h-3 w-3" />Stop
+              </Button>
+            )}
             <Button size="sm" onClick={() => requestGen(undefined)} disabled={!locked || gen.isPending}>
-              {busyKind === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {gen.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               {items.length > 0 ? "Regenerate all" : "Generate all"}
             </Button>
+
           </div>
         </div>
 
@@ -311,7 +380,7 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
                   fileCount={(byKind[k.kind] ?? []).length}
                   stale={isStale(k.kind)}
                   qc={qcState(k.kind)}
-                  busy={busyKind === k.kind || (busyKind === "all" && gen.isPending)}
+                  busy={running.has(k.kind)}
                   markChoice={markChoice[k.kind] ?? null}
                   markUsed={marksUsed[k.kind] ?? null}
                   availableSlots={availableSlots}
@@ -345,7 +414,7 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
         onOpenChange={(v) => setOpenKind(v ? openKind : null)}
         kind={openMeta}
         files={openKind ? (byKind[openKind] ?? []) : []}
-        busy={gen.isPending && (busyKind === openKind || busyKind === "all")}
+        busy={!!openKind && running.has(openKind)}
         canGenerate={!!locked}
         onRegenerate={() => openKind && requestGen([openKind])}
         onClear={async () => {
@@ -358,13 +427,18 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
 
       <CollateralDetailsDialog
         open={detailsOpen}
-        onOpenChange={setDetailsOpen}
+        onOpenChange={(v) => {
+          setDetailsOpen(v);
+          // Abandoning the confirm must never leave a queued run behind.
+          if (!v) setPendingKinds(undefined);
+        }}
         snapshotId={snapshot.id}
         onVerified={() => {
           detailsQ.refetch();
           gen.mutate(pendingKinds);
         }}
       />
+
 
     </div>
   );
