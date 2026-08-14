@@ -747,7 +747,7 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
         );
 
         metrics.logo_corner = chosen.corner;
-        metrics.logo_ink = built ? inkHex : null;
+        metrics.logo_ink = built ? (keepColour ? "artwork" : inkHex) : null;
         metrics.logo_contrast = Number(ratio.toFixed(2));
         (metrics as any).logo_plate = plated;
       }
