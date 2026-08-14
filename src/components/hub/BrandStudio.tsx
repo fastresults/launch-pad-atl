@@ -3,8 +3,9 @@ import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Palette, Sparkles, Lock, RotateCcw, RefreshCw, Loader2, Eye } from "lucide-react";
-import { getBrandKit, resetBrandKit, upsertBrandKit, generateStyleGuide } from "@/lib/brandKit.functions";
+import { Palette, Sparkles, Lock, LockOpen, RotateCcw, RefreshCw, Loader2, Eye } from "lucide-react";
+import { getBrandKit, resetBrandKit, upsertBrandKit, generateStyleGuide, setBrandKitLock } from "@/lib/brandKit.functions";
+import { useAuth } from "@/hooks/use-auth";
 import { BrandWizard } from "@/components/hub/brand-wizard/BrandWizard";
 import { BrandIdentityHeader } from "@/components/hub/brand/BrandIdentityHeader";
 import { BrandCollateral } from "@/components/hub/brand/BrandCollateral";
@@ -27,6 +28,7 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
 
   const qc = useQueryClient();
   const confirm = useConfirm();
+  const { isAdmin } = useAuth();
   const kitQ = useQuery({
     queryKey: ["brandKit", snapshot.id],
     queryFn: () => getBrandKit(snapshot.id),
@@ -54,6 +56,16 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
     onError: (e: any) => toast.error(e.message || "Lock failed"),
   });
 
+  const setLock = useMutation({
+    mutationFn: (next: boolean) => setBrandKitLock(snapshot.id, next),
+    onSuccess: (_d, next) => {
+      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      toast.success(next ? "Brand kit locked" : "Brand kit unlocked — it's editable again");
+    },
+    onError: (e: any) => toast.error(e.message || "Could not change the lock"),
+  });
+
+
   const reset = useMutation({
     mutationFn: () => resetBrandKit(snapshot.id),
     onSuccess: () => {
@@ -70,6 +82,18 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
       : "This will discard your current wizard progress.";
     if (await confirm({ title: "Reset brand wizard?", description, destructive: true, confirmText: "Reset" })) reset.mutate();
   };
+
+  const onUnlock = async () => {
+    const ok = await confirm({
+      title: "Unlock this brand?",
+      description:
+        "The palette, typography and marks become editable again. Nothing is deleted, but anything built from the locked brand (style guide, collateral, website brief) may read as out of date until you lock it again.",
+      confirmText: "Unlock brand",
+    });
+    if (ok) setLock.mutate(false);
+  };
+
+
 
   return (
     <div className="space-y-3">
@@ -124,6 +148,29 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
                 {lockKit.isPending ? "Locking…" : "Lock brand kit"}
               </Button>
             )}
+            {isAdmin && kit && locked && (
+              <Button
+                size="sm"
+                onClick={onUnlock}
+                disabled={setLock.isPending}
+                title="Admin: unlock the brand kit so palette, type and marks can be edited again"
+              >
+                {setLock.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <LockOpen className="mr-1 h-3 w-3" />}
+                {setLock.isPending ? "Unlocking…" : "Unlock brand"}
+              </Button>
+            )}
+            {isAdmin && kit && !locked && !lockBlockedReason && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setLock.mutate(true)}
+                disabled={setLock.isPending || lockKit.isPending}
+                title="Admin: lock the kit without regenerating the style guide"
+              >
+                <Lock className="mr-1 h-3 w-3" />Lock (no rebuild)
+              </Button>
+            )}
+
           </>
         }
 
