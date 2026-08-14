@@ -12,6 +12,7 @@ import {
 import { Loader2, Sparkles, Image as ImageIcon, RotateCcw } from "lucide-react";
 import { contrastRatio } from "@/lib/brand/palette-rules";
 import { AssetImage } from "./AssetImage";
+import { StudioMarkPicker } from "@/components/hub/brand/StudioMarkPicker";
 
 // Strip trailing ellipsis / punctuation left behind by older truncators so the
 // full headline can be re-edited and re-rendered without a leftover "…".
@@ -182,6 +183,10 @@ export function RegenerateAssetDialog({
   currentLogoSize,
   currentScene,
   focusSection,
+  assetKind,
+  logos,
+  initialMarkPick,
+  usedMark,
   onSubmit,
 }: {
   open: boolean;
@@ -201,6 +206,14 @@ export function RegenerateAssetDialog({
   currentLogoSize?: "sm" | "md" | "lg" | null;
   /** The scene the current asset was generated from, if recorded. */
   currentScene?: string | null;
+  /** Surface this asset renders into — decides the mark slot. */
+  assetKind?: string;
+  /** The venture's supplied logo set, for the exact-version picker. */
+  logos?: any[] | null;
+  /** The saved Form × Tone pick for this surface, if any. */
+  initialMarkPick?: { form: string; tone: string } | null;
+  /** What the last run actually drew. */
+  usedMark?: { form?: string; tone?: string; mode?: string } | null;
   /** When set, scroll+highlight the matching section and pre-focus its primary input. */
   focusSection?: "headline" | "palette" | "feedback" | "logo";
   onSubmit: (input: {
@@ -211,6 +224,7 @@ export function RegenerateAssetDialog({
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
     headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
     logoSize?: "sm" | "md" | "lg";
+    markPick?: { form: string; tone: string } | null;
     sceneOverride?: string;
     refreshScenes?: boolean;
   }) => Promise<void>;
@@ -220,6 +234,7 @@ export function RegenerateAssetDialog({
   const [intensity, setIntensity] = useState<"subtle" | "balanced" | "bold">(initialIntensity);
   const [placement, setPlacement] = useState<typeof PLACEMENTS[number]["id"]>("auto");
   const [logoSize, setLogoSize] = useState<"sm" | "md" | "lg">(currentLogoSize || "md");
+  const [markPick, setMarkPick] = useState<{ form: string; tone: string } | null>(initialMarkPick ?? null);
   const [sceneText, setSceneText] = useState("");
   const [refreshScenes, setRefreshScenes] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -317,6 +332,7 @@ export function RegenerateAssetDialog({
       paletteOverride: Object.keys(paletteOverride).length ? paletteOverride : undefined,
       headlineOverride,
       logoSize,
+      markPick,
       sceneOverride: sceneText.trim() || undefined,
       refreshScenes: refreshScenes || undefined,
     };
@@ -477,6 +493,17 @@ export function RegenerateAssetDialog({
                 Bigger = more brand recall
               </div>
             </div>
+            {assetKind && (
+              <div className="mb-2">
+                <StudioMarkPicker
+                  assetKind={assetKind}
+                  logos={logos}
+                  value={markPick}
+                  onChange={setMarkPick}
+                  used={usedMark}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-1.5">
               {LOGO_SIZES.map((opt) => {
                 const active = logoSize === opt.id;
