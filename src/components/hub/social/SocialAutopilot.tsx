@@ -1639,6 +1639,22 @@ function Step6Launch({
                 </div>
               </div>
 
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <MarkPickerFor
+                  snapshotId={snapshotId}
+                  assetKind="avatar"
+                  used={avatar?.qa_notes?.logo_mark ?? null}
+                />
+                {coverKind && (
+                  <MarkPickerFor
+                    snapshotId={snapshotId}
+                    assetKind={coverKind}
+                    used={cover?.qa_notes?.logo_mark ?? null}
+                  />
+                )}
+              </div>
+
+
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <Button size="sm" className="h-6 px-1.5 text-[10px]" disabled={!!regenerating[`${p}:all`]} onClick={() => regenerate(p)}>
                   {regenerating[`${p}:all`] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate {p}
