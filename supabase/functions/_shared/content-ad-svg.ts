@@ -704,12 +704,23 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
         plateColor = plateFill;
       }
 
+
+      // A plate is a clean ground built for the mark, so full-colour artwork
+      // that reads on it keeps its own colours — knocking a two-colour logo to
+      // flat white on a white plate is how an ad ended up carrying a mark the
+      // founder never chose. Photo-direct placement stays mono: brand colour on
+      // moving pixels is a smudge.
+      const keepColour = plated && args.logoSvgText
+        ? svgReadsOn(args.logoSvgText, lum(plateColor))
+        : false;
+
       const built = await buildVectorInkLogoPng({
         svgText: args.logoSvgText ?? null,
         bytes: args.logoBytes ?? null,
-        inkHex,
+        inkHex: keepColour ? null : inkHex,
         targetWidthPx: chosen.box.boxW,
       });
+
       const href = built?.dataUrl ?? args.logoDataUrl ?? null;
       if (href) {
         // Re-derive the box from the trimmed mark so the inset stays optical.
