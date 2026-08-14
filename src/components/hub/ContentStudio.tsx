@@ -864,17 +864,22 @@ function Step4BuildAds({
               <> · <span className="text-status-info">{pendingWeeks.length} more week{pendingWeeks.length === 1 ? "" : "s"} available below</span></>
             )}
           </p>
-
+          {run && (
+            <p className="mt-1 flex items-center gap-1.5 text-[11px] text-status-info">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              {run.scope === "week" ? `Generating week ${run.week}` : "Generating all ads"} — ad {Math.min(run.done + 1, run.total)} of {run.total}
+            </p>
+          )}
         </div>
         {tasks.length > 0 && (
           tasks.some((t) => !t.ad) ? (
             <Button size="sm" onClick={() => runAll()} disabled={running}>
-              {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               Generate all ({tasks.filter((t) => !t.ad).length})
             </Button>
           ) : (
             <Button size="sm" variant="outline" onClick={() => runAll({ force: true })} disabled={running}>
-              {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+              {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
               Regenerate all ({tasks.length})
             </Button>
           )
