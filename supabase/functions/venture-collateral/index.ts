@@ -19,6 +19,11 @@ import {
   slotFor,
 } from "../_shared/logo-form.ts";
 
+import {
+  isMultiSlot,
+  recommendMark,
+  slotsForKind,
+} from "../_shared/collateral-marks.ts";
 import { traceLogo } from "../_shared/logo-trace.ts";
 
 
@@ -31,6 +36,7 @@ import {
   type CollateralCopy,
   type CollateralCtx,
   type CollateralKind,
+  type MarkPickEntry,
 } from "../_shared/collateral-svg.ts";
 import {
   auditDetails,
@@ -248,7 +254,15 @@ function markPickOrder(form: LogoForm, tone: LogoTone): LogoVariant[] {
 async function buildCtx(
   admin: any,
   snapshotId: string,
-  opts: { redirect?: boolean; needsCopy?: boolean; needsImagery?: boolean; markPick?: { form: LogoForm; tone: LogoTone } | null } = {},
+  opts: {
+    redirect?: boolean;
+    needsCopy?: boolean;
+    needsImagery?: boolean;
+    /** The piece being built — decides which mark slots exist. */
+    kind?: string;
+    /** Explicit founder choices, keyed by slot id. */
+    markPicks?: Record<string, { form: LogoForm; tone: LogoTone }> | null;
+  } = {},
 ): Promise<{ ctx: CollateralCtx; details: ContactDetails; extras: StyleSystemExtras }> {
 
   const kit = await loadKit(admin, snapshotId);
@@ -496,7 +510,7 @@ async function buildCtx(
     ad,
     copy,
     imagery,
-    markPick,
+    markPicks,
   };
 
 
