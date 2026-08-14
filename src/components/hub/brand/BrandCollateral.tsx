@@ -19,6 +19,7 @@ import { CollateralPreviewDialog } from "@/components/hub/brand/CollateralPrevie
 import { CollateralDetailsDialog } from "@/components/hub/brand/CollateralDetailsDialog";
 import { CollateralPieceCard } from "@/components/hub/brand/CollateralPieceCard";
 import { slotsForKind } from "@/lib/brand/collateral-marks";
+import { LogoPlacementMenu } from "@/components/hub/brand/LogoPlacementMenu";
 import { logoSetFrom } from "@/components/hub/brand/LogoSetPanel";
 
 
@@ -97,6 +98,22 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
     setMarksUsed((prev) => ({ ...used, ...prev }));
   }, [storedChoice]);
 
+
+  /** One mark applied to every piece and every slot in the next run. */
+  const [batchMark, setBatchMark] = useState<{ form: string; tone: string } | null>(null);
+  const applyBatchMark = (cell: { form: string; tone: string } | null) => {
+    setBatchMark(cell);
+    const kinds = COLLATERAL_TIERS.flatMap((t: any) => t.kinds.map((k: any) => k.kind));
+    setMarkChoice((prev) => {
+      const next: Record<string, any> = { ...prev };
+      for (const kind of kinds) {
+        if (!cell) { delete next[kind]; continue; }
+        next[kind] = slotsForKind(kind).reduce((acc: any, slot: any) => ({ ...acc, [slot.id]: cell }), {});
+      }
+      return next;
+    });
+    toast.success(cell ? "Every piece will use that logo" : "Every piece is back to AI selection");
+  };
 
   /** Slots the venture has actually uploaded, so absent cells read as absent. */
   const availableSlots = useMemo(() => {
@@ -333,6 +350,16 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
               {gen.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
               {items.length > 0 ? "Regenerate all" : "Generate all"}
             </Button>
+            <LogoPlacementMenu
+              assetKind="collateral"
+              logos={kit?.logos}
+              value={batchMark}
+              disabled={!locked || gen.isPending}
+              triggerClassName="h-8 rounded-md"
+              title="Logo for every piece in this run"
+              label="all collateral pieces"
+              onChange={applyBatchMark}
+            />
 
           </div>
         </div>
