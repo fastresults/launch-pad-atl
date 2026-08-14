@@ -965,7 +965,7 @@ function Step4BuildAds({
                         tabIndex={0}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (isLoading) return;
+                          if (running) return;
                           if (isPending) onAddWeek?.(w);
                           else if (wPending > 0) runWeek(w);
                           else if (wTotal > 0) runWeek(w, { force: true });
@@ -974,7 +974,7 @@ function Step4BuildAds({
                           if (e.key === "Enter" || e.key === " ") {
                             e.stopPropagation();
                             e.preventDefault();
-                            if (isLoading) return;
+                            if (running) return;
                             if (isPending) onAddWeek?.(w);
                             else if (wPending > 0) runWeek(w);
                             else if (wTotal > 0) runWeek(w, { force: true });
@@ -982,14 +982,14 @@ function Step4BuildAds({
                         }}
                         className={
                           isPending || wTotal > 0
-                            ? "inline-flex h-7 items-center gap-1 rounded-md border border-input bg-background px-2 text-[11px] hover:bg-accent hover:text-accent-foreground"
+                            ? `inline-flex h-7 items-center gap-1 rounded-md border border-input bg-background px-2 text-[11px] ${isBlocked ? "pointer-events-none opacity-40" : "hover:bg-accent hover:text-accent-foreground"}`
                             : "text-[10px] text-muted-foreground"
                         }
-                        aria-disabled={isLoading}
+                        aria-disabled={running}
                       >
                         {isPending ? (
                           <>
-                            {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                            <Sparkles className="h-3 w-3" />
                             Add &amp; generate
                           </>
                         ) : wPending > 0 ? (
