@@ -135,6 +135,29 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
                 {lockKit.isPending ? "Locking…" : "Lock brand kit"}
               </Button>
             )}
+            {isAdmin && kit && locked && (
+              <Button
+                size="sm"
+                onClick={onUnlock}
+                disabled={setLock.isPending}
+                title="Admin: unlock the brand kit so palette, type and marks can be edited again"
+              >
+                {setLock.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <LockOpen className="mr-1 h-3 w-3" />}
+                {setLock.isPending ? "Unlocking…" : "Unlock brand"}
+              </Button>
+            )}
+            {isAdmin && kit && !locked && !lockBlockedReason && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setLock.mutate(true)}
+                disabled={setLock.isPending || lockKit.isPending}
+                title="Admin: lock the kit without regenerating the style guide"
+              >
+                <Lock className="mr-1 h-3 w-3" />Lock (no rebuild)
+              </Button>
+            )}
+
           </>
         }
 
