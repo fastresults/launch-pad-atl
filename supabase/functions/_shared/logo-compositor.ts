@@ -9,7 +9,7 @@
 // Pure JS via imagescript — runs on the Supabase Edge runtime, no native deps.
 
 import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
-import { rasterizeSvgMono } from "./logo-raster.ts";
+import { rasterizeSvgMono, rasterizeSvgToBytes, stripSvgBackground } from "./logo-raster.ts";
 
 export type LogoPlacement =
   | "avatar-center"
@@ -315,14 +315,15 @@ function cheapHash(s: string): string {
 export async function buildVectorInkLogoPng(opts: {
   svgText?: string | null;
   bytes?: Uint8Array | null;
-  inkHex: string;
+  /** Null keeps the artwork's own colours — used on a clean brand plate. */
+  inkHex: string | null;
   targetWidthPx?: number;
 }): Promise<{ dataUrl: string; aspect: number } | null> {
   // A mark never renders wider than a few hundred px on the poster; 768 is
   // plenty of resolution and keeps the per-pixel passes cheap.
   const width = Math.min(768, Math.max(384, Math.round(opts.targetWidthPx || 384) * 2));
   const cacheKey = [
-    opts.inkHex,
+    opts.inkHex ?? "artwork",
     width,
     opts.svgText ? `s${cheapHash(opts.svgText)}` : "",
     opts.bytes?.byteLength ? `b${opts.bytes.byteLength}` : "",
@@ -334,7 +335,9 @@ export async function buildVectorInkLogoPng(opts: {
   try {
     let built: { dataUrl: string; aspect: number } | null = null;
     if (opts.svgText) {
-      const mono = await rasterizeSvgMono(opts.svgText, opts.inkHex, width);
+      const mono = opts.inkHex
+        ? await rasterizeSvgMono(opts.svgText, opts.inkHex, width)
+        : await rasterizeSvgToBytes(stripSvgBackground(opts.svgText), width);
       if (mono) {
         const img = knockoutAndTrim(await Image.decode(mono));
         const out = await img.encode(1);
@@ -342,7 +345,8 @@ export async function buildVectorInkLogoPng(opts: {
       }
     }
     if (!built && opts.bytes && opts.bytes.byteLength) {
-      const img = tintMark(knockoutAndTrim(await Image.decode(opts.bytes)), opts.inkHex);
+      const decoded = knockoutAndTrim(await Image.decode(opts.bytes));
+      const img = opts.inkHex ? tintMark(decoded, opts.inkHex) : decoded;
       const out = await img.encode(1);
       built = { dataUrl: `data:image/png;base64,${b64FromBytes(out)}`, aspect: img.width / Math.max(1, img.height) };
     }

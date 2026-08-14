@@ -33,7 +33,7 @@ function svgReadsOn(svg: string, groundLum: number): boolean {
   const fills = [...svg.matchAll(/fill\s*[:=]\s*["']?(#[0-9a-fA-F]{3,8})/g)].map((m) => m[1].toLowerCase());
   const distinct = new Set(fills);
   if (distinct.size < 2) return false;
-  return [...distinct].some((f) => contrastOf(relLuminance(f), groundLum) >= 3);
+  return [...distinct].some((f) => contrastOf(lum(f), groundLum) >= 3);
 }
 
 
