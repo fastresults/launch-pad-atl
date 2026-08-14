@@ -1,7 +1,21 @@
 // @ts-nocheck
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Eye, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CheckCircle2, ChevronDown, Eye, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
+import { LOGO_SLOTS } from "@/components/hub/brand/LogoSetPanel";
+
+const AUTO = "auto";
+const toKey = (c: { form: string; tone: string } | null | undefined) =>
+  c ? `${c.form}|${c.tone}` : AUTO;
 
 /**
  * One deliverable in the collateral library. Uniform height, artwork-first —
@@ -17,6 +31,10 @@ export function CollateralPieceCard({
   busy,
   canGenerate,
   disabled,
+  markChoice,
+  markUsed,
+  availableSlots,
+  onMarkChoice,
   onPreview,
   onGenerate,
   onDelete,
@@ -30,12 +48,23 @@ export function CollateralPieceCard({
   busy: boolean;
   canGenerate: boolean;
   disabled: boolean;
+  /** The founder's chosen form × tone for this piece, or null for automatic. */
+  markChoice?: { form: string; tone: string } | null;
+  /** What the last run actually drew, so the card can say which mark it carries. */
+  markUsed?: { form: string; tone: string; fallback?: boolean } | null;
+  /** Slot keys the venture has actually supplied — everything else reads as absent. */
+  availableSlots?: Record<string, boolean>;
+  onMarkChoice?: (choice: { form: string; tone: string } | null) => void;
   onPreview: () => void;
   onGenerate: () => void;
   /** Remove every file for this piece. Only offered once something exists. */
   onDelete: () => void;
 }) {
   const generated = fileCount > 0;
+  const supplied = availableSlots ?? {};
+  const slotLabel = (c?: { form: string; tone: string } | null) =>
+    LOGO_SLOTS.find((s) => s.form === c?.form && s.tone === c?.tone)?.label ?? null;
+
 
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-background/40 transition hover:border-border">
