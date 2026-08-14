@@ -59,25 +59,29 @@ fallback it took.
 ## Technical notes
 
 - `src/lib/collateral.functions.ts`: `generateCollateral(snapshotId, kinds,
-  markForms?)` passes a `markForms: Record<kind, LogoForm>` map through every
-  paginated slice so multi-page pieces stay consistent.
-- `supabase/functions/venture-collateral/index.ts`: read `body.markForms`,
-  validate against the four forms, and put the requested form for the current
-  kind on the context as `ctx.markForm`. Persist the map on
-  `venture_brand_kits.collateral_mark_forms` (new jsonb column, default `{}`)
-  so the choice survives reloads; return the effective form per piece in the
-  generate response.
+  markChoice?)` passes a `Record<kind, { form: LogoForm; tone: LogoTone }>` map
+  through every paginated slice so multi-page pieces stay consistent.
+- `supabase/functions/venture-collateral/index.ts`: read `body.markChoice`,
+  validate form and tone against `LOGO_VARIANTS` in `_shared/logo-form.ts`, and
+  put the requested pair for the current kind on the context as `ctx.markPick`.
+  Persist the map on `venture_brand_kits.collateral_mark_choice` (new jsonb
+  column, default `{}`) so the choice survives reloads; return the effective
+  form, tone and any fallback per piece in the generate response.
 - `supabase/functions/_shared/collateral-svg.ts`: `markSvgFor()` takes
-  `ctx.markForm` as the first preference and orders candidates
-  `requested form → current aspect-based default → remaining forms`, keeping the
-  existing dark/light split intact. `logoAspect()` and `isLockup()` already call
-  `markSvgFor`, so sizing follows the chosen artwork with no further change.
-  `markAt` records `data-mark-form` alongside the existing `data-mark-art`.
+  `ctx.markPick` as the first preference, ordering candidates
+  `exact cell → same tone, other forms → same form, other tone → today's default`.
+  Existing contrast repair (`resolveInk` / knockout / plate) runs unchanged on
+  whatever artwork is picked. `logoAspect()` and `isLockup()` already call
+  `markSvgFor`, so sizing follows the chosen artwork. `markAt` records
+  `data-mark-form` and `data-mark-tone` alongside `data-mark-art`.
 - `src/components/hub/brand/CollateralPieceCard.tsx`: add the split generate
-  button and the "mark used" caption; the available-forms list comes from the
-  brand kit `logos` array already loaded by the Brand Studio.
+  button with the eight-cell menu and the "mark used" caption; availability comes
+  from the brand kit `logos` array already loaded by the Brand Studio, reusing
+  `formToneOf`/`slotFor` so the menu matches the logo set grid exactly.
 - `src/components/hub/brand/BrandCollateral.tsx`: hold the per-kind selection,
   pass it into the mutation, and show the section-level control.
-- Tests: extend `logo-form.test.ts` with cases proving an explicit form wins over
-  the aspect default, and that a missing form falls back within the correct tone.
+- Tests: extend `logo-form.test.ts` with cases proving an explicit form+tone wins
+  over the aspect/ground default, that a missing cell falls back within the same
+  tone first, and that an illegible tone still ends up as a legible mark.
+
 - Redeploy `venture-collateral`.
