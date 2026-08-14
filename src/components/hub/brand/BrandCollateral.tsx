@@ -57,6 +57,26 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
     return m;
   }, [items]);
 
+  /** Founder's chosen mark per piece; absent means the layout decides. */
+  const [markChoice, setMarkChoice] = useState<Record<string, { form: string; tone: string }>>(
+    () => {
+      const stored = snapshot?.brand_kit?.collateral_mark_choice ?? snapshot?.collateral_mark_choice ?? {};
+      const out: Record<string, any> = {};
+      for (const [kind, v] of Object.entries(stored as Record<string, any>)) {
+        if (v?.requested?.form && v?.requested?.tone) out[kind] = v.requested;
+      }
+      return out;
+    },
+  );
+  /** What the last run actually drew, per piece. */
+  const [marksUsed, setMarksUsed] = useState<Record<string, any>>({});
+
+  /** Slots the venture has actually uploaded, so absent cells read as absent. */
+  const availableSlots = useMemo(() => {
+    const set = logoSetFrom(snapshot?.brand_logos ?? snapshot?.logos ?? snapshot?.brand_kit?.logos);
+    return Object.fromEntries(Object.keys(set).map((k) => [k, true]));
+  }, [snapshot]);
+
   const gen = useMutation({
     // Rasterising several pieces in one call blows the edge worker's CPU and
     // memory budget, so we walk through them one at a time.
@@ -66,18 +86,22 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
       const failed: any[] = [];
       const qcIssues: any[] = [];
       let artDirection: any = null;
+      const marks: Record<string, any> = {};
       // One piece per call. Multi-page pieces (deck, guidelines) rasterise five
       // pages, and pairing them exhausts the edge worker's CPU budget.
       for (let i = 0; i < all.length; i += 1) {
-        const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 1));
+        const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 1), markChoice);
         generated.push(...(res?.generated ?? []));
         failed.push(...(res?.failed ?? []));
         qcIssues.push(...(res?.qcIssues ?? []));
         artDirection ??= res?.artDirection ?? null;
+        Object.assign(marks, res?.marks ?? {});
         qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       }
-      return { ok: true, generated, failed, qcIssues, artDirection };
+      setMarksUsed((prev) => ({ ...prev, ...marks }));
+      return { ok: true, generated, failed, qcIssues, artDirection, marks };
     },
+
     onMutate: (kinds) => { setRunReport(null); setBusyKind(kinds?.length === 1 ? kinds[0] : "all"); },
     onSettled: () => setBusyKind(null),
 
