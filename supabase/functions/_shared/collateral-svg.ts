@@ -657,10 +657,13 @@ function logoAspect(ctx: CollateralCtx, bg?: string | null, boxAspect?: number):
 
 /** True when the artwork being drawn already contains the company name. */
 function isLockup(ctx: CollateralCtx): boolean {
+  // A chosen cell says what it is: only the symbol is wordmark-less.
+  if (ctx.markPick?.svg) return ctx.markPick.form !== "symbol";
   if (ctx.symbolSvg) return false; // the wordmark is set in real type instead
   return logoAspect(ctx) >= 1.6;
 
 }
+
 
 /** Clear space the mark demands on every side, from its own height. */
 function clearSpace(height: number): number {
