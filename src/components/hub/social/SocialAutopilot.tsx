@@ -28,14 +28,14 @@ import { edgeStatus, edgeErrorMessage } from "@/lib/edge-errors";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { LogoPlacementMenu } from "@/components/hub/brand/LogoPlacementMenu";
 import { getBrandKit, setStudioMarkChoice } from "@/lib/brandKit.functions";
-import { socialGraphicKey, studioChoiceFor, stylePreviewGraphicKey } from "@/lib/brand/collateral-marks";
+import { socialAllKey, socialGraphicKey, studioChoiceFor, stylePreviewGraphicKey } from "@/lib/brand/collateral-marks";
 
 /**
  * Every logo placement in the studio gets the same chevron picker as Branded
  * Collateral. It reads and writes `studio_mark_choice` on the brand kit, so the
  * pick survives regeneration and the worker places that exact artwork.
  */
-function MarkPickerFor({ snapshotId, assetKind, placementKey, used, disabled, label }: { snapshotId: string; assetKind: string; placementKey?: string; used?: any; disabled?: boolean; label?: string }) {
+function MarkPickerFor({ snapshotId, assetKind, placementKey, used, disabled, label, batch, title, triggerClassName }: { snapshotId: string; assetKind: string; placementKey?: string; used?: any; disabled?: boolean; label?: string; batch?: boolean; title?: string; triggerClassName?: string }) {
   const qc = useQueryClient();
   const kitQ = useQuery({ queryKey: ["brandKit", snapshotId], queryFn: () => getBrandKit(snapshotId) });
   const kit: any = kitQ.data;
@@ -48,15 +48,19 @@ function MarkPickerFor({ snapshotId, assetKind, placementKey, used, disabled, la
       toast.error(e?.message || "Could not save the logo choice");
     }
   };
+  const allKey = socialAllKey(assetKind);
   return (
     <LogoPlacementMenu
       assetKind={assetKind}
       logos={kit?.logos ?? null}
-      value={studioChoiceFor(kit?.studio_mark_choice, markKind, assetKind)}
+      value={kit?.studio_mark_choice?.[markKind] ?? null}
+      inherited={batch ? null : (kit?.studio_mark_choice?.[allKey] ?? null)}
       onChange={save}
       used={used ?? null}
       disabled={disabled}
       label={label}
+      title={title}
+      triggerClassName={triggerClassName}
     />
   );
 }
@@ -874,7 +878,7 @@ function Step5BuildKit({
   const allDone = tasks.every((t) => t.status === "done");
   const taskKey = (t: Pick<KitTask, "platform" | "asset">) => `${t.platform}:${t.asset}`;
   const placementKey = (t: Pick<KitTask, "platform" | "asset" | "direction">) => socialGraphicKey(t.platform, t.asset, t.direction);
-  const generationMarkOpts = (t: any) => ({ placementKey: placementKey(t), markPick: studioChoiceFor(kit?.studio_mark_choice, placementKey(t), t.asset) });
+  const generationMarkOpts = (t: any) => ({ placementKey: placementKey(t), markPick: studioChoiceFor(kit?.studio_mark_choice, placementKey(t), t.asset, [socialAllKey(t.asset)]) });
   const signatureFailed = (t?: any) =>
     t?.qa_notes?.observed?.signatureVisible === false ||
     (typeof t?.qa_notes?.observed?.signatureCoveragePct === "number" &&
@@ -1045,6 +1049,19 @@ function Step5BuildKit({
             {running ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
             Generate all
           </Button>
+          {Array.from(new Set(tasks.map((t: any) => t.asset))).map((kind: any) => (
+            <MarkPickerFor
+              key={`batch-${kind}`}
+              snapshotId={snapshotId}
+              assetKind={kind}
+              placementKey={socialAllKey(kind)}
+              batch
+              disabled={running}
+              triggerClassName="h-7 rounded-md"
+              title={`Logo for every ${kind} in this run`}
+              label={`all ${kind} graphics`}
+            />
+          ))}
 
           {anyDone && (
             <Button
@@ -1489,7 +1506,7 @@ function Step6Launch({
       for (const task of targets) {
         try {
           const key = socialGraphicKey(task.platform, task.asset, task.direction);
-          await generateOneKitTask(snapshotId, task, { placementKey: key, markPick: studioChoiceFor(kit?.studio_mark_choice, key, task.asset) });
+          await generateOneKitTask(snapshotId, task, { placementKey: key, markPick: studioChoiceFor(kit?.studio_mark_choice, key, task.asset, [socialAllKey(task.asset)]) });
           await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
         } catch (error) {
           failed += 1;
