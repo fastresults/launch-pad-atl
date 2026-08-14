@@ -1671,7 +1671,9 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
       hMis.svg,
       ...misuse.map((m, i) => {
         const x = g.M + i * (mW + mGap);
-        const art = markAt(ctx, x + mW * 0.16, mTop + mArt * 0.2, mW * 0.68, mArt * 0.6, m.ink ?? null, paper);
+        // "Do not recolour off-palette" has to actually recolour the mark.
+        const art = markAt(ctx, x + mW * 0.16, mTop + mArt * 0.2, mW * 0.68, mArt * 0.6, m.ink ?? null, paper, { mono: !!m.ink });
+
         const f = T.flow(x, mTop + mArt + step(ad, 0.4), mW);
         f.line(m.cap, step(ad, -1.2), fg, { family: "head", weight: 700 });
         return [
