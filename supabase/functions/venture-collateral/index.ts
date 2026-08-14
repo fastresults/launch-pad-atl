@@ -337,6 +337,30 @@ async function buildCtx(
     ? await loadMarkArtwork(admin, String(stackedDarkPath))
     : null;
 
+  // The founder's explicit cell for this piece, when they picked one.
+  let markPick: CollateralCtx["markPick"] = null;
+  if (opts.markPick) {
+    const wanted = slotFor(opts.markPick.form, opts.markPick.tone);
+    for (const slot of markPickOrder(opts.markPick.form, opts.markPick.tone)) {
+      const entry = logos.find((l: any) => l?.variant === slot && (l?.svg_path ?? l?.path));
+      const p = entry?.svg_path ?? entry?.path;
+      if (!p) continue;
+      const svg = await loadMarkArtwork(admin, String(p));
+      if (!svg) continue;
+      const ft = formToneOf(slot);
+      markPick = {
+        form: ft.form,
+        tone: ft.tone,
+        svg,
+        requested: { form: opts.markPick.form, tone: opts.markPick.tone },
+        fallback: slot !== wanted,
+      };
+      break;
+    }
+    console.log(
+      `[collateral mark] asked ${wanted} → ${markPick ? `${markPick.form}/${markPick.tone}${markPick.fallback ? " (fallback)" : ""}` : "nothing supplied, using the layout's own pick"}`,
+    );
+  }
 
 
   const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
