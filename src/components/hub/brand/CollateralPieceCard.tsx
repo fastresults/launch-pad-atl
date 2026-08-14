@@ -177,37 +177,60 @@ export function CollateralPieceCard({
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel className="text-[11px]">Mark for this piece</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={toKey(markChoice)}
-                  onValueChange={(v) => {
-                    if (v === AUTO) return onMarkChoice?.(null);
-                    const [form, tone] = v.split("|");
-                    onMarkChoice?.({ form, tone });
-                  }}
-                >
-                  <DropdownMenuRadioItem value={AUTO} className="text-[11px]">
-                    Recommended — chosen from the layout
-                  </DropdownMenuRadioItem>
-                  {["colour", "inverse"].map((tone) => (
-                    <div key={tone}>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] font-normal uppercase tracking-[0.12em] text-muted-foreground">
-                        {tone === "colour" ? "Colour — for light grounds" : "Inverse — for dark grounds"}
-                      </DropdownMenuLabel>
-                      {LOGO_SLOTS.filter((s) => s.tone === tone).map((s) => (
-                        <DropdownMenuRadioItem key={s.key} value={`${s.form}|${s.tone}`} className="text-[11px]">
-                          <span className="flex w-full items-center justify-between gap-2">
-                            <span>{s.label}</span>
-                            {!supplied[s.key] && <span className="text-[10px] text-muted-foreground">Not supplied</span>}
+              <DropdownMenuContent align="end" className="max-h-[70vh] w-72 overflow-y-auto">
+                <DropdownMenuLabel className="text-[11px]">
+                  {slots.length > 1 ? "Marks on this piece" : "Mark for this piece"}
+                </DropdownMenuLabel>
+                {slots.map((slot, i) => {
+                  const rec = recommendMark(slot, inventory);
+                  return (
+                    <div key={slot.id}>
+                      {i > 0 && <DropdownMenuSeparator />}
+                      {slots.length > 1 && (
+                        <DropdownMenuLabel className="pb-0 text-[11px] font-medium">
+                          {slot.label}
+                          <span className="block text-[10px] font-normal text-muted-foreground">{slot.hint}</span>
+                        </DropdownMenuLabel>
+                      )}
+                      <DropdownMenuRadioGroup
+                        value={toKey(markChoice?.[slot.id])}
+                        onValueChange={(v) => {
+                          if (v === AUTO) return onMarkChoice?.(slot.id, null);
+                          const [form, tone] = v.split("|");
+                          onMarkChoice?.(slot.id, { form, tone });
+                        }}
+                      >
+                        <DropdownMenuRadioItem value={AUTO} className="text-[11px]">
+                          <span className="flex flex-col">
+                            <span>Auto — recommended</span>
+                            {rec && (
+                              <span className="text-[10px] text-muted-foreground">
+                                {cellLabel(rec) ?? `${rec.form} · ${rec.tone}`} — {rec.reason}
+                              </span>
+                            )}
                           </span>
                         </DropdownMenuRadioItem>
-                      ))}
+                        {["colour", "inverse"].map((tone) => (
+                          <div key={tone}>
+                            <DropdownMenuLabel className="text-[10px] font-normal uppercase tracking-[0.12em] text-muted-foreground">
+                              {tone === "colour" ? "Colour — for light grounds" : "Inverse — for dark grounds"}
+                            </DropdownMenuLabel>
+                            {LOGO_SLOTS.filter((s) => s.tone === tone).map((s) => (
+                              <DropdownMenuRadioItem key={s.key} value={`${s.form}|${s.tone}`} className="text-[11px]">
+                                <span className="flex w-full items-center justify-between gap-2">
+                                  <span>{s.label}</span>
+                                  {!supplied[s.key] && <span className="text-[10px] text-muted-foreground">Not supplied</span>}
+                                </span>
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </div>
+                        ))}
+                      </DropdownMenuRadioGroup>
                     </div>
-                  ))}
-                </DropdownMenuRadioGroup>
+                  );
+                })}
               </DropdownMenuContent>
+
             </DropdownMenu>
           </div>
           {generated && (
