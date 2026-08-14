@@ -1977,8 +1977,9 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
     // stacked lockup sized for equal optical area is not failed as "oversized".
     markBand: markBand(
       rs,
-      primaryMark && idx >= 0 && markWs[idx] ? markWs[idx] / primaryMark : 3.2,
-      isLockup(ctx, idx >= 0 ? markSlots[idx] : undefined),
+      primaryMark && idx >= 0 && marks[idx].w ? marks[idx].w / primaryMark : 3.2,
+      isLockup(ctx, idx >= 0 ? marks[idx].slot : undefined),
+
     ),
 
 
