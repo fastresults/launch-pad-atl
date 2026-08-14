@@ -1200,7 +1200,15 @@ function Step5BuildKit({
                                     <span className="h-2.5 w-2.5 rounded-sm border border-border" style={{ background: t.canvas_plan.accent }} />
                                   </div>
                                 )}
+                                <div className="mt-2 max-w-[15rem]">
+                                  <MarkPickerFor
+                                    snapshotId={snapshotId}
+                                    assetKind={t.asset}
+                                    used={t.qa_notes?.logo_mark ?? null}
+                                  />
+                                </div>
                               </div>
+
                             </div>
                             <div className="flex flex-wrap items-center gap-1 sm:ml-auto sm:justify-end">
                               {t.signed_url && (
