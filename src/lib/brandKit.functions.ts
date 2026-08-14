@@ -56,11 +56,15 @@ export async function setStudioMarkChoice(
   markKind: string,
   cell: { form: string; tone: string } | null,
 ): Promise<BrandKit> {
+  const { error } = await supabase.rpc("mutate_studio_mark_choice", {
+    p_snapshot_id: snapshotId,
+    p_placement_key: markKind,
+    p_choice: cell,
+  } as any);
+  if (error) throw error;
   const kit = await getBrandKit(snapshotId);
-  const current = { ...(((kit as any)?.studio_mark_choice as Record<string, any>) ?? {}) };
-  if (cell) current[markKind] = cell;
-  else delete current[markKind];
-  return await upsertBrandKit(snapshotId, { studio_mark_choice: current } as any);
+  if (!kit) throw new Error("Brand kit not found after saving logo choice");
+  return kit;
 }
 
 

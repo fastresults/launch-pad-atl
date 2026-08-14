@@ -94,6 +94,24 @@ export function studioMarkKind(assetKind: string): string {
   return "studio_post";
 }
 
+/** Stable keys for one actual generated graphic, not a broad surface class. */
+export function socialGraphicKey(platform: string, assetKind: string, direction?: string | null): string {
+  return ["social", platform, assetKind, direction].filter(Boolean).map((v) => encodeURIComponent(String(v))).join(":");
+}
+
+export function contentGraphicKey(postId: string, aspect: string): string {
+  return ["content", postId, aspect].map((v) => encodeURIComponent(String(v))).join(":");
+}
+
+export function stylePreviewGraphicKey(direction: string): string {
+  return `style:${encodeURIComponent(String(direction))}`;
+}
+
+/** Exact graphic choice, with the old broad surface value as migration fallback. */
+export function studioChoiceFor(choices: Record<string, any> | null | undefined, placementKey: string, assetKind: string) {
+  return choices?.[placementKey] ?? choices?.[studioMarkKind(assetKind)] ?? null;
+}
+
 /** Every slot this kind renders. Unknown kinds get one generic slot. */
 export function slotsForKind(kind: string): MarkSlot[] {
   return SLOTS[kind] ?? [{

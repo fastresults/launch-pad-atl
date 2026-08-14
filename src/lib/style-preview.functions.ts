@@ -47,6 +47,8 @@ export async function generateStylePreview(input: {
   paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
   headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
   logoSize?: "sm" | "md" | "lg";
+  markPick?: { form: string; tone: string } | null;
+  placementKey?: string;
   sceneOverride?: string;
   refreshScenes?: boolean;
 }): Promise<StylePreview> {
