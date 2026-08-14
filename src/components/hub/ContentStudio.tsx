@@ -1442,6 +1442,7 @@ function Step5Launch({
                       {wPosts.length} planned post{wPosts.length === 1 ? "" : "s"} · not started
                     </span>
                   </div>
+                  <div className="flex items-center">
                   <Button
                     size="sm"
                     variant="outline"
@@ -1465,6 +1466,7 @@ function Step5Launch({
                       onChange={(cell) => saveKeyMark(contentWeekKey(w, asp), cell)}
                     />
                   ))}
+                  </div>
                 </div>
                 <ul className="grid gap-1 sm:grid-cols-2">
                   {wPosts.slice(0, 4).map((p) => (
