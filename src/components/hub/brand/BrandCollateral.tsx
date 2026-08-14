@@ -17,6 +17,8 @@ import { useConfirm } from "@/components/ui/confirm-dialog";
 import { CollateralPreviewDialog } from "@/components/hub/brand/CollateralPreviewDialog";
 import { CollateralDetailsDialog } from "@/components/hub/brand/CollateralDetailsDialog";
 import { CollateralPieceCard } from "@/components/hub/brand/CollateralPieceCard";
+import { logoSetFrom } from "@/components/hub/brand/LogoSetPanel";
+
 
 
 const KIND_LABELS: Record<string, string> = Object.fromEntries(
