@@ -17,6 +17,9 @@ import {
   ART_DIRECTIONS,
   type ArtDirectionId,
 } from "@/lib/social-platform-specs";
+import { StudioMarkPicker } from "@/components/hub/brand/StudioMarkPicker";
+import { setStudioMarkChoice } from "@/lib/brandKit.functions";
+import { studioMarkKind } from "@/lib/brand/collateral-marks";
 
 type BusyKey = string; // platform:asset:direction
 
@@ -66,6 +69,15 @@ export function CoverArtTab({
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] }),
     onError: (e: any) => toast.error(e.message || "Generation failed"),
+  });
+
+  // Remembering the pick is what makes it stick: every later run of this
+  // surface reads it from the kit and places that exact artwork.
+  const markChoice = useMutation({
+    mutationFn: ({ assetKind, cell }: { assetKind: string; cell: any }) =>
+      setStudioMarkChoice(snapshotId, studioMarkKind(assetKind), cell),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] }),
+    onError: (e: any) => toast.error(e.message || "Could not save the logo choice"),
   });
 
   const select = useMutation({
@@ -130,6 +142,15 @@ export function CoverArtTab({
                             {a.width}×{a.height}
                           </span>
                         </div>
+                      </div>
+                      <div className="mb-2 max-w-xs">
+                        <StudioMarkPicker
+                          assetKind={a.kind}
+                          logos={kit?.logos ?? null}
+                          value={kit?.studio_mark_choice?.[studioMarkKind(a.kind)] ?? null}
+                          onChange={(cell) => markChoice.mutate({ assetKind: a.kind, cell })}
+                          used={existing[0]?.qa_notes?.logo_mark ?? null}
+                        />
                       </div>
                       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                         {ART_DIRECTIONS.map((d) => {

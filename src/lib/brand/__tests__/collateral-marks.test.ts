@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recommendMark, slotChoices, slotsForKind } from "../collateral-marks";
+import { recommendMark, slotChoices, slotsForKind, studioMarkKind } from "../collateral-marks";
 
 const full = [
   { form: "symbol", tone: "colour" },
@@ -76,5 +76,39 @@ describe("slotChoices", () => {
       slots: { running: { form: "symbol", tone: "colour" } },
     });
     expect(out).toEqual({ running: { form: "symbol", tone: "colour" } });
+  });
+});
+
+describe("studio surfaces", () => {
+  it("maps studio asset kinds onto slot sets", () => {
+    expect(studioMarkKind("avatar")).toBe("studio_avatar");
+    expect(studioMarkKind("profile_photo")).toBe("studio_avatar");
+    expect(studioMarkKind("cover")).toBe("studio_cover");
+    expect(studioMarkKind("linkedin_banner")).toBe("studio_cover");
+    expect(studioMarkKind("9:16")).toBe("studio_story");
+    expect(studioMarkKind("1:1")).toBe("studio_post");
+  });
+
+  it("gives every studio surface exactly one mark slot", () => {
+    for (const kind of ["studio_avatar", "studio_cover", "studio_post", "studio_story"]) {
+      expect(slotsForKind(kind)).toHaveLength(1);
+      expect(slotsForKind(kind)[0].id).toBe("primary");
+    }
+  });
+
+  it("recommends a full lockup for the avatar and a compact mark for a post corner", () => {
+    const inventory = [
+      { form: "symbol", tone: "colour" },
+      { form: "stacked", tone: "colour" },
+      { form: "stacked", tone: "inverse" },
+      { form: "horizontal", tone: "inverse" },
+    ] as any;
+    const avatar = recommendMark(slotsForKind("studio_avatar")[0], inventory);
+    // Square field on the brand colour: reversed lockup, never the bare symbol.
+    expect(avatar?.tone).toBe("inverse");
+    expect(avatar?.form).not.toBe("symbol");
+    const post = recommendMark(slotsForKind("studio_post")[0], inventory);
+    // Corner chrome on photography: the compact reversed mark.
+    expect(post?.tone).toBe("inverse");
   });
 });

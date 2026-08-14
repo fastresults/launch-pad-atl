@@ -47,6 +47,24 @@ export async function upsertBrandKit(snapshotId: string, patch: Partial<BrandKit
   return data as BrandKit;
 }
 
+/**
+ * Remember which logo version a studio surface (avatar / cover / post / story)
+ * should carry. `null` hands the slot back to AI selection.
+ */
+export async function setStudioMarkChoice(
+  snapshotId: string,
+  markKind: string,
+  cell: { form: string; tone: string } | null,
+): Promise<BrandKit> {
+  const kit = await getBrandKit(snapshotId);
+  const current = { ...(((kit as any)?.studio_mark_choice as Record<string, any>) ?? {}) };
+  if (cell) current[markKind] = cell;
+  else delete current[markKind];
+  return await upsertBrandKit(snapshotId, { studio_mark_choice: current } as any);
+}
+
+
+
 async function callWizard(body: any) {
   const { data, error } = await invokeEdge("venture-brand-wizard", { body });
   if (error) throw new Error(error.message || "Brand wizard request failed");

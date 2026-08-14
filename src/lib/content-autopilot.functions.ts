@@ -106,6 +106,8 @@ export async function generateContentAd(
     paletteOverride?: { surface?: string; ink?: string; accent?: string; signature?: string };
     headlineOverride?: { mode: "auto" | "custom" | "none"; text?: string };
     logoSize?: "sm" | "md" | "lg";
+    /** Exact Form × Tone logo pick; null = let the AI select. */
+    markPick?: { form: string; tone: string } | null;
     posterLayout?: string;
     /** Founder-authored scene description — wins over the derived scene brief. */
     sceneOverride?: string;

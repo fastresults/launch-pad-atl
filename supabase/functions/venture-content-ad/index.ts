@@ -16,7 +16,8 @@ import { buildContentAdPrompt, specForAspect, resolveAdHeadline, HEADLINE_CAP, t
 import { buildContentAdSvgBytes, type PosterLayout } from "../_shared/content-ad-svg.ts";
 import { buildPosterCopy, shortenHeadline } from "../_shared/poster-copy.ts";
 import { ART_DIRECTIONS, type ArtDirectionId } from "../_shared/social-platform-specs.ts";
-import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
+import { fetchPrimaryLogoBitmap, resolveStudioMark, ExactMarkUnavailable } from "../_shared/brand-logo-bitmap.ts";
+import { studioMarkKind } from "../_shared/collateral-marks.ts";
 import { replaceSupersededAssets } from "../_shared/replace-asset.ts";
 import { ensureSceneBrief, checkSceneRelevance } from "../_shared/scene-brief.ts";
 import { resolveSceneDirective, type SceneDirective } from "../_shared/cover-art-director.ts";
@@ -505,8 +506,35 @@ Deno.serve(async (req) => {
     }
 
 
-    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
-    step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText });
+    // Which mark this poster carries. A manual Form × Tone pick (from the
+    // request, else the kit's saved studio choice) is exact: the artwork is
+    // placed as drawn, or the run fails — never a plausible substitute.
+    const markKind = studioMarkKind(String(aspect));
+    const savedStudioPick = (kit as any)?.studio_mark_choice?.[markKind] ?? null;
+    const markPick = body?.markPick === null
+      ? null
+      : (body?.markPick ?? savedStudioPick);
+    let logoDataUrl: string | null = null;
+    let logoBytes: Uint8Array | null = null;
+    let logoSvgText: string | null = null;
+    let markIdentity: any = null;
+    try {
+      const resolved = await resolveStudioMark(admin, kit, { assetKind: String(aspect), pick: markPick });
+      logoDataUrl = resolved.dataUrl;
+      logoBytes = resolved.bytes;
+      logoSvgText = resolved.svgText;
+      markIdentity = resolved.identity;
+    } catch (e) {
+      if (e instanceof ExactMarkUnavailable) {
+        return json({
+          error: "The logo version selected for this asset has not been supplied in Logo Studio. Add it, or switch this asset back to AI selection.",
+          code: "EXACT_LOGO_UNAVAILABLE",
+          variant: e.variant,
+        }, 400);
+      }
+      throw e;
+    }
+    step("logo loaded", { bytes: logoBytes?.byteLength ?? 0, svg: !!logoSvgText, mark: markIdentity?.variant ?? null });
 
     let plan: CanvasPlan = buildCanvasPlan({ kit, asset, direction, signature: signatureCfg });
     plan = applyPaletteOverride(plan, paletteOverride);
@@ -748,6 +776,7 @@ Deno.serve(async (req) => {
       logoBytes,
       logoAspect,
       logoSize,
+      logoExact: markIdentity?.mode === "manual",
       // The compositor picks the quietest legal corner; bottom-right is only
       // the starting preference when the headline is suppressed.
       logoCorner: undefined,
@@ -774,6 +803,7 @@ Deno.serve(async (req) => {
     (qa as any).headline_composited = headlineComposited;
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
+    (qa as any).logo_mark = markIdentity;
     (qa as any).poster_layout = posterLayout;
     (qa as any).poster_copy = { ...posterCopy, headline: finalHeadline };
     (qa as any).copy_truncated = posterCopy.truncated;

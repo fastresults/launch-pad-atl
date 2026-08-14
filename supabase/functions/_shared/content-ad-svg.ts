@@ -60,6 +60,9 @@ type SvgArgs = {
   logoAspect?: number | null;
   logoSize?: LogoSize;
   logoCorner?: "top-left" | "bottom-right";
+  /** The mark is a manual Form × Tone selection: place the exact artwork,
+   *  never recolour it. Contrast is repaired with a plate instead. */
+  logoExact?: boolean;
   /** Share of canvas height reserved for the type band (campaign-level lock). */
   bandRatio?: number | null;
 
@@ -722,9 +725,21 @@ export async function buildContentAdSvgBytes(args: SvgArgs): Promise<{ bytes: Ui
       // flat white on a white plate is how an ad ended up carrying a mark the
       // founder never chose. Photo-direct placement stays mono: brand colour on
       // moving pixels is a smudge.
-      const keepColour = plated && args.logoSvgText
-        ? svgReadsOn(args.logoSvgText, lum(plateColor))
-        : false;
+      // A manual Form × Tone pick is the artwork contract: it is placed as
+      // drawn. If it does not read where it lands, the surface adapts (a quiet
+      // brand plate), never the logo.
+      const exactArtwork = args.logoExact === true;
+      if (exactArtwork && !plated && args.logoSvgText && !svgReadsOn(args.logoSvgText, chosen.lumBehind)) {
+        const white = svgReadsOn(args.logoSvgText, lum("#FFFFFF"));
+        plateColor = white ? "#FFFFFF" : surface;
+        plated = true;
+        ratio = MIN_LOGO_CONTRAST;
+      }
+      const keepColour = exactArtwork
+        ? true
+        : plated && args.logoSvgText
+          ? svgReadsOn(args.logoSvgText, lum(plateColor))
+          : false;
 
       const built = await buildVectorInkLogoPng({
         svgText: args.logoSvgText ?? null,
