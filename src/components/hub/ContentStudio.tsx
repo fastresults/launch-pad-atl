@@ -931,7 +931,10 @@ function Step4BuildAds({
               const wDone = wTasks.filter((t) => t.ad).length;
               const wTotal = wTasks.length;
               const wPending = wTotal - wDone;
-              const isLoading = autoRunWeek === w || running;
+              // Only the week actually being generated looks busy; other weeks
+              // are simply unavailable while a run is in flight.
+              const isLoading = run?.scope === "week" && run.week === w;
+              const isBlocked = running && !isLoading;
 
               return (
                 <AccordionItem
