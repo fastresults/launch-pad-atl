@@ -667,7 +667,13 @@ function Step4BuildAds({
     return out;
   }, [scoped, aspects, ads]);
 
-  const [running, setRunning] = useState(false);
+  // A run is scoped: only the button that started it, and the tile actually in
+  // flight, are allowed to look busy. Everything else is disabled, not spinning.
+  const [run, setRun] = useState<null | { scope: "all" | "week"; week?: number; done: number; total: number }>(null);
+  const running = run != null;
+  const runLock = useRef(false);
+  const inFlight = useRef<Set<string>>(new Set());
+  const autoRan = useRef<Set<number>>(new Set());
   const [runningKeys, setRunningKeys] = useState<Record<string, boolean>>({});
   const [openWeeks, setOpenWeeks] = useState<string[] | null>(null);
 
