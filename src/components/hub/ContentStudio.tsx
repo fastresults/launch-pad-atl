@@ -12,7 +12,6 @@ import {
 import { toast } from "sonner";
 import { edgeErrorMessage } from "@/lib/edge-errors";
 import { getBrandKit, setStudioMarkChoice } from "@/lib/brandKit.functions";
-import { studioMarkKind } from "@/lib/brand/collateral-marks";
 import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import {
   parseCalendarPosts, listCalendarPosts, listContentAds, generateContentAd,
