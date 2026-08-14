@@ -1586,7 +1586,10 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
           .line(t.note, step(ad, -1.4), muted, { gap: step(ad, 0.2) });
         return [
           `<rect x="${r(x)}" y="${r(y)}" width="${r(tileW)}" height="${r(artH)}" fill="${t.bg}" rx="${ad.material.radius}"${onDark ? "" : ` stroke="${mix(fg, paper, 0.82)}" stroke-width="${r(ad.ink.hairline)}"`}/>`,
-          markAt(ctx, x + tileW * 0.14, y + artH * 0.18, tileW * 0.72, artH * 0.64, t.ink, t.bg),
+          // A specimen tile demonstrates a named treatment, so here the ink IS
+          // the instruction — colour preservation would defeat the page.
+          markAt(ctx, x + tileW * 0.14, y + artH * 0.18, tileW * 0.72, artH * 0.64, t.ink, t.bg, { mono: !!t.ink }),
+
           f.svg(),
         ].join("");
       }),
