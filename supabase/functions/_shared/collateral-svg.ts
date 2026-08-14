@@ -204,26 +204,36 @@ export type CollateralCtx = {
   imagery?: string[] | null;
 
   /**
-   * The founder's explicit mark choice for this piece — a form × tone cell of
-   * the logo set. When present it wins over the layout's own recommendation;
-   * the ink authority still decides how it is painted, so an inverse mark on
-   * white paper is knocked out or plated rather than shipped invisible.
+   * The resolved mark for each slot of this piece — a form × tone cell of the
+   * logo set, keyed by slot id (`front`, `cover`, `running`, …). A piece can
+   * carry a different mark in every position, which is what a cover slide and
+   * a running corner actually need. When a slot has no entry the layout picks
+   * for itself. The ink authority still decides how each one is painted, so an
+   * inverse mark on white paper is knocked out or plated, never shipped
+   * invisible.
    */
-  markPick?: {
-    form: "symbol" | "horizontal" | "stacked" | "wordmark";
-    tone: "colour" | "inverse";
-    svg: string;
-    /** What was asked for, when the exact cell was not supplied. */
-    requested?: { form: string; tone: string } | null;
-    fallback?: boolean;
-  } | null;
+  markPicks?: Record<string, MarkPickEntry> | null;
   /**
-   * Set by the renderer when the chosen artwork had to be repainted to stay
-   * legible on a surface — reported back so the founder sees why the mark does
-   * not look exactly like the cell they picked.
+   * Slots whose chosen artwork had to be repainted to stay legible on its
+   * ground — reported back so the founder sees why a mark does not look
+   * exactly like the cell they picked.
    */
-  markRecoloured?: boolean;
+  markRecoloured?: Record<string, boolean>;
 };
+
+export type MarkPickEntry = {
+  form: "symbol" | "horizontal" | "stacked" | "wordmark";
+  tone: "colour" | "inverse";
+  svg: string;
+  /** What was asked for, when the exact cell was not supplied. */
+  requested?: { form: string; tone: string } | null;
+  fallback?: boolean;
+  /** True when this slot took the recommendation rather than an explicit pick. */
+  auto?: boolean;
+  /** Why the recommender chose it, when auto. */
+  reason?: string | null;
+};
+
 
 
 
