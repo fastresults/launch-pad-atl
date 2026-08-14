@@ -696,22 +696,23 @@ function markAt(
 
 
 
-function logoAspect(ctx: CollateralCtx, bg?: string | null, boxAspect?: number): number {
+function logoAspect(ctx: CollateralCtx, bg?: string | null, boxAspect?: number, slot?: string): number {
   // Measure the artwork that will actually be painted on this ground. Sizing
   // from the light variant and then drawing the reversed one (a different
   // aspect) is how a legally-sized box produced a half-height mark.
-  const svg = markSvgFor(ctx, bg ?? null, boxAspect).svg;
+  const svg = markSvgFor(ctx, bg ?? null, boxAspect, slot).svg;
   return svg ? inkAspect(svg) : 1;
 
 
 }
 
 /** True when the artwork being drawn already contains the company name. */
-function isLockup(ctx: CollateralCtx): boolean {
+function isLockup(ctx: CollateralCtx, slot?: string): boolean {
   // A chosen cell says what it is: only the symbol is wordmark-less.
-  if (ctx.markPick?.svg) return ctx.markPick.form !== "symbol";
+  const pick = pickFor(ctx, slot);
+  if (pick?.svg) return pick.form !== "symbol";
   if (ctx.symbolSvg) return false; // the wordmark is set in real type instead
-  return logoAspect(ctx) >= 1.6;
+  return logoAspect(ctx, null, undefined, slot) >= 1.6;
 
 }
 
@@ -727,18 +728,19 @@ function clearSpace(height: number): number {
  */
 function markBoxFor(
   ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.85, fillWidth = false, bg?: string | null,
+  slot?: string,
 ) {
-  return logoBox(rs, logoAspect(ctx, bg), isLockup(ctx), maxWidth, bias, fillWidth);
+  return logoBox(rs, logoAspect(ctx, bg, undefined, slot), isLockup(ctx, slot), maxWidth, bias, fillWidth);
 }
 
 
 /** Draw the mark at its spec size, top-left anchored at (x, y). */
 function specMark(
   ctx: CollateralCtx, rs: ResolvedSpec, x: number, y: number, maxWidth: number,
-  ink: string | null, bg: string, bias = 0.85,
+  ink: string | null, bg: string, bias = 0.85, slot?: string,
 ): { svg: string; w: number; h: number; clear: number } {
-  const box = markBoxFor(ctx, rs, maxWidth, bias);
-  return { svg: markAt(ctx, x, y, box.w, box.h, ink, bg), ...box };
+  const box = markBoxFor(ctx, rs, maxWidth, bias, false, bg, slot);
+  return { svg: markAt(ctx, x, y, box.w, box.h, ink, bg, { slot }), ...box };
 }
 
 /**
@@ -748,19 +750,21 @@ function specMark(
 function logoBlock(
   ctx: CollateralCtx, T: TypeKit, x: number, baseline: number, height: number,
   ink: string | null, nameFill: string, nameSize: number, maxWidth: number, bg?: string,
+  slot?: string,
 ): string {
-  if (isLockup(ctx)) {
-    const w = Math.min(height * logoAspect(ctx), maxWidth);
-    return markAt(ctx, x, baseline - height, w, height, ink, bg);
+  if (isLockup(ctx, slot)) {
+    const w = Math.min(height * logoAspect(ctx, bg ?? null, undefined, slot), maxWidth);
+    return markAt(ctx, x, baseline - height, w, height, ink, bg, { slot });
   }
   const gap = Math.round(height * 0.42);
   return [
-    markAt(ctx, x, baseline - height, height, height, ink, bg),
+    markAt(ctx, x, baseline - height, height, height, ink, bg, { slot }),
     T.line(ctx.company, x + height + gap, baseline - height * 0.24, nameSize, nameFill, {
       family: "head", weight: 700, tracking: nameSize * (ctx.ad.type.displayTracking), maxWidth: maxWidth - height - gap,
     }),
   ].join("");
 }
+
 
 /** The repeating graphic device that makes the set read as one family. */
 function motif(ctx: CollateralCtx, g: PageGrid, color: string, corner: "tl" | "tr" | "bl" | "br" = "br"): string {
