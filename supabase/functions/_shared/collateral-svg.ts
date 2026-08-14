@@ -1118,6 +1118,18 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   const rows = Math.min(maxRows, isInvoice ? 6 : Math.min(9, Math.max(4, scope.length + 1)));
   const totalsY = snap(ad, bodyTop + rowH * (rows + 1.6));
 
+  // The terms paragraph is measured and then bottom-anchored above the contact
+  // line, and it keeps to the left half of the page. Setting it from a fixed
+  // offset let a three-line paragraph run straight through the website address
+  // in the bottom-right corner.
+  const footBaseline = H - g.M - step(ad, 0.4);
+  const termsSize = step(ad, -1.1);
+  const termsW = g.span(Math.round(ad.grid.columns * 0.5));
+  const termsProbe = T.block(terms, g.M, 0, termsSize, termsW, muted, { leading: 1.5, maxLines: 3 });
+  const termsY = footBaseline - step(ad, 1.4) - (termsProbe.lines - 1) * termsProbe.size * 1.5;
+
+
+
   const body = [
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="0" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
