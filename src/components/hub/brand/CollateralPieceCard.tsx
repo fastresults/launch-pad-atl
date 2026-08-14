@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CheckCircle2, ChevronDown, Eye, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import { LOGO_SLOTS } from "@/components/hub/brand/LogoSetPanel";
+import { recommendMark, slotsForKind } from "@/lib/brand/collateral-marks";
 
 const AUTO = "auto";
 const toKey = (c: { form: string; tone: string } | null | undefined) =>
   c ? `${c.form}|${c.tone}` : AUTO;
+
 
 /**
  * One deliverable in the collateral library. Uniform height, artwork-first —
