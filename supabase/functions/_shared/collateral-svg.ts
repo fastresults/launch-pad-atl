@@ -611,7 +611,11 @@ function markAt(
 
   // Record when a founder's explicit cell had to be repainted, so the piece can
   // say "recoloured for contrast" instead of silently looking like another cell.
-  if (ctx.markPick?.svg && use && !keepArtworkColour) ctx.markRecoloured = true;
+  const slotPick = pickFor(ctx, opts?.slot);
+  if (slotPick?.svg && use && !keepArtworkColour) {
+    ctx.markRecoloured = { ...(ctx.markRecoloured ?? {}), [opts?.slot ?? "primary"]: true };
+  }
+
 
   if (use && !untintable) inner = tint(inner, use);
 
