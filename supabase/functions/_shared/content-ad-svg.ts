@@ -25,6 +25,18 @@ export const POSTER_LAYOUTS: { id: PosterLayout; label: string; blurb: string }[
   { id: "edge-rule", label: "Edge rule", blurb: "Accent rule at the left edge, type stacked" },
 ];
 
+/**
+ * True when the artwork carries more than one colour and at least one of them
+ * reads on a ground of this luminance — the test for "leave the logo alone".
+ */
+function svgReadsOn(svg: string, groundLum: number): boolean {
+  const fills = [...svg.matchAll(/fill\s*[:=]\s*["']?(#[0-9a-fA-F]{3,8})/g)].map((m) => m[1].toLowerCase());
+  const distinct = new Set(fills);
+  if (distinct.size < 2) return false;
+  return [...distinct].some((f) => contrastOf(relLuminance(f), groundLum) >= 3);
+}
+
+
 type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
 type SvgArgs = {
