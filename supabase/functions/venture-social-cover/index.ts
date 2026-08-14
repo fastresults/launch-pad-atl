@@ -23,7 +23,8 @@ import { finishToSpec } from "../_shared/image-fit.ts";
 import { runContrastQa, logoDominantInk } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
-import { fetchPrimaryLogoBitmap, type LogoBitmapOpts } from "../_shared/brand-logo-bitmap.ts";
+import { fetchPrimaryLogoBitmap, resolveStudioMark, ExactMarkUnavailable, type LogoBitmapOpts } from "../_shared/brand-logo-bitmap.ts";
+import { studioMarkKind } from "../_shared/collateral-marks.ts";
 import { replaceSupersededAssets } from "../_shared/replace-asset.ts";
 import { compositeHeadline, type AdAspect } from "../_shared/headline-compositor.ts";
 import { PNG } from "npm:pngjs@7.0.0";
@@ -363,8 +364,38 @@ Deno.serve(async (req) => {
     const lockupWanted = placementForAssetKind(asset.kind) === "avatar-center"
       ? "stacked"
       : "horizontal";
-    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText, skipReason: logoSkipReason } =
-      await fetchPrimaryLogo(admin, kit, { lockup: lockupWanted });
+    // The mark for this asset. A manual Form × Tone pick (request, else the
+    // kit's saved studio choice) is exact: placed as drawn, never recoloured
+    // and never substituted. Unpicked assets fall to the shared recommender.
+    const markKind = studioMarkKind(asset.kind);
+    const savedStudioPick = (kit as any)?.studio_mark_choice?.[markKind] ?? null;
+    const markPick = body?.markPick === null ? null : (body?.markPick ?? savedStudioPick);
+    let logoDataUrl: string | null = null;
+    let logoBytes: Uint8Array | null = null;
+    let logoSvgText: string | null = null;
+    let logoSkipReason: any = null;
+    let markIdentity: any = null;
+    try {
+      const resolved = await resolveStudioMark(admin, kit, {
+        assetKind: asset.kind,
+        pick: markPick,
+        fallback: { lockup: lockupWanted },
+      });
+      logoDataUrl = resolved.dataUrl;
+      logoBytes = resolved.bytes;
+      logoSvgText = resolved.svgText;
+      logoSkipReason = resolved.skipReason;
+      markIdentity = resolved.identity;
+    } catch (e) {
+      if (e instanceof ExactMarkUnavailable) {
+        return json({
+          error: "The logo version selected for this asset has not been supplied in Logo Studio. Add it, or switch this asset back to AI selection.",
+          code: "EXACT_LOGO_UNAVAILABLE",
+          variant: e.variant,
+        }, 400);
+      }
+      throw e;
+    }
 
 
 
@@ -717,17 +748,20 @@ Deno.serve(async (req) => {
           inkHex: plan.ink,
           logoSize,
           svgText: logoSvgText,
+          exactArtwork: markIdentity?.mode === "manual",
         });
         bytes = res.bytes;
         logoComposited = true;
         (qa as any).logo_contrast = Number(res.contrast.toFixed(2));
         (qa as any).logo_ink = res.inkHex;
         (qa as any).logo_scrim = res.scrim;
+        (qa as any).logo_adapted = res.adapted;
       } catch (e) {
         console.warn("logo composite failed, shipping un-composited image", e);
       }
     }
     (qa as any).logo_composited = logoComposited;
+    (qa as any).logo_mark = markIdentity;
     (qa as any).logo_size = logoSize;
     if (!logoComposited && logoSkipReason) (qa as any).logo_skipped = logoSkipReason;
     (qa as any).used_fallback = usedFallback;
