@@ -510,7 +510,10 @@ Deno.serve(async (req) => {
     // request, else the kit's saved studio choice) is exact: the artwork is
     // placed as drawn, or the run fails — never a plausible substitute.
     const markKind = studioMarkKind(String(aspect));
-    const savedStudioPick = (kit as any)?.studio_mark_choice?.[markKind] ?? null;
+    const placementKey = typeof body?.placementKey === "string" ? body.placementKey : markKind;
+    const savedStudioPick = (kit as any)?.studio_mark_choice?.[placementKey]
+      ?? (kit as any)?.studio_mark_choice?.[markKind]
+      ?? null;
     const markPick = body?.markPick === null
       ? null
       : (body?.markPick ?? savedStudioPick);
@@ -755,6 +758,9 @@ Deno.serve(async (req) => {
     // headline / CTA lockup is typeset here in real brand fonts.
     const headlineComposited = !!posterCopy.headline;
     const logoComposited = !!(logoSvgText || logoBytes || logoDataUrl);
+    if (markIdentity?.mode === "manual" && !logoComposited) {
+      return json({ error: "The selected logo could not be placed exactly.", code: "LOGO_SELECTION_INVARIANT_FAILED", requested: markPick }, 409);
+    }
     const platePngBytes = bytes;
     const plateB64 = bytesToB64(platePngBytes);
     const composite = (headline: string) => buildContentAdSvgBytes({

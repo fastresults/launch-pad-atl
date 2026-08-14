@@ -368,7 +368,10 @@ Deno.serve(async (req) => {
     // kit's saved studio choice) is exact: placed as drawn, never recoloured
     // and never substituted. Unpicked assets fall to the shared recommender.
     const markKind = studioMarkKind(asset.kind);
-    const savedStudioPick = (kit as any)?.studio_mark_choice?.[markKind] ?? null;
+    const placementKey = typeof body?.placementKey === "string" ? body.placementKey : markKind;
+    const savedStudioPick = (kit as any)?.studio_mark_choice?.[placementKey]
+      ?? (kit as any)?.studio_mark_choice?.[markKind]
+      ?? null;
     const markPick = body?.markPick === null ? null : (body?.markPick ?? savedStudioPick);
     let logoDataUrl: string | null = null;
     let logoBytes: Uint8Array | null = null;
@@ -757,12 +760,16 @@ Deno.serve(async (req) => {
         (qa as any).logo_scrim = res.scrim;
         (qa as any).logo_adapted = res.adapted;
       } catch (e) {
+        if (markIdentity?.mode === "manual") throw e;
         console.warn("logo composite failed, shipping un-composited image", e);
       }
     }
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_mark = markIdentity;
     (qa as any).logo_size = logoSize;
+    if (markIdentity?.mode === "manual" && !logoComposited) {
+      return json({ error: "The selected logo could not be placed exactly.", code: "LOGO_SELECTION_INVARIANT_FAILED", requested: markPick }, 409);
+    }
     if (!logoComposited && logoSkipReason) (qa as any).logo_skipped = logoSkipReason;
     (qa as any).used_fallback = usedFallback;
 

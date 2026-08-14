@@ -15,7 +15,7 @@ import { buildPaletteTilePngBytes, bytesToDataUrl } from "../_shared/palette-til
 import { runContrastQa } from "../_shared/image-qa.ts";
 import { compositeLogo, placementForAssetKind, normalizeLogoSize, readLogoAspect, logoSafeZone, type LogoSize } from "../_shared/logo-compositor.ts";
 import { compositeSignatureSplash } from "../_shared/signature-compositor.ts";
-import { fetchPrimaryLogoBitmap } from "../_shared/brand-logo-bitmap.ts";
+import { fetchPrimaryLogoBitmap, resolveStudioMark, ExactMarkUnavailable } from "../_shared/brand-logo-bitmap.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -253,7 +253,23 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.warn("[style-preview] scene brief unavailable", e);
     }
-    const { dataUrl: logoDataUrl, bytes: logoBytes, svgText: logoSvgText } = await fetchPrimaryLogo(admin, kit);
+    const placementKey = typeof body?.placementKey === "string" ? body.placementKey : `style:${direction}`;
+    const savedPick = (kit as any)?.studio_mark_choice?.[placementKey] ?? null;
+    const markPick = body?.markPick === null ? null : (body?.markPick ?? savedPick);
+    let logoDataUrl: string | null = null;
+    let logoBytes: Uint8Array | null = null;
+    let logoSvgText: string | null = null;
+    let markIdentity: any = null;
+    try {
+      const resolved = await resolveStudioMark(admin, kit, { assetKind: "style_preview", pick: markPick });
+      logoDataUrl = resolved.dataUrl;
+      logoBytes = resolved.bytes;
+      logoSvgText = resolved.svgText;
+      markIdentity = resolved.identity;
+    } catch (e) {
+      if (e instanceof ExactMarkUnavailable) return json({ error: e.message, code: "EXACT_MARK_UNAVAILABLE", requested: markPick }, 409);
+      throw e;
+    }
 
     let plan: CanvasPlan = buildCanvasPlan({ kit, asset: PREVIEW_ASSET, direction, signature: signatureCfg });
     plan = applyPaletteOverride(plan, paletteOverride);
@@ -372,11 +388,16 @@ Deno.serve(async (req) => {
         logoComposited = true;
         (qa as any).logo_contrast = Number(res.contrast.toFixed(2));
       } catch (e) {
+        if (markIdentity?.mode === "manual") throw e;
         console.warn("style preview logo composite failed", e);
       }
     }
     (qa as any).logo_composited = logoComposited;
     (qa as any).logo_size = logoSize;
+    (qa as any).logo_mark = markIdentity;
+    if (markIdentity?.mode === "manual" && !logoComposited) {
+      return json({ error: "The selected logo could not be placed exactly.", code: "LOGO_SELECTION_INVARIANT_FAILED", requested: markPick }, 409);
+    }
 
 
 

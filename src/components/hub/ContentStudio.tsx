@@ -1160,6 +1160,7 @@ function Step4BuildAds({
             onRegenerate={() => setRegen({ task: t })}
             onEditHeadline={() => setRegen({ task: t, focusSection: "headline" })}
             onEditLogoSize={() => setRegen({ task: t, focusSection: "logo" })}
+            logoPicker={<LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={!!runningKeys[key(t)]} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} />}
             onDelete={t.ad ? () => { setPreviewIdx(null); doDelete(t); } : undefined}
           />
         );

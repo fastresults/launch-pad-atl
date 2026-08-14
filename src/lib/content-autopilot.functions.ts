@@ -108,6 +108,8 @@ export async function generateContentAd(
     logoSize?: "sm" | "md" | "lg";
     /** Exact Form × Tone logo pick; null = let the AI select. */
     markPick?: { form: string; tone: string } | null;
+    /** Stable key for this exact generated graphic. */
+    placementKey?: string;
     posterLayout?: string;
     /** Founder-authored scene description — wins over the derived scene brief. */
     sceneOverride?: string;
