@@ -2843,6 +2843,7 @@ export type Database = {
           snapshot_id: string
           status: string
           step: number
+          studio_mark_choice: Json
           typography: Json | null
           updated_at: string
           user_id: string
@@ -2868,6 +2869,7 @@ export type Database = {
           snapshot_id: string
           status?: string
           step?: number
+          studio_mark_choice?: Json
           typography?: Json | null
           updated_at?: string
           user_id: string
@@ -2893,6 +2895,7 @@ export type Database = {
           snapshot_id?: string
           status?: string
           step?: number
+          studio_mark_choice?: Json
           typography?: Json | null
           updated_at?: string
           user_id?: string
