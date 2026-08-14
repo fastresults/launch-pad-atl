@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contentGraphicKey, recommendMark, slotChoices, slotsForKind, socialGraphicKey, studioChoiceFor, studioMarkKind, stylePreviewGraphicKey } from "../collateral-marks";
+import { contentAllKey, contentWeekKey, socialAllKey, resolveStudioChoice, contentGraphicKey, recommendMark, slotChoices, slotsForKind, socialGraphicKey, studioChoiceFor, studioMarkKind, stylePreviewGraphicKey } from "../collateral-marks";
 
 const full = [
   { form: "symbol", tone: "colour" },
@@ -93,6 +93,35 @@ describe("studio surfaces", () => {
     };
     expect(studioChoiceFor(choices, "content:post-1:1%3A1", "1:1")).toEqual({ form: "stacked", tone: "colour" });
     expect(studioChoiceFor(choices, "content:post-2:1%3A1", "1:1")).toEqual({ form: "symbol", tone: "inverse" });
+  });
+
+  it("inherits week then flight defaults before the legacy surface value", () => {
+    const choices = {
+      studio_post: { form: "symbol", tone: "inverse" },
+      [contentAllKey("1:1")]: { form: "horizontal", tone: "colour" },
+      [contentWeekKey(2, "1:1")]: { form: "stacked", tone: "colour" },
+      [contentGraphicKey("post-1", "1:1")]: { form: "wordmark", tone: "colour" },
+    };
+    const inherit = (week: number) => [contentWeekKey(week, "1:1"), contentAllKey("1:1")];
+    // exact wins
+    expect(studioChoiceFor(choices, contentGraphicKey("post-1", "1:1"), "1:1", inherit(2)))
+      .toEqual({ form: "wordmark", tone: "colour" });
+    // week default
+    expect(studioChoiceFor(choices, contentGraphicKey("post-9", "1:1"), "1:1", inherit(2)))
+      .toEqual({ form: "stacked", tone: "colour" });
+    // flight default
+    expect(studioChoiceFor(choices, contentGraphicKey("post-9", "1:1"), "1:1", inherit(7)))
+      .toEqual({ form: "horizontal", tone: "colour" });
+    // legacy fallback when no batch default exists
+    expect(studioChoiceFor(choices, contentGraphicKey("post-9", "4:5"), "4:5", [contentWeekKey(7, "4:5")]))
+      .toEqual({ form: "symbol", tone: "inverse" });
+    expect(resolveStudioChoice(choices, contentGraphicKey("post-9", "1:1"), "1:1", inherit(2)).source).toBe("inherited");
+  });
+
+  it("builds batch keys", () => {
+    expect(contentWeekKey(3, "1:1")).toBe("content:week:3:1%3A1");
+    expect(contentAllKey("4:5")).toBe("content:all:4%3A5");
+    expect(socialAllKey("cover")).toBe("social:all:cover");
   });
 
   it("maps studio asset kinds onto slot sets", () => {

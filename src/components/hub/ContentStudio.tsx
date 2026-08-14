@@ -26,7 +26,7 @@ import { AssetImage } from "@/components/hub/social/AssetImage";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { SectionHeader } from "@/components/hub/SectionHeader";
 import { LogoPlacementMenu } from "@/components/hub/brand/LogoPlacementMenu";
-import { contentGraphicKey, studioChoiceFor } from "@/lib/brand/collateral-marks";
+import { contentAllKey, contentGraphicKey, contentWeekKey, studioChoiceFor } from "@/lib/brand/collateral-marks";
 
 const ART_DIRECTIONS = [
   { id: "editorial", label: "Editorial" },
@@ -362,6 +362,8 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
       {step === 5 && (
         <Step5Launch
           snapshotId={snapshotId}
+          kit={kit}
+          aspects={aspects}
           ads={ads}
           posts={posts}
           selectedWeeks={effectiveWeeks}
@@ -683,11 +685,27 @@ function Step4BuildAds({
 
   const key = (t: AdTask) => `${t.post.id}:${t.aspect}`;
   const placementKey = (t: AdTask) => contentGraphicKey(t.post.id, t.aspect);
-  const markPick = (t: AdTask) => studioChoiceFor(kit?.studio_mark_choice, placementKey(t), t.aspect);
+  const inheritKeys = (week: number | string, aspect: string) => [contentWeekKey(week, aspect), contentAllKey(aspect)];
+  const markPick = (t: AdTask) =>
+    studioChoiceFor(kit?.studio_mark_choice, placementKey(t), t.aspect, inheritKeys(t.post.week, t.aspect));
+  const exactPick = (t: AdTask) => kit?.studio_mark_choice?.[placementKey(t)] ?? null;
+  const inheritedPick = (t: AdTask) =>
+    studioChoiceFor(kit?.studio_mark_choice, "__none__", t.aspect, inheritKeys(t.post.week, t.aspect));
+  const weekPick = (week: number, aspect: string) => kit?.studio_mark_choice?.[contentWeekKey(week, aspect)] ?? null;
+  const allPick = (aspect: string) => kit?.studio_mark_choice?.[contentAllKey(aspect)] ?? null;
   const saveMark = async (t: AdTask, cell: any) => {
     await setStudioMarkChoice(snapshotId, placementKey(t), cell);
     await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
   };
+  const saveWeekMark = async (week: number, aspect: string, cell: any) => {
+    await setStudioMarkChoice(snapshotId, contentWeekKey(week, aspect), cell);
+    await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+  };
+  const saveAllMark = async (aspect: string, cell: any) => {
+    await setStudioMarkChoice(snapshotId, contentAllKey(aspect), cell);
+    await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+  };
+
   const setBusy = (k: string, v: boolean) =>
     setRunningKeys((prev) => { const n = { ...prev }; if (v) n[k] = true; else delete n[k]; return n; });
 
@@ -872,18 +890,34 @@ function Step4BuildAds({
           )}
         </div>
         {tasks.length > 0 && (
-          tasks.some((t) => !t.ad) ? (
-            <Button size="sm" onClick={() => runAll()} disabled={running}>
-              {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-              Generate all ({tasks.filter((t) => !t.ad).length})
-            </Button>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => runAll({ force: true })} disabled={running}>
-              {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
-              Regenerate all ({tasks.length})
-            </Button>
-          )
+          <div className="flex items-center">
+            {tasks.some((t) => !t.ad) ? (
+              <Button size="sm" className="rounded-r-none" onClick={() => runAll()} disabled={running}>
+                {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+                Generate all ({tasks.filter((t) => !t.ad).length})
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" className="rounded-r-none" onClick={() => runAll({ force: true })} disabled={running}>
+                {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+                Regenerate all ({tasks.length})
+              </Button>
+            )}
+            {aspects.map((a) => (
+              <LogoPlacementMenu
+                key={`all-mark-${a}`}
+                assetKind={a}
+                logos={kit?.logos}
+                value={allPick(a)}
+                disabled={running}
+                title={`Logo for every ad in this flight${aspects.length > 1 ? ` · ${a}` : ""}`}
+                label={`all ${a} ads`}
+                triggerClassName="h-8 rounded-l-none"
+                onChange={(cell) => saveAllMark(a, cell)}
+              />
+            ))}
+          </div>
         )}
+
       </div>
 
       {allWeeks.length > 1 && (
@@ -942,7 +976,8 @@ function Step4BuildAds({
                   value={`w-${w}`}
                   className={`rounded-xl border ${isPending ? "border-dashed border-border bg-background/20" : "border-border bg-background/40"} px-3`}
                 >
-                  <AccordionTrigger className="py-2.5 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                  <AccordionTrigger className="flex-1 py-2.5 hover:no-underline">
                     <div className="flex flex-1 items-center justify-between gap-2 pr-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
@@ -960,6 +995,9 @@ function Step4BuildAds({
                           </span>
                         )}
                       </div>
+                    </div>
+                  </AccordionTrigger>
+                  <div className="flex shrink-0 items-center">
                       <span
                         role="button"
                         tabIndex={0}
@@ -982,7 +1020,7 @@ function Step4BuildAds({
                         }}
                         className={
                           isPending || wTotal > 0
-                            ? `inline-flex h-7 items-center gap-1 rounded-md border border-input bg-background px-2 text-[11px] ${isBlocked ? "pointer-events-none opacity-40" : "hover:bg-accent hover:text-accent-foreground"}`
+                            ? `inline-flex h-7 items-center gap-1 rounded-md rounded-r-none border border-input bg-background px-2 text-[11px] ${isBlocked ? "pointer-events-none opacity-40" : "hover:bg-accent hover:text-accent-foreground"}`
                             : "text-[10px] text-muted-foreground"
                         }
                         aria-disabled={running}
@@ -1006,8 +1044,23 @@ function Step4BuildAds({
                           "Done"
                         )}
                       </span>
-                    </div>
-                  </AccordionTrigger>
+                      {(isPending || wTotal > 0) && aspects.map((a) => (
+                        <LogoPlacementMenu
+                          key={`wk-mark-${w}-${a}`}
+                          assetKind={a}
+                          logos={kit?.logos}
+                          value={weekPick(w, a)}
+                          inherited={allPick(a)}
+                          disabled={running}
+                          title={`Logo for every week ${w} ad${aspects.length > 1 ? ` · ${a}` : ""}`}
+                          label={`week ${w} ${a} ads`}
+                          triggerClassName="h-7 rounded-l-none"
+                          onChange={(cell) => saveWeekMark(w, a, cell)}
+                        />
+                      ))}
+                  </div>
+                  </div>
+
                   <AccordionContent className="pb-3">
                     {isPending ? (
                       <ul className="grid gap-1 sm:grid-cols-2">
@@ -1065,13 +1118,13 @@ function Step4BuildAds({
                                       onClick={() => doGenerate(t)}>
                                       {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
                                       Generate
-                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
+                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={exactPick(t)} inherited={inheritedPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
                                   )}
                                   {(t.ad || err) && (
                                     <div className="inline-flex items-center"><Button size="sm" variant="outline" className="h-6 rounded-r-none text-[11px]" disabled={running || busy}
                                       onClick={() => setRegen({ task: t })}>
                                       <RefreshCw className="mr-1 h-3 w-3" /> Regenerate
-                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
+                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={exactPick(t)} inherited={inheritedPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
                                   )}
                                   {url && (
                                     <Button size="sm" variant="ghost" className="h-6 text-[11px]"
@@ -1187,7 +1240,7 @@ function Step4BuildAds({
             onRegenerate={() => setRegen({ task: t })}
             onEditHeadline={() => setRegen({ task: t, focusSection: "headline" })}
             onEditLogoSize={() => setRegen({ task: t, focusSection: "logo" })}
-            logoPicker={<LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={!!runningKeys[key(t)]} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} />}
+            logoPicker={<LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={exactPick(t)} inherited={inheritedPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={!!runningKeys[key(t)]} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} />}
             onDelete={t.ad ? () => { setPreviewIdx(null); doDelete(t); } : undefined}
           />
         );
@@ -1200,9 +1253,9 @@ function Step4BuildAds({
 // STEP 5 — Launch summary
 // ============================================================
 function Step5Launch({
-  snapshotId, ads, posts, selectedWeeks, onBack, onAddWeek,
+  snapshotId, kit, aspects = [], ads, posts, selectedWeeks, onBack, onAddWeek,
 }: {
-  snapshotId: string;
+  snapshotId: string; kit?: any; aspects?: AdAspect[];
   ads: ContentAd[]; posts: ContentPost[]; selectedWeeks: number[];
   onBack: () => void;
   onAddWeek?: (week: number) => Promise<void> | void;
@@ -1241,6 +1294,16 @@ function Step5Launch({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const qc = useQueryClient();
   const confirm = useConfirm();
+
+  const saveKeyMark = async (mkKey: string, cell: any) => {
+    await setStudioMarkChoice(snapshotId, mkKey, cell);
+    await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+  };
+  const adExactPick = (a: ContentAd) => kit?.studio_mark_choice?.[contentGraphicKey(a.post_id, a.aspect)] ?? null;
+  const adInheritPick = (a: ContentAd, week: number) =>
+    studioChoiceFor(kit?.studio_mark_choice, "__none__", a.aspect, [contentWeekKey(week, a.aspect), contentAllKey(a.aspect)]);
+
+
 
   const doDelete = async (adId: string) => {
     if (!(await confirm({ title: "Delete this ad?", description: "This can't be undone.", destructive: true, confirmText: "Delete" }))) return;
@@ -1329,6 +1392,16 @@ function Step5Launch({
                               </div>
                             </div>
                           </button>
+                          <LogoPlacementMenu
+                            assetKind={a.aspect}
+                            logos={kit?.logos}
+                            value={adExactPick(a)}
+                            inherited={adInheritPick(a, w)}
+                            used={(a as any)?.qa_notes?.logo_mark}
+                            label={p?.hook || "ad"}
+                            triggerClassName="rounded-md"
+                            onChange={(cell) => saveKeyMark(contentGraphicKey(a.post_id, a.aspect), cell)}
+                          />
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); doDelete(a.id); }}
@@ -1369,16 +1442,31 @@ function Step5Launch({
                       {wPosts.length} planned post{wPosts.length === 1 ? "" : "s"} · not started
                     </span>
                   </div>
+                  <div className="flex items-center">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-7 text-[11px]"
+                    className="h-7 rounded-r-none text-[11px]"
                     disabled={!onAddWeek}
                     onClick={() => onAddWeek?.(w)}
                   >
                     <Sparkles className="mr-1 h-3 w-3" />
                     Add &amp; generate Week {w}
                   </Button>
+                  {aspects.map((asp) => (
+                    <LogoPlacementMenu
+                      key={`pending-mark-${w}-${asp}`}
+                      assetKind={asp}
+                      logos={kit?.logos}
+                      value={kit?.studio_mark_choice?.[contentWeekKey(w, asp)] ?? null}
+                      inherited={kit?.studio_mark_choice?.[contentAllKey(asp)] ?? null}
+                      title={`Logo for every week ${w} ad${aspects.length > 1 ? ` · ${asp}` : ""}`}
+                      label={`week ${w} ${asp} ads`}
+                      triggerClassName="h-7 rounded-l-none"
+                      onChange={(cell) => saveKeyMark(contentWeekKey(w, asp), cell)}
+                    />
+                  ))}
+                  </div>
                 </div>
                 <ul className="grid gap-1 sm:grid-cols-2">
                   {wPosts.slice(0, 4).map((p) => (
