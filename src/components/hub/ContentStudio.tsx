@@ -909,6 +909,7 @@ function Step4BuildAds({
                 disabled={running}
                 title={`Logo for every ad in this flight${aspects.length > 1 ? ` · ${a}` : ""}`}
                 label={`all ${a} ads`}
+                triggerClassName="h-8 rounded-l-none"
                 onChange={(cell) => saveAllMark(a, cell)}
               />
             ))}
@@ -1051,6 +1052,7 @@ function Step4BuildAds({
                           disabled={running}
                           title={`Logo for every week ${w} ad${aspects.length > 1 ? ` · ${a}` : ""}`}
                           label={`week ${w} ${a} ads`}
+                          triggerClassName="h-7 rounded-l-none"
                           onChange={(cell) => saveWeekMark(w, a, cell)}
                         />
                       ))}
