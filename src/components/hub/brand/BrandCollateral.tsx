@@ -213,7 +213,23 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
 
   const wipe = useMutation({
     mutationFn: (kind?: string) => clearCollateral(snapshot.id, kind),
-    onSuccess: () => {
+    // Deleting a piece also retires everything the UI still remembers about it,
+    // so a cleared card reads as "Not generated" and stays generatable — even
+    // if a run was in flight when the founder deleted it.
+    onSuccess: (_res, kind) => {
+      const cleared = kind ? [kind] : COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => k.kind));
+      for (const k of cleared) droppedRef.current.add(k);
+      setRunningKinds((prev) => prev.filter((k) => !cleared.includes(k)));
+      setRunReport((prev) => {
+        const next = (prev ?? []).filter((r) => !cleared.includes(r.kind));
+        return next.length ? next : null;
+      });
+      setMarksUsed((prev) => {
+        const next = { ...prev };
+        for (const k of cleared) delete next[k];
+        return next;
+      });
+      if (!kind) stopRun();
       qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       toast.success("Cleared.");
     },
@@ -225,6 +241,7 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
       wipe.mutate(undefined);
     }
   };
+
 
   const openMeta = useMemo(
     () => COLLATERAL_TIERS.flatMap((t) => t.kinds).find((k) => k.kind === openKind) ?? null,
