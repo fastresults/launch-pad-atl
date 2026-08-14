@@ -4941,6 +4941,10 @@ export type Database = {
         }
         Returns: number
       }
+      mutate_studio_mark_choice: {
+        Args: { p_choice: Json; p_placement_key: string; p_snapshot_id: string }
+        Returns: Json
+      }
       mutate_venture_logo_set: {
         Args: {
           p_entry?: Json
