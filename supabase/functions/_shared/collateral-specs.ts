@@ -255,6 +255,26 @@ export function resolveSpec(pageName: string, W?: number, H?: number): ResolvedS
 }
 
 /**
+ * The height band a mark of THIS shape may occupy on THIS piece.
+ *
+ * The raw spec band is a height, and heights were written for the horizontal
+ * lockup every identity starts with. A stacked or square lockup at the same
+ * height covers a fraction of the optical area, which is why a stacked mark
+ * chosen for a card read as a postage stamp. The band is therefore corrected
+ * toward equal *area*: the narrower the artwork, the taller it is allowed to
+ * be, capped so a tall mark can never dominate the page.
+ */
+export function markBand(rs: ResolvedSpec, aspect: number, isLockup: boolean): [number, number] {
+  const base = isLockup ? rs.lockupBand : rs.logoBand;
+  if (!isLockup) return [base[0], base[1]];
+  const REF = 3.2; // the aspect a horizontal lockup band was written for
+  const a = Math.max(aspect, 0.2);
+  if (a >= REF) return [base[0], base[1]];
+  const boost = Math.min(1.5, Math.sqrt(REF / a));
+  return [base[0] * boost, base[1] * boost];
+}
+
+/**
  * The mark's box for this piece: a height inside the spec band, and the width
  * its own aspect demands. `bias` picks a point in the band (0 = min, 1 = max).
  */
@@ -266,7 +286,7 @@ export function logoBox(
   bias = 0.85,
   fillWidth = false,
 ): { w: number; h: number; clear: number } {
-  const [lo, hi] = isLockup ? rs.lockupBand : rs.logoBand;
+  const [lo, hi] = markBand(rs, aspect, isLockup);
   const a = Math.max(aspect, 0.2);
   // `fillWidth` lets a wide lockup use the slot it was given, still clamped to
   // the legal height band — a lockup set at a square mark's height reads tiny.
@@ -285,6 +305,7 @@ export function logoBox(
   }
   return { w: Math.round(w), h: Math.round(h), clear: Math.round(h * rs.clearSpace) };
 }
+
 
 
 /**
