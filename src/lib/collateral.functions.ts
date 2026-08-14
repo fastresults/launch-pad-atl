@@ -131,6 +131,12 @@ export async function generateCollateral(
     ? kinds
     : COLLATERAL_TIERS.flatMap((tier) => tier.kinds.map((item) => item.kind));
 
+  // Wrap each piece's picks in the canonical `{ slots }` envelope the renderer
+  // stores and reads. Sending the bare slot map worked only by accident.
+  const picks = markChoice
+    ? Object.fromEntries(Object.entries(markChoice).map(([kind, slots]) => [kind, { slots }]))
+    : undefined;
+
   // Edge rendering is CPU-bound (wasm + pixel QC). Keep each invocation
   // independently retryable so one complex deck cannot take the entire brand
   // package down with WORKER_RESOURCE_LIMIT. Multi-page kinds come back with
