@@ -71,6 +71,45 @@ async function call(body: any) {
   return data;
 }
 
+/**
+ * The generation itself is model-bound and can legitimately run for minutes, so
+ * we never abort the request — we only give the *UI* a way out. The promise
+ * below settles on stop or on a generous deadline; the in-flight work is left
+ * to finish server-side rather than being cancelled mid-render.
+ */
+export type RunEscape = { signal?: AbortSignal; timeoutMs?: number };
+
+const DEFAULT_ESCAPE_MS = 10 * 60_000;
+
+function withEscape<T>(work: Promise<T>, opts?: RunEscape): Promise<T> {
+  const signal = opts?.signal;
+  const timeoutMs = opts?.timeoutMs ?? DEFAULT_ESCAPE_MS;
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    };
+    const finish = (fn: (v: any) => void, value: any) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      fn(value);
+    };
+    function onAbort() {
+      finish(reject, Object.assign(new Error("Stopped"), { code: "ABORTED" }));
+    }
+    const timer = setTimeout(
+      () => finish(reject, Object.assign(new Error("Timed out — retry this piece"), { code: "TIMEOUT" })),
+      timeoutMs,
+    );
+    if (signal?.aborted) return onAbort();
+    signal?.addEventListener("abort", onAbort, { once: true });
+    work.then((v) => finish(resolve, v), (e) => finish(reject, e));
+  });
+}
+
+
 export async function listCollateral(snapshotId: string): Promise<CollateralItem[]> {
   const data = await call({ action: "list", snapshotId });
   return (data?.items ?? []) as CollateralItem[];
