@@ -1,9 +1,10 @@
 // @ts-nocheck
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Eye, Loader2, Package, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { CircleSlash, Download, Eye, Loader2, Package, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+
 import { toast } from "sonner";
 import {
   COLLATERAL_TIERS,
