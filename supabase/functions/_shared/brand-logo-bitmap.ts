@@ -91,19 +91,23 @@ export async function fetchPrimaryLogoBitmap(
   kit: any,
   opts: LogoBitmapOpts = {},
 ): Promise<LogoBitmap> {
-  try {
-    const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
-    if (!logos.length) {
-      console.warn("[brand-logo] skipped: no_logos on brand kit");
-      return { dataUrl: null, bytes: null, svgText: null, skipReason: "no_logos" };
-    }
-    const primary = pickEntry(logos, opts);
+  const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
+  if (!logos.length) {
+    console.warn("[brand-logo] skipped: no_logos on brand kit");
+    return { dataUrl: null, bytes: null, svgText: null, skipReason: "no_logos" };
+  }
+  return await loadEntryBitmap(admin, pickEntry(logos, opts));
+}
 
-    const rawPath: string | undefined = primary?.path || primary?.storage_path;
+/** Load one logo-set entry to bytes (+ its source SVG when it is vector). */
+export async function loadEntryBitmap(admin: any, primary: any): Promise<LogoBitmap> {
+  try {
+    const rawPath: string | undefined = primary?.svg_path || primary?.path || primary?.storage_path;
     if (!rawPath) {
-      console.warn("[brand-logo] skipped: primary entry has no path");
+      console.warn("[brand-logo] skipped: entry has no path");
       return { dataUrl: null, bytes: null, svgText: null, skipReason: "no_path" };
     }
+
 
     const declaredMime = primary?.contentType || mimeFromPath(rawPath);
     const isSvg = declaredMime === "image/svg+xml" || /\.svg$/i.test(rawPath);
