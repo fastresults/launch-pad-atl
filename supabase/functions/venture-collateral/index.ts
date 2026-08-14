@@ -955,6 +955,25 @@ Deno.serve(async (req) => {
       const qcIssues = done.flatMap((r: any) =>
         (r.qc ?? []).filter((v: QcVerdict) => !v.ok).map((v: QcVerdict) => ({ kind: r.kind, page: v.page, reasons: v.reasons })),
       );
+      // Remember the founder's pick for this piece so the card can say which
+      // mark it carries and the next run reuses it without being told again.
+      if (markPick && failed.length === 0) {
+        const { data: kitRow } = await admin
+          .from("venture_brand_kits")
+          .select("collateral_mark_choice")
+          .eq("snapshot_id", snapshotId)
+          .maybeSingle();
+        const merged = { ...(kitRow?.collateral_mark_choice ?? {}) };
+        merged[requested[0]] = {
+          requested: markPick,
+          used: ctx.markPick ? { form: ctx.markPick.form, tone: ctx.markPick.tone } : null,
+          at: new Date().toISOString(),
+        };
+        await admin.from("venture_brand_kits")
+          .update({ collateral_mark_choice: merged })
+          .eq("snapshot_id", snapshotId);
+      }
+
       // Resume contract: a bounded slice landed and more pages remain. The
       // client calls back with `fromPage` until `more` is false.
       const pending = done.find((r: any) => typeof r.nextPage === "number");
@@ -970,8 +989,12 @@ Deno.serve(async (req) => {
         // Tells the library whether the wordmark on these pieces is real type
         // (symbol isolated) or the tracer's polygons (nothing to isolate).
         logo: { symbolIsolated: !!ctx.symbolSvg },
+        mark: ctx.markPick
+          ? { form: ctx.markPick.form, tone: ctx.markPick.tone, fallback: !!ctx.markPick.fallback, requested: ctx.markPick.requested }
+          : null,
         artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },
       });
+
 
 
     }
