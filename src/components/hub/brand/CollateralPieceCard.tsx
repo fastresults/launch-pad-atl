@@ -108,6 +108,12 @@ export function CollateralPieceCard({
               {markUsed.fallback ? " (nearest supplied)" : ""}
             </Badge>
           )}
+          {markUsed?.recoloured && (
+            <Badge variant="outline" className="border-status-warning/50 text-[10px] text-status-warning">
+              Recoloured for contrast
+            </Badge>
+          )}
+
         </div>
 
         {qc?.ok === false && (
