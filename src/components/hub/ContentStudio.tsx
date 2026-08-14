@@ -709,6 +709,9 @@ function Step4BuildAds({
 
   const doGenerate = async (t: AdTask, opts?: any) => {
     const k = key(t);
+    // Synchronous guard: a second call for the same tile can never reach the worker.
+    if (inFlight.current.has(k)) return;
+    inFlight.current.add(k);
     const knownIds = new Set(ads.filter((ad) => ad.post_id === t.post.id && ad.aspect === t.aspect).map((ad) => ad.id));
     setBusy(k, true);
     try {
@@ -732,31 +735,38 @@ function Step4BuildAds({
       setErrors((p) => ({ ...p, [k]: msg }));
       toast.error(msg);
     } finally {
+      inFlight.current.delete(k);
       setBusy(k, false);
     }
   };
 
   const runWeek = async (week: number, opts?: { force?: boolean }) => {
-    setRunning(true);
+    if (runLock.current) return;
+    runLock.current = true;
+    const queue = tasks.filter((t) => t.post.week === week && (!t.ad || opts?.force));
+    setRun({ scope: "week", week, done: 0, total: queue.length });
     try {
       let refreshedArc = false;
-      for (const t of tasks) {
-        if (t.post.week !== week) continue;
-        if (t.ad && !opts?.force) continue;
-        await doGenerate(t, opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
+      for (let i = 0; i < queue.length; i += 1) {
+        setRun((r) => (r ? { ...r, done: i } : r));
+        await doGenerate(queue[i], opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
         refreshedArc = refreshedArc || !!opts?.force;
       }
       toast.success(opts?.force ? `Week ${week} ads regenerated` : `Week ${week} ads generated`);
     } finally {
-      setRunning(false);
+      runLock.current = false;
+      setRun(null);
     }
   };
 
-  // Auto-kick "Generate week" when arriving via the Step 1 shortcut.
+  // Auto-kick "Generate week" when arriving via the Step 1 shortcut. One-shot per
+  // week: the ref is marked before the async run so a re-render can't fire it twice.
   useEffect(() => {
     if (autoRunWeek == null) return;
-    if (running) return;
+    if (runLock.current) return;
     if (tasks.length === 0) return;
+    if (autoRan.current.has(autoRunWeek)) return;
+    autoRan.current.add(autoRunWeek);
     const pending = tasks.some((t) => t.post.week === autoRunWeek && !t.ad);
     onAutoRunConsumed?.();
     if (pending) void runWeek(autoRunWeek);
@@ -764,20 +774,24 @@ function Step4BuildAds({
   }, [autoRunWeek, tasks.length]);
 
   const runAll = async (opts?: { force?: boolean }) => {
-    setRunning(true);
+    if (runLock.current) return;
+    runLock.current = true;
+    const queue = tasks.filter((t) => !t.ad || opts?.force);
+    setRun({ scope: "all", done: 0, total: queue.length });
     try {
       let refreshedArc = false;
-      for (const t of tasks) {
-        if (!t.ad || opts?.force) {
-          await doGenerate(t, opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
-          refreshedArc = refreshedArc || !!opts?.force;
-        }
+      for (let i = 0; i < queue.length; i += 1) {
+        setRun((r) => (r ? { ...r, done: i } : r));
+        await doGenerate(queue[i], opts?.force && !refreshedArc ? { refreshArc: true } : undefined);
+        refreshedArc = refreshedArc || !!opts?.force;
       }
       toast.success(opts?.force ? "All ads regenerated" : "All ads generated");
     } finally {
-      setRunning(false);
+      runLock.current = false;
+      setRun(null);
     }
   };
+
 
   const doDelete = async (t: AdTask) => {
     if (!t.ad) return;
