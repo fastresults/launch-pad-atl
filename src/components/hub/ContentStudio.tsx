@@ -26,7 +26,7 @@ import { AssetImage } from "@/components/hub/social/AssetImage";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { SectionHeader } from "@/components/hub/SectionHeader";
 import { LogoPlacementMenu } from "@/components/hub/brand/LogoPlacementMenu";
-import { contentGraphicKey, studioChoiceFor } from "@/lib/brand/collateral-marks";
+import { contentAllKey, contentGraphicKey, contentWeekKey, studioChoiceFor } from "@/lib/brand/collateral-marks";
 
 const ART_DIRECTIONS = [
   { id: "editorial", label: "Editorial" },
