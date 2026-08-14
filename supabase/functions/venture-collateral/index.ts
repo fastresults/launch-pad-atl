@@ -221,11 +221,28 @@ async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
   return out;
 }
 
+/**
+ * The order in which cells of the logo set are tried for an explicit choice:
+ * the exact cell, then the same tone in another form (lockups before symbols,
+ * so the venture still reads as itself), then the same form in the other tone,
+ * then anything left. Contrast repair fixes the tone downstream; nothing here
+ * is allowed to silently produce an unreadable mark.
+ */
+function markPickOrder(form: LogoForm, tone: LogoTone): LogoVariant[] {
+  const forms: LogoForm[] = [form, ...(["horizontal", "stacked", "symbol", "wordmark"] as LogoForm[]).filter((f) => f !== form)];
+  const other: LogoTone = tone === "inverse" ? "colour" : "inverse";
+  return [
+    ...forms.map((f) => slotFor(f, tone)),
+    ...forms.map((f) => slotFor(f, other)),
+  ];
+}
+
 async function buildCtx(
   admin: any,
   snapshotId: string,
-  opts: { redirect?: boolean; needsCopy?: boolean; needsImagery?: boolean } = {},
+  opts: { redirect?: boolean; needsCopy?: boolean; needsImagery?: boolean; markPick?: { form: LogoForm; tone: LogoTone } | null } = {},
 ): Promise<{ ctx: CollateralCtx; details: ContactDetails; extras: StyleSystemExtras }> {
+
   const kit = await loadKit(admin, snapshotId);
   if (!kit) throw new Error("NO_BRAND_KIT");
 
