@@ -28,7 +28,15 @@ const KIND_LABELS: Record<string, string> = Object.fromEntries(
 export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?: any; locked: boolean }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
-  const [busyKind, setBusyKind] = useState<string | null>(null);
+  /**
+   * The kinds a live run is currently working through. Busy state is derived
+   * from this *and* the mutation being in flight — a leftover value can never
+   * pin a card on "Generating…".
+   */
+  const [runningKinds, setRunningKinds] = useState<string[]>([]);
+  /** Lets the founder escape a run that is taking too long. */
+  const stopRef = useRef<AbortController | null>(null);
+
   const [openKind, setOpenKind] = useState<string | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   /** Set when a generate attempt was blocked, so we can retry after confirming. */
