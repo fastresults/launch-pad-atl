@@ -15,18 +15,31 @@ short menu:
 
 ```text
 Mark for this piece
-  ● Recommended        Stacked lockup — chosen from the layout
-  ○ Symbol
-  ○ Horizontal lockup
-  ○ Stacked lockup
-  ○ Wordmark
+  ● Recommended                  Stacked · Colour — chosen from the layout
+  ─ Colour (for light grounds)
+  ○ Symbol · Colour
+  ○ Horizontal · Colour
+  ○ Stacked · Colour
+  ○ Wordmark · Colour            Not supplied
+  ─ Inverse (for dark grounds)
+  ○ Symbol · Inverse
+  ○ Horizontal · Inverse
+  ○ Stacked · Inverse
+  ○ Wordmark · Inverse           Not supplied
 ```
 
-- Forms with nothing in the logo set are listed but disabled, labelled
+All eight cells of the form × tone matrix are selectable — the same grid the
+logo set panel already shows — so a founder can force the inverse stacked
+lockup on a piece whose ground the machine reads as light.
+
+- Cells with nothing in the logo set are listed but disabled, labelled
   "Not supplied", so the menu doubles as an honest inventory.
-- Tone stays automatic. Colour vs inverse is a legibility decision the contrast
-  authority already makes correctly against each ground; exposing it would let a
-  founder ship a white mark on white paper. The menu says so in one line.
+- Legibility is still enforced, not bypassed. If the chosen tone would be
+  illegible on the ground a piece actually prints on (a light mark on white
+  paper), the compositor keeps the choice's *form* and either knocks the mark
+  out to a legible ink or sets it on a plate, exactly as it does today — and the
+  card reports "asked for Inverse, printed as knockout on white" rather than
+  shipping an invisible mark.
 - The generated card shows a small caption of the mark actually drawn
   ("Stacked · Inverse"), so the result is verifiable rather than assumed.
 - The choice sticks per piece for that venture, so regenerating the business
@@ -36,11 +49,12 @@ Mark for this piece
 
 ## How the choice reaches the artwork
 
-The preference is a *form* only, and it constrains selection rather than
-replacing it: the compositor still resolves tone from the ground, and still
-falls back — with the fallback recorded — when the requested form does not exist
-for the ground being drawn (e.g. stacked requested, no stacked inverse: it uses
-horizontal inverse rather than a light mark on dark paper).
+The preference is a form + tone pair. It constrains selection rather than
+replacing the resolver: the compositor picks the requested cell when it exists,
+falls back within the same tone first (stacked inverse missing → horizontal
+inverse), then across tone with the contrast repair applied, and records which
+fallback it took.
+
 
 ## Technical notes
 
