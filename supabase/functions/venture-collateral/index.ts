@@ -457,7 +457,9 @@ async function buildCtx(
     ad,
     copy,
     imagery,
+    markPick,
   };
+
 
   // The style system needs the kit's own voice block and imagery URLs, which
   // the SVG templates never see (they take inlined data URIs).
