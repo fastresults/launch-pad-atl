@@ -129,8 +129,6 @@ export function SocialAutopilot({
   onShowAdvanced: () => void;
 }) {
   const qc = useQueryClient();
-  const kitQ = useQuery({ queryKey: ["brandKit", snapshotId], queryFn: () => getBrandKit(snapshotId) });
-  const kit: any = kitQ.data;
   const snapshotId = snapshot.id;
 
   const progressQ = useQuery({
