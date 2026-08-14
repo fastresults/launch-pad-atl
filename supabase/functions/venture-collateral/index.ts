@@ -22,6 +22,7 @@ import {
 import {
   isMultiSlot,
   recommendMark,
+  slotChoices,
   slotsForKind,
 } from "../_shared/collateral-marks.ts";
 import { traceLogo } from "../_shared/logo-trace.ts";
@@ -936,7 +937,8 @@ Deno.serve(async (req) => {
           redirect: !!body?.redirect,
           needsCopy: ["presentation", "proposal", "invoice", "notecard", "guidelines"].includes(kind),
           needsImagery: kind === "presentation",
-          markPick,
+          kind,
+          markPicks: hasPicks ? markPicks : null,
         }));
 
       } catch (e) {
@@ -1010,7 +1012,7 @@ Deno.serve(async (req) => {
       );
       // Remember the founder's pick for this piece so the card can say which
       // mark it carries and the next run reuses it without being told again.
-      if (markPick && failed.length === 0) {
+      if (hasPicks && failed.length === 0) {
         const { data: kitRow } = await admin
           .from("venture_brand_kits")
           .select("collateral_mark_choice")
@@ -1018,8 +1020,10 @@ Deno.serve(async (req) => {
           .maybeSingle();
         const merged = { ...(kitRow?.collateral_mark_choice ?? {}) };
         merged[requested[0]] = {
-          requested: markPick,
-          used: ctx.markPick ? { form: ctx.markPick.form, tone: ctx.markPick.tone } : null,
+          slots: markPicks,
+          used: Object.fromEntries(
+            Object.entries(ctx.markPicks ?? {}).map(([slotId, p]) => [slotId, { form: p.form, tone: p.tone }]),
+          ),
           at: new Date().toISOString(),
         };
         await admin.from("venture_brand_kits")
@@ -1042,17 +1046,20 @@ Deno.serve(async (req) => {
         // Tells the library whether the wordmark on these pieces is real type
         // (symbol isolated) or the tracer's polygons (nothing to isolate).
         logo: { symbolIsolated: !!ctx.symbolSvg },
-        mark: ctx.markPick
-          ? {
-            form: ctx.markPick.form,
-            tone: ctx.markPick.tone,
-            fallback: !!ctx.markPick.fallback,
-            requested: ctx.markPick.requested,
-            // The chosen artwork kept its own colours unless a ground forced a
-            // repair — the card says so instead of looking like another cell.
-            recoloured: !!ctx.markRecoloured,
-          }
-          : null,
+        // What each slot of this piece actually carries — the card reports it
+        // per position rather than pretending a piece has one mark.
+        marks: Object.entries(ctx.markPicks ?? {}).map(([slotId, p]) => ({
+          slot: slotId,
+          form: p.form,
+          tone: p.tone,
+          fallback: !!p.fallback,
+          auto: !!p.auto,
+          reason: p.reason ?? null,
+          requested: p.requested,
+          // The chosen artwork kept its own colours unless a ground forced a
+          // repair — the card says so instead of looking like another cell.
+          recoloured: !!ctx.markRecoloured?.[slotId],
+        })),
 
         artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },
       });
