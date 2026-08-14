@@ -477,12 +477,20 @@ function fillsIn(svg: string): string[] {
  * `boxAspect` (width / height of the placement box) picks the lockup shape:
  * wide boxes take the horizontal lockup, square / tall boxes take the stacked
  * one when the venture has it.
+ *
+ * A founder's explicit `ctx.markPick` overrides both reads. It only chooses the
+ * artwork — legibility is still the ink authority's job downstream, so picking
+ * the inverse mark for a white page yields a knocked-out or plated mark rather
+ * than an invisible one.
  */
 function markSvgFor(
   ctx: CollateralCtx,
   bg?: string | null,
   boxAspect?: number,
 ): { svg: string | null; dark: boolean } {
+  if (ctx.markPick?.svg) {
+    return { svg: ctx.markPick.svg, dark: ctx.markPick.tone === "inverse" };
+  }
   const preferStacked = typeof boxAspect === "number" && boxAspect > 0 && boxAspect < 2.2;
   if (isDarkSurface(bg)) {
     const reversed = preferStacked
@@ -495,6 +503,7 @@ function markSvgFor(
     : ctx.symbolSvg || ctx.logoSvg;
   return { svg: light || null, dark: false };
 }
+
 
 
 
