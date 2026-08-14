@@ -380,7 +380,7 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
                   fileCount={(byKind[k.kind] ?? []).length}
                   stale={isStale(k.kind)}
                   qc={qcState(k.kind)}
-                  busy={busyKind === k.kind || (busyKind === "all" && gen.isPending)}
+                  busy={running.has(k.kind)}
                   markChoice={markChoice[k.kind] ?? null}
                   markUsed={marksUsed[k.kind] ?? null}
                   availableSlots={availableSlots}
