@@ -8,6 +8,8 @@
 // call is a straight download.
 
 import { rasterizeSvgToBytes, stripSvgBackground } from "./logo-raster.ts";
+import { formToneOf, slotFor, type LogoForm, type LogoTone, type LogoVariant } from "./logo-form.ts";
+import { recommendMark, slotsForKind, studioMarkKind } from "./collateral-marks.ts";
 
 const BUCKET = "user-media";
 const RASTER_WIDTH = 1024;
@@ -161,4 +163,119 @@ export async function loadEntryBitmap(admin: any, primary: any): Promise<LogoBit
     console.error("[brand-logo] fetchPrimaryLogoBitmap failed", e);
     return { dataUrl: null, bytes: null, svgText: null, skipReason: "exception" };
   }
+}
+
+// ---------------------------------------------------------------------------
+// Studio mark contract
+//
+// Social Studio and Content Studio obey the same rules as Branded Collateral:
+// a manual Form × Tone pick is the exact source artwork (never substituted,
+// never repainted), and an unpicked slot is resolved by the same symmetry
+// recommender the collateral worker uses.
+// ---------------------------------------------------------------------------
+
+export type StudioMarkIdentity = {
+  slot: string;
+  form: LogoForm;
+  tone: LogoTone;
+  variant: LogoVariant;
+  source: string;
+  mode: "manual" | "auto";
+  requested: { form: LogoForm; tone: LogoTone } | null;
+  reason: string | null;
+};
+
+export type StudioMark = LogoBitmap & { identity: StudioMarkIdentity | null };
+
+/** Raised when an explicitly picked cell has no artwork. Never fall back. */
+export class ExactMarkUnavailable extends Error {
+  code = "EXACT_LOGO_UNAVAILABLE";
+  constructor(public variant: string, public assetKind: string) {
+    super(`EXACT_LOGO_UNAVAILABLE:${assetKind}:${variant}`);
+  }
+}
+
+/**
+ * Resolve the mark for a studio asset, honouring a manual pick exactly.
+ * `pick` is a stored `{ form, tone }` cell (or null for AI selection).
+ */
+export async function resolveStudioMark(
+  admin: any,
+  kit: any,
+  opts: {
+    assetKind: string;
+    pick?: { form?: string; tone?: string } | null;
+    fallback?: LogoBitmapOpts;
+  },
+): Promise<StudioMark> {
+  const logos: any[] = Array.isArray(kit?.logos) ? kit.logos : [];
+  const kind = studioMarkKind(opts.assetKind);
+  const slot = slotsForKind(kind)[0];
+
+  const supplied: { variant: LogoVariant; form: LogoForm; tone: LogoTone; entry: any }[] = [];
+  for (const l of logos) {
+    const v = l?.variant;
+    if (!v || !(l?.svg_path ?? l?.path ?? l?.storage_path)) continue;
+    if (supplied.some((s) => s.variant === v)) continue;
+    const ft = formToneOf(v);
+    supplied.push({ variant: v as LogoVariant, form: ft.form, tone: ft.tone, entry: l });
+  }
+
+  const pick = opts.pick && opts.pick.form && opts.pick.tone
+    ? { form: opts.pick.form as LogoForm, tone: opts.pick.tone as LogoTone }
+    : null;
+
+  if (pick) {
+    const wanted = slotFor(pick.form, pick.tone);
+    const hit = supplied.find((s) => s.variant === wanted);
+    if (!hit) throw new ExactMarkUnavailable(wanted, opts.assetKind);
+    const bitmap = await loadEntryBitmap(admin, hit.entry);
+    if (!bitmap.bytes) throw new ExactMarkUnavailable(wanted, opts.assetKind);
+    console.log(`[studio mark] ${kind}/${slot.id} asked ${wanted} → exact`);
+    return {
+      ...bitmap,
+      identity: {
+        slot: slot.id,
+        form: hit.form,
+        tone: hit.tone,
+        variant: hit.variant,
+        source: String(hit.entry?.svg_path ?? hit.entry?.path ?? wanted),
+        mode: "manual",
+        requested: pick,
+        reason: null,
+      },
+    };
+  }
+
+  const rec = supplied.length
+    ? recommendMark(slot, supplied.map((s) => ({ form: s.form, tone: s.tone })))
+    : null;
+  if (rec) {
+    const variant = slotFor(rec.form, rec.tone);
+    const hit = supplied.find((s) => s.variant === variant);
+    if (hit) {
+      const bitmap = await loadEntryBitmap(admin, hit.entry);
+      if (bitmap.bytes) {
+        console.log(`[studio mark] ${kind}/${slot.id} auto → ${variant} (${rec.reason})`);
+        return {
+          ...bitmap,
+          identity: {
+            slot: slot.id,
+            form: hit.form,
+            tone: hit.tone,
+            variant: hit.variant,
+            source: String(hit.entry?.svg_path ?? hit.entry?.path ?? variant),
+            mode: "auto",
+            requested: null,
+            reason: rec.reason,
+          },
+        };
+      }
+    }
+  }
+
+  // Nothing classified — fall back to the legacy primary-entry heuristic so
+  // older ventures with unlabelled marks still get their logo.
+  const legacy = await fetchPrimaryLogoBitmap(admin, kit, opts.fallback ?? {});
+  return { ...legacy, identity: null };
 }
