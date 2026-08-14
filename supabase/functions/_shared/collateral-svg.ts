@@ -1937,8 +1937,9 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
     markBand: markBand(
       rs,
       primaryMark && idx >= 0 && markWs[idx] ? markWs[idx] / primaryMark : 3.2,
-      isLockup(ctx),
+      isLockup(ctx, idx >= 0 ? markSlots[idx] : undefined),
     ),
+
 
 
 
