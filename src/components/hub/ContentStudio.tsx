@@ -1099,13 +1099,13 @@ function Step4BuildAds({
                                       onClick={() => doGenerate(t)}>
                                       {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
                                       Generate
-                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
+                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={exactPick(t)} inherited={inheritedPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
                                   )}
                                   {(t.ad || err) && (
                                     <div className="inline-flex items-center"><Button size="sm" variant="outline" className="h-6 rounded-r-none text-[11px]" disabled={running || busy}
                                       onClick={() => setRegen({ task: t })}>
                                       <RefreshCw className="mr-1 h-3 w-3" /> Regenerate
-                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
+                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={exactPick(t)} inherited={inheritedPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
                                   )}
                                   {url && (
                                     <Button size="sm" variant="ghost" className="h-6 text-[11px]"
@@ -1221,7 +1221,7 @@ function Step4BuildAds({
             onRegenerate={() => setRegen({ task: t })}
             onEditHeadline={() => setRegen({ task: t, focusSection: "headline" })}
             onEditLogoSize={() => setRegen({ task: t, focusSection: "logo" })}
-            logoPicker={<LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={!!runningKeys[key(t)]} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} />}
+            logoPicker={<LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={exactPick(t)} inherited={inheritedPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={!!runningKeys[key(t)]} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} />}
             onDelete={t.ad ? () => { setPreviewIdx(null); doDelete(t); } : undefined}
           />
         );
