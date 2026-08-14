@@ -96,15 +96,19 @@ describe("studio surfaces", () => {
     }
   });
 
-  it("recommends a centred axial lockup for avatars and a compact mark for posts", () => {
+  it("recommends a full lockup for the avatar and a compact mark for a post corner", () => {
     const inventory = [
       { form: "symbol", tone: "colour" },
       { form: "stacked", tone: "colour" },
+      { form: "stacked", tone: "inverse" },
       { form: "horizontal", tone: "inverse" },
     ] as any;
     const avatar = recommendMark(slotsForKind("studio_avatar")[0], inventory);
-    expect(avatar?.form).toBe("stacked");
+    // Square field on the brand colour: reversed lockup, never the bare symbol.
+    expect(avatar?.tone).toBe("inverse");
+    expect(avatar?.form).not.toBe("symbol");
     const post = recommendMark(slotsForKind("studio_post")[0], inventory);
-    expect(post?.form).toBe("horizontal");
+    // Corner chrome on photography: the compact reversed mark.
+    expect(post?.tone).toBe("inverse");
   });
 });
