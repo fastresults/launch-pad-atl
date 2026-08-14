@@ -942,7 +942,8 @@ function Step4BuildAds({
                   value={`w-${w}`}
                   className={`rounded-xl border ${isPending ? "border-dashed border-border bg-background/20" : "border-border bg-background/40"} px-3`}
                 >
-                  <AccordionTrigger className="py-2.5 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                  <AccordionTrigger className="flex-1 py-2.5 hover:no-underline">
                     <div className="flex flex-1 items-center justify-between gap-2 pr-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-[10px]">Week {w}</Badge>
@@ -960,6 +961,9 @@ function Step4BuildAds({
                           </span>
                         )}
                       </div>
+                    </div>
+                  </AccordionTrigger>
+                  <div className="flex shrink-0 items-center">
                       <span
                         role="button"
                         tabIndex={0}
@@ -982,7 +986,7 @@ function Step4BuildAds({
                         }}
                         className={
                           isPending || wTotal > 0
-                            ? `inline-flex h-7 items-center gap-1 rounded-md border border-input bg-background px-2 text-[11px] ${isBlocked ? "pointer-events-none opacity-40" : "hover:bg-accent hover:text-accent-foreground"}`
+                            ? `inline-flex h-7 items-center gap-1 rounded-md rounded-r-none border border-input bg-background px-2 text-[11px] ${isBlocked ? "pointer-events-none opacity-40" : "hover:bg-accent hover:text-accent-foreground"}`
                             : "text-[10px] text-muted-foreground"
                         }
                         aria-disabled={running}
@@ -1006,8 +1010,22 @@ function Step4BuildAds({
                           "Done"
                         )}
                       </span>
-                    </div>
-                  </AccordionTrigger>
+                      {(isPending || wTotal > 0) && aspects.map((a) => (
+                        <LogoPlacementMenu
+                          key={`wk-mark-${w}-${a}`}
+                          assetKind={a}
+                          logos={kit?.logos}
+                          value={weekPick(w, a)}
+                          inherited={allPick(a)}
+                          disabled={running}
+                          title={`Logo for every week ${w} ad${aspects.length > 1 ? ` · ${a}` : ""}`}
+                          label={`week ${w} ${a} ads`}
+                          onChange={(cell) => saveWeekMark(w, a, cell)}
+                        />
+                      ))}
+                  </div>
+                  </div>
+
                   <AccordionContent className="pb-3">
                     {isPending ? (
                       <ul className="grid gap-1 sm:grid-cols-2">
