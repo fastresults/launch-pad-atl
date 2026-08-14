@@ -201,7 +201,23 @@ export type CollateralCtx = {
    * inlined as data URIs. Templates draw these instead of a grey box.
    */
   imagery?: string[] | null;
+
+  /**
+   * The founder's explicit mark choice for this piece — a form × tone cell of
+   * the logo set. When present it wins over the layout's own recommendation;
+   * the ink authority still decides how it is painted, so an inverse mark on
+   * white paper is knocked out or plated rather than shipped invisible.
+   */
+  markPick?: {
+    form: "symbol" | "horizontal" | "stacked" | "wordmark";
+    tone: "colour" | "inverse";
+    svg: string;
+    /** What was asked for, when the exact cell was not supplied. */
+    requested?: { form: string; tone: string } | null;
+    fallback?: boolean;
+  } | null;
 };
+
 
 export const COLLATERAL_KINDS = [
   "business_card",
