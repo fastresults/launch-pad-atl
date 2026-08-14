@@ -25,7 +25,7 @@ const KIND_LABELS: Record<string, string> = Object.fromEntries(
   COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => [k.kind, k.label])),
 );
 
-export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: boolean }) {
+export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?: any; locked: boolean }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [busyKind, setBusyKind] = useState<string | null>(null);
