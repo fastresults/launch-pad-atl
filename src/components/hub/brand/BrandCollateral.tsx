@@ -60,24 +60,29 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
   }, [items]);
 
   /** Founder's chosen mark per piece; absent means the layout decides. */
-  const [markChoice, setMarkChoice] = useState<Record<string, { form: string; tone: string }>>(
-    () => {
-      const stored = snapshot?.brand_kit?.collateral_mark_choice ?? snapshot?.collateral_mark_choice ?? {};
-      const out: Record<string, any> = {};
-      for (const [kind, v] of Object.entries(stored as Record<string, any>)) {
-        if (v?.requested?.form && v?.requested?.tone) out[kind] = v.requested;
+  const [markChoice, setMarkChoice] = useState<Record<string, { form: string; tone: string }>>({});
+  // Hydrate once the kit lands, without clobbering a choice made this session.
+  const storedChoice = kit?.collateral_mark_choice ?? null;
+  useMemo(() => {
+    if (!storedChoice) return;
+    setMarkChoice((prev) => {
+      const next = { ...prev };
+      for (const [kind, v] of Object.entries(storedChoice as Record<string, any>)) {
+        if (!next[kind] && v?.requested?.form && v?.requested?.tone) next[kind] = v.requested;
+        if (v?.used) usedFromKit[kind] = v.used;
       }
-      return out;
-    },
-  );
+      return next;
+    });
+  }, [storedChoice]);
   /** What the last run actually drew, per piece. */
   const [marksUsed, setMarksUsed] = useState<Record<string, any>>({});
 
   /** Slots the venture has actually uploaded, so absent cells read as absent. */
   const availableSlots = useMemo(() => {
-    const set = logoSetFrom(snapshot?.brand_logos ?? snapshot?.logos ?? snapshot?.brand_kit?.logos);
+    const set = logoSetFrom(kit?.logos);
     return Object.fromEntries(Object.keys(set).map((k) => [k, true]));
-  }, [snapshot]);
+  }, [kit?.logos]);
+
 
   const gen = useMutation({
     // Rasterising several pieces in one call blows the edge worker's CPU and
