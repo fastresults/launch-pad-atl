@@ -1295,6 +1295,16 @@ function Step5Launch({
   const qc = useQueryClient();
   const confirm = useConfirm();
 
+  const saveKeyMark = async (mkKey: string, cell: any) => {
+    await setStudioMarkChoice(snapshotId, mkKey, cell);
+    await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+  };
+  const adExactPick = (a: ContentAd) => kit?.studio_mark_choice?.[contentGraphicKey(a.post_id, a.aspect)] ?? null;
+  const adInheritPick = (a: ContentAd, week: number) =>
+    studioChoiceFor(kit?.studio_mark_choice, "__none__", a.aspect, [contentWeekKey(week, a.aspect), contentAllKey(a.aspect)]);
+
+
+
   const doDelete = async (adId: string) => {
     if (!(await confirm({ title: "Delete this ad?", description: "This can't be undone.", destructive: true, confirmText: "Delete" }))) return;
     setDeletingId(adId);
