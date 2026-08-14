@@ -151,7 +151,7 @@ export async function generateCollateral(
     for (let slice = 0; slice < 12; slice++) {
       try {
         const result = await withEscape(
-          call({ action: "generate", snapshotId, kinds: [kind], fromPage, markChoice }),
+          call({ action: "generate", snapshotId, kinds: [kind], fromPage, markChoice: picks }),
           escape,
         );
         generated.push(...(result?.generated ?? []));

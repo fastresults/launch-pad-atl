@@ -52,6 +52,25 @@ describe("slotChoices", () => {
     expect(out.cover).toEqual({ form: "stacked", tone: "colour" });
   });
 
+  it("reads a bare per-slot map straight from the picker", () => {
+    const out = slotChoices("business_card", {
+      front: { form: "stacked", tone: "colour" },
+      back: { form: "stacked", tone: "colour" },
+    });
+    expect(out).toEqual({
+      front: { form: "stacked", tone: "colour" },
+      back: { form: "stacked", tone: "colour" },
+    });
+  });
+
+  it("ignores keys that are not slots of this kind", () => {
+    const out = slotChoices("business_card", {
+      front: { form: "symbol", tone: "colour" },
+      cover: { form: "stacked", tone: "inverse" },
+    });
+    expect(out).toEqual({ front: { form: "symbol", tone: "colour" } });
+  });
+
   it("reads per-slot choices", () => {
     const out = slotChoices("presentation", {
       slots: { running: { form: "symbol", tone: "colour" } },
