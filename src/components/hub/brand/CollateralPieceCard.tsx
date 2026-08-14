@@ -102,6 +102,12 @@ export function CollateralPieceCard({
           {stale && (
             <Badge variant="outline" className="border-status-warning/50 text-[10px] text-status-warning">Details changed</Badge>
           )}
+          {markUsed && (
+            <Badge variant="outline" className="text-[10px] text-muted-foreground">
+              Mark: {slotLabel(markUsed) ?? `${markUsed.form} · ${markUsed.tone}`}
+              {markUsed.fallback ? " (nearest supplied)" : ""}
+            </Badge>
+          )}
         </div>
 
         {qc?.ok === false && (
@@ -118,16 +124,62 @@ export function CollateralPieceCard({
           >
             <Eye className="mr-1 h-3 w-3" />Preview
           </Button>
-          <Button
-            size="sm"
-            variant={generated ? "ghost" : "secondary"}
-            className="h-7 px-2 text-[11px]"
-            disabled={disabled || !canGenerate}
-            onClick={onGenerate}
-          >
-            {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-            {generated ? "Regenerate" : "Generate"}
-          </Button>
+          <div className="flex items-center">
+            <Button
+              size="sm"
+              variant={generated ? "ghost" : "secondary"}
+              className="h-7 rounded-r-none px-2 text-[11px]"
+              disabled={disabled || !canGenerate}
+              onClick={onGenerate}
+            >
+              {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+              {generated ? "Regenerate" : "Generate"}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant={generated ? "ghost" : "secondary"}
+                  aria-label={`Choose the mark for ${label}`}
+                  className="h-7 rounded-l-none border-l border-border px-1.5"
+                  disabled={disabled || !canGenerate}
+                >
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel className="text-[11px]">Mark for this piece</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={toKey(markChoice)}
+                  onValueChange={(v) => {
+                    if (v === AUTO) return onMarkChoice?.(null);
+                    const [form, tone] = v.split("|");
+                    onMarkChoice?.({ form, tone });
+                  }}
+                >
+                  <DropdownMenuRadioItem value={AUTO} className="text-[11px]">
+                    Recommended — chosen from the layout
+                  </DropdownMenuRadioItem>
+                  {["colour", "inverse"].map((tone) => (
+                    <div key={tone}>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-[10px] font-normal uppercase tracking-[0.12em] text-muted-foreground">
+                        {tone === "colour" ? "Colour — for light grounds" : "Inverse — for dark grounds"}
+                      </DropdownMenuLabel>
+                      {LOGO_SLOTS.filter((s) => s.tone === tone).map((s) => (
+                        <DropdownMenuRadioItem key={s.key} value={`${s.form}|${s.tone}`} className="text-[11px]">
+                          <span className="flex w-full items-center justify-between gap-2">
+                            <span>{s.label}</span>
+                            {!supplied[s.key] && <span className="text-[10px] text-muted-foreground">Not supplied</span>}
+                          </span>
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </div>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           {generated && (
             <Button
               size="sm"
@@ -140,6 +192,7 @@ export function CollateralPieceCard({
             </Button>
           )}
         </div>
+
 
       </div>
     </div>
