@@ -61,21 +61,24 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
 
   /** Founder's chosen mark per piece; absent means the layout decides. */
   const [markChoice, setMarkChoice] = useState<Record<string, { form: string; tone: string }>>({});
-  // Hydrate once the kit lands, without clobbering a choice made this session.
-  const storedChoice = kit?.collateral_mark_choice ?? null;
-  useMemo(() => {
-    if (!storedChoice) return;
-    setMarkChoice((prev) => {
-      const next = { ...prev };
-      for (const [kind, v] of Object.entries(storedChoice as Record<string, any>)) {
-        if (!next[kind] && v?.requested?.form && v?.requested?.tone) next[kind] = v.requested;
-        if (v?.used) usedFromKit[kind] = v.used;
-      }
-      return next;
-    });
-  }, [storedChoice]);
   /** What the last run actually drew, per piece. */
   const [marksUsed, setMarksUsed] = useState<Record<string, any>>({});
+
+  // Hydrate from the kit once it lands, without clobbering a choice made in
+  // this session.
+  const storedChoice = kit?.collateral_mark_choice ?? null;
+  useEffect(() => {
+    if (!storedChoice) return;
+    const picks: Record<string, any> = {};
+    const used: Record<string, any> = {};
+    for (const [kind, v] of Object.entries(storedChoice as Record<string, any>)) {
+      if (v?.requested?.form && v?.requested?.tone) picks[kind] = v.requested;
+      if (v?.used?.form) used[kind] = v.used;
+    }
+    setMarkChoice((prev) => ({ ...picks, ...prev }));
+    setMarksUsed((prev) => ({ ...used, ...prev }));
+  }, [storedChoice]);
+
 
   /** Slots the venture has actually uploaded, so absent cells read as absent. */
   const availableSlots = useMemo(() => {
