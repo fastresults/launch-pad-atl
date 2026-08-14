@@ -1392,6 +1392,16 @@ function Step5Launch({
                               </div>
                             </div>
                           </button>
+                          <LogoPlacementMenu
+                            assetKind={a.aspect}
+                            logos={kit?.logos}
+                            value={adExactPick(a)}
+                            inherited={adInheritPick(a, w)}
+                            used={(a as any)?.qa_notes?.logo_mark}
+                            label={p?.hook || "ad"}
+                            triggerClassName="rounded-md"
+                            onChange={(cell) => saveKeyMark(contentGraphicKey(a.post_id, a.aspect), cell)}
+                          />
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); doDelete(a.id); }}
@@ -1435,13 +1445,26 @@ function Step5Launch({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-7 text-[11px]"
+                    className="h-7 rounded-r-none text-[11px]"
                     disabled={!onAddWeek}
                     onClick={() => onAddWeek?.(w)}
                   >
                     <Sparkles className="mr-1 h-3 w-3" />
                     Add &amp; generate Week {w}
                   </Button>
+                  {aspects.map((asp) => (
+                    <LogoPlacementMenu
+                      key={`pending-mark-${w}-${asp}`}
+                      assetKind={asp}
+                      logos={kit?.logos}
+                      value={kit?.studio_mark_choice?.[contentWeekKey(w, asp)] ?? null}
+                      inherited={kit?.studio_mark_choice?.[contentAllKey(asp)] ?? null}
+                      title={`Logo for every week ${w} ad${aspects.length > 1 ? ` · ${asp}` : ""}`}
+                      label={`week ${w} ${asp} ads`}
+                      triggerClassName="h-7 rounded-l-none"
+                      onChange={(cell) => saveKeyMark(contentWeekKey(w, asp), cell)}
+                    />
+                  ))}
                 </div>
                 <ul className="grid gap-1 sm:grid-cols-2">
                   {wPosts.slice(0, 4).map((p) => (
