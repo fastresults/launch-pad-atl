@@ -888,18 +888,33 @@ function Step4BuildAds({
           )}
         </div>
         {tasks.length > 0 && (
-          tasks.some((t) => !t.ad) ? (
-            <Button size="sm" onClick={() => runAll()} disabled={running}>
-              {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
-              Generate all ({tasks.filter((t) => !t.ad).length})
-            </Button>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => runAll({ force: true })} disabled={running}>
-              {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
-              Regenerate all ({tasks.length})
-            </Button>
-          )
+          <div className="flex items-center">
+            {tasks.some((t) => !t.ad) ? (
+              <Button size="sm" className="rounded-r-none" onClick={() => runAll()} disabled={running}>
+                {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+                Generate all ({tasks.filter((t) => !t.ad).length})
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" className="rounded-r-none" onClick={() => runAll({ force: true })} disabled={running}>
+                {run?.scope === "all" ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />}
+                Regenerate all ({tasks.length})
+              </Button>
+            )}
+            {aspects.map((a) => (
+              <LogoPlacementMenu
+                key={`all-mark-${a}`}
+                assetKind={a}
+                logos={kit?.logos}
+                value={allPick(a)}
+                disabled={running}
+                title={`Logo for every ad in this flight${aspects.length > 1 ? ` · ${a}` : ""}`}
+                label={`all ${a} ads`}
+                onChange={(cell) => saveAllMark(a, cell)}
+              />
+            ))}
+          </div>
         )}
+
       </div>
 
       {allWeeks.length > 1 && (
