@@ -1913,6 +1913,8 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
   const markBgs = [...svg.matchAll(/data-mark-bg="([^"]*)"/g)].map((m) => m[1]);
   const markInks = [...svg.matchAll(/data-mark-ink="([^"]*)"/g)].map((m) => m[1]);
   const markVis = [...svg.matchAll(/data-mark-visible="([^"]*)"/g)].map((m) => m[1] === "1");
+  const markSlots = [...svg.matchAll(/data-mark-slot="([^"]*)"/g)].map((m) => m[1] || undefined);
+
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
   const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
   const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
