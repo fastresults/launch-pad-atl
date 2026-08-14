@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,13 +17,15 @@ import { useConfirm } from "@/components/ui/confirm-dialog";
 import { CollateralPreviewDialog } from "@/components/hub/brand/CollateralPreviewDialog";
 import { CollateralDetailsDialog } from "@/components/hub/brand/CollateralDetailsDialog";
 import { CollateralPieceCard } from "@/components/hub/brand/CollateralPieceCard";
+import { logoSetFrom } from "@/components/hub/brand/LogoSetPanel";
+
 
 
 const KIND_LABELS: Record<string, string> = Object.fromEntries(
   COLLATERAL_TIERS.flatMap((t) => t.kinds.map((k) => [k.kind, k.label])),
 );
 
-export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: boolean }) {
+export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?: any; locked: boolean }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [busyKind, setBusyKind] = useState<string | null>(null);
@@ -57,6 +59,34 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
     return m;
   }, [items]);
 
+  /** Founder's chosen mark per piece; absent means the layout decides. */
+  const [markChoice, setMarkChoice] = useState<Record<string, { form: string; tone: string }>>({});
+  /** What the last run actually drew, per piece. */
+  const [marksUsed, setMarksUsed] = useState<Record<string, any>>({});
+
+  // Hydrate from the kit once it lands, without clobbering a choice made in
+  // this session.
+  const storedChoice = kit?.collateral_mark_choice ?? null;
+  useEffect(() => {
+    if (!storedChoice) return;
+    const picks: Record<string, any> = {};
+    const used: Record<string, any> = {};
+    for (const [kind, v] of Object.entries(storedChoice as Record<string, any>)) {
+      if (v?.requested?.form && v?.requested?.tone) picks[kind] = v.requested;
+      if (v?.used?.form) used[kind] = v.used;
+    }
+    setMarkChoice((prev) => ({ ...picks, ...prev }));
+    setMarksUsed((prev) => ({ ...used, ...prev }));
+  }, [storedChoice]);
+
+
+  /** Slots the venture has actually uploaded, so absent cells read as absent. */
+  const availableSlots = useMemo(() => {
+    const set = logoSetFrom(kit?.logos);
+    return Object.fromEntries(Object.keys(set).map((k) => [k, true]));
+  }, [kit?.logos]);
+
+
   const gen = useMutation({
     // Rasterising several pieces in one call blows the edge worker's CPU and
     // memory budget, so we walk through them one at a time.
@@ -66,18 +96,22 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
       const failed: any[] = [];
       const qcIssues: any[] = [];
       let artDirection: any = null;
+      const marks: Record<string, any> = {};
       // One piece per call. Multi-page pieces (deck, guidelines) rasterise five
       // pages, and pairing them exhausts the edge worker's CPU budget.
       for (let i = 0; i < all.length; i += 1) {
-        const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 1));
+        const res: any = await generateCollateral(snapshot.id, all.slice(i, i + 1), markChoice);
         generated.push(...(res?.generated ?? []));
         failed.push(...(res?.failed ?? []));
         qcIssues.push(...(res?.qcIssues ?? []));
         artDirection ??= res?.artDirection ?? null;
+        Object.assign(marks, res?.marks ?? {});
         qc.invalidateQueries({ queryKey: ["brandCollateral", snapshot.id] });
       }
-      return { ok: true, generated, failed, qcIssues, artDirection };
+      setMarksUsed((prev) => ({ ...prev, ...marks }));
+      return { ok: true, generated, failed, qcIssues, artDirection, marks };
     },
+
     onMutate: (kinds) => { setRunReport(null); setBusyKind(kinds?.length === 1 ? kinds[0] : "all"); },
     onSettled: () => setBusyKind(null),
 
@@ -278,6 +312,17 @@ export function BrandCollateral({ snapshot, locked }: { snapshot: any; locked: b
                   stale={isStale(k.kind)}
                   qc={qcState(k.kind)}
                   busy={busyKind === k.kind || (busyKind === "all" && gen.isPending)}
+                  markChoice={markChoice[k.kind] ?? null}
+                  markUsed={marksUsed[k.kind] ?? null}
+                  availableSlots={availableSlots}
+                  onMarkChoice={(choice) =>
+                    setMarkChoice((prev) => {
+                      const next = { ...prev };
+                      if (choice) next[k.kind] = choice;
+                      else delete next[k.kind];
+                      return next;
+                    })}
+
                   canGenerate={!!locked}
                   disabled={!locked || gen.isPending}
                   onPreview={() => setOpenKind(k.kind)}

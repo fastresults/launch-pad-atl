@@ -11,6 +11,14 @@ import { requireUser, requireSnapshotOwner } from "../_shared/auth.ts";
 import { loadVentureContext } from "../_shared/venture-context.ts";
 import { rasterizeSvgToBytes } from "../_shared/logo-raster.ts";
 import { isolateSymbol } from "../_shared/logo-geometry.ts";
+import {
+  formToneOf,
+  type LogoForm,
+  type LogoTone,
+  type LogoVariant,
+  slotFor,
+} from "../_shared/logo-form.ts";
+
 import { traceLogo } from "../_shared/logo-trace.ts";
 
 
@@ -221,11 +229,28 @@ async function loadVentureImagery(admin: any, kit: any): Promise<string[]> {
   return out;
 }
 
+/**
+ * The order in which cells of the logo set are tried for an explicit choice:
+ * the exact cell, then the same tone in another form (lockups before symbols,
+ * so the venture still reads as itself), then the same form in the other tone,
+ * then anything left. Contrast repair fixes the tone downstream; nothing here
+ * is allowed to silently produce an unreadable mark.
+ */
+function markPickOrder(form: LogoForm, tone: LogoTone): LogoVariant[] {
+  const forms: LogoForm[] = [form, ...(["horizontal", "stacked", "symbol", "wordmark"] as LogoForm[]).filter((f) => f !== form)];
+  const other: LogoTone = tone === "inverse" ? "colour" : "inverse";
+  return [
+    ...forms.map((f) => slotFor(f, tone)),
+    ...forms.map((f) => slotFor(f, other)),
+  ];
+}
+
 async function buildCtx(
   admin: any,
   snapshotId: string,
-  opts: { redirect?: boolean; needsCopy?: boolean; needsImagery?: boolean } = {},
+  opts: { redirect?: boolean; needsCopy?: boolean; needsImagery?: boolean; markPick?: { form: LogoForm; tone: LogoTone } | null } = {},
 ): Promise<{ ctx: CollateralCtx; details: ContactDetails; extras: StyleSystemExtras }> {
+
   const kit = await loadKit(admin, snapshotId);
   if (!kit) throw new Error("NO_BRAND_KIT");
 
@@ -320,6 +345,30 @@ async function buildCtx(
     ? await loadMarkArtwork(admin, String(stackedDarkPath))
     : null;
 
+  // The founder's explicit cell for this piece, when they picked one.
+  let markPick: CollateralCtx["markPick"] = null;
+  if (opts.markPick) {
+    const wanted = slotFor(opts.markPick.form, opts.markPick.tone);
+    for (const slot of markPickOrder(opts.markPick.form, opts.markPick.tone)) {
+      const entry = logos.find((l: any) => l?.variant === slot && (l?.svg_path ?? l?.path));
+      const p = entry?.svg_path ?? entry?.path;
+      if (!p) continue;
+      const svg = await loadMarkArtwork(admin, String(p));
+      if (!svg) continue;
+      const ft = formToneOf(slot);
+      markPick = {
+        form: ft.form,
+        tone: ft.tone,
+        svg,
+        requested: { form: opts.markPick.form, tone: opts.markPick.tone },
+        fallback: slot !== wanted,
+      };
+      break;
+    }
+    console.log(
+      `[collateral mark] asked ${wanted} → ${markPick ? `${markPick.form}/${markPick.tone}${markPick.fallback ? " (fallback)" : ""}` : "nothing supplied, using the layout's own pick"}`,
+    );
+  }
 
 
   const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
@@ -416,7 +465,9 @@ async function buildCtx(
     ad,
     copy,
     imagery,
+    markPick,
   };
+
 
   // The style system needs the kit's own voice block and imagery URLs, which
   // the SVG templates never see (they take inlined data URIs).
@@ -813,6 +864,16 @@ Deno.serve(async (req) => {
         }, 400);
       }
 
+      // The founder's chosen mark cell for this piece, if they picked one.
+      const FORMS = ["symbol", "horizontal", "stacked", "wordmark"];
+      const TONES = ["colour", "inverse"];
+      const rawPick = body?.markChoice && typeof body.markChoice === "object"
+        ? body.markChoice[requested[0]]
+        : null;
+      const markPick = rawPick && FORMS.includes(rawPick.form) && TONES.includes(rawPick.tone)
+        ? { form: rawPick.form as LogoForm, tone: rawPick.tone as LogoTone }
+        : null;
+
       let ctx: CollateralCtx;
       let details: ContactDetails;
       let extras: StyleSystemExtras;
@@ -822,7 +883,9 @@ Deno.serve(async (req) => {
           redirect: !!body?.redirect,
           needsCopy: ["presentation", "proposal", "invoice", "notecard", "guidelines"].includes(kind),
           needsImagery: kind === "presentation",
+          markPick,
         }));
+
       } catch (e) {
         const code = (e as Error).message;
         const msg = code === "NO_BRAND_KIT"
@@ -892,6 +955,25 @@ Deno.serve(async (req) => {
       const qcIssues = done.flatMap((r: any) =>
         (r.qc ?? []).filter((v: QcVerdict) => !v.ok).map((v: QcVerdict) => ({ kind: r.kind, page: v.page, reasons: v.reasons })),
       );
+      // Remember the founder's pick for this piece so the card can say which
+      // mark it carries and the next run reuses it without being told again.
+      if (markPick && failed.length === 0) {
+        const { data: kitRow } = await admin
+          .from("venture_brand_kits")
+          .select("collateral_mark_choice")
+          .eq("snapshot_id", snapshotId)
+          .maybeSingle();
+        const merged = { ...(kitRow?.collateral_mark_choice ?? {}) };
+        merged[requested[0]] = {
+          requested: markPick,
+          used: ctx.markPick ? { form: ctx.markPick.form, tone: ctx.markPick.tone } : null,
+          at: new Date().toISOString(),
+        };
+        await admin.from("venture_brand_kits")
+          .update({ collateral_mark_choice: merged })
+          .eq("snapshot_id", snapshotId);
+      }
+
       // Resume contract: a bounded slice landed and more pages remain. The
       // client calls back with `fromPage` until `more` is false.
       const pending = done.find((r: any) => typeof r.nextPage === "number");
@@ -907,8 +989,12 @@ Deno.serve(async (req) => {
         // Tells the library whether the wordmark on these pieces is real type
         // (symbol isolated) or the tracer's polygons (nothing to isolate).
         logo: { symbolIsolated: !!ctx.symbolSvg },
+        mark: ctx.markPick
+          ? { form: ctx.markPick.form, tone: ctx.markPick.tone, fallback: !!ctx.markPick.fallback, requested: ctx.markPick.requested }
+          : null,
         artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },
       });
+
 
 
     }

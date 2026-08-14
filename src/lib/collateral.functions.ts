@@ -76,7 +76,15 @@ export async function listCollateral(snapshotId: string): Promise<CollateralItem
   return (data?.items ?? []) as CollateralItem[];
 }
 
-export async function generateCollateral(snapshotId: string, kinds?: string[]) {
+export type LogoForm = "symbol" | "horizontal" | "stacked" | "wordmark";
+export type LogoTone = "colour" | "inverse";
+export type MarkChoice = { form: LogoForm; tone: LogoTone };
+
+export async function generateCollateral(
+  snapshotId: string,
+  kinds?: string[],
+  markChoice?: Record<string, MarkChoice>,
+) {
   const requested = kinds?.length
     ? kinds
     : COLLATERAL_TIERS.flatMap((tier) => tier.kinds.map((item) => item.kind));
@@ -89,21 +97,24 @@ export async function generateCollateral(snapshotId: string, kinds?: string[]) {
   const failed: any[] = [];
   const qcIssues: any[] = [];
   let artDirection: any = null;
+  const marks: Record<string, any> = {};
   for (const kind of requested) {
     let fromPage = 0;
     for (let slice = 0; slice < 12; slice++) {
-      const result = await call({ action: "generate", snapshotId, kinds: [kind], fromPage });
+      const result = await call({ action: "generate", snapshotId, kinds: [kind], fromPage, markChoice });
       generated.push(...(result?.generated ?? []));
       failed.push(...(result?.failed ?? []));
       qcIssues.push(...(result?.qcIssues ?? []));
       artDirection ??= result?.artDirection ?? null;
+      if (result?.mark) marks[kind] = result.mark;
       if (!result?.more || typeof result?.nextPage !== "number" || result.nextPage <= fromPage) break;
       fromPage = result.nextPage;
     }
   }
-  return { ok: failed.length === 0, generated, failed, qcIssues, artDirection };
+  return { ok: failed.length === 0, generated, failed, qcIssues, artDirection, marks };
 
 }
+
 
 export async function clearCollateral(snapshotId: string, kind?: string) {
   return call({ action: "delete", snapshotId, kind });

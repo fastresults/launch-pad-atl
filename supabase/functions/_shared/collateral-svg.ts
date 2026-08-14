@@ -201,7 +201,23 @@ export type CollateralCtx = {
    * inlined as data URIs. Templates draw these instead of a grey box.
    */
   imagery?: string[] | null;
+
+  /**
+   * The founder's explicit mark choice for this piece — a form × tone cell of
+   * the logo set. When present it wins over the layout's own recommendation;
+   * the ink authority still decides how it is painted, so an inverse mark on
+   * white paper is knocked out or plated rather than shipped invisible.
+   */
+  markPick?: {
+    form: "symbol" | "horizontal" | "stacked" | "wordmark";
+    tone: "colour" | "inverse";
+    svg: string;
+    /** What was asked for, when the exact cell was not supplied. */
+    requested?: { form: string; tone: string } | null;
+    fallback?: boolean;
+  } | null;
 };
+
 
 export const COLLATERAL_KINDS = [
   "business_card",
@@ -461,12 +477,20 @@ function fillsIn(svg: string): string[] {
  * `boxAspect` (width / height of the placement box) picks the lockup shape:
  * wide boxes take the horizontal lockup, square / tall boxes take the stacked
  * one when the venture has it.
+ *
+ * A founder's explicit `ctx.markPick` overrides both reads. It only chooses the
+ * artwork — legibility is still the ink authority's job downstream, so picking
+ * the inverse mark for a white page yields a knocked-out or plated mark rather
+ * than an invisible one.
  */
 function markSvgFor(
   ctx: CollateralCtx,
   bg?: string | null,
   boxAspect?: number,
 ): { svg: string | null; dark: boolean } {
+  if (ctx.markPick?.svg) {
+    return { svg: ctx.markPick.svg, dark: ctx.markPick.tone === "inverse" };
+  }
   const preferStacked = typeof boxAspect === "number" && boxAspect > 0 && boxAspect < 2.2;
   if (isDarkSurface(bg)) {
     const reversed = preferStacked
@@ -479,6 +503,7 @@ function markSvgFor(
     : ctx.symbolSvg || ctx.logoSvg;
   return { svg: light || null, dark: false };
 }
+
 
 
 
@@ -613,7 +638,9 @@ function markAt(
     ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN }));
   }
 
-  return `${repairedPlate}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  const pickAttrs = ctx.markPick?.svg ? ` data-mark-form="${ctx.markPick.form}" data-mark-tone="${ctx.markPick.tone}"` : "";
+  return `${repairedPlate}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}"${pickAttrs} data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+
 
 
 }
@@ -632,10 +659,13 @@ function logoAspect(ctx: CollateralCtx, bg?: string | null, boxAspect?: number):
 
 /** True when the artwork being drawn already contains the company name. */
 function isLockup(ctx: CollateralCtx): boolean {
+  // A chosen cell says what it is: only the symbol is wordmark-less.
+  if (ctx.markPick?.svg) return ctx.markPick.form !== "symbol";
   if (ctx.symbolSvg) return false; // the wordmark is set in real type instead
   return logoAspect(ctx) >= 1.6;
 
 }
+
 
 /** Clear space the mark demands on every side, from its own height. */
 function clearSpace(height: number): number {

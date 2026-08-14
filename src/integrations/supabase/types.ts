@@ -2825,6 +2825,7 @@ export type Database = {
       venture_brand_kits: {
         Row: {
           art_direction: Json | null
+          collateral_mark_choice: Json
           contact_details: Json | null
           contact_details_suggested: Json | null
           contact_suggested_at: string | null
@@ -2849,6 +2850,7 @@ export type Database = {
         }
         Insert: {
           art_direction?: Json | null
+          collateral_mark_choice?: Json
           contact_details?: Json | null
           contact_details_suggested?: Json | null
           contact_suggested_at?: string | null
@@ -2873,6 +2875,7 @@ export type Database = {
         }
         Update: {
           art_direction?: Json | null
+          collateral_mark_choice?: Json
           contact_details?: Json | null
           contact_details_suggested?: Json | null
           contact_suggested_at?: string | null
