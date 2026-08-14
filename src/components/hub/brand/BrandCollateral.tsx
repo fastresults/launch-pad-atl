@@ -427,13 +427,18 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
 
       <CollateralDetailsDialog
         open={detailsOpen}
-        onOpenChange={setDetailsOpen}
+        onOpenChange={(v) => {
+          setDetailsOpen(v);
+          // Abandoning the confirm must never leave a queued run behind.
+          if (!v) setPendingKinds(undefined);
+        }}
         snapshotId={snapshot.id}
         onVerified={() => {
           detailsQ.refetch();
           gen.mutate(pendingKinds);
         }}
       />
+
 
     </div>
   );
