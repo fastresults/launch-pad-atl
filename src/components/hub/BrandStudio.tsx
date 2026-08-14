@@ -55,6 +55,16 @@ export function BrandStudio({ snapshot }: { snapshot: any }) {
     onError: (e: any) => toast.error(e.message || "Lock failed"),
   });
 
+  const setLock = useMutation({
+    mutationFn: (next: boolean) => setBrandKitLock(snapshot.id, next),
+    onSuccess: (_d, next) => {
+      qc.invalidateQueries({ queryKey: ["brandKit", snapshot.id] });
+      toast.success(next ? "Brand kit locked" : "Brand kit unlocked — it's editable again");
+    },
+    onError: (e: any) => toast.error(e.message || "Could not change the lock"),
+  });
+
+
   const reset = useMutation({
     mutationFn: () => resetBrandKit(snapshot.id),
     onSuccess: () => {
