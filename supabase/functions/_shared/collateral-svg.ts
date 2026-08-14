@@ -1155,9 +1155,10 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
     T.line(isInvoice ? "Total due" : "Total investment", W - g.M - g.span(Math.round(ad.grid.columns * 0.34)), totalsY + step(ad, 1.7), step(ad, -0.3), fg, { family: "head", weight: 700, maxWidth: g.span(4) }),
     T.line("$0.00", W - g.M - step(ad, 0.4), totalsY + step(ad, 1.7), step(ad, 0.4), primary, { family: "head", weight: 700, anchor: "end", maxWidth: g.span(3) }),
 
-    T.block(terms, g.M, H - g.M - step(ad, 3.6), step(ad, -1.1), g.span(Math.round(ad.grid.columns * 0.7)), muted, { leading: 1.5, maxLines: 3 }).svg,
-    d.tax_id ? T.line(`EIN ${d.tax_id}`, g.M, H - g.M - step(ad, 0.4), step(ad, -1.4), mix(fg, paper, 0.5), { maxWidth: g.span(4) }) : "",
-    label(T, ctx, [d.website, d.email].filter(Boolean).join("   ·   "), W - g.M, H - g.M - step(ad, 0.4), step(ad, -1.4), muted, "end", g.span(6)),
+    T.block(terms, g.M, termsY, termsSize, termsW, muted, { leading: 1.5, maxLines: 3 }).svg,
+    d.tax_id ? T.line(`EIN ${d.tax_id}`, g.M, footBaseline, step(ad, -1.4), mix(fg, paper, 0.5), { maxWidth: g.span(3) }) : "",
+    label(T, ctx, [d.website, d.email].filter(Boolean).join("   ·   "), W - g.M, footBaseline, step(ad, -1.4), muted, "end", g.span(5)),
+
     // No corner motif here: all four corners are already spoken for (mark,
     // title, terms, contact line). The ornament was striking through the title.
   ].join("");
