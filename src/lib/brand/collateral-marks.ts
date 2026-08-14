@@ -90,7 +90,7 @@ export function studioMarkKind(assetKind: string): string {
   const k = String(assetKind || "").toLowerCase();
   if (/avatar|profile|logo_square/.test(k)) return "studio_avatar";
   if (/cover|banner|header/.test(k)) return "studio_cover";
-  if (/story|reel|vertical|9x16/.test(k)) return "studio_story";
+  if (/story|reel|vertical|9x16|9:16/.test(k)) return "studio_story";
   return "studio_post";
 }
 
