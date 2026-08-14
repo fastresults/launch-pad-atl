@@ -496,18 +496,28 @@ function fillsIn(svg: string): string[] {
  * wide boxes take the horizontal lockup, square / tall boxes take the stacked
  * one when the venture has it.
  *
- * A founder's explicit `ctx.markPick` overrides both reads. It only chooses the
- * artwork — legibility is still the ink authority's job downstream, so picking
- * the inverse mark for a white page yields a knocked-out or plated mark rather
- * than an invisible one.
+ * The mark resolved for this slot (`ctx.markPicks[slot]`) overrides both reads.
+ * It only chooses the artwork — legibility is still the ink authority's job
+ * downstream, so picking the inverse mark for a white page yields a knocked-out
+ * or plated mark rather than an invisible one.
  */
+export function pickFor(ctx: CollateralCtx, slot?: string): MarkPickEntry | null {
+  const picks = ctx.markPicks;
+  if (!picks) return null;
+  // A slot with no entry falls back to the piece-wide entry, which is what a
+  // legacy single-cell choice resolves into.
+  return (slot ? picks[slot] : null) ?? picks.primary ?? null;
+}
+
 function markSvgFor(
   ctx: CollateralCtx,
   bg?: string | null,
   boxAspect?: number,
+  slot?: string,
 ): { svg: string | null; dark: boolean } {
-  if (ctx.markPick?.svg) {
-    return { svg: ctx.markPick.svg, dark: ctx.markPick.tone === "inverse" };
+  const pick = pickFor(ctx, slot);
+  if (pick?.svg) {
+    return { svg: pick.svg, dark: pick.tone === "inverse" };
   }
   const preferStacked = typeof boxAspect === "number" && boxAspect > 0 && boxAspect < 2.2;
   if (isDarkSurface(bg)) {
@@ -521,6 +531,7 @@ function markSvgFor(
     : ctx.symbolSvg || ctx.logoSvg;
   return { svg: light || null, dark: false };
 }
+
 
 
 
