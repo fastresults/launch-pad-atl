@@ -414,7 +414,7 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
         onOpenChange={(v) => setOpenKind(v ? openKind : null)}
         kind={openMeta}
         files={openKind ? (byKind[openKind] ?? []) : []}
-        busy={gen.isPending && (busyKind === openKind || busyKind === "all")}
+        busy={!!openKind && running.has(openKind)}
         canGenerate={!!locked}
         onRegenerate={() => openKind && requestGen([openKind])}
         onClear={async () => {
