@@ -362,6 +362,8 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
       {step === 5 && (
         <Step5Launch
           snapshotId={snapshotId}
+          kit={kit}
+          aspects={aspects}
           ads={ads}
           posts={posts}
           selectedWeeks={effectiveWeeks}
@@ -1251,9 +1253,9 @@ function Step4BuildAds({
 // STEP 5 — Launch summary
 // ============================================================
 function Step5Launch({
-  snapshotId, ads, posts, selectedWeeks, onBack, onAddWeek,
+  snapshotId, kit, aspects = [], ads, posts, selectedWeeks, onBack, onAddWeek,
 }: {
-  snapshotId: string;
+  snapshotId: string; kit?: any; aspects?: AdAspect[];
   ads: ContentAd[]; posts: ContentPost[]; selectedWeeks: number[];
   onBack: () => void;
   onAddWeek?: (week: number) => Promise<void> | void;
