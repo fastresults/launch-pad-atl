@@ -184,6 +184,14 @@ export function slotChoices(
   const legacy = (rec.requested ?? rec) as any;
   if (legacy?.form && legacy?.tone) {
     for (const s of slotsForKind(kind)) out[s.id] = { form: legacy.form, tone: legacy.tone };
+    return out;
+  }
+  // A bare per-slot map (`{ front: cell, back: cell }`) — what the card sends
+  // straight from its picker. Unknown keys are ignored so a stale slot id from
+  // an older client can never smuggle a mark into a slot that no longer exists.
+  for (const s of slotsForKind(kind)) {
+    const v = rec[s.id] as any;
+    if (v?.form && v?.tone) out[s.id] = { form: v.form, tone: v.tone };
   }
   return out;
 }
