@@ -62,7 +62,37 @@ const SLOTS: Record<string, MarkSlot[]> = {
     { id: "cover", label: "Guidelines cover", hint: "Hero mark on the brand-colour cover", scale: "hero", align: "edge", ground: "brand", boxAspect: 2.2 },
     { id: "system", label: "Guidelines logo pages", hint: "The approved mark repeated across logo, clear-space and usage pages", scale: "hero", align: "centred", ground: "paper", boxAspect: 1.8 },
   ],
+  // --- Studio surfaces -------------------------------------------------
+  // Social Studio and Content Studio render one mark per asset, but the hole
+  // it drops into differs sharply: an avatar is a square field carrying the
+  // mark alone, a cover is a wide banner with the mark on the margin, a poster
+  // is photography with the mark as chrome in a corner.
+  studio_avatar: [
+    { id: "primary", label: "Avatar mark", hint: "The mark alone, centred in the square brand field", scale: "hero", align: "centred", ground: "brand", boxAspect: 1.0 },
+  ],
+  studio_cover: [
+    { id: "primary", label: "Cover mark", hint: "Mark on the banner margin, clear of the safe zone", scale: "chrome", align: "edge", ground: "dark", boxAspect: 3.0 },
+  ],
+  studio_post: [
+    { id: "primary", label: "Post mark", hint: "Small mark in the poster corner", scale: "chrome", align: "edge", ground: "dark", boxAspect: 2.6 },
+  ],
+  studio_story: [
+    { id: "primary", label: "Story mark", hint: "Small mark on the vertical frame", scale: "chrome", align: "edge", ground: "dark", boxAspect: 2.2 },
+  ],
 };
+
+/**
+ * Which studio slot set an asset kind renders into. Social and Content Studio
+ * name their assets by platform surface; this maps those names onto the same
+ * slot vocabulary collateral uses so one resolver serves every studio.
+ */
+export function studioMarkKind(assetKind: string): string {
+  const k = String(assetKind || "").toLowerCase();
+  if (/avatar|profile|logo_square/.test(k)) return "studio_avatar";
+  if (/cover|banner|header/.test(k)) return "studio_cover";
+  if (/story|reel|vertical|9x16/.test(k)) return "studio_story";
+  return "studio_post";
+}
 
 /** Every slot this kind renders. Unknown kinds get one generic slot. */
 export function slotsForKind(kind: string): MarkSlot[] {
