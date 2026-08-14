@@ -78,3 +78,33 @@ describe("slotChoices", () => {
     expect(out).toEqual({ running: { form: "symbol", tone: "colour" } });
   });
 });
+
+describe("studio surfaces", () => {
+  it("maps studio asset kinds onto slot sets", () => {
+    expect(studioMarkKind("avatar")).toBe("studio_avatar");
+    expect(studioMarkKind("profile_photo")).toBe("studio_avatar");
+    expect(studioMarkKind("cover")).toBe("studio_cover");
+    expect(studioMarkKind("linkedin_banner")).toBe("studio_cover");
+    expect(studioMarkKind("9:16")).toBe("studio_story");
+    expect(studioMarkKind("1:1")).toBe("studio_post");
+  });
+
+  it("gives every studio surface exactly one mark slot", () => {
+    for (const kind of ["studio_avatar", "studio_cover", "studio_post", "studio_story"]) {
+      expect(slotsForKind(kind)).toHaveLength(1);
+      expect(slotsForKind(kind)[0].id).toBe("primary");
+    }
+  });
+
+  it("recommends a centred axial lockup for avatars and a compact mark for posts", () => {
+    const inventory = [
+      { form: "symbol", tone: "colour" },
+      { form: "stacked", tone: "colour" },
+      { form: "horizontal", tone: "inverse" },
+    ] as any;
+    const avatar = recommendMark(slotsForKind("studio_avatar")[0], inventory);
+    expect(avatar?.form).toBe("stacked");
+    const post = recommendMark(slotsForKind("studio_post")[0], inventory);
+    expect(post?.form).toBe("horizontal");
+  });
+});
