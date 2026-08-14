@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recommendMark, slotChoices, slotsForKind } from "../collateral-marks";
+import { recommendMark, slotChoices, slotsForKind, studioMarkKind } from "../collateral-marks";
 
 const full = [
   { form: "symbol", tone: "colour" },
