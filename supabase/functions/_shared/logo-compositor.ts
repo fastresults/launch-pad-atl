@@ -416,25 +416,30 @@ export async function compositeLogo(
     /** Vector source — when present the mark is re-rendered in the knockout
      *  color instead of pixel-tinted, keeping vector crispness. */
     svgText?: string | null;
+    /** A manual Form × Tone selection: the artwork is the contract. Never
+     *  tint, knock out or substitute it — adapt the surface underneath it
+     *  instead (a scrim) when it does not read. */
+    exactArtwork?: boolean;
   },
-): Promise<{ bytes: Uint8Array; contrast: number; inkHex: string; scrim: boolean }> {
+): Promise<{ bytes: Uint8Array; contrast: number; inkHex: string; scrim: boolean; adapted: boolean }> {
   let base: Image;
   let logo: Image;
   try {
     base = await Image.decode(baseBytes);
   } catch (e) {
     console.warn("logo-compositor: base decode failed, returning original", e);
-    return { bytes: baseBytes, contrast: 0, inkHex: "", scrim: false };
+    return { bytes: baseBytes, contrast: 0, inkHex: "", scrim: false, adapted: false };
   }
   try {
     logo = knockoutAndTrim(await Image.decode(logoBytes));
   } catch (e) {
     console.warn("logo-compositor: logo decode failed, returning base", e);
-    return { bytes: baseBytes, contrast: 0, inkHex: "", scrim: false };
+    return { bytes: baseBytes, contrast: 0, inkHex: "", scrim: false, adapted: false };
   }
 
   const size = normalizeLogoSize(opts.logoSize);
   const isAvatar = opts.placement === "avatar-center";
+  const exact = opts.exactArtwork === true;
   const logoAspect = logo.width / Math.max(1, logo.height);
   const box = targetBoxFor(opts.placement, base.width, base.height, logoAspect, size, opts.cornerOverride);
 
@@ -446,7 +451,17 @@ export async function compositeLogo(
   const inkHex = baseLumBehind < 0.5 ? lightCandidate : darkCandidate;
 
   let mark = logo;
-  if (!isAvatar) {
+  if (exact) {
+    // Re-render the vector at placement resolution in its OWN colours.
+    if (opts.svgText) {
+      const raw = await rasterizeSvgToBytes(stripSvgBackground(opts.svgText), Math.max(512, box.w * 2));
+      if (raw) {
+        try {
+          mark = knockoutAndTrim(await Image.decode(raw));
+        } catch { /* keep the decoded raster */ }
+      }
+    }
+  } else if (!isAvatar) {
     if (opts.svgText) {
       const mono = await rasterizeSvgMono(opts.svgText, inkHex, Math.max(512, box.w * 2));
       if (mono) {
@@ -467,13 +482,16 @@ export async function compositeLogo(
   const finalAspect = mark.width / Math.max(1, mark.height);
   const finalBox = targetBoxFor(opts.placement, base.width, base.height, finalAspect, size, opts.cornerOverride);
 
+  // For exact artwork the relevant ink is the artwork's own ink, not a
+  // knockout colour we chose.
+  const artworkLum = exact ? visibleLuminance(mark) : null;
   const inkRgb = hexToRgb(inkHex);
-  const inkLum = luminance(inkRgb.r, inkRgb.g, inkRgb.b);
+  const inkLum = artworkLum ?? luminance(inkRgb.r, inkRgb.g, inkRgb.b);
   const behind = avgLuminance(base, finalBox.x, finalBox.y, finalBox.w, finalBox.h);
   let contrast = (Math.max(inkLum, behind) + 0.05) / (Math.min(inkLum, behind) + 0.05);
 
   let scrim = false;
-  if (!isAvatar && contrast < 3) {
+  if ((!isAvatar || exact) && contrast < 3) {
     scrim = true;
     const cx = finalBox.x + finalBox.w / 2;
     const cy = finalBox.y + finalBox.h / 2;
@@ -487,9 +505,26 @@ export async function compositeLogo(
   base.composite(fit.img, finalBox.x + fit.offX, finalBox.y + fit.offY);
 
   console.log(
-    `[logo-compositor] placement=${opts.placement} size=${size} aspect=${finalAspect.toFixed(2)} box=${finalBox.w}x${finalBox.h} @${finalBox.x},${finalBox.y} ink=${inkHex} contrast=${contrast.toFixed(2)} scrim=${scrim} vector=${!!opts.svgText} canvas=${base.width}x${base.height}`,
+    `[logo-compositor] placement=${opts.placement} size=${size} exact=${exact} aspect=${finalAspect.toFixed(2)} box=${finalBox.w}x${finalBox.h} @${finalBox.x},${finalBox.y} ink=${exact ? "artwork" : inkHex} contrast=${contrast.toFixed(2)} scrim=${scrim} vector=${!!opts.svgText} canvas=${base.width}x${base.height}`,
   );
 
   const out = await base.encode(1);
-  return { bytes: out, contrast, inkHex, scrim };
+  return { bytes: out, contrast, inkHex: exact ? "artwork" : inkHex, scrim, adapted: scrim };
 }
+
+/** Mean luminance of the mark's visible (non-transparent) pixels. */
+function visibleLuminance(img: Image): number {
+  let sum = 0;
+  let n = 0;
+  for (let y = 0; y < img.height; y += 2) {
+    for (let x = 0; x < img.width; x += 2) {
+      const px = img.getPixelAt(x + 1, y + 1);
+      const a = px & 0xff;
+      if (a < 40) continue;
+      sum += luminance((px >> 24) & 0xff, (px >> 16) & 0xff, (px >> 8) & 0xff);
+      n++;
+    }
+  }
+  return n ? sum / n : 0.5;
+}
+
