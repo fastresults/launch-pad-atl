@@ -70,6 +70,8 @@ export async function generateSocialCover(input: {
   paletteOverride?: PaletteOverride;
   headlineOverride?: HeadlineOverride;
   logoSize?: "sm" | "md" | "lg";
+  /** Exact Form × Tone logo pick; null = let the AI select. */
+  markPick?: { form: string; tone: string } | null;
   sceneOverride?: string;
   refreshScenes?: boolean;
 }): Promise<SocialAsset> {

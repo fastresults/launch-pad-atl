@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { edgeErrorMessage } from "@/lib/edge-errors";
-import { getBrandKit } from "@/lib/brandKit.functions";
+import { getBrandKit, setStudioMarkChoice } from "@/lib/brandKit.functions";
+import { studioMarkKind } from "@/lib/brand/collateral-marks";
 import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import {
   parseCalendarPosts, listCalendarPosts, listContentAds, generateContentAd,
@@ -1092,7 +1093,19 @@ function Step4BuildAds({
           currentScene={(regen.task.ad as any)?.qa_notes?.scene?.depict ?? null}
           initialIntensity="balanced"
           focusSection={regen.focusSection}
-          onSubmit={async (input) => { await doGenerate(regen.task, input); }}
+          assetKind={regen.task.aspect}
+          logos={(kit as any)?.logos ?? null}
+          initialMarkPick={(kit as any)?.studio_mark_choice?.[studioMarkKind(regen.task.aspect)] ?? null}
+          usedMark={(regen.task.ad as any)?.qa_notes?.logo_mark ?? null}
+          onSubmit={async (input) => {
+            // The pick is the contract from here on: remember it for this
+            // surface so later runs place the same artwork.
+            try {
+              await setStudioMarkChoice(snapshotId, studioMarkKind(regen.task.aspect), input.markPick ?? null);
+              await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+            } catch { /* generation still carries the pick in its payload */ }
+            await doGenerate(regen.task, input);
+          }}
         />
       )}
 

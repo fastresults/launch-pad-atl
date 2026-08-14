@@ -509,7 +509,7 @@ Deno.serve(async (req) => {
     // Which mark this poster carries. A manual Form × Tone pick (from the
     // request, else the kit's saved studio choice) is exact: the artwork is
     // placed as drawn, or the run fails — never a plausible substitute.
-    const markKind = studioMarkKind(String(post.format ?? aspect));
+    const markKind = studioMarkKind(String(aspect));
     const savedStudioPick = (kit as any)?.studio_mark_choice?.[markKind] ?? null;
     const markPick = body?.markPick === null
       ? null
@@ -519,7 +519,7 @@ Deno.serve(async (req) => {
     let logoSvgText: string | null = null;
     let markIdentity: any = null;
     try {
-      const resolved = await resolveStudioMark(admin, kit, { assetKind: String(post.format ?? aspect), pick: markPick });
+      const resolved = await resolveStudioMark(admin, kit, { assetKind: String(aspect), pick: markPick });
       logoDataUrl = resolved.dataUrl;
       logoBytes = resolved.bytes;
       logoSvgText = resolved.svgText;
