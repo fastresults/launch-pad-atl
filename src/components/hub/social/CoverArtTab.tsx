@@ -17,9 +17,9 @@ import {
   ART_DIRECTIONS,
   type ArtDirectionId,
 } from "@/lib/social-platform-specs";
-import { StudioMarkPicker } from "@/components/hub/brand/StudioMarkPicker";
+import { LogoPlacementMenu } from "@/components/hub/brand/LogoPlacementMenu";
 import { setStudioMarkChoice } from "@/lib/brandKit.functions";
-import { studioMarkKind } from "@/lib/brand/collateral-marks";
+import { socialGraphicKey, studioChoiceFor } from "@/lib/brand/collateral-marks";
 
 type BusyKey = string; // platform:asset:direction
 
@@ -58,7 +58,7 @@ export function CoverArtTab({
     assets.filter((a) => a.platform === platform && a.asset_kind === asset);
 
   const gen = useMutation({
-    mutationFn: async (v: { platform: string; asset: string; direction: ArtDirectionId }) => {
+    mutationFn: async (v: { platform: string; asset: string; direction: ArtDirectionId; markPick?: any; placementKey?: string }) => {
       const k = key(v.platform, v.asset, v.direction);
       setBusy((b) => ({ ...b, [k]: true }));
       try {
@@ -75,7 +75,7 @@ export function CoverArtTab({
   // surface reads it from the kit and places that exact artwork.
   const markChoice = useMutation({
     mutationFn: ({ assetKind, cell }: { assetKind: string; cell: any }) =>
-      setStudioMarkChoice(snapshotId, studioMarkKind(assetKind), cell),
+      setStudioMarkChoice(snapshotId, assetKind, cell),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] }),
     onError: (e: any) => toast.error(e.message || "Could not save the logo choice"),
   });
@@ -143,20 +143,13 @@ export function CoverArtTab({
                           </span>
                         </div>
                       </div>
-                      <div className="mb-2 max-w-xs">
-                        <StudioMarkPicker
-                          assetKind={a.kind}
-                          logos={kit?.logos ?? null}
-                          value={kit?.studio_mark_choice?.[studioMarkKind(a.kind)] ?? null}
-                          onChange={(cell) => markChoice.mutate({ assetKind: a.kind, cell })}
-                          used={existing[0]?.qa_notes?.logo_mark ?? null}
-                        />
-                      </div>
                       <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                         {ART_DIRECTIONS.map((d) => {
                           const k = key(p.platform, a.kind, d.id);
                           const isBusy = !!busy[k];
                           const match = existing.find((x) => x.art_direction === d.id);
+                          const placementKey = socialGraphicKey(p.platform, a.kind, d.id);
+                          const pick = studioChoiceFor(kit?.studio_mark_choice, placementKey, a.kind);
                           return (
                             <div key={d.id} className="rounded-md border border-border bg-background/40 p-1.5">
                               <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
@@ -187,15 +180,18 @@ export function CoverArtTab({
                                 )}
                               </div>
                               <div className="mt-1 flex flex-wrap items-center gap-1">
+                                <div className="inline-flex items-center">
                                 <Button
                                   size="sm" variant="ghost"
-                                  className="h-6 px-1.5 text-[10px]"
+                                  className="h-6 rounded-r-none px-1.5 text-[10px]"
                                   disabled={isBusy}
-                                  onClick={() => gen.mutate({ platform: p.platform, asset: a.kind, direction: d.id as ArtDirectionId })}
+                                  onClick={() => gen.mutate({ platform: p.platform, asset: a.kind, direction: d.id as ArtDirectionId, markPick: pick, placementKey })}
                                 >
                                   {match ? <RefreshCw className="mr-0.5 h-3 w-3" /> : <Sparkles className="mr-0.5 h-3 w-3" />}
                                   {match ? "Regen" : "Generate"}
                                 </Button>
+                                <LogoPlacementMenu assetKind={a.kind} logos={kit?.logos} value={pick} used={match?.qa_notes?.logo_mark} disabled={isBusy} label={`${p.label} ${a.label} ${d.label}`} onChange={(cell) => markChoice.mutate({ assetKind: placementKey, cell })} />
+                                </div>
                                 {match && !match.is_selected && (
                                   <Button size="sm" variant="ghost" className="h-6 px-1.5 text-[10px]"
                                     onClick={() => select.mutate(match.id)}>

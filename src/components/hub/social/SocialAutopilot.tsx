@@ -26,20 +26,20 @@ import { AssetPreviewDialog, type PreviewableAsset } from "./AssetPreviewDialog"
 import { RotateCcw } from "lucide-react";
 import { edgeStatus, edgeErrorMessage } from "@/lib/edge-errors";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import { StudioMarkPicker } from "@/components/hub/brand/StudioMarkPicker";
+import { LogoPlacementMenu } from "@/components/hub/brand/LogoPlacementMenu";
 import { getBrandKit, setStudioMarkChoice } from "@/lib/brandKit.functions";
-import { studioMarkKind } from "@/lib/brand/collateral-marks";
+import { socialGraphicKey, studioChoiceFor, stylePreviewGraphicKey } from "@/lib/brand/collateral-marks";
 
 /**
  * Every logo placement in the studio gets the same chevron picker as Branded
  * Collateral. It reads and writes `studio_mark_choice` on the brand kit, so the
  * pick survives regeneration and the worker places that exact artwork.
  */
-function MarkPickerFor({ snapshotId, assetKind, used }: { snapshotId: string; assetKind: string; used?: any }) {
+function MarkPickerFor({ snapshotId, assetKind, placementKey, used, disabled, label }: { snapshotId: string; assetKind: string; placementKey?: string; used?: any; disabled?: boolean; label?: string }) {
   const qc = useQueryClient();
   const kitQ = useQuery({ queryKey: ["brandKit", snapshotId], queryFn: () => getBrandKit(snapshotId) });
   const kit: any = kitQ.data;
-  const markKind = studioMarkKind(assetKind);
+  const markKind = placementKey ?? assetKind;
   const save = async (cell: any) => {
     try {
       await setStudioMarkChoice(snapshotId, markKind, cell);
@@ -49,12 +49,14 @@ function MarkPickerFor({ snapshotId, assetKind, used }: { snapshotId: string; as
     }
   };
   return (
-    <StudioMarkPicker
+    <LogoPlacementMenu
       assetKind={assetKind}
       logos={kit?.logos ?? null}
-      value={kit?.studio_mark_choice?.[markKind] ?? null}
+      value={studioChoiceFor(kit?.studio_mark_choice, markKind, assetKind)}
       onChange={save}
       used={used ?? null}
+      disabled={disabled}
+      label={label}
     />
   );
 }
@@ -127,6 +129,8 @@ export function SocialAutopilot({
   onShowAdvanced: () => void;
 }) {
   const qc = useQueryClient();
+  const kitQ = useQuery({ queryKey: ["brandKit", snapshotId], queryFn: () => getBrandKit(snapshotId) });
+  const kit: any = kitQ.data;
   const snapshotId = snapshot.id;
 
   const progressQ = useQuery({
@@ -543,6 +547,7 @@ function Step4Style({
   });
   const previews: StylePreview[] = previewsQ.data ?? [];
   const byDirection = new Map(previews.map((p) => [p.direction, p]));
+  const stylePick = (dirId: string) => studioChoiceFor(kit?.studio_mark_choice, stylePreviewGraphicKey(dirId), "style_preview");
 
   const runGenerate = async (dirId: string, opts?: { feedback?: string; signatureIntensity?: any; signaturePlacement?: any; paletteOverride?: any; headlineOverride?: any; logoSize?: "sm" | "md" | "lg"; sceneOverride?: string; refreshScenes?: boolean }) => {
     if (!brandLocked) return;
@@ -551,6 +556,8 @@ function Step4Style({
       await generateStylePreview({
         snapshotId,
         direction: dirId,
+        placementKey: stylePreviewGraphicKey(dirId),
+        markPick: opts?.markPick ?? stylePick(dirId),
         feedback: opts?.feedback,
         signatureIntensity: opts?.signatureIntensity,
         signaturePlacement: opts?.signaturePlacement,
@@ -679,6 +686,7 @@ function Step4Style({
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                   </button>
+                  <MarkPickerFor snapshotId={snapshotId} assetKind="style_preview" placementKey={stylePreviewGraphicKey(d.id)} used={(preview as any)?.qa_notes?.logo_mark} disabled={loading} label={`${d.label} style preview`} />
                   {preview?.signed_url && (
                     <button
                       type="button"
@@ -764,6 +772,7 @@ function Step4Style({
             onRegenerate={d ? () => setDialog({ scope: "single", direction: d.id }) : undefined}
             onEditHeadline={d ? () => setDialog({ scope: "single", direction: d.id, focusSection: "headline" }) : undefined}
             onEditLogoSize={d ? () => setDialog({ scope: "single", direction: d.id, focusSection: "logo" }) : undefined}
+            logoPicker={d ? <MarkPickerFor snapshotId={snapshotId} assetKind="style_preview" placementKey={stylePreviewGraphicKey(d.id)} used={(p as any)?.qa_notes?.logo_mark} disabled={!!busy[d.id]} label={`${d.label} style preview`} /> : undefined}
             onDelete={d && p?.signed_url ? () => { setPreviewIdx(null); deletePreview(d.id); } : undefined}
           />
         );
@@ -819,6 +828,8 @@ function Step5BuildKit({
   onBack: () => void; onContinue: () => void;
 }) {
   const qc = useQueryClient();
+  const kitQ = useQuery({ queryKey: ["brandKit", snapshotId], queryFn: () => getBrandKit(snapshotId) });
+  const kit: any = kitQ.data;
   const confirm = useConfirm();
   const assetsQ = useQuery({
     queryKey: ["social-cover", snapshotId],
@@ -864,6 +875,8 @@ function Step5BuildKit({
   const previewableIdxs = useMemo(() => tasks.map((t, i) => (t.signed_url ? i : -1)).filter((i) => i >= 0), [tasks]);
   const allDone = tasks.every((t) => t.status === "done");
   const taskKey = (t: Pick<KitTask, "platform" | "asset">) => `${t.platform}:${t.asset}`;
+  const placementKey = (t: Pick<KitTask, "platform" | "asset" | "direction">) => socialGraphicKey(t.platform, t.asset, t.direction);
+  const generationMarkOpts = (t: any) => ({ placementKey: placementKey(t), markPick: studioChoiceFor(kit?.studio_mark_choice, placementKey(t), t.asset) });
   const signatureFailed = (t?: any) =>
     t?.qa_notes?.observed?.signatureVisible === false ||
     (typeof t?.qa_notes?.observed?.signatureCoveragePct === "number" &&
@@ -891,7 +904,7 @@ function Step5BuildKit({
       const k = taskKey(t);
       setTaskRunning(k, true);
       try {
-        await generateOneKitTask(snapshotId, t);
+        await generateOneKitTask(snapshotId, t, generationMarkOpts(t));
         await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
       } catch (e: any) {
         setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
@@ -911,7 +924,7 @@ function Step5BuildKit({
     const k = taskKey(t);
     setTaskRunning(k, true);
     try {
-      await generateOneKitTask(snapshotId, t, opts);
+      await generateOneKitTask(snapshotId, t, { ...opts, ...generationMarkOpts(t), markPick: opts?.markPick ?? generationMarkOpts(t).markPick });
       await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
       setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
       toast.success("Regenerated");
@@ -932,7 +945,7 @@ function Step5BuildKit({
         if (kept[k]) continue;
         setTaskRunning(k, true);
         try {
-          await generateOneKitTask(snapshotId, t, opts);
+          await generateOneKitTask(snapshotId, t, { ...opts, ...generationMarkOpts(t), markPick: opts?.markPick ?? generationMarkOpts(t).markPick });
           await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
         } catch (e: any) {
           setErrors((prev) => ({ ...prev, [k]: generationErrorMessage(e) }));
@@ -1200,13 +1213,6 @@ function Step5BuildKit({
                                     <span className="h-2.5 w-2.5 rounded-sm border border-border" style={{ background: t.canvas_plan.accent }} />
                                   </div>
                                 )}
-                                <div className="mt-2 max-w-[15rem]">
-                                  <MarkPickerFor
-                                    snapshotId={snapshotId}
-                                    assetKind={t.asset}
-                                    used={t.qa_notes?.logo_mark ?? null}
-                                  />
-                                </div>
                               </div>
 
                             </div>
@@ -1239,15 +1245,16 @@ function Step5BuildKit({
                                 </Button>
                               )}
                               {!done && !err && (
+                                <div className="inline-flex items-center">
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-6 text-[11px]"
+                                  className="h-6 rounded-r-none text-[11px]"
                                   disabled={running || itemRunning}
                                   onClick={async () => {
                                     setTaskRunning(k, true);
                                     try {
-                                      await generateOneKitTask(snapshotId, t);
+                                      await generateOneKitTask(snapshotId, t, generationMarkOpts(t));
                                       await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
                                       setErrors((prev) => { const n = { ...prev }; delete n[k]; return n; });
                                     } catch (e: any) {
@@ -1259,17 +1266,22 @@ function Step5BuildKit({
                                 >
                                   {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />} Generate
                                 </Button>
+                                <MarkPickerFor snapshotId={snapshotId} assetKind={t.asset} placementKey={placementKey(t)} used={t.qa_notes?.logo_mark} disabled={running || itemRunning} label={`${t.platform} ${t.asset}`} />
+                                </div>
                               )}
                               {(err || done) && (
+                                <div className="inline-flex items-center">
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-6 text-[11px]"
+                                  className="h-6 rounded-r-none text-[11px]"
                                   disabled={running || itemRunning}
                                   onClick={() => setRegenTarget({ scope: "single", task: t })}
                                 >
                                   {itemRunning ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
                                 </Button>
+                                <MarkPickerFor snapshotId={snapshotId} assetKind={t.asset} placementKey={placementKey(t)} used={t.qa_notes?.logo_mark} disabled={running || itemRunning} label={`${t.platform} ${t.asset}`} />
+                                </div>
                               )}
                               {done && t.asset_id && (
                                 <Button
@@ -1416,6 +1428,7 @@ function Step5BuildKit({
             onRegenerate={() => setRegenTarget({ scope: "single", task: t })}
             onEditHeadline={() => setRegenTarget({ scope: "single", task: t, focusSection: "headline" })}
             onEditLogoSize={() => setRegenTarget({ scope: "single", task: t, focusSection: "logo" })}
+            logoPicker={<MarkPickerFor snapshotId={snapshotId} assetKind={t.asset} placementKey={placementKey(t)} used={t.qa_notes?.logo_mark} disabled={!!runningKeys[`${t.platform}:${t.asset}`]} label={`${t.platform} ${t.asset}`} />}
             onDelete={t.asset_id ? () => { setPreviewIdx(null); deleteAsset(t); } : undefined}
           />
         );
@@ -1477,7 +1490,8 @@ function Step6Launch({
     try {
       for (const task of targets) {
         try {
-          await generateOneKitTask(snapshotId, task);
+          const key = socialGraphicKey(task.platform, task.asset, task.direction);
+          await generateOneKitTask(snapshotId, task, { placementKey: key, markPick: studioChoiceFor(kit?.studio_mark_choice, key, task.asset) });
           await qc.invalidateQueries({ queryKey: ["social-cover", snapshotId] });
         } catch (error) {
           failed += 1;
@@ -1611,9 +1625,9 @@ function Step6Launch({
                       ? <img src={avatar.signed_url} alt={`${p} avatar`} className="h-full w-full object-cover transition group-hover:scale-105" />
                       : <div className="flex h-full w-full items-center justify-center text-muted-foreground"><ImageIcon className="h-4 w-4" /></div>}
                   </button>
-                  <Button size="sm" variant="ghost" className="mt-1 h-6 w-full px-1 text-[9px]" disabled={!!regenerating[`${p}:avatar`]} onClick={() => regenerate(p, "avatar")}>
+                  <div className="mt-1 inline-flex w-full"><Button size="sm" variant="ghost" className="h-6 flex-1 rounded-r-none px-1 text-[9px]" disabled={!!regenerating[`${p}:avatar`]} onClick={() => regenerate(p, "avatar")}>
                     {regenerating[`${p}:avatar`] ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <RefreshCw className="mr-1 h-3 w-3" />} Regenerate
-                  </Button>
+                  </Button><MarkPickerFor snapshotId={snapshotId} assetKind="avatar" placementKey={socialGraphicKey(p, "avatar", direction)} used={avatar?.qa_notes?.logo_mark} disabled={!!regenerating[`${p}:avatar`]} label={`${p} avatar`} /></div>
                 </div>
                 <div>
                   <button
@@ -1632,28 +1646,12 @@ function Step6Launch({
                       </span>
                     )}
                   </button>
-                  <Button size="sm" variant="ghost" className="mt-1 h-6 px-1.5 text-[9px]" disabled={!coverKind || !!regenerating[`${p}:${coverKind}`]} onClick={() => coverKind && regenerate(p, coverKind)}>
+                  <div className="mt-1 inline-flex"><Button size="sm" variant="ghost" className="h-6 rounded-r-none px-1.5 text-[9px]" disabled={!coverKind || !!regenerating[`${p}:${coverKind}`]} onClick={() => coverKind && regenerate(p, coverKind)}>
                     <RefreshCw className="mr-1 h-3 w-3" /> Regenerate {coverLabel.toLowerCase()}
-                  </Button>
+                  </Button>{coverKind && <MarkPickerFor snapshotId={snapshotId} assetKind={coverKind} placementKey={socialGraphicKey(p, coverKind, direction)} used={cover?.qa_notes?.logo_mark} disabled={!!regenerating[`${p}:${coverKind}`]} label={`${p} ${coverLabel}`} />}</div>
 
                 </div>
               </div>
-
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                <MarkPickerFor
-                  snapshotId={snapshotId}
-                  assetKind="avatar"
-                  used={avatar?.qa_notes?.logo_mark ?? null}
-                />
-                {coverKind && (
-                  <MarkPickerFor
-                    snapshotId={snapshotId}
-                    assetKind={coverKind}
-                    used={cover?.qa_notes?.logo_mark ?? null}
-                  />
-                )}
-              </div>
-
 
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <Button size="sm" className="h-6 px-1.5 text-[10px]" disabled={!!regenerating[`${p}:all`]} onClick={() => regenerate(p)}>
@@ -1738,6 +1736,7 @@ function Step6Launch({
         }
         busy={!!previewAsset && !!regenerating[`${previewAsset.platform}:${previewAsset.asset_kind}`]}
         onRegenerate={previewAsset ? () => regenerate(previewAsset.platform, previewAsset.asset_kind) : undefined}
+        logoPicker={previewAsset ? <MarkPickerFor snapshotId={snapshotId} assetKind={previewAsset.asset_kind} placementKey={socialGraphicKey(previewAsset.platform, previewAsset.asset_kind, direction)} used={previewAsset.qa_notes?.logo_mark} disabled={!!regenerating[`${previewAsset.platform}:${previewAsset.asset_kind}`]} label={`${previewAsset.platform} ${previewAsset.asset_kind}`} /> : undefined}
         onPrev={previewables.length > 1 ? () => stepPreview(-1) : undefined}
         onNext={previewables.length > 1 ? () => stepPreview(1) : undefined}
       />

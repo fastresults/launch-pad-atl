@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { recommendMark, slotChoices, slotsForKind, studioMarkKind } from "../collateral-marks";
+import { contentGraphicKey, recommendMark, slotChoices, slotsForKind, socialGraphicKey, studioChoiceFor, studioMarkKind, stylePreviewGraphicKey } from "../collateral-marks";
 
 const full = [
   { form: "symbol", tone: "colour" },
@@ -80,6 +80,21 @@ describe("slotChoices", () => {
 });
 
 describe("studio surfaces", () => {
+  it("creates stable, exact keys for each generated graphic", () => {
+    expect(socialGraphicKey("LinkedIn", "banner", "editorial")).toBe("social:LinkedIn:banner:editorial");
+    expect(contentGraphicKey("post-1", "4:5")).toBe("content:post-1:4%3A5");
+    expect(stylePreviewGraphicKey("editorial")).toBe("style:editorial");
+  });
+
+  it("prefers an exact graphic choice and falls back to the legacy surface choice", () => {
+    const choices = {
+      studio_post: { form: "symbol", tone: "inverse" },
+      "content:post-1:1%3A1": { form: "stacked", tone: "colour" },
+    };
+    expect(studioChoiceFor(choices, "content:post-1:1%3A1", "1:1")).toEqual({ form: "stacked", tone: "colour" });
+    expect(studioChoiceFor(choices, "content:post-2:1%3A1", "1:1")).toEqual({ form: "symbol", tone: "inverse" });
+  });
+
   it("maps studio asset kinds onto slot sets", () => {
     expect(studioMarkKind("avatar")).toBe("studio_avatar");
     expect(studioMarkKind("profile_photo")).toBe("studio_avatar");

@@ -12,7 +12,6 @@ import {
 import { toast } from "sonner";
 import { edgeErrorMessage } from "@/lib/edge-errors";
 import { getBrandKit, setStudioMarkChoice } from "@/lib/brandKit.functions";
-import { studioMarkKind } from "@/lib/brand/collateral-marks";
 import { listSnapshotDocuments } from "@/lib/foundersHub.functions";
 import {
   parseCalendarPosts, listCalendarPosts, listContentAds, generateContentAd,
@@ -26,6 +25,8 @@ import { RegenerateAssetDialog } from "@/components/hub/social/RegenerateAssetDi
 import { AssetImage } from "@/components/hub/social/AssetImage";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { SectionHeader } from "@/components/hub/SectionHeader";
+import { LogoPlacementMenu } from "@/components/hub/brand/LogoPlacementMenu";
+import { contentGraphicKey, studioChoiceFor } from "@/lib/brand/collateral-marks";
 
 const ART_DIRECTIONS = [
   { id: "editorial", label: "Editorial" },
@@ -343,6 +344,7 @@ export function ContentStudio({ snapshot }: { snapshot: any }) {
           selectedWeeks={effectiveWeeks}
           posts={posts}
           ads={ads}
+          kit={kit}
           autoRunWeek={autoRunWeek}
           onAutoRunConsumed={() => setAutoRunWeek(null)}
           onAddWeek={async (week) => {
@@ -640,10 +642,10 @@ type AdTask = {
 };
 
 function Step4BuildAds({
-  snapshotId, direction, posterLayout, aspects, selectedWeeks, posts, ads,
+  snapshotId, direction, posterLayout, aspects, selectedWeeks, posts, ads, kit,
   autoRunWeek, onAutoRunConsumed, onAddWeek, onBack, onDone,
 }: {
-  snapshotId: string; direction: string; posterLayout?: string; aspects: AdAspect[];
+  snapshotId: string; direction: string; posterLayout?: string; aspects: AdAspect[]; kit: any;
   selectedWeeks: number[]; posts: ContentPost[]; ads: ContentAd[];
   autoRunWeek?: number | null; onAutoRunConsumed?: () => void;
   onAddWeek?: (week: number) => Promise<void> | void;
@@ -674,6 +676,12 @@ function Step4BuildAds({
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
 
   const key = (t: AdTask) => `${t.post.id}:${t.aspect}`;
+  const placementKey = (t: AdTask) => contentGraphicKey(t.post.id, t.aspect);
+  const markPick = (t: AdTask) => studioChoiceFor(kit?.studio_mark_choice, placementKey(t), t.aspect);
+  const saveMark = async (t: AdTask, cell: any) => {
+    await setStudioMarkChoice(snapshotId, placementKey(t), cell);
+    await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+  };
   const setBusy = (k: string, v: boolean) =>
     setRunningKeys((prev) => { const n = { ...prev }; if (v) n[k] = true; else delete n[k]; return n; });
 
@@ -698,7 +706,7 @@ function Step4BuildAds({
     const knownIds = new Set(ads.filter((ad) => ad.post_id === t.post.id && ad.aspect === t.aspect).map((ad) => ad.id));
     setBusy(k, true);
     try {
-      await generateContentAd(snapshotId, t.post.id, t.aspect, direction, { posterLayout, ...(opts ?? {}) });
+      await generateContentAd(snapshotId, t.post.id, t.aspect, direction, { posterLayout, markPick: markPick(t), placementKey: placementKey(t), ...(opts ?? {}) });
       await qc.invalidateQueries({ queryKey: ["content-ads", snapshotId] });
       setErrors((p) => { const n = { ...p }; delete n[k]; return n; });
     } catch (e: any) {
@@ -1025,17 +1033,17 @@ function Step4BuildAds({
                                 )}
                                 <div className="mt-1.5 flex flex-wrap items-center gap-1">
                                   {!t.ad && !err && (
-                                    <Button size="sm" variant="outline" className="h-6 text-[11px]" disabled={running || busy}
+                                    <div className="inline-flex items-center"><Button size="sm" variant="outline" className="h-6 rounded-r-none text-[11px]" disabled={running || busy}
                                       onClick={() => doGenerate(t)}>
                                       {busy ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
                                       Generate
-                                    </Button>
+                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
                                   )}
                                   {(t.ad || err) && (
-                                    <Button size="sm" variant="outline" className="h-6 text-[11px]" disabled={running || busy}
+                                    <div className="inline-flex items-center"><Button size="sm" variant="outline" className="h-6 rounded-r-none text-[11px]" disabled={running || busy}
                                       onClick={() => setRegen({ task: t })}>
                                       <RefreshCw className="mr-1 h-3 w-3" /> Regenerate
-                                    </Button>
+                                    </Button><LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={running || busy} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} /></div>
                                   )}
                                   {url && (
                                     <Button size="sm" variant="ghost" className="h-6 text-[11px]"
@@ -1095,13 +1103,13 @@ function Step4BuildAds({
           focusSection={regen.focusSection}
           assetKind={regen.task.aspect}
           logos={(kit as any)?.logos ?? null}
-          initialMarkPick={(kit as any)?.studio_mark_choice?.[studioMarkKind(regen.task.aspect)] ?? null}
+          initialMarkPick={markPick(regen.task)}
           usedMark={(regen.task.ad as any)?.qa_notes?.logo_mark ?? null}
           onSubmit={async (input) => {
             // The pick is the contract from here on: remember it for this
             // surface so later runs place the same artwork.
             try {
-              await setStudioMarkChoice(snapshotId, studioMarkKind(regen.task.aspect), input.markPick ?? null);
+              await setStudioMarkChoice(snapshotId, placementKey(regen.task), input.markPick ?? null);
               await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
             } catch { /* generation still carries the pick in its payload */ }
             await doGenerate(regen.task, input);
@@ -1151,6 +1159,7 @@ function Step4BuildAds({
             onRegenerate={() => setRegen({ task: t })}
             onEditHeadline={() => setRegen({ task: t, focusSection: "headline" })}
             onEditLogoSize={() => setRegen({ task: t, focusSection: "logo" })}
+            logoPicker={<LogoPlacementMenu assetKind={t.aspect} logos={kit?.logos} value={markPick(t)} used={t.ad?.qa_notes?.logo_mark} disabled={!!runningKeys[key(t)]} label={t.post.hook} onChange={(cell) => saveMark(t, cell)} />}
             onDelete={t.ad ? () => { setPreviewIdx(null); doDelete(t); } : undefined}
           />
         );

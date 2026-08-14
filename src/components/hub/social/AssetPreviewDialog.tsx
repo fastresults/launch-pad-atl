@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +42,7 @@ export type PreviewableAsset = {
 
 
 export function AssetPreviewDialog({
-  open, onOpenChange, asset, onRegenerate, onEditHeadline, onEditLogoSize, onDelete, onPrev, onNext, busy = false,
+  open, onOpenChange, asset, onRegenerate, onEditHeadline, onEditLogoSize, onDelete, onPrev, onNext, logoPicker, busy = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -53,6 +53,7 @@ export function AssetPreviewDialog({
   onDelete?: () => void;
   onPrev?: () => void;
   onNext?: () => void;
+  logoPicker?: ReactNode;
   busy?: boolean;
 }) {
   const confirmDialog = useConfirm();
@@ -339,6 +340,7 @@ export function AssetPreviewDialog({
                 </div>
               );
             })()}
+            {logoPicker}
 
             {(() => {
               const sz = asset.lastLogoSize;
