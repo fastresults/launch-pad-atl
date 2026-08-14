@@ -208,9 +208,8 @@ export type CollateralCtx = {
    * logo set, keyed by slot id (`front`, `cover`, `running`, …). A piece can
    * carry a different mark in every position, which is what a cover slide and
    * a running corner actually need. When a slot has no entry the layout picks
-   * for itself. The ink authority still decides how each one is painted, so an
-   * inverse mark on white paper is knocked out or plated, never shipped
-   * invisible.
+   * for itself. Manual picks are immutable artwork contracts: the composition
+   * adapts to them; their paths and paint are never rewritten.
    */
   markPicks?: Record<string, MarkPickEntry> | null;
   /**
@@ -219,6 +218,8 @@ export type CollateralCtx = {
    * exactly like the cell they picked.
    */
   markRecoloured?: Record<string, boolean>;
+  /** Slots whose surrounding surface changed to preserve exact manual artwork. */
+  markAdapted?: Record<string, boolean>;
 };
 
 export type MarkPickEntry = {
@@ -232,6 +233,10 @@ export type MarkPickEntry = {
   auto?: boolean;
   /** Why the recommender chose it, when auto. */
   reason?: string | null;
+  /** Stable identity of the exact uploaded source used for this slot. */
+  source?: string | null;
+  /** Manual choices are immutable; auto choices may be repaired by the renderer. */
+  mode?: "manual" | "auto";
 };
 
 
@@ -568,6 +573,8 @@ function markAt(
     .trim();
 
   const untintable = isUntintable(inner);
+  const slotPick = pickFor(ctx, opts?.slot);
+  const exactManual = slotPick?.mode === "manual" || (!!slotPick?.svg && slotPick.auto === false);
   const dark = isDarkSurface(bg);
   const MIN = 2.4;
   // One authority decides the ink. Templates ask for the colour they want and
@@ -593,7 +600,14 @@ function markAt(
   const readsAsSupplied = !bg || measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
   const keepArtworkColour = !opts?.mono && multiColour && readsAsSupplied && !untintable;
 
-  if (keepArtworkColour) {
+  if (exactManual && !opts?.mono) {
+    // A manual Form × Tone choice is the source artwork, not a colour hint.
+    // If it does not read on the planned field, adapt the composition with a
+    // local surface. Never tint it into another member of the logo family.
+    use = null;
+    const visible = !bg || measuredFills.some((f) => contrastRatio(f, bg) >= MIN);
+    if (!visible) plate = true;
+  } else if (keepArtworkColour) {
     use = null;
   } else if (bg && !untintable) {
     if (picked.dark) use = inkOn(bg);
@@ -611,8 +625,7 @@ function markAt(
 
   // Record when a founder's explicit cell had to be repainted, so the piece can
   // say "recoloured for contrast" instead of silently looking like another cell.
-  const slotPick = pickFor(ctx, opts?.slot);
-  if (slotPick?.svg && use && !keepArtworkColour) {
+  if (slotPick?.svg && use && !keepArtworkColour && !exactManual) {
     ctx.markRecoloured = { ...(ctx.markRecoloured ?? {}), [opts?.slot ?? "primary"]: true };
   }
 
@@ -666,7 +679,7 @@ function markAt(
   // given a contrast plate. Only a repair that still fails is reported.
   let repairedPlate = plateSvg;
   if (!anyVisible) {
-    if (!untintable) {
+    if (!untintable && !exactManual) {
       const safeInk = resolveInk(use ?? paintedFills[0] ?? null, ground, { min: MIN });
       inner = tint(inner, safeInk);
       use = safeInk;
@@ -681,13 +694,22 @@ function markAt(
         `<rect x="${r(x + (boxW - drawnW) / 2 - px)}" y="${r(y + (boxH - drawnH) / 2 - px)}" width="${r(drawnW + px * 2)}" height="${r(drawnH + px * 2)}" rx="${r(px * 0.6)}" fill="${rescueFill}" opacity="0.94"/>`;
       paintedFills = measuredFills;
       ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, rescueFill, { min: MIN }));
-      return `${repairedPlate}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="plated" data-mark-bg="${rescueFill}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+      const rescueAttrs = slotPick?.svg
+        ? ` data-mark-form="${slotPick.form}" data-mark-tone="${slotPick.tone}" data-mark-source="${esc(slotPick.source ?? "")}" data-mark-mode="${slotPick.mode ?? (slotPick.auto ? "auto" : "manual")}"`
+        : "";
+      return `${repairedPlate}<g data-mark-slot="${opts?.slot ?? ""}" data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="plated"${rescueAttrs} data-mark-adapted="1" data-mark-bg="${rescueFill}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
     }
     ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN }));
   }
 
-  const pickAttrs = slotPick?.svg ? ` data-mark-form="${slotPick.form}" data-mark-tone="${slotPick.tone}"` : "";
-  return `${repairedPlate}<g data-mark-slot="${opts?.slot ?? ""}" data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}"${pickAttrs} data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  if (exactManual && (plate || !!repairedPlate)) {
+    ctx.markAdapted = { ...(ctx.markAdapted ?? {}), [opts?.slot ?? "primary"]: true };
+  }
+
+  const pickAttrs = slotPick?.svg
+    ? ` data-mark-form="${slotPick.form}" data-mark-tone="${slotPick.tone}" data-mark-source="${esc(slotPick.source ?? "")}" data-mark-mode="${slotPick.mode ?? (slotPick.auto ? "auto" : "manual")}"`
+    : "";
+  return `${repairedPlate}<g data-mark-slot="${opts?.slot ?? ""}" data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}"${pickAttrs} data-mark-adapted="${plate || !!repairedPlate ? "1" : "0"}" data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
 
 
 
@@ -1620,7 +1642,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
           `<rect x="${r(x)}" y="${r(y)}" width="${r(tileW)}" height="${r(artH)}" fill="${t.bg}" rx="${ad.material.radius}"${onDark ? "" : ` stroke="${mix(fg, paper, 0.82)}" stroke-width="${r(ad.ink.hairline)}"`}/>`,
           // A specimen tile demonstrates a named treatment, so here the ink IS
           // the instruction — colour preservation would defeat the page.
-          markAt(ctx, x + tileW * 0.14, y + artH * 0.18, tileW * 0.72, artH * 0.64, t.ink, t.bg, { mono: !!t.ink }),
+          markAt(ctx, x + tileW * 0.14, y + artH * 0.18, tileW * 0.72, artH * 0.64, t.ink, t.bg, { mono: !!t.ink, slot: "system" }),
 
           f.svg(),
         ].join("");
@@ -1658,7 +1680,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
       tick(markX + markW + unit, csTop, markX + markW + unit, csTop + csH),
       tick(g.M, markY - unit, g.M + csW, markY - unit),
       tick(g.M, markY + markH + unit, g.M + csW, markY + markH + unit),
-      markAt(ctx, markX, markY, markW, markH, null, paper),
+      markAt(ctx, markX, markY, markW, markH, null, paper, { slot: "system" }),
       (() => {
         const f = T.flow(g.M + csW + g.gutter * 2, csTop, g.content - csW - g.gutter * 2);
         f.line("X = the mark's cap height", step(ad, 0.2), accent, { weight: 500, tracking: step(ad, 0.2) * ad.type.labelTracking })
@@ -1672,7 +1694,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
         const x = g.M + i * (g.content / 3);
         const h = Math.min(srArtH, s.w * 0.5);
         return [
-          markAt(ctx, x, srTop, s.w, h, null, paper),
+          markAt(ctx, x, srTop, s.w, h, null, paper, { slot: "system" }),
           label(T, ctx, s.cap, x, srTop + srArtH + step(ad, 1), step(ad, -1.3), muted, "start", g.content / 3 - g.gutter),
         ].join("");
       }),
@@ -1704,7 +1726,7 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
       ...misuse.map((m, i) => {
         const x = g.M + i * (mW + mGap);
         // "Do not recolour off-palette" has to actually recolour the mark.
-        const art = markAt(ctx, x + mW * 0.16, mTop + mArt * 0.2, mW * 0.68, mArt * 0.6, m.ink ?? null, paper, { mono: !!m.ink });
+        const art = markAt(ctx, x + mW * 0.16, mTop + mArt * 0.2, mW * 0.68, mArt * 0.6, m.ink ?? null, paper, { mono: !!m.ink, slot: "system" });
 
         const f = T.flow(x, mTop + mArt + step(ad, 0.4), mW);
         f.line(m.cap, step(ad, -1.2), fg, { family: "head", weight: 700 });
@@ -1914,6 +1936,11 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
   const markInks = [...svg.matchAll(/data-mark-ink="([^"]*)"/g)].map((m) => m[1]);
   const markVis = [...svg.matchAll(/data-mark-visible="([^"]*)"/g)].map((m) => m[1] === "1");
   const markSlots = [...svg.matchAll(/data-mark-slot="([^"]*)"/g)].map((m) => m[1] || undefined);
+  const markForms = [...svg.matchAll(/data-mark-form="([^"]*)"/g)].map((m) => m[1]);
+  const markTones = [...svg.matchAll(/data-mark-tone="([^"]*)"/g)].map((m) => m[1]);
+  const markSources = [...svg.matchAll(/data-mark-source="([^"]*)"/g)].map((m) => m[1]);
+  const markModes = [...svg.matchAll(/data-mark-mode="([^"]*)"/g)].map((m) => m[1]);
+  const markAdapted = [...svg.matchAll(/data-mark-adapted="([^"]*)"/g)].map((m) => m[1] === "1");
 
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
   const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
@@ -1933,6 +1960,12 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
       bg: markBgs[i] ?? "",
       ink: markInks[i] ?? "",
       visible: markVis[i] ?? true,
+      slot: markSlots[i],
+      form: markForms[i],
+      tone: markTones[i],
+      source: markSources[i],
+      mode: markModes[i] === "auto" ? "auto" : "manual",
+      adapted: markAdapted[i] ?? false,
     })),
     // QC measures against the band this mark's own shape is entitled to, so a
     // stacked lockup sized for equal optical area is not failed as "oversized".

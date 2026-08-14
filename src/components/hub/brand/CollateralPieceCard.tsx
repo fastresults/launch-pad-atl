@@ -64,6 +64,9 @@ export function CollateralPieceCard({
     recoloured?: boolean;
     auto?: boolean;
     reason?: string | null;
+    source?: string | null;
+    mode?: "manual" | "auto";
+    adapted?: boolean;
   }[] | null;
   /** Slot keys the venture has actually supplied — everything else reads as absent. */
   availableSlots?: Record<string, boolean>;
@@ -122,11 +125,11 @@ export function CollateralPieceCard({
           {stale && (
             <Badge variant="outline" className="border-status-warning/50 text-[10px] text-status-warning">Details changed</Badge>
           )}
-          {used.map((m) => {
+            {used.map((m) => {
             const slot = slots.find((s) => s.id === m.slot);
             return (
-              <Badge key={m.slot} variant="outline" className="text-[10px] text-muted-foreground">
-                {slot?.label ?? m.slot}: {cellLabel(m) ?? `${m.form} · ${m.tone}`}
+                <Badge key={m.slot} variant="outline" className="text-[10px] text-muted-foreground">
+                  {m.mode === "manual" ? "Verified exact" : "AI selected"} · {slot?.label ?? m.slot}: {cellLabel(m) ?? `${m.form} · ${m.tone}`}
                 {m.fallback ? " (nearest supplied)" : ""}
               </Badge>
             );
@@ -134,6 +137,11 @@ export function CollateralPieceCard({
           {used.some((m) => m.recoloured) && (
             <Badge variant="outline" className="border-status-warning/50 text-[10px] text-status-warning">
               Recoloured for contrast
+            </Badge>
+          )}
+          {used.some((m) => m.adapted) && (
+            <Badge variant="outline" className="text-[10px] text-muted-foreground">
+              Surface adapted for exact logo
             </Badge>
           )}
 

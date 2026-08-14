@@ -392,7 +392,12 @@ async function buildCtx(
       const want = explicit ?? (auto ? { form: auto.form, tone: auto.tone } : null);
       if (!want) continue;
       const wanted = slotFor(want.form, want.tone);
-      for (const variant of markPickOrder(want.form, want.tone)) {
+      // Explicit means exact. Never substitute another form or tone behind the
+      // admin's back; an unavailable selected cell blocks this slot instead of
+      // producing a plausible-looking but incorrect asset. Auto mode may walk
+      // the fallback order because the AI owns that decision.
+      const candidates = explicit ? [wanted] : markPickOrder(want.form, want.tone);
+      for (const variant of candidates) {
         const svg = await load(variant);
         if (!svg) continue;
         const ft = formToneOf(variant);
@@ -400,12 +405,17 @@ async function buildCtx(
           form: ft.form,
           tone: ft.tone,
           svg,
+          source: String(logos.find((l: any) => l?.variant === variant)?.svg_path ?? logos.find((l: any) => l?.variant === variant)?.path ?? variant),
+          mode: explicit ? "manual" : "auto",
           requested: { form: want.form, tone: want.tone },
           fallback: variant !== wanted,
           auto: !explicit,
           reason: auto?.reason ?? null,
         };
         break;
+      }
+      if (explicit && !markPicks[slot.id]) {
+        throw new Error(`EXACT_LOGO_UNAVAILABLE:${opts.kind}:${slot.id}:${wanted}`);
       }
       const got = markPicks[slot.id];
       console.log(
@@ -949,6 +959,8 @@ Deno.serve(async (req) => {
           ? "Lock a colour palette in the Brand Wizard before generating collateral."
           : code === "NO_VECTOR_LOGO"
           ? "Save a vector logo to your live brand first — collateral is typeset around the mark."
+          : code.startsWith("EXACT_LOGO_UNAVAILABLE:")
+          ? "The exact logo selected for this placement is no longer available. Upload or reassign that logo, then generate again."
           : code;
         return json({ error: msg, code }, 400);
       }
@@ -1054,11 +1066,14 @@ Deno.serve(async (req) => {
           tone: p.tone,
           fallback: !!p.fallback,
           auto: !!p.auto,
+          mode: p.mode ?? (p.auto ? "auto" : "manual"),
+          source: p.source ?? null,
           reason: p.reason ?? null,
           requested: p.requested,
           // The chosen artwork kept its own colours unless a ground forced a
           // repair — the card says so instead of looking like another cell.
           recoloured: !!ctx.markRecoloured?.[slotId],
+          adapted: !!ctx.markAdapted?.[slotId],
         })),
 
         artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },

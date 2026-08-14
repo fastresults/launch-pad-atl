@@ -59,6 +59,7 @@ const SLOTS: Record<string, MarkSlot[]> = {
   ],
   guidelines: [
     { id: "cover", label: "Guidelines cover", hint: "Hero mark on the brand-colour cover", scale: "hero", align: "edge", ground: "brand", boxAspect: 2.2 },
+    { id: "system", label: "Guidelines logo pages", hint: "The approved mark repeated across logo, clear-space and usage pages", scale: "hero", align: "centred", ground: "paper", boxAspect: 1.8 },
   ],
 };
 
