@@ -1901,7 +1901,14 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
       ink: markInks[i] ?? "",
       visible: markVis[i] ?? true,
     })),
-    markBand: isLockup(ctx) ? rs.lockupBand : rs.logoBand,
+    // QC measures against the band this mark's own shape is entitled to, so a
+    // stacked lockup sized for equal optical area is not failed as "oversized".
+    markBand: markBand(
+      rs,
+      primaryMark && idx >= 0 && markWs[idx] ? markWs[idx] / primaryMark : 3.2,
+      isLockup(ctx),
+    ),
+
 
 
     safe: rs.safe,
