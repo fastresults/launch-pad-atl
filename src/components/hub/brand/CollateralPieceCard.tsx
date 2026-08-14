@@ -24,6 +24,7 @@ const toKey = (c: { form: string; tone: string } | null | undefined) =>
  * the piece is the product, so it gets the space.
  */
 export function CollateralPieceCard({
+  kind,
   label,
   note,
   preview,
@@ -41,6 +42,8 @@ export function CollateralPieceCard({
   onGenerate,
   onDelete,
 }: {
+  /** The collateral kind — decides which mark slots this piece renders. */
+  kind: string;
   label: string;
   note: string;
   preview: string | null;
@@ -50,13 +53,21 @@ export function CollateralPieceCard({
   busy: boolean;
   canGenerate: boolean;
   disabled: boolean;
-  /** The founder's chosen form × tone for this piece, or null for automatic. */
-  markChoice?: { form: string; tone: string } | null;
-  /** What the last run actually drew, so the card can say which mark it carries. */
-  markUsed?: { form: string; tone: string; fallback?: boolean; recoloured?: boolean } | null;
+  /** The founder's chosen form × tone per mark slot; missing slots are automatic. */
+  markChoice?: Record<string, { form: string; tone: string }> | null;
+  /** What the last run actually drew in each slot. */
+  markUsed?: {
+    slot: string;
+    form: string;
+    tone: string;
+    fallback?: boolean;
+    recoloured?: boolean;
+    auto?: boolean;
+    reason?: string | null;
+  }[] | null;
   /** Slot keys the venture has actually supplied — everything else reads as absent. */
   availableSlots?: Record<string, boolean>;
-  onMarkChoice?: (choice: { form: string; tone: string } | null) => void;
+  onMarkChoice?: (slotId: string, choice: { form: string; tone: string } | null) => void;
   onPreview: () => void;
   onGenerate: () => void;
   /** Remove every file for this piece. Only offered once something exists. */
@@ -64,8 +75,15 @@ export function CollateralPieceCard({
 }) {
   const generated = fileCount > 0;
   const supplied = availableSlots ?? {};
-  const slotLabel = (c?: { form: string; tone: string } | null) =>
+  const slots = slotsForKind(kind);
+  const cellLabel = (c?: { form: string; tone: string } | null) =>
     LOGO_SLOTS.find((s) => s.form === c?.form && s.tone === c?.tone)?.label ?? null;
+
+  // The inventory the recommender scores against: the cells actually supplied.
+  const inventory = LOGO_SLOTS.filter((s) => supplied[s.key]).map((s) => ({ form: s.form, tone: s.tone }));
+  const used = markUsed ?? [];
+
+
 
 
   return (
