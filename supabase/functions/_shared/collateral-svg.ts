@@ -204,26 +204,36 @@ export type CollateralCtx = {
   imagery?: string[] | null;
 
   /**
-   * The founder's explicit mark choice for this piece — a form × tone cell of
-   * the logo set. When present it wins over the layout's own recommendation;
-   * the ink authority still decides how it is painted, so an inverse mark on
-   * white paper is knocked out or plated rather than shipped invisible.
+   * The resolved mark for each slot of this piece — a form × tone cell of the
+   * logo set, keyed by slot id (`front`, `cover`, `running`, …). A piece can
+   * carry a different mark in every position, which is what a cover slide and
+   * a running corner actually need. When a slot has no entry the layout picks
+   * for itself. The ink authority still decides how each one is painted, so an
+   * inverse mark on white paper is knocked out or plated, never shipped
+   * invisible.
    */
-  markPick?: {
-    form: "symbol" | "horizontal" | "stacked" | "wordmark";
-    tone: "colour" | "inverse";
-    svg: string;
-    /** What was asked for, when the exact cell was not supplied. */
-    requested?: { form: string; tone: string } | null;
-    fallback?: boolean;
-  } | null;
+  markPicks?: Record<string, MarkPickEntry> | null;
   /**
-   * Set by the renderer when the chosen artwork had to be repainted to stay
-   * legible on a surface — reported back so the founder sees why the mark does
-   * not look exactly like the cell they picked.
+   * Slots whose chosen artwork had to be repainted to stay legible on its
+   * ground — reported back so the founder sees why a mark does not look
+   * exactly like the cell they picked.
    */
-  markRecoloured?: boolean;
+  markRecoloured?: Record<string, boolean>;
 };
+
+export type MarkPickEntry = {
+  form: "symbol" | "horizontal" | "stacked" | "wordmark";
+  tone: "colour" | "inverse";
+  svg: string;
+  /** What was asked for, when the exact cell was not supplied. */
+  requested?: { form: string; tone: string } | null;
+  fallback?: boolean;
+  /** True when this slot took the recommendation rather than an explicit pick. */
+  auto?: boolean;
+  /** Why the recommender chose it, when auto. */
+  reason?: string | null;
+};
+
 
 
 
@@ -486,18 +496,28 @@ function fillsIn(svg: string): string[] {
  * wide boxes take the horizontal lockup, square / tall boxes take the stacked
  * one when the venture has it.
  *
- * A founder's explicit `ctx.markPick` overrides both reads. It only chooses the
- * artwork — legibility is still the ink authority's job downstream, so picking
- * the inverse mark for a white page yields a knocked-out or plated mark rather
- * than an invisible one.
+ * The mark resolved for this slot (`ctx.markPicks[slot]`) overrides both reads.
+ * It only chooses the artwork — legibility is still the ink authority's job
+ * downstream, so picking the inverse mark for a white page yields a knocked-out
+ * or plated mark rather than an invisible one.
  */
+export function pickFor(ctx: CollateralCtx, slot?: string): MarkPickEntry | null {
+  const picks = ctx.markPicks;
+  if (!picks) return null;
+  // A slot with no entry falls back to the piece-wide entry, which is what a
+  // legacy single-cell choice resolves into.
+  return (slot ? picks[slot] : null) ?? picks.primary ?? null;
+}
+
 function markSvgFor(
   ctx: CollateralCtx,
   bg?: string | null,
   boxAspect?: number,
+  slot?: string,
 ): { svg: string | null; dark: boolean } {
-  if (ctx.markPick?.svg) {
-    return { svg: ctx.markPick.svg, dark: ctx.markPick.tone === "inverse" };
+  const pick = pickFor(ctx, slot);
+  if (pick?.svg) {
+    return { svg: pick.svg, dark: pick.tone === "inverse" };
   }
   const preferStacked = typeof boxAspect === "number" && boxAspect > 0 && boxAspect < 2.2;
   if (isDarkSurface(bg)) {
@@ -511,6 +531,7 @@ function markSvgFor(
     : ctx.symbolSvg || ctx.logoSvg;
   return { svg: light || null, dark: false };
 }
+
 
 
 
@@ -534,9 +555,10 @@ function tint(inner: string, use: string): string {
 
 function markAt(
   ctx: CollateralCtx, x: number, y: number, boxW: number, boxH: number,
-  ink: string | null, bg?: string, opts?: { mono?: boolean },
+  ink: string | null, bg?: string, opts?: { mono?: boolean; slot?: string },
 ): string {
-  const picked = markSvgFor(ctx, bg, boxH > 0 ? boxW / boxH : undefined);
+  const picked = markSvgFor(ctx, bg, boxH > 0 ? boxW / boxH : undefined, opts?.slot);
+
   const svg = picked.svg;
   if (!svg) return "";
   // Drop full-bleed background plates so the mark sits directly on the paper.
@@ -589,7 +611,11 @@ function markAt(
 
   // Record when a founder's explicit cell had to be repainted, so the piece can
   // say "recoloured for contrast" instead of silently looking like another cell.
-  if (ctx.markPick?.svg && use && !keepArtworkColour) ctx.markRecoloured = true;
+  const slotPick = pickFor(ctx, opts?.slot);
+  if (slotPick?.svg && use && !keepArtworkColour) {
+    ctx.markRecoloured = { ...(ctx.markRecoloured ?? {}), [opts?.slot ?? "primary"]: true };
+  }
+
 
   if (use && !untintable) inner = tint(inner, use);
 
@@ -660,8 +686,9 @@ function markAt(
     ({ ink: drawnInk, visible: anyVisible } = specimenVerdict(paintedFills, ground, { min: MIN }));
   }
 
-  const pickAttrs = ctx.markPick?.svg ? ` data-mark-form="${ctx.markPick.form}" data-mark-tone="${ctx.markPick.tone}"` : "";
-  return `${repairedPlate}<g data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}"${pickAttrs} data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+  const pickAttrs = slotPick?.svg ? ` data-mark-form="${slotPick.form}" data-mark-tone="${slotPick.tone}"` : "";
+  return `${repairedPlate}<g data-mark-slot="${opts?.slot ?? ""}" data-mark-w="${r(drawnW)}" data-mark-h="${r(drawnH)}" data-mark-art="${picked.dark ? "reversed" : use ? "knockout" : plate ? "plated" : "primary"}"${pickAttrs} data-mark-bg="${effectiveBg}" data-mark-ink="${drawnInk}" data-mark-visible="${anyVisible ? "1" : "0"}" transform="translate(${r(dx)} ${r(dy)}) scale(${r(s, 5)})">${inner}</g>`;
+
 
 
 
@@ -669,22 +696,23 @@ function markAt(
 
 
 
-function logoAspect(ctx: CollateralCtx, bg?: string | null, boxAspect?: number): number {
+function logoAspect(ctx: CollateralCtx, bg?: string | null, boxAspect?: number, slot?: string): number {
   // Measure the artwork that will actually be painted on this ground. Sizing
   // from the light variant and then drawing the reversed one (a different
   // aspect) is how a legally-sized box produced a half-height mark.
-  const svg = markSvgFor(ctx, bg ?? null, boxAspect).svg;
+  const svg = markSvgFor(ctx, bg ?? null, boxAspect, slot).svg;
   return svg ? inkAspect(svg) : 1;
 
 
 }
 
 /** True when the artwork being drawn already contains the company name. */
-function isLockup(ctx: CollateralCtx): boolean {
+function isLockup(ctx: CollateralCtx, slot?: string): boolean {
   // A chosen cell says what it is: only the symbol is wordmark-less.
-  if (ctx.markPick?.svg) return ctx.markPick.form !== "symbol";
+  const pick = pickFor(ctx, slot);
+  if (pick?.svg) return pick.form !== "symbol";
   if (ctx.symbolSvg) return false; // the wordmark is set in real type instead
-  return logoAspect(ctx) >= 1.6;
+  return logoAspect(ctx, null, undefined, slot) >= 1.6;
 
 }
 
@@ -700,18 +728,19 @@ function clearSpace(height: number): number {
  */
 function markBoxFor(
   ctx: CollateralCtx, rs: ResolvedSpec, maxWidth: number, bias = 0.85, fillWidth = false, bg?: string | null,
+  slot?: string,
 ) {
-  return logoBox(rs, logoAspect(ctx, bg), isLockup(ctx), maxWidth, bias, fillWidth);
+  return logoBox(rs, logoAspect(ctx, bg, undefined, slot), isLockup(ctx, slot), maxWidth, bias, fillWidth);
 }
 
 
 /** Draw the mark at its spec size, top-left anchored at (x, y). */
 function specMark(
   ctx: CollateralCtx, rs: ResolvedSpec, x: number, y: number, maxWidth: number,
-  ink: string | null, bg: string, bias = 0.85,
+  ink: string | null, bg: string, bias = 0.85, slot?: string,
 ): { svg: string; w: number; h: number; clear: number } {
-  const box = markBoxFor(ctx, rs, maxWidth, bias);
-  return { svg: markAt(ctx, x, y, box.w, box.h, ink, bg), ...box };
+  const box = markBoxFor(ctx, rs, maxWidth, bias, false, bg, slot);
+  return { svg: markAt(ctx, x, y, box.w, box.h, ink, bg, { slot }), ...box };
 }
 
 /**
@@ -721,19 +750,21 @@ function specMark(
 function logoBlock(
   ctx: CollateralCtx, T: TypeKit, x: number, baseline: number, height: number,
   ink: string | null, nameFill: string, nameSize: number, maxWidth: number, bg?: string,
+  slot?: string,
 ): string {
-  if (isLockup(ctx)) {
-    const w = Math.min(height * logoAspect(ctx), maxWidth);
-    return markAt(ctx, x, baseline - height, w, height, ink, bg);
+  if (isLockup(ctx, slot)) {
+    const w = Math.min(height * logoAspect(ctx, bg ?? null, undefined, slot), maxWidth);
+    return markAt(ctx, x, baseline - height, w, height, ink, bg, { slot });
   }
   const gap = Math.round(height * 0.42);
   return [
-    markAt(ctx, x, baseline - height, height, height, ink, bg),
+    markAt(ctx, x, baseline - height, height, height, ink, bg, { slot }),
     T.line(ctx.company, x + height + gap, baseline - height * 0.24, nameSize, nameFill, {
       family: "head", weight: 700, tracking: nameSize * (ctx.ad.type.displayTracking), maxWidth: maxWidth - height - gap,
     }),
   ].join("");
 }
+
 
 /** The repeating graphic device that makes the set read as one family. */
 function motif(ctx: CollateralCtx, g: PageGrid, color: string, corner: "tl" | "tr" | "bl" | "br" = "br"): string {
@@ -820,7 +851,7 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   // and a short descriptor.
   const fieldBg = invert ? paper : primary;
   const fieldInk = inkOn(fieldBg);
-  const markBox = markBoxFor(ctx, rsF, W * 0.32, 1, true, fieldBg);
+  const markBox = markBoxFor(ctx, rsF, W * 0.32, 1, true, fieldBg, "front");
   const clear = markBox.clear;
   // The field is sized to the mark, not the other way round: a wide lockup at
   // its legal height needs the room, and shrinking the field only forced the
@@ -842,7 +873,7 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
     invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
     // Bleeds off three edges by design — the field is trim-to-trim.
     `<rect x="${fieldX}" y="0" width="${fieldW}" height="${H}" fill="${fieldBg}"/>`,
-    markAt(ctx, fieldX + (fieldW - markBox.w) / 2, (H - markBox.h) / 2, markBox.w, markBox.h, fieldInk, fieldBg),
+    markAt(ctx, fieldX + (fieldW - markBox.w) / 2, (H - markBox.h) / 2, markBox.w, markBox.h, fieldInk, fieldBg, { slot: "front" }),
     T.line(ctx.company, M, nameBase, nameSize, faceInk, {
       family: "head", weight: 700, tracking: nameSize * ad.type.displayTracking, maxWidth: colW, minSize: rsF.minType,
     }),
@@ -862,7 +893,7 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
   const titleS = Math.max(rsB.minType, step(ad, -0.6));
   const rowS = Math.max(rsB.minType, step(ad, -0.7));
   const rowGap = rowS * 1.62;
-  const backMark = markBoxFor(ctx, rsB, W * 0.26, 0.8, true, paper);
+  const backMark = markBoxFor(ctx, rsB, W * 0.26, 0.8, true, paper, "back");
   const backColW = Math.max(
     W * 0.32,
     Math.min(g.span(Math.max(4, Math.round(ad.grid.columns * 0.62))), W - M * 2 - backMark.w - backMark.clear),
@@ -879,7 +910,7 @@ function businessCard({ ctx, T, defs }: Args): Page[] {
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="0" width="${r(rule * 3)}" height="${H}" fill="${primary}"/>`,
     // Mark, top-right, at the back-of-card size band, inside its clear space.
-    markAt(ctx, W - M - backMark.w, M, backMark.w, backMark.h, mix(fg, paper, 0.25), paper),
+    markAt(ctx, W - M - backMark.w, M, backMark.w, backMark.h, mix(fg, paper, 0.25), paper, { slot: "back" }),
     T.line(d.person_name || ctx.company, M, backTop, nameS, fg, { family: "head", weight: 700, maxWidth: backColW, tracking: nameS * ad.type.displayTracking, minSize: rsB.minType }),
     d.person_title ? label(T, ctx, d.person_title, M, backTop + titleS * 1.7, titleS, accent, "start", backColW) : "",
     `<rect x="${M}" y="${r(backRowsTop - rowGap * 1.25)}" width="${r(Math.min(g.span(2), backColW))}" height="${r(ad.ink.hairline * 2)}" fill="${accent}"/>`,
@@ -901,7 +932,7 @@ function letterhead({ ctx, T, defs }: Args): Page[] {
 
   const rs = resolveSpec("letterhead", W, H);
   T.setFloor(rs.minType, rs.measureMax);
-  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.6)), 0.7).h;
+  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.6)), 0.7, false, paper, "header").h;
   const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const footerY = H - g.M;
   const footer = [d.website, d.email, d.phone].filter(Boolean).join("   ·   ");
@@ -917,7 +948,7 @@ function letterhead({ ctx, T, defs }: Args): Page[] {
   const body = [
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="0" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
-    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.4), g.span(Math.round(ad.grid.columns * 0.6)), paper),
+    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.4), g.span(Math.round(ad.grid.columns * 0.6)), paper, "header"),
     d.tagline ? label(T, ctx, d.tagline, g.M, headBase + step(ad, -0.9) * 2, step(ad, -1.2), muted, "start", g.span(6)) : "",
     `<rect x="${g.M}" y="${r(headBase + clearSpace(logoH))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${mix(primary, paper, 0.55)}"/>`,
     openBlock.svg,
@@ -938,14 +969,14 @@ function envelope({ ctx, T, defs }: Args): Page[] {
   const d = ctx.details;
   const rs = resolveSpec("envelope-no10", W, H);
   T.setFloor(rs.minType, rs.measureMax);
-  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.45)), 0.7).h;
+  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.45)), 0.7, false, paper, "header").h;
   const base = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const lines = addressBlock(d);
 
   const body = [
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="${r(H - ad.ink.ruleWeight * 2)}" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
-    logoBlock(ctx, T, g.M, base, logoH, null, fg, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.45)), paper),
+    logoBlock(ctx, T, g.M, base, logoH, null, fg, step(ad, 0.6), g.span(Math.round(ad.grid.columns * 0.45)), paper, "header"),
     ...lines.map((l, i) => T.line(l, g.M, base + clearSpace(logoH) + i * step(ad, -1) * 1.6, step(ad, -1.1), muted, { maxWidth: g.span(Math.round(ad.grid.columns * 0.4)) })),
     d.website ? T.line(d.website, g.M, H - g.M, step(ad, -1.2), accent, { maxWidth: g.span(4) }) : "",
     `<rect x="${r(W - g.M - 180)}" y="${g.M}" width="180" height="120" fill="none" stroke="${mix(fg, paper, 0.6)}" stroke-width="${r(ad.ink.hairline * 1.5)}" stroke-dasharray="8 8"/>`,
@@ -967,7 +998,7 @@ function notecard({ ctx, T, defs }: Args): Page[] {
 
   const rs = resolveSpec("notecard", W, H);
   T.setFloor(rs.minType, rs.measureMax);
-  const nBox = markBoxFor(ctx, rs, g.content * 0.62, 0.68);
+  const nBox = markBoxFor(ctx, rs, g.content * 0.62, 0.68, false, invert ? primary : paper, "primary");
   const markH = nBox.h;
   const markW = nBox.w;
   const top = snap(ad, H * 0.17);
@@ -976,9 +1007,9 @@ function notecard({ ctx, T, defs }: Args): Page[] {
 
   const body = [
     invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
-    markAt(ctx, (W - markW) / 2, top, markW, markH, invert ? ink : null, invert ? primary : paper),
-    isLockup(ctx) ? "" : T.line(ctx.company, W / 2, top + markH + clearSpace(markH) * 0.8, nameS, ink, { family: "head", weight: 700, anchor: "middle", tracking: nameS * ad.type.displayTracking, maxWidth: g.content }),
-    note ? label(T, ctx, note, W / 2, top + markH + clearSpace(markH) * (isLockup(ctx) ? 0.8 : 1.6), step(ad, -1), soft, "middle", g.span(Math.round(ad.grid.columns * 0.75))) : "",
+    markAt(ctx, (W - markW) / 2, top, markW, markH, invert ? ink : null, invert ? primary : paper, { slot: "primary" }),
+    isLockup(ctx, "primary") ? "" : T.line(ctx.company, W / 2, top + markH + clearSpace(markH) * 0.8, nameS, ink, { family: "head", weight: 700, anchor: "middle", tracking: nameS * ad.type.displayTracking, maxWidth: g.content }),
+    note ? label(T, ctx, note, W / 2, top + markH + clearSpace(markH) * (isLockup(ctx, "primary") ? 0.8 : 1.6), step(ad, -1), soft, "middle", g.span(Math.round(ad.grid.columns * 0.75))) : "",
     `<rect x="${r(W / 2 - g.span(1))}" y="${r(H * 0.52)}" width="${r(g.span(2))}" height="${r(ad.ink.hairline * 2)}" fill="${invert ? ink : accent}" opacity="${invert ? 0.5 : 1}"/>`,
     ...[0, 1, 2].map((i) => `<rect x="${g.M}" y="${r(H * 0.63 + i * step(ad, 2.4))}" width="${g.content}" height="${r(ad.ink.hairline)}" fill="${invert ? ink : fg}" opacity="0.16"/>`),
     d.website ? T.line(d.website, W / 2, H - g.M, step(ad, -1.4), soft, { anchor: "middle", opacity: invert ? 0.7 : 1, maxWidth: g.content }) : "",
@@ -996,7 +1027,7 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
   T.setFloor(rsSig.minType, rsSig.measureMax);
   // Use the box's real aspect: fitting a wide lockup inside a square slot is
   // what kept the mark a third under its standard height.
-  const mb = markBoxFor(ctx, rsSig, W * 0.4, 1, true);
+  const mb = markBoxFor(ctx, rsSig, W * 0.4, 1, true, paper, "primary");
   const markBox = mb.h;
   const left = Math.max(60, rsSig.safe);
   const railX = left + mb.w + clearSpace(markBox) * 0.7;
@@ -1007,7 +1038,7 @@ function emailSignature({ ctx, T, defs }: Args): Page[] {
 
   const body = [
     surface(W, H, paper, ad.material.grain * 0.4),
-    markAt(ctx, left, (H - mb.h) / 2, mb.w, mb.h, null, paper),
+    markAt(ctx, left, (H - mb.h) / 2, mb.w, mb.h, null, paper, { slot: "primary" }),
     `<rect x="${r(railX)}" y="${r(H * 0.2)}" width="${r(Math.max(3, ad.ink.ruleWeight))}" height="${r(H * 0.6)}" fill="${primary}"/>`,
     T.line(d.person_name || ctx.company, textX, top, nameS, fg, { family: "head", weight: 700, maxWidth: W - textX - 60 }),
     T.line([d.person_title, ctx.company].filter(Boolean).join(" · "), textX, top + nameS * 1.35, rowS, accent, { maxWidth: W - textX - 60 }),
@@ -1029,7 +1060,7 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
 
   const rs = resolveSpec(mode, W, H);
   T.setFloor(rs.minType, rs.measureMax);
-  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.5)), 0.7).h;
+  const logoH = markBoxFor(ctx, rs, g.span(Math.round(ad.grid.columns * 0.5)), 0.7, false, paper, "header").h;
   const headBase = snap(ad, Math.max(g.M, rs.safe) + logoH);
   const metaTop = snap(ad, headBase + clearSpace(logoH) + step(ad, 2.5));
 
@@ -1068,7 +1099,7 @@ function docTemplate({ ctx, T, defs }: Args, mode: "invoice" | "proposal"): Page
   const body = [
     surface(W, H, paper, ad.material.grain),
     `<rect x="0" y="0" width="${W}" height="${r(ad.ink.ruleWeight * 2)}" fill="${primary}"/>`,
-    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.1), g.span(Math.round(ad.grid.columns * 0.5)), paper),
+    logoBlock(ctx, T, g.M, headBase, logoH, null, fg, step(ad, 1.1), g.span(Math.round(ad.grid.columns * 0.5)), paper, "header"),
     label(T, ctx, title, W - g.M, headBase - logoH * 0.35, step(ad, 1.8), primary, "end", g.span(4)),
     T.line(isInvoice ? "No. 0001" : "Prepared for", W - g.M, headBase + step(ad, -0.4), step(ad, -1), muted, { anchor: "end", maxWidth: g.span(4) }),
 
@@ -1155,8 +1186,8 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   // the running one. Taking the minimum of the two let 22px chrome onto a page
   // whose standard is 26px.
   T.setFloor(rsCover.minType, rsCover.measureMax);
-  const coverBox = markBoxFor(ctx, rsCover, g.span(4), 0.65);
-  const slideBox = markBoxFor(ctx, rsSlide, g.span(3), 0.6);
+  const coverBox = markBoxFor(ctx, rsCover, g.span(4), 0.65, false, null, "cover");
+  const slideBox = markBoxFor(ctx, rsSlide, g.span(3), 0.6, false, null, "running");
 
   const total = 10;
   /**
@@ -1167,7 +1198,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
   const chrome = (n: number, ground: string, tone: string, markInk: string | null) => [
     label(T, ctx, `${String(n).padStart(2, "0")} / ${total}`, g.M, g.M + sp(-0.6), sp(-1.2), tone, "start", g.span(2)),
     T.line(ctx.company, g.M, H - g.M, sp(-0.9), tone, { maxWidth: g.span(5), opacity: 0.85 }),
-    markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, markInk, ground),
+    markAt(ctx, W - g.M - slideBox.w, H - g.M - slideBox.h, slideBox.w, slideBox.h, markInk, ground, { slot: "running" }),
   ].join("");
 
   const headTop = g.M + sp(2.2);
@@ -1217,7 +1248,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     name: "slide-1-cover", width: W, height: H,
     svg: page(W, H, defs, [
       invert ? `<rect width="${W}" height="${H}" fill="${primary}"/>` : surface(W, H, paper, ad.material.grain),
-      markAt(ctx, g.M, g.M, coverBox.w, coverBox.h, invert ? coverInk : null, coverGround),
+      markAt(ctx, g.M, g.M, coverBox.w, coverBox.h, invert ? coverInk : null, coverGround, { slot: "cover" }),
       coverStack.svg(),
       label(T, ctx, String(new Date().getFullYear()), W - g.M, H - g.M, sp(-0.6), coverInk, "end", g.span(2)),
       motif(ctx, g, invert ? coverInk : accent, "br"),
@@ -1473,7 +1504,7 @@ function presentation({ ctx, T, defs }: Args): Page[] {
     name: "slide-10-closing", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${fg}"/>`,
-      markAt(ctx, (W - coverBox.w) / 2, H * 0.3, coverBox.w, coverBox.h, inkOn(fg), fg),
+      markAt(ctx, (W - coverBox.w) / 2, H * 0.3, coverBox.w, coverBox.h, inkOn(fg), fg, { slot: "closing" }),
       closeStack.svg(),
     ].join("")),
   });
@@ -1521,13 +1552,13 @@ function guidelines({ ctx, T, defs }: Args): Page[] {
 
   // Cover carries its own (larger) type floor; the interior pages share theirs.
   T.setFloor(rsG.minType, rsG.measureMax);
-  const gCover = markBoxFor(ctx, rsG, g.span(4), 0.68);
+  const gCover = markBoxFor(ctx, rsG, g.span(4), 0.68, false, primary, "cover");
 
   pages.push({
     name: "guidelines-1-cover", width: W, height: H,
     svg: page(W, H, defs, [
       `<rect width="${W}" height="${H}" fill="${primary}"/>`,
-      markAt(ctx, g.M, g.M, gCover.w, gCover.h, ink, primary),
+      markAt(ctx, g.M, g.M, gCover.w, gCover.h, ink, primary, { slot: "cover" }),
       label(T, ctx, "Brand guidelines", g.M, H * 0.52, step(ad, 0.6), ink, "start", g.span(6)),
       T.line(ctx.company, g.M, H * 0.66, step(ad, 4), ink, { family: "head", weight: 700, maxWidth: g.span(Math.round(ad.grid.columns * 0.8)), tracking: step(ad, 4) * ad.type.displayTracking }),
       d.tagline ? T.line(d.tagline, g.M, H * 0.73, step(ad, 0.4), ink, { opacity: 0.75, maxWidth: g.span(Math.round(ad.grid.columns * 0.6)) }) : "",
@@ -1882,6 +1913,8 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
   const markBgs = [...svg.matchAll(/data-mark-bg="([^"]*)"/g)].map((m) => m[1]);
   const markInks = [...svg.matchAll(/data-mark-ink="([^"]*)"/g)].map((m) => m[1]);
   const markVis = [...svg.matchAll(/data-mark-visible="([^"]*)"/g)].map((m) => m[1] === "1");
+  const markSlots = [...svg.matchAll(/data-mark-slot="([^"]*)"/g)].map((m) => m[1] || undefined);
+
   const sizes = [...svg.matchAll(/font-size="([\d.]+)"/g)].map((m) => Number(m[1]));
   const texts = [...svg.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].map((m) => m[1]);
   const primaryMark = markHs.length ? Math.max(...markHs) : undefined;
@@ -1906,8 +1939,9 @@ function pageMetrics(ctx: CollateralCtx, name: string, svg: string, rs: Resolved
     markBand: markBand(
       rs,
       primaryMark && idx >= 0 && markWs[idx] ? markWs[idx] / primaryMark : 3.2,
-      isLockup(ctx),
+      isLockup(ctx, idx >= 0 ? markSlots[idx] : undefined),
     ),
+
 
 
 

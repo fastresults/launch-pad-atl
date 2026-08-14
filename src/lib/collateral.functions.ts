@@ -117,7 +117,9 @@ export async function listCollateral(snapshotId: string): Promise<CollateralItem
 
 export type LogoForm = "symbol" | "horizontal" | "stacked" | "wordmark";
 export type LogoTone = "colour" | "inverse";
-export type MarkChoice = { form: LogoForm; tone: LogoTone };
+export type MarkCell = { form: LogoForm; tone: LogoTone };
+/** A piece's mark decisions, keyed by mark slot id (`front`, `cover`, …). */
+export type MarkChoice = Record<string, MarkCell>;
 
 export async function generateCollateral(
   snapshotId: string,
@@ -150,7 +152,7 @@ export async function generateCollateral(
         failed.push(...(result?.failed ?? []));
         qcIssues.push(...(result?.qcIssues ?? []));
         artDirection ??= result?.artDirection ?? null;
-        if (result?.mark) marks[kind] = result.mark;
+        if (result?.marks?.length) marks[kind] = result.marks;
         if (!result?.more || typeof result?.nextPage !== "number" || result.nextPage <= fromPage) break;
         fromPage = result.nextPage;
       } catch (e: any) {

@@ -18,6 +18,7 @@ import { useConfirm } from "@/components/ui/confirm-dialog";
 import { CollateralPreviewDialog } from "@/components/hub/brand/CollateralPreviewDialog";
 import { CollateralDetailsDialog } from "@/components/hub/brand/CollateralDetailsDialog";
 import { CollateralPieceCard } from "@/components/hub/brand/CollateralPieceCard";
+import { slotsForKind } from "@/lib/brand/collateral-marks";
 import { logoSetFrom } from "@/components/hub/brand/LogoSetPanel";
 
 
@@ -68,10 +69,10 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
     return m;
   }, [items]);
 
-  /** Founder's chosen mark per piece; absent means the layout decides. */
-  const [markChoice, setMarkChoice] = useState<Record<string, { form: string; tone: string }>>({});
-  /** What the last run actually drew, per piece. */
-  const [marksUsed, setMarksUsed] = useState<Record<string, any>>({});
+  /** Founder's chosen mark per piece and slot; absent means the layout decides. */
+  const [markChoice, setMarkChoice] = useState<Record<string, Record<string, { form: string; tone: string }>>>({});
+  /** What the last run actually drew, per piece — one entry per mark slot. */
+  const [marksUsed, setMarksUsed] = useState<Record<string, any[]>>({});
 
   // Hydrate from the kit once it lands, without clobbering a choice made in
   // this session.
@@ -81,8 +82,16 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
     const picks: Record<string, any> = {};
     const used: Record<string, any> = {};
     for (const [kind, v] of Object.entries(storedChoice as Record<string, any>)) {
-      if (v?.requested?.form && v?.requested?.tone) picks[kind] = v.requested;
-      if (v?.used?.form) used[kind] = v.used;
+      // Per-slot shape, or a legacy flat cell read as "every slot".
+      if (v?.slots && typeof v.slots === "object") picks[kind] = v.slots;
+      else if (v?.requested?.form) picks[kind] = slotsForKind(kind).reduce(
+        (acc: any, s: any) => ({ ...acc, [s.id]: v.requested }), {},
+      );
+      if (v?.used && typeof v.used === "object") {
+        used[kind] = v.used.form
+          ? [{ slot: slotsForKind(kind)[0].id, ...v.used }]
+          : Object.entries(v.used).map(([slot, cell]: any) => ({ slot, ...cell }));
+      }
     }
     setMarkChoice((prev) => ({ ...picks, ...prev }));
     setMarksUsed((prev) => ({ ...used, ...prev }));
@@ -381,13 +390,17 @@ export function BrandCollateral({ snapshot, kit, locked }: { snapshot: any; kit?
                   stale={isStale(k.kind)}
                   qc={qcState(k.kind)}
                   busy={running.has(k.kind)}
+                  kind={k.kind}
                   markChoice={markChoice[k.kind] ?? null}
                   markUsed={marksUsed[k.kind] ?? null}
                   availableSlots={availableSlots}
-                  onMarkChoice={(choice) =>
+                  onMarkChoice={(slotId, choice) =>
                     setMarkChoice((prev) => {
+                      const forKind = { ...(prev[k.kind] ?? {}) };
+                      if (choice) forKind[slotId] = choice;
+                      else delete forKind[slotId];
                       const next = { ...prev };
-                      if (choice) next[k.kind] = choice;
+                      if (Object.keys(forKind).length) next[k.kind] = forKind;
                       else delete next[k.kind];
                       return next;
                     })}

@@ -19,6 +19,12 @@ import {
   slotFor,
 } from "../_shared/logo-form.ts";
 
+import {
+  isMultiSlot,
+  recommendMark,
+  slotChoices,
+  slotsForKind,
+} from "../_shared/collateral-marks.ts";
 import { traceLogo } from "../_shared/logo-trace.ts";
 
 
@@ -31,6 +37,7 @@ import {
   type CollateralCopy,
   type CollateralCtx,
   type CollateralKind,
+  type MarkPickEntry,
 } from "../_shared/collateral-svg.ts";
 import {
   auditDetails,
@@ -248,7 +255,15 @@ function markPickOrder(form: LogoForm, tone: LogoTone): LogoVariant[] {
 async function buildCtx(
   admin: any,
   snapshotId: string,
-  opts: { redirect?: boolean; needsCopy?: boolean; needsImagery?: boolean; markPick?: { form: LogoForm; tone: LogoTone } | null } = {},
+  opts: {
+    redirect?: boolean;
+    needsCopy?: boolean;
+    needsImagery?: boolean;
+    /** The piece being built — decides which mark slots exist. */
+    kind?: string;
+    /** Explicit founder choices, keyed by slot id. */
+    markPicks?: Record<string, { form: LogoForm; tone: LogoTone }> | null;
+  } = {},
 ): Promise<{ ctx: CollateralCtx; details: ContactDetails; extras: StyleSystemExtras }> {
 
   const kit = await loadKit(admin, snapshotId);
@@ -345,30 +360,61 @@ async function buildCtx(
     ? await loadMarkArtwork(admin, String(stackedDarkPath))
     : null;
 
-  // The founder's explicit cell for this piece, when they picked one.
-  let markPick: CollateralCtx["markPick"] = null;
-  if (opts.markPick) {
-    const wanted = slotFor(opts.markPick.form, opts.markPick.tone);
-    for (const slot of markPickOrder(opts.markPick.form, opts.markPick.tone)) {
-      const entry = logos.find((l: any) => l?.variant === slot && (l?.svg_path ?? l?.path));
-      const p = entry?.svg_path ?? entry?.path;
-      if (!p) continue;
-      const svg = await loadMarkArtwork(admin, String(p));
-      if (!svg) continue;
-      const ft = formToneOf(slot);
-      markPick = {
-        form: ft.form,
-        tone: ft.tone,
-        svg,
-        requested: { form: opts.markPick.form, tone: opts.markPick.tone },
-        fallback: slot !== wanted,
-      };
-      break;
+  // The mark for every slot this piece renders. A piece is not one logo
+  // decision: a deck cover, its running corner and its closing slide are three
+  // different holes with three different proportions. Explicit choices win;
+  // the rest of a multi-slot piece takes the symmetry recommendation.
+  const markPicks: Record<string, MarkPickEntry> = {};
+  if (opts.kind) {
+    const supplied: { variant: LogoVariant; form: LogoForm; tone: LogoTone }[] = [];
+    for (const l of logos) {
+      const v = l?.variant;
+      if (!v || !(l?.svg_path ?? l?.path)) continue;
+      const ft = formToneOf(v);
+      if (supplied.some((s) => s.variant === v)) continue;
+      supplied.push({ variant: v as LogoVariant, form: ft.form, tone: ft.tone });
     }
-    console.log(
-      `[collateral mark] asked ${wanted} → ${markPick ? `${markPick.form}/${markPick.tone}${markPick.fallback ? " (fallback)" : ""}` : "nothing supplied, using the layout's own pick"}`,
-    );
+    const artwork = new Map<string, string | null>();
+    const load = async (variant: LogoVariant): Promise<string | null> => {
+      if (artwork.has(variant)) return artwork.get(variant) ?? null;
+      const entry = logos.find((l: any) => l?.variant === variant && (l?.svg_path ?? l?.path));
+      const p = entry?.svg_path ?? entry?.path;
+      const svg = p ? await loadMarkArtwork(admin, String(p)) : null;
+      artwork.set(variant, svg);
+      return svg;
+    };
+
+    for (const slot of slotsForKind(opts.kind)) {
+      const explicit = opts.markPicks?.[slot.id] ?? null;
+      const auto = explicit
+        ? null
+        : (isMultiSlot(opts.kind) ? recommendMark(slot, supplied.map((s) => ({ form: s.form, tone: s.tone }))) : null);
+      const want = explicit ?? (auto ? { form: auto.form, tone: auto.tone } : null);
+      if (!want) continue;
+      const wanted = slotFor(want.form, want.tone);
+      for (const variant of markPickOrder(want.form, want.tone)) {
+        const svg = await load(variant);
+        if (!svg) continue;
+        const ft = formToneOf(variant);
+        markPicks[slot.id] = {
+          form: ft.form,
+          tone: ft.tone,
+          svg,
+          requested: { form: want.form, tone: want.tone },
+          fallback: variant !== wanted,
+          auto: !explicit,
+          reason: auto?.reason ?? null,
+        };
+        break;
+      }
+      const got = markPicks[slot.id];
+      console.log(
+        `[collateral mark] ${opts.kind}/${slot.id} asked ${wanted}${explicit ? "" : " (auto)"} → ` +
+          (got ? `${got.form}/${got.tone}${got.fallback ? " (fallback)" : ""}` : "nothing supplied, using the layout's own pick"),
+      );
+    }
   }
+
 
 
   const vctx = await loadVentureContext(admin, snapshotId).catch(() => null);
@@ -465,7 +511,7 @@ async function buildCtx(
     ad,
     copy,
     imagery,
-    markPick,
+    markPicks,
   };
 
 
@@ -864,15 +910,23 @@ Deno.serve(async (req) => {
         }, 400);
       }
 
-      // The founder's chosen mark cell for this piece, if they picked one.
+      // The founder's chosen mark cells for this piece, per slot. A flat
+      // `{ form, tone }` from an older client is read as "the same cell in
+      // every slot", so saved choices keep working.
       const FORMS = ["symbol", "horizontal", "stacked", "wordmark"];
       const TONES = ["colour", "inverse"];
       const rawPick = body?.markChoice && typeof body.markChoice === "object"
         ? body.markChoice[requested[0]]
         : null;
-      const markPick = rawPick && FORMS.includes(rawPick.form) && TONES.includes(rawPick.tone)
-        ? { form: rawPick.form as LogoForm, tone: rawPick.tone as LogoTone }
-        : null;
+      const parsed = slotChoices(requested[0], rawPick);
+      const markPicks: Record<string, { form: LogoForm; tone: LogoTone }> = {};
+      for (const [slotId, cell] of Object.entries(parsed)) {
+        if (FORMS.includes(cell.form) && TONES.includes(cell.tone)) {
+          markPicks[slotId] = { form: cell.form as LogoForm, tone: cell.tone as LogoTone };
+        }
+      }
+      const hasPicks = Object.keys(markPicks).length > 0;
+
 
       let ctx: CollateralCtx;
       let details: ContactDetails;
@@ -883,7 +937,8 @@ Deno.serve(async (req) => {
           redirect: !!body?.redirect,
           needsCopy: ["presentation", "proposal", "invoice", "notecard", "guidelines"].includes(kind),
           needsImagery: kind === "presentation",
-          markPick,
+          kind,
+          markPicks: hasPicks ? markPicks : null,
         }));
 
       } catch (e) {
@@ -957,7 +1012,7 @@ Deno.serve(async (req) => {
       );
       // Remember the founder's pick for this piece so the card can say which
       // mark it carries and the next run reuses it without being told again.
-      if (markPick && failed.length === 0) {
+      if (hasPicks && failed.length === 0) {
         const { data: kitRow } = await admin
           .from("venture_brand_kits")
           .select("collateral_mark_choice")
@@ -965,8 +1020,10 @@ Deno.serve(async (req) => {
           .maybeSingle();
         const merged = { ...(kitRow?.collateral_mark_choice ?? {}) };
         merged[requested[0]] = {
-          requested: markPick,
-          used: ctx.markPick ? { form: ctx.markPick.form, tone: ctx.markPick.tone } : null,
+          slots: markPicks,
+          used: Object.fromEntries(
+            Object.entries(ctx.markPicks ?? {}).map(([slotId, p]) => [slotId, { form: p.form, tone: p.tone }]),
+          ),
           at: new Date().toISOString(),
         };
         await admin.from("venture_brand_kits")
@@ -989,17 +1046,20 @@ Deno.serve(async (req) => {
         // Tells the library whether the wordmark on these pieces is real type
         // (symbol isolated) or the tracer's polygons (nothing to isolate).
         logo: { symbolIsolated: !!ctx.symbolSvg },
-        mark: ctx.markPick
-          ? {
-            form: ctx.markPick.form,
-            tone: ctx.markPick.tone,
-            fallback: !!ctx.markPick.fallback,
-            requested: ctx.markPick.requested,
-            // The chosen artwork kept its own colours unless a ground forced a
-            // repair — the card says so instead of looking like another cell.
-            recoloured: !!ctx.markRecoloured,
-          }
-          : null,
+        // What each slot of this piece actually carries — the card reports it
+        // per position rather than pretending a piece has one mark.
+        marks: Object.entries(ctx.markPicks ?? {}).map(([slotId, p]) => ({
+          slot: slotId,
+          form: p.form,
+          tone: p.tone,
+          fallback: !!p.fallback,
+          auto: !!p.auto,
+          reason: p.reason ?? null,
+          requested: p.requested,
+          // The chosen artwork kept its own colours unless a ground forced a
+          // repair — the card says so instead of looking like another cell.
+          recoloured: !!ctx.markRecoloured?.[slotId],
+        })),
 
         artDirection: { archetype: ctx.ad.archetype, rationale: ctx.ad.rationale },
       });

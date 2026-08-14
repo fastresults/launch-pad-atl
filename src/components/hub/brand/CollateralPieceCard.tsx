@@ -12,16 +12,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CheckCircle2, ChevronDown, Eye, Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import { LOGO_SLOTS } from "@/components/hub/brand/LogoSetPanel";
+import { recommendMark, slotsForKind } from "@/lib/brand/collateral-marks";
 
 const AUTO = "auto";
 const toKey = (c: { form: string; tone: string } | null | undefined) =>
   c ? `${c.form}|${c.tone}` : AUTO;
+
 
 /**
  * One deliverable in the collateral library. Uniform height, artwork-first —
  * the piece is the product, so it gets the space.
  */
 export function CollateralPieceCard({
+  kind,
   label,
   note,
   preview,
@@ -39,6 +42,8 @@ export function CollateralPieceCard({
   onGenerate,
   onDelete,
 }: {
+  /** The collateral kind — decides which mark slots this piece renders. */
+  kind: string;
   label: string;
   note: string;
   preview: string | null;
@@ -48,13 +53,21 @@ export function CollateralPieceCard({
   busy: boolean;
   canGenerate: boolean;
   disabled: boolean;
-  /** The founder's chosen form × tone for this piece, or null for automatic. */
-  markChoice?: { form: string; tone: string } | null;
-  /** What the last run actually drew, so the card can say which mark it carries. */
-  markUsed?: { form: string; tone: string; fallback?: boolean; recoloured?: boolean } | null;
+  /** The founder's chosen form × tone per mark slot; missing slots are automatic. */
+  markChoice?: Record<string, { form: string; tone: string }> | null;
+  /** What the last run actually drew in each slot. */
+  markUsed?: {
+    slot: string;
+    form: string;
+    tone: string;
+    fallback?: boolean;
+    recoloured?: boolean;
+    auto?: boolean;
+    reason?: string | null;
+  }[] | null;
   /** Slot keys the venture has actually supplied — everything else reads as absent. */
   availableSlots?: Record<string, boolean>;
-  onMarkChoice?: (choice: { form: string; tone: string } | null) => void;
+  onMarkChoice?: (slotId: string, choice: { form: string; tone: string } | null) => void;
   onPreview: () => void;
   onGenerate: () => void;
   /** Remove every file for this piece. Only offered once something exists. */
@@ -62,8 +75,15 @@ export function CollateralPieceCard({
 }) {
   const generated = fileCount > 0;
   const supplied = availableSlots ?? {};
-  const slotLabel = (c?: { form: string; tone: string } | null) =>
+  const slots = slotsForKind(kind);
+  const cellLabel = (c?: { form: string; tone: string } | null) =>
     LOGO_SLOTS.find((s) => s.form === c?.form && s.tone === c?.tone)?.label ?? null;
+
+  // The inventory the recommender scores against: the cells actually supplied.
+  const inventory = LOGO_SLOTS.filter((s) => supplied[s.key]).map((s) => ({ form: s.form, tone: s.tone }));
+  const used = markUsed ?? [];
+
+
 
 
   return (
@@ -102,17 +122,21 @@ export function CollateralPieceCard({
           {stale && (
             <Badge variant="outline" className="border-status-warning/50 text-[10px] text-status-warning">Details changed</Badge>
           )}
-          {markUsed && (
-            <Badge variant="outline" className="text-[10px] text-muted-foreground">
-              Mark: {slotLabel(markUsed) ?? `${markUsed.form} · ${markUsed.tone}`}
-              {markUsed.fallback ? " (nearest supplied)" : ""}
-            </Badge>
-          )}
-          {markUsed?.recoloured && (
+          {used.map((m) => {
+            const slot = slots.find((s) => s.id === m.slot);
+            return (
+              <Badge key={m.slot} variant="outline" className="text-[10px] text-muted-foreground">
+                {slot?.label ?? m.slot}: {cellLabel(m) ?? `${m.form} · ${m.tone}`}
+                {m.fallback ? " (nearest supplied)" : ""}
+              </Badge>
+            );
+          })}
+          {used.some((m) => m.recoloured) && (
             <Badge variant="outline" className="border-status-warning/50 text-[10px] text-status-warning">
               Recoloured for contrast
             </Badge>
           )}
+
 
         </div>
 
@@ -153,37 +177,60 @@ export function CollateralPieceCard({
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel className="text-[11px]">Mark for this piece</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={toKey(markChoice)}
-                  onValueChange={(v) => {
-                    if (v === AUTO) return onMarkChoice?.(null);
-                    const [form, tone] = v.split("|");
-                    onMarkChoice?.({ form, tone });
-                  }}
-                >
-                  <DropdownMenuRadioItem value={AUTO} className="text-[11px]">
-                    Recommended — chosen from the layout
-                  </DropdownMenuRadioItem>
-                  {["colour", "inverse"].map((tone) => (
-                    <div key={tone}>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] font-normal uppercase tracking-[0.12em] text-muted-foreground">
-                        {tone === "colour" ? "Colour — for light grounds" : "Inverse — for dark grounds"}
-                      </DropdownMenuLabel>
-                      {LOGO_SLOTS.filter((s) => s.tone === tone).map((s) => (
-                        <DropdownMenuRadioItem key={s.key} value={`${s.form}|${s.tone}`} className="text-[11px]">
-                          <span className="flex w-full items-center justify-between gap-2">
-                            <span>{s.label}</span>
-                            {!supplied[s.key] && <span className="text-[10px] text-muted-foreground">Not supplied</span>}
+              <DropdownMenuContent align="end" className="max-h-[70vh] w-72 overflow-y-auto">
+                <DropdownMenuLabel className="text-[11px]">
+                  {slots.length > 1 ? "Marks on this piece" : "Mark for this piece"}
+                </DropdownMenuLabel>
+                {slots.map((slot, i) => {
+                  const rec = recommendMark(slot, inventory);
+                  return (
+                    <div key={slot.id}>
+                      {i > 0 && <DropdownMenuSeparator />}
+                      {slots.length > 1 && (
+                        <DropdownMenuLabel className="pb-0 text-[11px] font-medium">
+                          {slot.label}
+                          <span className="block text-[10px] font-normal text-muted-foreground">{slot.hint}</span>
+                        </DropdownMenuLabel>
+                      )}
+                      <DropdownMenuRadioGroup
+                        value={toKey(markChoice?.[slot.id])}
+                        onValueChange={(v) => {
+                          if (v === AUTO) return onMarkChoice?.(slot.id, null);
+                          const [form, tone] = v.split("|");
+                          onMarkChoice?.(slot.id, { form, tone });
+                        }}
+                      >
+                        <DropdownMenuRadioItem value={AUTO} className="text-[11px]">
+                          <span className="flex flex-col">
+                            <span>Auto — recommended</span>
+                            {rec && (
+                              <span className="text-[10px] text-muted-foreground">
+                                {cellLabel(rec) ?? `${rec.form} · ${rec.tone}`} — {rec.reason}
+                              </span>
+                            )}
                           </span>
                         </DropdownMenuRadioItem>
-                      ))}
+                        {["colour", "inverse"].map((tone) => (
+                          <div key={tone}>
+                            <DropdownMenuLabel className="text-[10px] font-normal uppercase tracking-[0.12em] text-muted-foreground">
+                              {tone === "colour" ? "Colour — for light grounds" : "Inverse — for dark grounds"}
+                            </DropdownMenuLabel>
+                            {LOGO_SLOTS.filter((s) => s.tone === tone).map((s) => (
+                              <DropdownMenuRadioItem key={s.key} value={`${s.form}|${s.tone}`} className="text-[11px]">
+                                <span className="flex w-full items-center justify-between gap-2">
+                                  <span>{s.label}</span>
+                                  {!supplied[s.key] && <span className="text-[10px] text-muted-foreground">Not supplied</span>}
+                                </span>
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </div>
+                        ))}
+                      </DropdownMenuRadioGroup>
                     </div>
-                  ))}
-                </DropdownMenuRadioGroup>
+                  );
+                })}
               </DropdownMenuContent>
+
             </DropdownMenu>
           </div>
           {generated && (
