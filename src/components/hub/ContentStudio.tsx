@@ -683,11 +683,27 @@ function Step4BuildAds({
 
   const key = (t: AdTask) => `${t.post.id}:${t.aspect}`;
   const placementKey = (t: AdTask) => contentGraphicKey(t.post.id, t.aspect);
-  const markPick = (t: AdTask) => studioChoiceFor(kit?.studio_mark_choice, placementKey(t), t.aspect);
+  const inheritKeys = (week: number | string, aspect: string) => [contentWeekKey(week, aspect), contentAllKey(aspect)];
+  const markPick = (t: AdTask) =>
+    studioChoiceFor(kit?.studio_mark_choice, placementKey(t), t.aspect, inheritKeys(t.post.week, t.aspect));
+  const exactPick = (t: AdTask) => kit?.studio_mark_choice?.[placementKey(t)] ?? null;
+  const inheritedPick = (t: AdTask) =>
+    studioChoiceFor(kit?.studio_mark_choice, "__none__", t.aspect, inheritKeys(t.post.week, t.aspect));
+  const weekPick = (week: number, aspect: string) => kit?.studio_mark_choice?.[contentWeekKey(week, aspect)] ?? null;
+  const allPick = (aspect: string) => kit?.studio_mark_choice?.[contentAllKey(aspect)] ?? null;
   const saveMark = async (t: AdTask, cell: any) => {
     await setStudioMarkChoice(snapshotId, placementKey(t), cell);
     await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
   };
+  const saveWeekMark = async (week: number, aspect: string, cell: any) => {
+    await setStudioMarkChoice(snapshotId, contentWeekKey(week, aspect), cell);
+    await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+  };
+  const saveAllMark = async (aspect: string, cell: any) => {
+    await setStudioMarkChoice(snapshotId, contentAllKey(aspect), cell);
+    await qc.invalidateQueries({ queryKey: ["brandKit", snapshotId] });
+  };
+
   const setBusy = (k: string, v: boolean) =>
     setRunningKeys((prev) => { const n = { ...prev }; if (v) n[k] = true; else delete n[k]; return n; });
 
